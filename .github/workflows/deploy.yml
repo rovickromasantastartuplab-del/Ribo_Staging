@@ -1,3 +1,4 @@
+# Triggering fresh deployment run
 name: Auto Deploy to Staging (cPanel)
 
 on:
