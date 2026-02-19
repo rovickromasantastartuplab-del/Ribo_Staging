@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - develop  # Trigger on push to develop branch
-      - deploy
+
 jobs:
   deploy:
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner
