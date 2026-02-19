@@ -315,7 +315,7 @@ export default function WeddingSuppliers() {
                 entityName={t('Supplier')}
                 itemName={currentItem?.name || ''}
             />
-            {/*wag */}
+
             <ImportModal
                 isOpen={isImportModalOpen}
                 onClose={() => {
