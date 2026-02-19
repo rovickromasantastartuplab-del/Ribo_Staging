@@ -37,6 +37,10 @@ jobs:
         echo "APP_DEBUG=false" >> .env
         echo "DB_CONNECTION=sqlite" >> .env
         echo "DB_DATABASE=:memory:" >> .env
+        echo "CACHE_STORE=array" >> .env
+        echo "SESSION_DRIVER=array" >> .env
+        echo "QUEUE_CONNECTION=sync" >> .env
+        echo "MAIL_MAILER=array" >> .env
 
     # Step 5: Install Backend Dependencies
     - name: Install Composer dependencies
