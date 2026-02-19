@@ -70,6 +70,7 @@ jobs:
     # Step 7: Install Composer manually and run install
     - name: Install Composer dependencies
       run: |
+        cd repo  # Navigate to the 'repo' directory
         mkdir -p $HOME/bin
         EXPECTED_SIGNATURE=$(curl -s https://composer.github.io/installer.sig)
         php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
@@ -81,9 +82,9 @@ jobs:
         php composer-setup.php --install-dir=$HOME/bin --filename=composer
         php -r "unlink('composer-setup.php');"
         export PATH="$HOME/bin:$PATH"
-        composer install --no-dev --optimize-autoloader
+        composer install --no-dev --optimize-autoloader  # Run Composer inside the 'repo' directory
 
-    # Step 8: Setup SSH (use GitHub secret)
+      # Step 8: Setup SSH (use GitHub secret)
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
