@@ -1,3 +1,4 @@
+
 name: Auto Deploy to Staging (cPanel)
 
 on:
@@ -15,9 +16,9 @@ jobs:
       run: |
         git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} repo
         cd repo
-        git checkout develop  # Checkout develop branch
+        git checkout develop
         shopt -s dotglob
-        cd ..  # Go back to the previous directory
+        cd ..
         rm -rf repo
 
     # Step 2: Install Node.js manually using nvm
@@ -32,15 +33,11 @@ jobs:
 
     # Step 3: Install Node dependencies
     - name: Install Node dependencies
-      run: |
-        cd repo  # Change directory to the 'repo' folder where package.json is
-        npm install  # Run npm install here
+      run: npm install
 
     # Step 4: Build frontend
     - name: Build frontend
-      run: |
-        cd repo  # Stay in the 'repo' folder
-        npm run build  # Build the frontend
+      run: npm run build
 
     # Step 5: Create temporary .env file for Composer (SQLite)
     - name: Create temporary dummy .env for Composer (SQLite)
