@@ -52,9 +52,14 @@ jobs:
         run: composer install --no-dev --optimize-autoloader
 
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.CPANEL_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "" >> ~/.ssh/id_ed25519  # Ensure newline at EOF
+          chmod 600 ~/.ssh/id_ed25519
+          
+      - name: Add Known Hosts
+        run: ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts
 
       - name: Deploy to cPanel via Rsync
         run: |
