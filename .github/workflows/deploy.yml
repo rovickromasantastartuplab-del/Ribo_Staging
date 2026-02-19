@@ -14,11 +14,12 @@ jobs:
     - name: Clone repository
       run: |
         git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} repo
+        ls -la  # List the files after cloning to see if 'repo' folder exists
         cd repo
-        git checkout develop  # Checkout the 'develop' branch
+        git checkout develop
         shopt -s dotglob
         cd ..  # Go back to the previous directory
-        rm -rf repo
+        ls -la  # List files after going back to ensure the 'repo' folder was created
 
     # Step 2: Install Node.js manually using nvm
     - name: Install Node.js
@@ -33,13 +34,15 @@ jobs:
     # Step 3: Install Node dependencies
     - name: Install Node dependencies
       run: |
-        cd repo  # Make sure npm install runs inside the 'repo' folder
-        npm install  # Install dependencies
+        ls -la  # List the files to check the current directory
+        cd repo  # Change to the 'repo' folder where package.json should be
+        ls -la  # Check if package.json is in the 'repo' directory
+        npm install  # Run npm install inside the 'repo' folder
 
     # Step 4: Build frontend
     - name: Build frontend
       run: |
-        cd repo  # Ensure npm run build runs inside the 'repo' folder
+        cd repo  # Ensure we are inside the 'repo' folder
         npm run build  # Build the frontend
 
     # Step 5: Create temporary .env file for Composer (SQLite)
