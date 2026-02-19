@@ -271,7 +271,7 @@ export default function WeddingSuppliers() {
                 />
             </div>
 
-            {/*  section */}
+            {/* content section */}
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
                 <CrudTable
                     columns={columns}
