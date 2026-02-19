@@ -29,18 +29,7 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
-    # Step 4: Install Backend Dependencies
-    - name: Install Composer dependencies
-      run: composer install --no-dev --optimize-autoloader --no-progress
-
-    # Step 5: Install Frontend Dependencies & Build
-    - name: Install & Build Frontend
-      run: |
-        npm ci
-        npm run build
-
-    # Step 6: Create Dummy .env for Cache Clearing (if needed)
-    # Note: We create this locally just for any artisan commands that might run during build
+    # Step 4: Create Dummy .env for Cache Clearing (Critical for package discovery)
     - name: Create dummy .env
       run: |
         echo "APP_ENV=production" > .env
@@ -48,6 +37,16 @@ jobs:
         echo "APP_DEBUG=false" >> .env
         echo "DB_CONNECTION=sqlite" >> .env
         echo "DB_DATABASE=:memory:" >> .env
+
+    # Step 5: Install Backend Dependencies
+    - name: Install Composer dependencies
+      run: composer install --no-dev --optimize-autoloader --no-progress
+
+    # Step 6: Install Frontend Dependencies & Build
+    - name: Install & Build Frontend
+      run: |
+        npm ci
+        npm run build
 
     # Step 7: Setup SSH
     - name: Setup SSH
