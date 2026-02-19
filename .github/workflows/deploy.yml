@@ -68,9 +68,15 @@ jobs:
         SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
       run: |
         mkdir -p ~/.ssh
-        echo "$SSH_KEY" > ~/.ssh/id_ed25519
+        echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts
+        echo "" >> ~/.ssh/id_ed25519  # Ensure newline at EOF
+        
+        echo "Validating key file exists..."
+        ls -l ~/.ssh/id_ed25519
+        
+        echo "Scanning host keys..."
+        ssh-keyscan -v -H 66.176.153.160 >> ~/.ssh/known_hosts
 
     # Step 8: Deploy to cPanel via Rsync
     - name: Deploy to cPanel
