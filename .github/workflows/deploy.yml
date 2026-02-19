@@ -29,7 +29,16 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
-    # Step 4: Create Dummy .env for Cache Clearing (Critical for package discovery)
+    # Step 4: Create Storage Directories (Critical for Cache)
+    - name: Create Storage Directories
+      run: |
+        mkdir -p storage/framework/cache
+        mkdir -p storage/framework/sessions
+        mkdir -p storage/framework/views
+        mkdir -p storage/logs
+        chmod -R 775 storage
+
+    # Step 5: Create Dummy .env for Cache Clearing (Critical for package discovery)
     - name: Create dummy .env
       run: |
         echo "APP_ENV=production" > .env
