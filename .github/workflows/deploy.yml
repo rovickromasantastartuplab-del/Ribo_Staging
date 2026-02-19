@@ -54,8 +54,8 @@ jobs:
         echo "APP_DEBUG=true" >> .env
         echo "APP_URL=http://localhost" >> .env
         echo "DB_CONNECTION=sqlite" >> .env
-        echo "DB_DATABASE=/tmp/database.sqlite" >> .env
-        touch /tmp/database.sqlite
+        echo "DB_DATABASE=/tmp/database.sqlite" >> .env  # Path to a temporary SQLite database
+        touch /tmp/database.sqlite  # Create the temp SQLite database file
 
     # Step 6: Create Laravel cache directories to avoid "valid cache path" errors
     - name: Create Laravel cache directories
