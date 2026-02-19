@@ -458,6 +458,14 @@ class PermissionSeeder extends Seeder
             ['name' => 'edit-notification-templates', 'module' => 'notification_templates', 'label' => 'Edit Notification Templates', 'description' => 'Can edit notification templates'],
             ['name' => 'delete-notification-templates', 'module' => 'notification_templates', 'label' => 'Delete Notification Templates', 'description' => 'Can delete notification templates'],
 
+            // Wedding Supplier management
+            ['name' => 'manage-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Manage Wedding Suppliers', 'description' => 'Can manage wedding suppliers'],
+            ['name' => 'view-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'View Wedding Suppliers', 'description' => 'View Wedding Suppliers'],
+            ['name' => 'create-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Create Wedding Suppliers', 'description' => 'Can create wedding suppliers'],
+            ['name' => 'edit-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Edit Wedding Suppliers', 'description' => 'Can edit wedding suppliers'],
+            ['name' => 'delete-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Delete Wedding Suppliers', 'description' => 'Can delete wedding suppliers'],
+            ['name' => 'export-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Export Wedding Suppliers', 'description' => 'Can export wedding suppliers'],
+            ['name' => 'import-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Import Wedding Suppliers', 'description' => 'Can import wedding suppliers'],
         ];
 
         foreach ($permissions as $permission) {

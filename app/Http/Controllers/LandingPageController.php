@@ -29,7 +29,12 @@ class LandingPageController extends Controller
 
         $plans = Plan::where('is_plan_enable', 'on')->get()->map(function ($plan) {
             $features = [];
-            if ($plan->enable_chatgpt === 'on') $features[] = 'AI Integration';
+            if ($plan->enable_chatgpt === 'on')
+                $features[] = 'AI Integration';
+            if ($plan->enable_branding === 'on')
+                $features[] = 'Branding';
+            if (is_array($plan->module) && in_array('wedding_suppliers_module', $plan->module))
+                $features[] = 'Wedding Suppliers';
 
 
             return [
@@ -55,11 +60,11 @@ class LandingPageController extends Controller
         // Mark most subscribed plan as popular
         $planSubscriberCounts = Plan::withCount('users')->get()->pluck('users_count', 'id');
         if ($planSubscriberCounts->isNotEmpty()) {
-            $mostSubscribedPlanId = $planSubscriberCounts->keys()->sortByDesc(function($planId) use ($planSubscriberCounts) {
+            $mostSubscribedPlanId = $planSubscriberCounts->keys()->sortByDesc(function ($planId) use ($planSubscriberCounts) {
                 return $planSubscriberCounts[$planId];
             })->first();
 
-            $plans = $plans->map(function($plan) use ($mostSubscribedPlanId) {
+            $plans = $plans->map(function ($plan) use ($mostSubscribedPlanId) {
                 if ($plan['id'] == $mostSubscribedPlanId && $plan['price'] != '0') {
                     $plan['is_popular'] = true;
                 }
@@ -75,7 +80,7 @@ class LandingPageController extends Controller
             'faqs' => [],
             'customPages' => LandingPageCustomPage::active()->ordered()->get() ?? [],
             'settings' => array_merge($landingSettings->toArray(), [
-                'footerText' => getSetting('footerText', '',$user)
+                'footerText' => getSetting('footerText', '', $user)
             ])
         ]);
     }

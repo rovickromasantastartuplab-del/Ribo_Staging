@@ -652,7 +652,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Wedding Suppliers routes
-        Route::resource('wedding-suppliers', \App\Http\Controllers\WeddingSupplierController::class);
+        Route::group(['middleware' => ['auth', 'verified']], function () {
+            Route::get('wedding-suppliers/download/template', [\App\Http\Controllers\WeddingSupplierController::class, 'downloadTemplate'])->name('wedding-suppliers.download.template');
+            Route::get('wedding-suppliers/file/export/', [\App\Http\Controllers\WeddingSupplierController::class, 'fileExport'])->middleware('permission:export-wedding-suppliers')->name('wedding-suppliers.export');
+            Route::post('wedding-suppliers/file/parse', [\App\Http\Controllers\WeddingSupplierController::class, 'parseFile'])->middleware('permission:import-wedding-suppliers')->name('wedding-suppliers.parse');
+            Route::post('wedding-suppliers/file/import', [\App\Http\Controllers\WeddingSupplierController::class, 'fileImport'])->middleware('permission:import-wedding-suppliers')->name('wedding-suppliers.import');
+            Route::resource('wedding-suppliers', \App\Http\Controllers\WeddingSupplierController::class);
+        });
         Route::resource('wedding-supplier-categories', \App\Http\Controllers\WeddingSupplierCategoryController::class);
 
         // Shipping Provider Type routes

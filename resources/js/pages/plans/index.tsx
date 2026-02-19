@@ -579,6 +579,10 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
         return <FileText className="h-4 w-4" />;
       case 'AI Integration':
         return <Bot className="h-4 w-4" />;
+      case 'Branding':
+        return <Sparkles className="h-4 w-4" />;
+      case 'Wedding Suppliers':
+        return <Store className="h-4 w-4" />;
       case 'Analytics':
         return <BarChart2 className="h-4 w-4" />;
       case 'Email Support':
@@ -633,7 +637,9 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
 
   // Common features to display for all plans
   const commonFeatures = [
-    'AI Integration'
+    'AI Integration',
+    'Branding',
+    'Wedding Suppliers'
   ];
 
   // Define stat icons

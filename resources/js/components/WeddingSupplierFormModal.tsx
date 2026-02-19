@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { WeddingSupplier, WeddingSupplierCategory } from '@/types/wedding-supplier';
 import { Plus, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { DateTimePicker } from '@/components/ui/datetime-picker';
+
 
 interface WeddingSupplierFormModalProps {
     isOpen: boolean;
@@ -168,10 +168,11 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
 
                         <div className="space-y-2">
                             <Label htmlFor="available_contact_time">{t('Available Contact Time')}</Label>
-                            <DateTimePicker
-                                selected={data.available_contact_time}
-                                onValueChange={(val) => setData('available_contact_time', val)}
-                                className="w-full"
+                            <Input
+                                id="available_contact_time"
+                                value={data.available_contact_time}
+                                onChange={(e) => setData('available_contact_time', e.target.value)}
+                                placeholder="e.g. 9:00 AM - 5:00 PM"
                             />
                         </div>
                     </div>

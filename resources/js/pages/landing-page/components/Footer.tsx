@@ -78,8 +78,12 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
           <div className="grid lg:grid-cols-6 gap-8 sm:gap-12">
             {/* Company Info */}
             <div className="lg:col-span-2">
-              <Link href="/" className="text-2xl font-bold text-white mb-6 block hover:text-gray-300 transition-colors">
-                {settings.company_name}
+              <Link href="/" className="inline-block mb-6">
+                <img
+                  src="/images/logos/ribo-logo.png"
+                  alt={settings.company_name}
+                  className="h-12 w-auto"
+                />
               </Link>
               <p className="text-gray-400 mb-8 leading-relaxed">
                 {sectionData.description || t('Empowering businesses to boost sales and grow faster with our all-in-one Sales SaaS platform.')}
@@ -201,7 +205,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
           <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
             {/* Copyright */}
             <div className="text-gray-400 text-sm">
-              {settings.footerText || `© ${currentYear} ${settings.company_name}. All rights reserved.`}
+              {settings.footerText || `Â© 2026 Ribo CRM. All rights reserved.`}
             </div>
 
             {/* Social Links */}

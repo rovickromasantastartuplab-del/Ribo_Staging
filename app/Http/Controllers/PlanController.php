@@ -324,6 +324,12 @@ class PlanController extends Controller
             if ($plan->enable_chatgpt === 'on')
                 $features[] = 'AI Integration';
 
+            if ($plan->enable_branding === 'on')
+                $features[] = 'Branding';
+
+            if (is_array($plan->module) && in_array('wedding_suppliers_module', $plan->module))
+                $features[] = 'Wedding Suppliers';
+
             return [
                 'id' => $plan->id,
                 'name' => $plan->name,

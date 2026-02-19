@@ -66,11 +66,13 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                     <div className="flex-shrink-0">
                         <Link
                             href={route("home")}
-                            className="text-2xl font-bold text-gray-900 transition-colors"
-                            onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
-                            onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                            className="flex items-center"
                         >
-                            {settings.company_name}
+                            <img
+                                src="/images/logos/ribo-logo.png"
+                                alt={settings.company_name}
+                                className="h-10 w-auto" // Adjust height as needed
+                            />
                         </Link>
                     </div>
 

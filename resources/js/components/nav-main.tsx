@@ -11,7 +11,7 @@ const STORAGE_KEY = 'nav_expanded_items';
 export function NavMain({ items = [], position }: { items: NavItem[]; position: 'left' | 'right' }) {
     const { t } = useTranslation();
     const page = usePage();
-    const { state } = useSidebar();
+    const { state, toggleSidebar } = useSidebar();
 
     // Check if the document is in RTL mode
     const isRtl = document.documentElement.dir === 'rtl';
@@ -175,20 +175,25 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                     <SidebarMenuButton
                                         isActive={isChildActive(item.children)}
                                         tooltip={{ children: item.title }}
-                                        onClick={() => toggleExpand(item.title)}
+                                        onClick={() => {
+                                            if (state === 'collapsed') {
+                                                toggleSidebar();
+                                            }
+                                            toggleExpand(item.title);
+                                        }}
                                     >
                                         <div className={`flex items-center gap-2 w-full ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}>
                                             {effectivePosition === 'right' ? (
                                                 <>
                                                     <span>{state !== "collapsed" ? item.title : ""}</span>
-                                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                                    {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                     {state !== "collapsed" && (
                                                         expandedItems[item.title] ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
                                                     )}
                                                 </>
                                             ) : (
                                                 <>
-                                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                                    {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                     <div className="flex items-center gap-1">
                                                         {state !== "collapsed" && <span>{item.title}</span>}
                                                         {state !== "collapsed" && item.badge && (
@@ -223,11 +228,11 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                             {effectivePosition === 'right' ? (
                                                 <>
                                                     {state !== "collapsed" && <span>{item.title}</span>}
-                                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                                    {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                 </>
                                             ) : (
                                                 <>
-                                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                                    {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                     {state !== "collapsed" && <span>{item.title}</span>}
                                                 </>
                                             )}
@@ -241,11 +246,11 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                             {effectivePosition === 'right' ? (
                                                 <>
                                                     {state !== "collapsed" && <span>{item.title}</span>}
-                                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                                    {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                 </>
                                             ) : (
                                                 <>
-                                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                                    {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                     {state !== "collapsed" && <span>{item.title}</span>}
                                                 </>
                                             )}

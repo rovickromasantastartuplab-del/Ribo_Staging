@@ -13,7 +13,7 @@ export function NavFooter({
 }) {
     // Check if the document is in RTL mode
     const isRtl = document.documentElement.dir === 'rtl';
-    
+
     // Determine the actual position considering RTL mode
     const effectivePosition = isRtl ? (position === 'left' ? 'right' : 'left') : position;
     return (
@@ -30,18 +30,17 @@ export function NavFooter({
                                     href={item.href}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 ${
-                                        effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'
-                                    }`}
+                                    className={`flex items-center gap-2 ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'
+                                        }`}
                                 >
                                     {effectivePosition === 'right' ? (
                                         <>
                                             <span>{item.title}</span>
-                                            {item.icon && <item.icon className="h-5 w-5" />}
+                                            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                         </>
                                     ) : (
                                         <>
-                                            {item.icon && <item.icon className="h-5 w-5" />}
+                                            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                             <span>{item.title}</span>
                                         </>
                                     )}
