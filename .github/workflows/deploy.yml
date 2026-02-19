@@ -66,17 +66,24 @@ jobs:
     - name: Setup SSH
       env:
         SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+        KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
       run: |
         mkdir -p ~/.ssh
+        
+        # Add Private Key
         echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        echo "" >> ~/.ssh/id_ed25519  # Ensure newline at EOF
+        echo "" >> ~/.ssh/id_ed25519
         
-        echo "Validating key file exists..."
-        ls -l ~/.ssh/id_ed25519
-        
-        echo "Scanning host keys..."
-        ssh-keyscan -v -H 66.176.153.160 >> ~/.ssh/known_hosts
+        # Add Known Hosts (bypass scan)
+        if [ -n "$KNOWN_HOSTS" ]; then
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          echo "Using provided KNOWN_HOSTS secret."
+        else
+          echo "WARNING: CPANEL_KNOWN_HOSTS secret is missing! Build will likely fail."
+          # Fallback (will likely fail based on history)
+          ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts || true
+        fi
 
     # Step 8: Deploy to cPanel via Rsync
     - name: Deploy to cPanel
