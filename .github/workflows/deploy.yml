@@ -3,104 +3,79 @@ name: Auto Deploy to Staging (cPanel)
 on:
   push:
     branches:
-      - develop  # Trigger on push to develop branch
+      - develop
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Clone repository manually
-    - name: Clone repository
-      run: |
-        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} repo
-        ls -la  # List the files after cloning to see if 'repo' folder exists
-        cd repo
-        git checkout develop
-        shopt -s dotglob
-        cd ..  # Go back to the previous directory
-        ls -la  # List files after going back to ensure the 'repo' folder was created
+    # Step 1: Checkout code (Standard Action)
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    # Step 2: Install Node.js manually using nvm
-    - name: Install Node.js
-      run: |
-        curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        nvm install 20
-        node -v
-        npm -v
+    # Step 2: Setup PHP (Standard Action)
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, intl, bcmath, fileinfo
+        coverage: none
 
-    # Step 3: Install Node dependencies
-    - name: Install Node dependencies
-      run: |
-        ls -la  # List the files to check the current directory
-        cd repo  # Change to the 'repo' folder where package.json should be
-        ls -la  # Check if package.json is in the 'repo' directory
-        npm install  # Run npm install inside the 'repo' folder
+    # Step 3: Setup Node.js (Standard Action)
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
 
-    # Step 4: Build frontend
-    - name: Build frontend
-      run: |
-        cd repo  # Ensure we are inside the 'repo' folder
-        npm run build  # Build the frontend
-
-    # Step 5: Create temporary .env file for Composer (SQLite)
-    - name: Create temporary dummy .env for Composer (SQLite)
-      run: |
-        echo "APP_NAME=ribo" > .env
-        echo "APP_ENV=local" >> .env
-        echo "APP_KEY=dummydummykeydummykey" >> .env
-        echo "APP_DEBUG=true" >> .env
-        echo "APP_URL=http://localhost" >> .env
-        echo "DB_CONNECTION=sqlite" >> .env
-        echo "DB_DATABASE=/tmp/database.sqlite" >> .env
-        touch /tmp/database.sqlite
-
-    # Step 6: Create Laravel cache directories to avoid "valid cache path" errors
-    - name: Create Laravel cache directories
-      run: |
-        mkdir -p bootstrap/cache
-        mkdir -p storage/framework/cache
-        mkdir -p storage/framework/views
-        mkdir -p storage/framework/sessions
-        mkdir -p storage/logs
-        chmod -R 777 bootstrap/cache storage
-
-    # Step 7: Install Composer manually and run install
+    # Step 4: Install Backend Dependencies
     - name: Install Composer dependencies
-      run: |
-        mkdir -p $HOME/bin
-        EXPECTED_SIGNATURE=$(curl -s https://composer.github.io/installer.sig)
-        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-        ACTUAL_SIGNATURE=$(php -r "echo hash_file('sha384', 'composer-setup.php');")
-        if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
-          >&2 echo 'ERROR: Invalid installer signature'
-          exit 1;
-        fi
-        php composer-setup.php --install-dir=$HOME/bin --filename=composer
-        php -r "unlink('composer-setup.php');"
-        export PATH="$HOME/bin:$PATH"
-        composer install --no-dev --optimize-autoloader
+      run: composer install --no-dev --optimize-autoloader --no-progress
 
-    # Step 8: Setup SSH (use GitHub secret)
+    # Step 5: Install Frontend Dependencies & Build
+    - name: Install & Build Frontend
+      run: |
+        npm ci
+        npm run build
+
+    # Step 6: Create Dummy .env for Cache Clearing (if needed)
+    # Note: We create this locally just for any artisan commands that might run during build
+    - name: Create dummy .env
+      run: |
+        echo "APP_ENV=production" > .env
+        echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+        echo "APP_DEBUG=false" >> .env
+        echo "DB_CONNECTION=sqlite" >> .env
+        echo "DB_DATABASE=:memory:" >> .env
+
+    # Step 7: Setup SSH
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
-        printf "%s" "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
+        echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H your.cpanel.server.com >> ~/.ssh/known_hosts
+        ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts
 
-    # Step 9: Deploy to cPanel via Rsync
+    # Step 8: Deploy to cPanel via Rsync
     - name: Deploy to cPanel
       run: |
         rsync -avz --delete \
-        -e "ssh -i ~/.ssh/id_ed25519" \
-        --exclude='.git' \
-        --exclude='.github' \
-        --exclude='node_modules' \
-        --exclude='.env' \
-        --exclude='storage/' \
-        --exclude='public/storage' \
-        ./ \
-        moonshotdigital@66.176.153.160:/home/ribocrm/staging
+          -e "ssh -i ~/.ssh/id_ed25519" \
+          --exclude='.git*' \
+          --exclude='.github' \
+          --exclude='node_modules' \
+          --exclude='tests' \
+          --exclude='phpunit.xml' \
+          --exclude='storage/*.key' \
+          --exclude='.env' \
+          ./ \
+          moonshotdigital@66.176.153.160:/home/ribocrm/staging
+
+    # Step 9: Run Remote Commands (Optional but Recommended)
+    # This ensures storage permissions and caches are cleared on the server
+    - name: Run Remote Post-Deploy Commands
+      run: |
+        ssh -i ~/.ssh/id_ed25519 moonshotdigital@66.176.153.160 "cd /home/ribocrm/staging && php artisan migrate --force && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+
+        
