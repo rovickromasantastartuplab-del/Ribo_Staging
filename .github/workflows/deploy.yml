@@ -52,16 +52,14 @@ jobs:
         run: composer install --no-dev --optimize-autoloader
 
       - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.CPANEL_SSH_KEY }}
 
       - name: Deploy to cPanel via Rsync
         run: |
           rsync -avz --delete \
-          -e "ssh -i ~/.ssh/id_ed25519" \
+          -e "ssh -o StrictHostKeyChecking=no" \
           --exclude='.git' \
           --exclude='.github' \
           --exclude='node_modules' \
@@ -70,3 +68,4 @@ jobs:
           --exclude='public/storage' \
           ./ \
           moonshotdigital@66.176.153.160:/home/ribocrm/staging
+
