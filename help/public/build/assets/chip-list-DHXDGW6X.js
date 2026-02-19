@@ -1,0 +1,1 @@
+import{j as x,r as e,p as o}from"./client-DtfdVV77.js";function f({className:s,children:t,size:a,color:i,radius:n,selectable:l,wrap:m=!0,startButton:p}){return x.jsxs("div",{className:o("flex items-center gap-8",m&&"flex-wrap",s),children:[p,e.Children.map(t,r=>{if(e.isValidElement(r))return e.cloneElement(r,{size:a,color:i,selectable:l,radius:n})})]})}export{f as C};

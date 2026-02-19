@@ -1,0 +1,1 @@
+import{X as i,o as s,k as u}from"./client-DtfdVV77.js";function o(e){return i({queryKey:["tags",e],queryFn:({signal:t})=>n(e,t),placeholderData:s})}async function n(e,t){return e.query&&await new Promise(a=>setTimeout(a,300)),u.get("tags",{params:{paginate:"simple",...e},signal:e.query?t:void 0}).then(a=>a.data)}export{o as u};

@@ -1,0 +1,1 @@
+import{j as a,p as o}from"./client-DtfdVV77.js";import{u as r}from"./websocket-updates-notifier-3Xk6dITh.js";function l({conversationId:s,className:e}){return r(n=>n.conversationsWithUnseenMessages.includes(s))?a.jsx("div",{className:o("h-12 w-12 flex-shrink-0 rounded-full bg-danger",e)}):null}export{l as U};

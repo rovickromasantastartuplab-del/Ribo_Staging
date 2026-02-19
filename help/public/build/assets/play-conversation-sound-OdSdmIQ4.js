@@ -1,0 +1,1 @@
+import{n as r}from"./client-DtfdVV77.js";const s={};function d(a,n){if(r(`${n}-chatSoundsDisabled`,!1))return null;const e=a.replace(/([A-Z])/g,"-$1").toLowerCase(),o=s[e]??new Audio(`/sounds/${e}.mp3`);s[e]=o,o.currentTime=0,o.volume=.4;try{o.play()}catch{}}export{d as p};

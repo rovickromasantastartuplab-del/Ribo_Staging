@@ -1,0 +1,1 @@
+import{r as e,j as o}from"./client-DtfdVV77.js";import n from"./index-Blr6EMNg.js";function m({children:r}){const t=e.useMemo(()=>r?n().render(r):"",[r]);return o.jsx("div",{dangerouslySetInnerHTML:{__html:t}})}export{m as default};

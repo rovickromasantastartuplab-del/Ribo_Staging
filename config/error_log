@@ -1,0 +1,64 @@
+[31-Jan-2026 23:12:33 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/services.php on line 18
+[31-Jan-2026 23:16:17 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/services.php on line 18
+[31-Jan-2026 23:36:57 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/services.php on line 18
+[09-Feb-2026 04:16:28 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/cache.php on line 18
+[10-Feb-2026 08:14:57 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/cache.php on line 18
+[10-Feb-2026 08:28:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/cache.php on line 18
+[14-Feb-2026 07:51:33 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/database.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/database.php on line 19
+[14-Feb-2026 07:51:33 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/mail.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/mail.php on line 17
+[14-Feb-2026 07:51:34 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/app.php on line 16
+[14-Feb-2026 07:51:34 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/services.php on line 18
+[14-Feb-2026 07:51:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/database.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/database.php on line 19
+[14-Feb-2026 07:51:46 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/mail.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/mail.php on line 17
+[14-Feb-2026 07:51:46 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/app.php on line 16
+[14-Feb-2026 07:51:47 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/services.php on line 18
+[14-Feb-2026 07:54:42 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/cache.php on line 18
+[14-Feb-2026 07:54:55 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/ribocrm/public_html/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/config/cache.php on line 18

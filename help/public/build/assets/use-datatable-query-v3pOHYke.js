@@ -1,0 +1,1 @@
+import{X as n}from"./client-DtfdVV77.js";function s(e){var t,i;const a=n(e);return{...a,items:((t=a.data)==null?void 0:t.pagination.data)??[],isEmpty:(a.isFetched||a.isPlaceholderData||e.enabled===!1)&&!((i=a.data)!=null&&i.pagination.data.length)}}export{s as u};

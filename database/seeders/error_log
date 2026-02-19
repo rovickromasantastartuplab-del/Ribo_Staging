@@ -1,0 +1,4 @@
+[30-Jan-2026 05:22:47 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Seeder" not found in /home/ribocrm/public_html/database/seeders/RoleSeeder.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/ribocrm/public_html/database/seeders/RoleSeeder.php on line 9

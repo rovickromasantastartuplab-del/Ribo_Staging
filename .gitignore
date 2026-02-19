@@ -1,0 +1,50 @@
+/.phpunit.cache
+/bootstrap/ssr
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+.env.backup
+.env.production
+.env.staging
+.env.local
+.env.*
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+/storage/logs
+/storage/uploads
+/storage/framework
+/storage/tmp
+/storage/sessions
+.env
+/vcardv5-refer
+/public/screenshots
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Large binary/zip assets
+/help/website.zip
+
+# Error logs
+error_log
+*.log
+
+# IDE
+*.swp
+*.swo
