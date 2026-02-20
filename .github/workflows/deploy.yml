@@ -68,11 +68,10 @@ jobs:
 
     # Step 9: Deploy to cPanel via SFTP
     - name: Deploy via SFTP
-      uses: SamKirkland/FTP-Deploy-Action@v4
+      uses: SamKirkland/FTP-Deploy-Action@v4.0.1
       with:
         server: 160.153.176.66
         username: ribocrm
-        # Use private key for auth
         port: 22
         key: ${{ secrets.CPANEL_SSH_KEY }}
         local-dir: './'
