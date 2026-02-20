@@ -99,7 +99,7 @@ jobs:
     - name: Deploy to cPanel
       run: |
         rsync -avz --delete \
-          -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
+          -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o LogLevel=ERROR -T" \
           --exclude='.git' \
           --exclude='.github' \
           --exclude='node_modules' \
