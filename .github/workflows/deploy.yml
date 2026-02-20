@@ -1,4 +1,3 @@
-
 name: Auto Deploy to Staging (cPanel)
 
 on:
@@ -18,26 +17,28 @@ jobs:
         cd repo
         git checkout develop
         shopt -s dotglob
-        cd ..
-        rm -rf repo
+        # Stay inside repo for all next steps
 
     # Step 2: Install Node.js manually using nvm
     - name: Install Node.js
       run: |
-        curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
         export NVM_DIR="$HOME/.nvm"
+        curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
         nvm install 20
         node -v
         npm -v
+      working-directory: repo
 
     # Step 3: Install Node dependencies
     - name: Install Node dependencies
       run: npm install
+      working-directory: repo
 
     # Step 4: Build frontend
     - name: Build frontend
       run: npm run build
+      working-directory: repo
 
     # Step 5: Create temporary .env file for Composer (SQLite)
     - name: Create temporary dummy .env for Composer (SQLite)
@@ -50,6 +51,7 @@ jobs:
         echo "DB_CONNECTION=sqlite" >> .env
         echo "DB_DATABASE=/tmp/database.sqlite" >> .env
         touch /tmp/database.sqlite
+      working-directory: repo
 
     # Step 6: Create Laravel cache directories to avoid "valid cache path" errors
     - name: Create Laravel cache directories
@@ -60,6 +62,7 @@ jobs:
         mkdir -p storage/framework/sessions
         mkdir -p storage/logs
         chmod -R 777 bootstrap/cache storage
+      working-directory: repo
 
     # Step 7: Install Composer manually and run install
     - name: Install Composer dependencies
@@ -76,6 +79,7 @@ jobs:
         php -r "unlink('composer-setup.php');"
         export PATH="$HOME/bin:$PATH"
         composer install --no-dev --optimize-autoloader
+      working-directory: repo
 
     # Step 8: Setup SSH (use GitHub secret)
     - name: Setup SSH
@@ -83,9 +87,9 @@ jobs:
         mkdir -p ~/.ssh
         printf "%s" "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H your.cpanel.server.com >> ~/.ssh/known_hosts
+        ssh-keyscan -H 160.153.176.66 >> ~/.ssh/known_hosts
 
-    # Step 9: Deploy to cPanel via Rsync
+    # Step 9: Deploy to cPanel via Rsync (over SSH)
     - name: Deploy to cPanel
       run: |
         rsync -avz --delete \
@@ -98,3 +102,4 @@ jobs:
         --exclude='public/storage' \
         ./ \
         ribocrm@160.153.176.66:/home/ribocrm/staging
+      working-directory: repo
