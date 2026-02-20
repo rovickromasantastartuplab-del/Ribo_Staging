@@ -1,86 +1,100 @@
-# Triggering deployment on push to develop
-name: Auto Deploy to Staging (cPanel via SFTP)
+
+name: Auto Deploy to Staging (cPanel)
 
 on:
   push:
     branches:
-      - develop
+      - develop  # Trigger on push to develop branch
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
 
     steps:
-    # Step 1: Checkout code
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    # Step 2: Setup PHP
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.3'
-        extensions: mbstring, intl, bcmath, fileinfo
-        coverage: none
-
-    # Step 3: Setup Node.js
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-
-    # Step 4: Prepare Laravel Storage
-    - name: Create Storage Directories
+    # Step 1: Clone repository manually
+    - name: Clone repository
       run: |
-        mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
-        chmod -R 775 storage
+        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} repo
+        cd repo
+        git checkout develop
+        shopt -s dotglob
+        cd ..
+        rm -rf repo
 
-    # Step 5: Create Dummy .env for local build
-    - name: Create dummy .env
+    # Step 2: Install Node.js manually using nvm
+    - name: Install Node.js
       run: |
-        echo "APP_ENV=production" > .env
-        echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
-        echo "APP_DEBUG=false" >> .env
+        curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        nvm install 20
+        node -v
+        npm -v
+
+    # Step 3: Install Node dependencies
+    - name: Install Node dependencies
+      run: npm install
+
+    # Step 4: Build frontend
+    - name: Build frontend
+      run: npm run build
+
+    # Step 5: Create temporary .env file for Composer (SQLite)
+    - name: Create temporary dummy .env for Composer (SQLite)
+      run: |
+        echo "APP_NAME=ribo" > .env
+        echo "APP_ENV=local" >> .env
+        echo "APP_KEY=dummydummykeydummykey" >> .env
+        echo "APP_DEBUG=true" >> .env
+        echo "APP_URL=http://localhost" >> .env
         echo "DB_CONNECTION=sqlite" >> .env
-        echo "DB_DATABASE=:memory:" >> .env
-        echo "CACHE_STORE=array" >> .env
-        echo "SESSION_DRIVER=array" >> .env
-        echo "QUEUE_CONNECTION=sync" >> .env
-        echo "MAIL_MAILER=array" >> .env
+        echo "DB_DATABASE=/tmp/database.sqlite" >> .env
+        touch /tmp/database.sqlite
 
-    # Step 6: Install PHP dependencies
+    # Step 6: Create Laravel cache directories to avoid "valid cache path" errors
+    - name: Create Laravel cache directories
+      run: |
+        mkdir -p bootstrap/cache
+        mkdir -p storage/framework/cache
+        mkdir -p storage/framework/views
+        mkdir -p storage/framework/sessions
+        mkdir -p storage/logs
+        chmod -R 777 bootstrap/cache storage
+
+    # Step 7: Install Composer manually and run install
     - name: Install Composer dependencies
-      run: composer install --no-dev --optimize-autoloader --no-progress
-
-    # Step 7: Install Node dependencies & build frontend
-    - name: Install & Build Frontend
       run: |
-        npm ci
-        npm run build
+        mkdir -p $HOME/bin
+        EXPECTED_SIGNATURE=$(curl -s https://composer.github.io/installer.sig)
+        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        ACTUAL_SIGNATURE=$(php -r "echo hash_file('sha384', 'composer-setup.php');")
+        if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
+          >&2 echo 'ERROR: Invalid installer signature'
+          exit 1;
+        fi
+        php composer-setup.php --install-dir=$HOME/bin --filename=composer
+        php -r "unlink('composer-setup.php');"
+        export PATH="$HOME/bin:$PATH"
+        composer install --no-dev --optimize-autoloader
 
-    # Step 8: Optimize Laravel caches locally
-    - name: Optimize Laravel
+    # Step 8: Setup SSH (use GitHub secret)
+    - name: Setup SSH
       run: |
-        php artisan config:cache
-        php artisan route:cache
-        php artisan view:cache
+        mkdir -p ~/.ssh
+        printf "%s" "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H your.cpanel.server.com >> ~/.ssh/known_hosts
 
-    # Step 9: Deploy to cPanel via SFTP
-    - name: Deploy via SFTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.0.1
-      with:
-        server: 160.153.176.66
-        username: ribocrm
-        port: 22
-        key: ${{ secrets.CPANEL_SSH_KEY }}
-        local-dir: './'
-        remote-dir: '/home/ribocrm/staging'
-        exclude: |
-          .git*
-          .github
-          node_modules
-          tests
-          phpunit.xml
-          storage/*.key
-          .env
+    # Step 9: Deploy to cPanel via Rsync
+    - name: Deploy to cPanel
+      run: |
+        rsync -avz --delete \
+        -e "ssh -i ~/.ssh/id_ed25519" \
+        --exclude='.git' \
+        --exclude='.github' \
+        --exclude='node_modules' \
+        --exclude='.env' \
+        --exclude='storage/' \
+        --exclude='public/storage' \
+        ./ \
+        ribocrm@160.153.176.66:/home/ribocrm/staging
