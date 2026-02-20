@@ -1,5 +1,5 @@
-# Triggering fresh deployment run
-name: Auto Deploy to Staging (cPanel)
+# Triggering deployment on push to develop
+name: Auto Deploy to Staging (cPanel via SFTP)
 
 on:
   push:
@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout code (Standard Action)
-    - name: Checkout code
+    # Step 1: Checkout code
+    - name: Checkout Code
       uses: actions/checkout@v4
 
-    # Step 2: Setup PHP (Standard Action)
+    # Step 2: Setup PHP
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -23,22 +23,20 @@ jobs:
         extensions: mbstring, intl, bcmath, fileinfo
         coverage: none
 
-    # Step 3: Setup Node.js (Standard Action)
+    # Step 3: Setup Node.js
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
 
-    # Step 4: Create Storage Directories (Critical for Cache)
+    # Step 4: Prepare Laravel Storage
     - name: Create Storage Directories
       run: |
-        mkdir -p storage/framework/cache
-        mkdir -p storage/framework/sessions
-        mkdir -p storage/framework/views
-        mkdir -p storage/logs
+        mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
         chmod -R 775 storage
-    # Step 5: Create Dummy .env for Cache Clearing (Critical for package discovery)
+
+    # Step 5: Create Dummy .env for local build
     - name: Create dummy .env
       run: |
         echo "APP_ENV=production" > .env
@@ -50,53 +48,40 @@ jobs:
         echo "SESSION_DRIVER=array" >> .env
         echo "QUEUE_CONNECTION=sync" >> .env
         echo "MAIL_MAILER=array" >> .env
-    # Step 5: Install Backend Dependencies
+
+    # Step 6: Install PHP dependencies
     - name: Install Composer dependencies
       run: composer install --no-dev --optimize-autoloader --no-progress
 
-    # Step 6: Install Frontend Dependencies & Build
+    # Step 7: Install Node dependencies & build frontend
     - name: Install & Build Frontend
       run: |
         npm ci
         npm run build
-    # Step 7: Setup SSH
-    - name: Setup SSH
-      env:
-        SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
-        KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
+
+    # Step 8: Optimize Laravel caches locally
+    - name: Optimize Laravel
       run: |
-        mkdir -p ~/.ssh
-        
-        # Add Private Key
-        echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        echo "" >> ~/.ssh/id_ed25519
-        
-        # Add Known Hosts (bypass scan)
-        if [ -n "$KNOWN_HOSTS" ]; then
-          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          echo "Using provided KNOWN_HOSTS secret."
-        else
-          echo "WARNING: CPANEL_KNOWN_HOSTS secret is missing! Build will likely fail."
-          # Fallback (will likely fail based on history)
-          ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts || true
-        fi
-    # Step 8: Deploy to cPanel via Rsync
-    - name: Deploy to cPanel
-      run: |
-        rsync -avz --delete \
-          -e "ssh -i ~/.ssh/id_ed25519" \
-          --exclude='.git*' \
-          --exclude='.github' \
-          --exclude='node_modules' \
-          --exclude='tests' \
-          --exclude='phpunit.xml' \
-          --exclude='storage/*.key' \
-          --exclude='.env' \
-          ./ \
-          ribocrm@160.153.176.66:/home/ribocrm/staging
-    # Step 9: Run Remote Commands (Optional but Recommended)
-    # This ensures storage permissions and caches are cleared on the server
-    - name: Run Remote Post-Deploy Commands
-      run: |
-        ssh -i ~/.ssh/id_ed25519 ribocrm@160.153.176.66 "cd /home/ribocrm/staging && php artisan migrate --force && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+        php artisan config:cache
+        php artisan route:cache
+        php artisan view:cache
+
+    # Step 9: Deploy to cPanel via SFTP
+    - name: Deploy via SFTP
+      uses: SamKirkland/FTP-Deploy-Action@v4
+      with:
+        server: 160.153.176.66
+        username: ribocrm
+        # Use private key for auth
+        port: 22
+        key: ${{ secrets.CPANEL_SSH_KEY }}
+        local-dir: './'
+        remote-dir: '/home/ribocrm/staging'
+        exclude: |
+          .git*
+          .github
+          node_modules
+          tests
+          phpunit.xml
+          storage/*.key
+          .env
