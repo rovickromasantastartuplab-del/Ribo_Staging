@@ -90,16 +90,20 @@ jobs:
         ssh-keyscan -H 160.153.176.66 >> ~/.ssh/known_hosts
 
     # Step 9: Deploy to cPanel via Rsync (over SSH)
-    - name: Deploy to cPanel
-      run: |
-        rsync -avz --delete \
-        -e "ssh -i ~/.ssh/id_ed25519" \
-        --exclude='.git' \
-        --exclude='.github' \
-        --exclude='node_modules' \
-        --exclude='.env' \
-        --exclude='storage/' \
-        --exclude='public/storage' \
-        ./ \
-        ribocrm@160.153.176.66:/home/ribocrm/staging
-      working-directory: repo
+    - name: Deploy via SFTP
+      uses: SamKirkland/FTP-Deploy-Action@v4
+      with:
+        server: 160.153.176.66
+        username: ribocrm
+        key: ${{ secrets.CPANEL_SSH_KEY }}
+        port: 22
+        local-dir: 'repo'
+        remote-dir: '/home/ribocrm/staging'
+        exclude: |
+          .git*
+          .github
+          node_modules
+          tests
+          phpunit.xml
+          storage/*.key
+          .env
