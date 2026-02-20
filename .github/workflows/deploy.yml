@@ -94,7 +94,7 @@ jobs:
 
         # Add cPanel host to known_hosts to avoid prompt
         ssh-keyscan -H 160.153.176.66 >> ~/.ssh/known_hosts
-    #wag
+    #ge
     - name: Deploy to cPanel
       run: |
         rsync -avz --delete \
@@ -106,5 +106,5 @@ jobs:
         --exclude='storage/' \
         --exclude='public/storage' \
         ./ \
-        ribocrm@160.153.176.66:/home/ribocrm/htt
+        ribocrm@160.153.176.66:/home/ribocrm/staging
       working-directory: repo
