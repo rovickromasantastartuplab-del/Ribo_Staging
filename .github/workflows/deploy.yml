@@ -106,5 +106,5 @@ jobs:
         --exclude='storage/' \
         --exclude='public/storage' \
         ./ \
-        ribocrm@160.153.176.66:/home/ribocrm/staging
+        ribocrm@160.153.176.66:/home/ribocrm/htt
       working-directory: repo
