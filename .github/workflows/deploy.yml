@@ -94,9 +94,9 @@ jobs:
           --exclude='storage/*.key' \
           --exclude='.env' \
           ./ \
-          moonshotdigital@66.176.153.160:/home/ribocrm/staging
+          ribocrm@160.153.176.66:/home/ribocrm/staging
     # Step 9: Run Remote Commands (Optional but Recommended)
     # This ensures storage permissions and caches are cleared on the server
     - name: Run Remote Post-Deploy Commands
       run: |
-        ssh -i ~/.ssh/id_ed25519 moonshotdigital@66.176.153.160 "cd /home/ribocrm/staging && php artisan migrate --force && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+        ssh -i ~/.ssh/id_ed25519 ribocrm@160.153.176.66 "cd /home/ribocrm/staging && php artisan migrate --force && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
