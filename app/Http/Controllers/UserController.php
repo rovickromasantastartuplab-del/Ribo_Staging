@@ -16,7 +16,7 @@ class UserController extends BaseController
      */
     public function index(Request $request)
     {
-        $authUser     = Auth::user();
+        $authUser = Auth::user();
         $authUserRole = $authUser->roles->first()?->name;
         // Allow superadmin, admin, product-manager, contact-manager, viewer
         if (!$authUser->hasPermissionTo('view-users')) {
@@ -24,6 +24,12 @@ class UserController extends BaseController
         }
 
         $userQuery = User::withPermissionCheck()->with(['roles', 'creator'])->orderBy('id', 'desc');
+
+        // Hide the company owner from the staff/users list so they cannot be accidentally edited or reassigned
+        if ($authUser->type === 'company' || $authUser->type !== 'superadmin') {
+            $userQuery->where('type', '!=', 'company');
+        }
+
         # Admin
         if ($authUserRole === 'super admin') {
             $userQuery->whereDoesntHave('roles', function ($q) {
@@ -34,15 +40,15 @@ class UserController extends BaseController
         // Handle search
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $userQuery->where(function($q) use ($search) {
+            $userQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         // Handle role filter
         if ($request->has('role') && $request->role !== 'all') {
-            $userQuery->whereHas('roles', function($q) use ($request) {
+            $userQuery->whereHas('roles', function ($q) use ($request) {
                 $q->where('roles.id', $request->role);
             });
         }
@@ -53,7 +59,7 @@ class UserController extends BaseController
         }
 
         // Handle pagination
-        $perPage = $request->has('per_page') ? (int)$request->per_page : 10;
+        $perPage = $request->has('per_page') ? (int) $request->per_page : 10;
         $users = $userQuery->paginate($perPage)->withQueryString();
 
         # Roles listing - Get roles based on user type
@@ -141,25 +147,24 @@ class UserController extends BaseController
         }
 
         $user = User::create([
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'password'   => Hash::make($request->password),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
             'created_by' => $created_by,
-            'lang'       => $userLang,
+            'lang' => $userLang,
         ]);
 
         if ($user && $request->roles) {
             // Convert role names to IDs for syncing
             $role = Role::where('id', $request->roles)
-            ->where('created_by', $created_by)->first();
+                ->where('created_by', $created_by)->first();
 
             $user->roles()->sync([$role->id]);
             $user->type = $role->name;
             $user->save();
 
             // Trigger email notification
-            if(isEmailTemplateEnabled('User Created', createdBy()) && !IsDemo())
-            {
+            if (isEmailTemplateEnabled('User Created', createdBy()) && !IsDemo()) {
                 event(new \App\Events\UserCreated($user, $request->password));
             }
 
@@ -179,7 +184,7 @@ class UserController extends BaseController
     public function update(UserRequest $request, User $user)
     {
         if ($user) {
-            $user->name  = $request->name;
+            $user->name = $request->name;
             $user->email = $request->email;
 
             // find and syncing role
@@ -190,7 +195,7 @@ class UserController extends BaseController
                     $created_by = auth()->id();
                 }
                 $role = Role::where('id', $request->roles)
-                ->where('created_by', $created_by)->first();
+                    ->where('created_by', $created_by)->first();
 
                 $user->roles()->sync([$role->id]);
                 $user->type = $role->name;
@@ -236,9 +241,9 @@ class UserController extends BaseController
     {
         // Get meetings where user is an attendee
         $meetings = \App\Models\Meeting::where('created_by', createdBy())
-            ->whereHas('attendees', function($q) use ($user) {
+            ->whereHas('attendees', function ($q) use ($user) {
                 $q->where('attendee_type', 'user')
-                  ->where('attendee_id', $user->id);
+                    ->where('attendee_id', $user->id);
             })
             ->with(['creator', 'assignedUser'])
             ->orderBy('start_date', 'desc')
@@ -271,14 +276,14 @@ class UserController extends BaseController
 
         if ($authUser->type === 'superadmin') {
             // For superadmin: show superadmin logs and company type logs created by superadmin
-            $loginHistoriesQuery = \App\Models\LoginHistory::whereHas('user', function($q) {
+            $loginHistoriesQuery = \App\Models\LoginHistory::whereHas('user', function ($q) {
                 $q->where('type', 'superadmin')
-                  ->orWhere(function($subQ) {
-                      $subQ->where('type', 'company');
-                  });
+                    ->orWhere(function ($subQ) {
+                        $subQ->where('type', 'company');
+                    });
             })
-            ->with('user')
-            ->orderBy('created_at', 'desc');
+                ->with('user')
+                ->orderBy('created_at', 'desc');
         } else {
             // For other users: show logs created by current user
             $loginHistoriesQuery = \App\Models\LoginHistory::where('created_by', createdBy())
@@ -289,17 +294,17 @@ class UserController extends BaseController
         // Handle search
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $loginHistoriesQuery->where(function($q) use ($search) {
+            $loginHistoriesQuery->where(function ($q) use ($search) {
                 $q->where('ip', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
         // Handle pagination
-        $perPage = $request->has('per_page') ? (int)$request->per_page : 10;
+        $perPage = $request->has('per_page') ? (int) $request->per_page : 10;
         $loginHistories = $loginHistoriesQuery->paginate($perPage)->withQueryString();
 
         return Inertia::render('users/all-logs', [
