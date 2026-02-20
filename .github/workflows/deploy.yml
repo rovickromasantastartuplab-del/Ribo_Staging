@@ -7,19 +7,16 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Clone repository manually
-    - name: Clone repository
-      run: |
-        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} repo
-        cd repo
-        git checkout develop
-        shopt -s dotglob
-        # Stay inside repo for all next steps
+    # Step 1: Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: develop
 
-    # Step 2: Install Node.js manually using nvm
+    # Step 2: Setup Node.js via nvm
     - name: Install Node.js
       run: |
         export NVM_DIR="$HOME/.nvm"
@@ -28,20 +25,15 @@ jobs:
         nvm install 20
         node -v
         npm -v
-      working-directory: repo
 
-    # Step 3: Install Node dependencies
-    - name: Install Node dependencies
-      run: npm install
-      working-directory: repo
+    # Step 3: Install Node dependencies & build frontend
+    - name: Install Node dependencies and build
+      run: |
+        npm ci
+        npm run build
 
-    # Step 4: Build frontend
-    - name: Build frontend
-      run: npm run build
-      working-directory: repo
-
-    # Step 5: Create temporary .env file for Composer (SQLite)
-    - name: Create temporary dummy .env for Composer (SQLite)
+    # Step 4: Create temporary .env for Laravel (SQLite)
+    - name: Create dummy .env
       run: |
         echo "APP_NAME=ribo" > .env
         echo "APP_ENV=local" >> .env
@@ -51,49 +43,44 @@ jobs:
         echo "DB_CONNECTION=sqlite" >> .env
         echo "DB_DATABASE=/tmp/database.sqlite" >> .env
         touch /tmp/database.sqlite
-      working-directory: repo
 
-    # Step 6: Create Laravel cache directories to avoid "valid cache path" errors
-    - name: Create Laravel cache directories
+    # Step 5: Create Laravel storage & cache directories
+    - name: Prepare Laravel directories
       run: |
-        mkdir -p bootstrap/cache
-        mkdir -p storage/framework/cache
-        mkdir -p storage/framework/views
-        mkdir -p storage/framework/sessions
-        mkdir -p storage/logs
+        mkdir -p bootstrap/cache storage/framework/{cache,views,sessions} storage/logs
         chmod -R 777 bootstrap/cache storage
-      working-directory: repo
 
-    # Step 7: Install Composer manually and run install
-    - name: Install Composer dependencies
+    # Step 6: Install Composer
+    - name: Install Composer
       run: |
-        mkdir -p $HOME/bin
         EXPECTED_SIGNATURE=$(curl -s https://composer.github.io/installer.sig)
         php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
         ACTUAL_SIGNATURE=$(php -r "echo hash_file('sha384', 'composer-setup.php');")
         if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
           >&2 echo 'ERROR: Invalid installer signature'
-          exit 1;
+          exit 1
         fi
         php composer-setup.php --install-dir=$HOME/bin --filename=composer
         php -r "unlink('composer-setup.php');"
         export PATH="$HOME/bin:$PATH"
         composer install --no-dev --optimize-autoloader
-      working-directory: repo
 
-    # Step 8: Setup SSH (use GitHub secret)
+    # Step 7: Setup SSH for rsync
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
-        printf "%s" "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
+        # Convert key to PEM format for compatibility
+        echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
         ssh-keyscan -H 160.153.176.66 >> ~/.ssh/known_hosts
+        # Force using PEM format if necessary
+        ssh-keygen -p -m PEM -f ~/.ssh/id_ed25519 -N ""
 
-    # Step 9: Deploy to cPanel via Rsync (over SSH)
+    # Step 8: Deploy to cPanel via Rsync over SSH
     - name: Deploy to cPanel
       run: |
         rsync -avz --delete \
-        -e "ssh -i ~/.ssh/id_ed25519" \
+        -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
         --exclude='.git' \
         --exclude='.github' \
         --exclude='node_modules' \
@@ -102,4 +89,3 @@ jobs:
         --exclude='public/storage' \
         ./ \
         ribocrm@160.153.176.66:/home/ribocrm/staging
-      working-directory: repo
