@@ -1,3 +1,4 @@
+# Triggering fresh deployment run
 name: Auto Deploy to Staging (cPanel)
 
 on:
@@ -37,7 +38,6 @@ jobs:
         mkdir -p storage/framework/views
         mkdir -p storage/logs
         chmod -R 775 storage
-
     # Step 5: Create Dummy .env for Cache Clearing (Critical for package discovery)
     - name: Create dummy .env
       run: |
@@ -50,7 +50,6 @@ jobs:
         echo "SESSION_DRIVER=array" >> .env
         echo "QUEUE_CONNECTION=sync" >> .env
         echo "MAIL_MAILER=array" >> .env
-
     # Step 5: Install Backend Dependencies
     - name: Install Composer dependencies
       run: composer install --no-dev --optimize-autoloader --no-progress
@@ -60,15 +59,28 @@ jobs:
       run: |
         npm ci
         npm run build
-
     # Step 7: Setup SSH
     - name: Setup SSH
+      env:
+        SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+        KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
+        
+        # Add Private Key
+        echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts
-
+        echo "" >> ~/.ssh/id_ed25519
+        
+        # Add Known Hosts (bypass scan)
+        if [ -n "$KNOWN_HOSTS" ]; then
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          echo "Using provided KNOWN_HOSTS secret."
+        else
+          echo "WARNING: CPANEL_KNOWN_HOSTS secret is missing! Build will likely fail."
+          # Fallback (will likely fail based on history)
+          ssh-keyscan -H 66.176.153.160 >> ~/.ssh/known_hosts || true
+        fi
     # Step 8: Deploy to cPanel via Rsync
     - name: Deploy to cPanel
       run: |
@@ -83,11 +95,8 @@ jobs:
           --exclude='.env' \
           ./ \
           moonshotdigital@66.176.153.160:/home/ribocrm/staging
-
     # Step 9: Run Remote Commands (Optional but Recommended)
     # This ensures storage permissions and caches are cleared on the server
     - name: Run Remote Post-Deploy Commands
       run: |
         ssh -i ~/.ssh/id_ed25519 moonshotdigital@66.176.153.160 "cd /home/ribocrm/staging && php artisan migrate --force && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
-
-        
