@@ -81,7 +81,7 @@ jobs:
         composer install --no-dev --optimize-autoloader
       working-directory: repo
 
-    # Step 8: Setup SSH (convert key to PEM format)
+    # wag
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
@@ -105,6 +105,45 @@ jobs:
         --exclude='.env' \
         --exclude='storage/' \
         --exclude='public/storage' \
+        --exclude='.phpunit.cache' \
+        --exclude='/bootstrap/ssr' \
+        --exclude='/public/build' \
+        --exclude='/public/hot' \
+        --exclude='/storage/*.key' \
+        --exclude='/storage/pail' \
+        --exclude='/vendor' \
+        --exclude='.env.backup' \
+        --exclude='.env.production' \
+        --exclude='.env.staging' \
+        --exclude='.env.local' \
+        --exclude='.env.*' \
+        --exclude='.phpactor.json' \
+        --exclude='.phpunit.result.cache' \
+        --exclude='/Homestead.json' \
+        --exclude='/Homestead.yaml' \
+        --exclude='npm-debug.log' \
+        --exclude='yarn-error.log' \
+        --exclude='/auth.json' \
+        --exclude='/.fleet' \
+        --exclude='/.idea' \
+        --exclude='/.nova' \
+        --exclude='/.vscode' \
+        --exclude='/.zed' \
+        --exclude='/storage/logs' \
+        --exclude='/storage/uploads' \
+        --exclude='/storage/framework' \
+        --exclude='/storage/tmp' \
+        --exclude='/storage/sessions' \
+        --exclude='.vcardv5-refer' \
+        --exclude='/public/screenshots' \
+        --exclude='.DS_Store' \
+        --exclude='Thumbs.db' \
+        --exclude='desktop.ini' \
+        --exclude='/help/website.zip' \
+        --exclude='error_log' \
+        --exclude='*.log' \
+        --exclude='*.swp' \
+        --exclude='*.swo' \
         ./ \
-        ribocrm@160.153.176.66:/home/ribocrm/staging
+        ribocrm@160.153.176.66:/home/ribocrm/public_html/staging
       working-directory: repo

@@ -68,6 +68,9 @@ export default function WeddingSuppliers() {
         setCurrentItem(item);
 
         switch (action) {
+            case 'view':
+                router.get(route('wedding-suppliers.show', item.id));
+                break;
             case 'edit':
                 setFormMode('edit');
                 setIsFormModalOpen(true);
@@ -206,6 +209,12 @@ export default function WeddingSuppliers() {
     // Define table actions
     const actions = [
         {
+            label: t('View'),
+            icon: 'Eye',
+            action: 'view',
+            className: 'text-blue-500'
+        },
+        {
             label: t('Edit'),
             icon: 'Edit',
             action: 'edit',
@@ -282,7 +291,7 @@ export default function WeddingSuppliers() {
                     permissions={permissions}
                     // Assuming blanket permission for now as per controller 'create' check
                     entityPermissions={{
-                        view: 'view-any-wedding-suppliers',
+                        view: 'view-wedding-suppliers',
                         edit: 'create-wedding-suppliers',
                         delete: 'create-wedding-suppliers'
                     }}
