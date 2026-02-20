@@ -94,7 +94,7 @@ jobs:
 
         # Add cPanel host to known_hosts to avoid prompt
         ssh-keyscan -H 160.153.176.66 >> ~/.ssh/known_hosts
-
+    #WAG
     # Step 9: Deploy to cPanel via Rsync (over SSH)
     - name: Deploy to cPanel
       run: |
