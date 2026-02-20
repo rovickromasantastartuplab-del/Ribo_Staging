@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PageTemplate, PageAction } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus, Edit, Trash2, Download, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, Upload, Eye } from 'lucide-react';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
@@ -309,6 +309,10 @@ export default function WeddingSuppliers() {
                 />
             </div>
 
+            {/* Hidden icons for tree-shaking bypass for CrudTable dynamic icons */}
+            <div className="hidden"><Eye /></div>
+
+            {/* Form Modal */}
             <WeddingSupplierFormModal
                 isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}

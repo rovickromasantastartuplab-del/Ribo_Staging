@@ -187,7 +187,7 @@ export default function Accounts() {
         } else if (page.props.flash.error) {
           toast.error(t(page.props.flash.error));
         } else if (page.props.flash.warning) {
-            toast.warning(t(page.props.flash.warning));
+          toast.warning(t(page.props.flash.warning));
         }
       },
       onError: (errors) => {
@@ -213,7 +213,7 @@ export default function Accounts() {
         } else if (page.props.flash.error) {
           toast.error(t(page.props.flash.error));
         } else if (page.props.flash.warning) {
-            toast.warning(t(page.props.flash.warning));
+          toast.warning(t(page.props.flash.warning));
         }
       },
       onError: (errors) => {
@@ -245,6 +245,31 @@ export default function Accounts() {
 
   // Define page actions
   const pageActions = [];
+
+  const assignedToFilter = {
+    name: 'assigned_to',
+    label: t('Assigned To'),
+    type: 'select',
+    value: selectedAssignee,
+    onChange: setSelectedAssignee,
+    options: [
+      { value: 'all', label: t('All Users') },
+      ...users.map((u: any) => ({
+        value: u.id.toString(),
+        label: u.name
+      }))
+    ]
+  };
+
+  const assignToField = {
+    name: 'assigned_to',
+    label: t('Assign To'),
+    type: 'select',
+    options: users.map((u: any) => ({
+      value: u.id.toString(),
+      label: u.name
+    }))
+  };
 
   // Add the "Add New Account" button if user has permission
   if (hasPermission(permissions, 'create-accounts')) {
@@ -478,22 +503,22 @@ export default function Accounts() {
       {activeView === 'list' ? (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
           <CrudTable
-          columns={columns}
-          actions={actions}
-          data={accounts?.data || []}
-          from={accounts?.from || 1}
-          onAction={handleAction}
-          sortField={pageFilters.sort_field}
-          sortDirection={pageFilters.sort_direction}
-          onSort={handleSort}
-          permissions={permissions}
-          entityPermissions={{
-            view: 'view-accounts',
-            create: 'create-accounts',
-            edit: 'edit-accounts',
-            delete: 'delete-accounts'
-          }}
-        />
+            columns={columns}
+            actions={actions}
+            data={accounts?.data || []}
+            from={accounts?.from || 1}
+            onAction={handleAction}
+            sortField={pageFilters.sort_field}
+            sortDirection={pageFilters.sort_direction}
+            onSort={handleSort}
+            permissions={permissions}
+            entityPermissions={{
+              view: 'view-accounts',
+              create: 'create-accounts',
+              edit: 'edit-accounts',
+              delete: 'delete-accounts'
+            }}
+          />
 
           {/* Pagination section */}
           <Pagination
@@ -521,9 +546,8 @@ export default function Accounts() {
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{account.name}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{account.email || t('No email')}</p>
                         <div className="flex items-center">
-                          <div className={`h-2 w-2 rounded-full mr-2 ${
-                            account.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
-                          }`}></div>
+                          <div className={`h-2 w-2 rounded-full mr-2 ${account.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
+                            }`}></div>
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {account.status === 'active' ? t('Active') : t('Inactive')}
                           </span>

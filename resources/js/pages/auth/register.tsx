@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
 import InputError from '@/components/input-error';
@@ -16,7 +16,6 @@ import { isDemoMode } from '@/utils/cookie-utils';
 import { Checkbox } from '@/components/ui/checkbox';
 
 type RegisterForm = {
-    name: string;
     email: string;
     password: string;
     password_confirmation: string;
@@ -32,7 +31,6 @@ export default function Register({ referralCode, planId, settings }: { referralC
     const { themeColor, customColor } = useBrand();
     const primaryColor = themeColor === 'custom' ? customColor : THEME_COLORS[themeColor as keyof typeof THEME_COLORS];
     const { data, setData, post, processing, errors, reset } = useForm<RegisterForm>({
-        name: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -56,26 +54,6 @@ export default function Register({ referralCode, planId, settings }: { referralC
         >
             <form className="space-y-5" onSubmit={submit}>
                 <div className="space-y-4">
-                    <div className="relative">
-                        <Label htmlFor="name" className="text-gray-700 dark:text-gray-300 font-medium mb-2 block">{t("Full name")}</Label>
-                        <div className="relative">
-                            <Input
-                                id="name"
-                                type="text"
-                                required
-                                autoFocus
-                                tabIndex={1}
-                                autoComplete="name"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                placeholder={t("Enter your full name")}
-                                className="w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg transition-all duration-200"
-                                style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
-                            />
-                        </div>
-                        <InputError message={errors.name} />
-                    </div>
-
                     <div className="relative">
                         <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 font-medium mb-2 block">{t("Email")}</Label>
                         <div className="relative">

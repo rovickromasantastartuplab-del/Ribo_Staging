@@ -37,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => App\Http\Middleware\EnsureEmailIsVerified::class,
             'plan.access' => \App\Http\Middleware\CheckPlanAccess::class,
             'plan.feature' => CheckPlanFeature::class,
+            'onboarding' => \App\Http\Middleware\EnsureOnboardingCompleted::class,
         ]);
 
         $middleware->validateCsrfTokens(

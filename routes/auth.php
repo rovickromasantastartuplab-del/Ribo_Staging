@@ -32,6 +32,13 @@ Route::middleware(['guest', 'landing.enabled'])->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    // Team invitation routes
+    Route::get('invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'accept'])
+        ->name('invitation.accept');
+
+    Route::post('invitation/complete', [\App\Http\Controllers\InvitationController::class, 'complete'])
+        ->name('invitation.complete');
 });
 
 Route::middleware('auth')->group(function () {

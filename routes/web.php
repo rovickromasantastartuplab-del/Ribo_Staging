@@ -55,6 +55,7 @@ use App\Http\Controllers\PaymentWallPaymentController;
 use App\Http\Controllers\SSPayPaymentController;
 use App\Http\Controllers\PublicFormController;
 use App\Http\Controllers\SalesOrderController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\PurchaseOrderCommentController;
 use App\Http\Controllers\QuoteController;
@@ -305,8 +306,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('mercadopago/webhook', [MercadoPagoController::class, 'webhook'])->name('mercadopago.webhook');
     Route::post('authorizenet/test-connection', [AuthorizeNetPaymentController::class, 'testConnection'])->name('authorizenet.test-connection');
 
-    // All other routes require plan access check
-    Route::middleware('plan.access')->group(function () {
+    // Onboarding routes - accessible without plan check or onboarding check
+    Route::prefix('onboarding')->name('onboarding.')->group(function () {
+        Route::get('/company', [OnboardingController::class, 'showCompany'])->name('company');
+        Route::post('/company', [OnboardingController::class, 'storeCompany'])->name('company.store');
+        Route::get('/plan', [OnboardingController::class, 'showPlan'])->name('plan');
+        Route::post('/plan', [OnboardingController::class, 'storePlan'])->name('plan.store');
+        Route::get('/members', [OnboardingController::class, 'showMembers'])->name('members');
+        Route::post('/members', [OnboardingController::class, 'storeMembers'])->name('members.store');
+        Route::get('/roles', [OnboardingController::class, 'showRoles'])->name('roles');
+        Route::post('/roles', [OnboardingController::class, 'storeRoles'])->name('roles.store');
+        Route::post('/skip', [OnboardingController::class, 'skip'])->name('skip');
+    });
+
+    // All other routes require plan access check and onboarding completion
+    Route::middleware(['plan.access', 'onboarding'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard/redirect', [DashboardController::class, 'redirectToFirstAvailablePage'])->name('dashboard.redirect');
 

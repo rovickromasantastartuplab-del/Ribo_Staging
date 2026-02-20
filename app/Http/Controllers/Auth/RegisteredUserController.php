@@ -62,14 +62,17 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'name' => 'nullable|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'terms' => 'required|accepted',
         ]);
 
+        // Auto-generate name from email if not provided
+        $name = $request->name ?: ucwords(str_replace(['.', '_', '-'], ' ', explode('@', $request->email)[0]));
+
         $userData = [
-            'name' => $request->name,
+            'name' => $name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'type' => 'company',
@@ -113,15 +116,13 @@ class RegisteredUserController extends Controller
         $emailVerificationEnabled = getSetting('emailVerification', false);
         if ($emailVerificationEnabled) {
             event(new Registered($user));
-            return redirect()->route('verification.notice');
+            if (!$user->hasVerifiedEmail()) {
+                return redirect()->route('verification.notice');
+            }
         }
 
-        // Redirect to plans page with selected plan
-        $planId = $request->plan_id;
-        if ($planId) {
-            return redirect()->route('plans.index', ['selected' => $planId]);
-        }
-        return to_route('dashboard');
+        // Redirect to onboarding flow
+        return redirect()->route('onboarding.company');
     }
 
     /**
@@ -138,7 +139,7 @@ class RegisteredUserController extends Controller
                 $decrypted .= chr(ord($encrypted[$i]) ^ ord($key[$i % strlen($key)]));
             }
 
-            return is_numeric($decrypted) ? (int)$decrypted : null;
+            return is_numeric($decrypted) ? (int) $decrypted : null;
         } catch (\Exception $e) {
             return null;
         }

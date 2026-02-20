@@ -25,6 +25,7 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
+        'company_name',
         'email',
         'email_verified_at',
         'password',
@@ -50,7 +51,10 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
         'trial_expire_date',
         'active_module',
         'commission_amount',
-        'invoice_template'
+        'invoice_template',
+        'onboarding_completed_at',
+        'invitation_token',
+        'invitation_sent_at',
     ];
 
     /**
@@ -81,6 +85,7 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
             'is_enable_login' => 'integer',
             'google2fa_enable' => 'integer',
             'storage_limit' => 'float',
+            'onboarding_completed_at' => 'datetime',
         ];
     }
 
@@ -96,6 +101,14 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
         } else {
             return $this->created_by;
         }
+    }
+
+    /**
+     * Check if the user has completed onboarding.
+     */
+    public function hasCompletedOnboarding(): bool
+    {
+        return $this->onboarding_completed_at !== null;
     }
 
     /**

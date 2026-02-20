@@ -204,7 +204,7 @@ class DashboardController extends Controller
         }
 
         // Sort by created_at if available
-        usort($recentActivity, function($a, $b) {
+        usort($recentActivity, function ($a, $b) {
             $timeA = isset($a['created_at']) ? strtotime($a['created_at']) : 0;
             $timeB = isset($b['created_at']) ? strtotime($b['created_at']) : 0;
             return $timeB - $timeA;
@@ -229,7 +229,7 @@ class DashboardController extends Controller
             }
 
             // Sort by revenue descending and take top 5
-            usort($topPlans, function($a, $b) {
+            usort($topPlans, function ($a, $b) {
                 return $b['revenue'] <=> $a['revenue'];
             });
             $topPlans = array_slice($topPlans, 0, 5);
@@ -266,7 +266,9 @@ class DashboardController extends Controller
         $user = auth()->user();
         $companyId = $user->type === 'company' ? $user->id : $user->creatorId();
 
-        $totalEmployees = User::where('created_by', $companyId)->count();
+        $totalEmployees = User::where('created_by', $companyId)
+            ->where('id', '!=', $companyId)
+            ->count();
         $totalLeads = 0;
         $totalSales = 0;
         $totalCustomers = 0;
@@ -277,25 +279,29 @@ class DashboardController extends Controller
             if (class_exists('\App\Models\Lead')) {
                 $totalLeads = \App\Models\Lead::where('created_by', $companyId)->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             if (class_exists('\App\Models\SalesOrder')) {
                 $totalSales = \App\Models\SalesOrder::where('created_by', $companyId)->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             if (class_exists('\App\Models\Account')) {
                 $totalCustomers = \App\Models\Account::where('created_by', $companyId)->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             if (class_exists('\App\Models\Project')) {
                 $totalProjects = \App\Models\Project::where('created_by', $companyId)->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             if (class_exists('\App\Models\Invoice')) {
@@ -303,7 +309,8 @@ class DashboardController extends Controller
                     ->where('status', 'paid')
                     ->sum('total_amount') ?? 0;
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $currentMonthLeads = 0;
         $previousMonthLeads = 0;
@@ -317,7 +324,8 @@ class DashboardController extends Controller
                     ->whereMonth('created_at', now()->subMonth()->month)
                     ->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
         $monthlyGrowth = $previousMonthLeads > 0
             ? round((($currentMonthLeads - $previousMonthLeads) / $previousMonthLeads) * 100, 1)
             : ($currentMonthLeads > 0 ? 100 : 0);
@@ -329,7 +337,8 @@ class DashboardController extends Controller
                     ->where('is_converted', 1)
                     ->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $conversionRate = $totalLeads > 0 ? round(($totalConvertedLeads / $totalLeads) * 100, 1) : 0;
 
@@ -348,7 +357,8 @@ class DashboardController extends Controller
                         ->whereYear('created_at', $date->year)
                         ->count();
                 }
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+            }
 
             try {
                 if (class_exists('\App\Models\Lead')) {
@@ -364,7 +374,8 @@ class DashboardController extends Controller
                         ->whereYear('updated_at', $date->year)
                         ->count();
                 }
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+            }
 
             $salesTrendsData[] = ['month' => $date->format('M'), 'sales' => $monthlySales];
             $leadConversionsData[] = [
@@ -383,7 +394,8 @@ class DashboardController extends Controller
                     ->groupBy('account_type_id')
                     ->get();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $customerDistribution = [];
         $colors = ['#3b82f6', '#10b77f', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'];
@@ -396,6 +408,7 @@ class DashboardController extends Controller
         }
 
         $employeeRoles = User::where('created_by', $companyId)
+            ->where('id', '!=', $companyId)
             ->select('type', DB::raw('COUNT(*) as count'))
             ->groupBy('type')
             ->get();
@@ -421,7 +434,8 @@ class DashboardController extends Controller
                     ->take(2)
                     ->get(['id', 'name', 'email', 'status', 'created_at']);
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             if (class_exists('\App\Models\SalesOrder')) {
@@ -431,7 +445,8 @@ class DashboardController extends Controller
                     ->take(2)
                     ->get(['id', 'account_id', 'total_amount', 'status', 'created_at']);
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             if (class_exists('\App\Models\Project')) {
@@ -440,7 +455,8 @@ class DashboardController extends Controller
                     ->take(2)
                     ->get(['id', 'name', 'status', 'created_at']);
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             if (class_exists('\App\Models\Account')) {
@@ -450,7 +466,8 @@ class DashboardController extends Controller
                     ->take(2)
                     ->get(['id', 'name', 'account_type_id', 'created_at']);
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         // Storage usage calculation with plan limits
         $storageUsed = 0;
@@ -466,7 +483,8 @@ class DashboardController extends Controller
         try {
             $companyUsers = User::where('created_by', $companyId)->pluck('id')->push($companyId);
             $storageUsed = \Spatie\MediaLibrary\MediaCollections\Models\Media::whereIn('user_id', $companyUsers)->sum('size');
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $storageUsagePercent = $storageLimit > 0 ? ($storageUsed / $storageLimit) * 100 : 0;
 
@@ -493,7 +511,7 @@ class DashboardController extends Controller
                 'employeeDistribution' => $employeeDistribution,
             ],
             'recentActivities' => [
-                'leads' => $recentLeads->map(function($lead) {
+                'leads' => $recentLeads->map(function ($lead) {
                     return [
                         'id' => $lead->id,
                         'name' => $lead->name,
@@ -502,7 +520,7 @@ class DashboardController extends Controller
                         'created_at' => $lead->created_at->toISOString()
                     ];
                 }),
-                'sales' => $recentSales->map(function($sale) {
+                'sales' => $recentSales->map(function ($sale) {
                     return [
                         'id' => $sale->id,
                         'customer' => $sale->account->name ?? 'Customer',
@@ -511,7 +529,7 @@ class DashboardController extends Controller
                         'created_at' => $sale->created_at->toISOString()
                     ];
                 }),
-                'projects' => $recentProjects->map(function($project) {
+                'projects' => $recentProjects->map(function ($project) {
                     return [
                         'id' => $project->id,
                         'name' => $project->name,
@@ -519,7 +537,7 @@ class DashboardController extends Controller
                         'created_at' => $project->created_at->toISOString()
                     ];
                 }),
-                'customers' => $recentCustomers->map(function($customer) {
+                'customers' => $recentCustomers->map(function ($customer) {
                     return [
                         'id' => $customer->id,
                         'name' => $customer->name,
