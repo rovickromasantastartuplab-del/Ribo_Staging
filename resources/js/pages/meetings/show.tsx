@@ -125,7 +125,7 @@ export default function MeetingShow() {
               {meeting.assigned_user && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('Assigned To')}</p>
-                  <p className="text-sm">{meeting.assigned_user.name}</p>
+                  <p className="text-sm">{(meeting.assigned_user.display_name || meeting.assigned_user.name)}</p>
                 </div>
               )}
 

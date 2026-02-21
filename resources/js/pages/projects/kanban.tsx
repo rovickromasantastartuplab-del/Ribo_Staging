@@ -474,9 +474,9 @@ export default function ProjectKanban() {
                                 {task.assigned_user && (
                                   <div className="flex items-center gap-1">
                                     <div className="w-5 h-5 bg-blue-500 rounded-full text-white text-xs flex items-center justify-center">
-                                      {getInitials(task.assigned_user.name)}
+                                      {getInitials((task.assigned_user.display_name || task.assigned_user.name))}
                                     </div>
-                                    <span className="text-gray-600 max-w-16 truncate">{task.assigned_user.name}</span>
+                                    <span className="text-gray-600 max-w-16 truncate">{(task.assigned_user.display_name || task.assigned_user.name)}</span>
                                   </div>
                                 )}
                               </div>
@@ -544,7 +544,7 @@ export default function ProjectKanban() {
               type: 'select',
               options: [
                 { value: null, label: t('Unassigned') },
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ]
             }] : [])
           ],

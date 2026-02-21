@@ -28,6 +28,13 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
 
+            'company_name' => [
+                Rule::requiredIf($this->user()->type === 'company'),
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             '_method' => ['sometimes', 'string', 'in:PATCH'],
         ];

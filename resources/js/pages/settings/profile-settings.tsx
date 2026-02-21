@@ -48,6 +48,7 @@ export default function ProfileSettings({ mustVerifyEmail, status }: { mustVerif
   const { data: profileData, setData: setProfileData, post: profilePost, errors: profileErrors, processing: profileProcessing, recentlySuccessful: profileRecentlySuccessful } = useForm({
     name: auth?.user?.name || '',
     email: auth?.user?.email || '',
+    company_name: auth?.user?.company_name || '',
     avatar: null as File | null,
     _method: 'PATCH',
   });
@@ -89,8 +90,8 @@ export default function ProfileSettings({ mustVerifyEmail, status }: { mustVerif
       return URL.createObjectURL(profileData.avatar);
     }
     // Show uploaded avatar from database
-    if (auth?.user?.avatar) {
-      return window.storage(auth.user.avatar);
+    if (auth?.user?.avatar_url) {
+      return auth.user.avatar_url;
     }
     // Show default avatar
     return window.asset('images/avatar/avatar.png');
@@ -250,6 +251,21 @@ export default function ProfileSettings({ mustVerifyEmail, status }: { mustVerif
                     />
                     <InputError className="mt-2" message={profileErrors.email} />
                   </div>
+
+                  {auth?.user?.type === 'company' && (
+                    <div className="grid gap-2">
+                      <Label htmlFor="company_name">{t("Company Name")}</Label>
+                      <Input
+                        id="company_name"
+                        className="mt-1 block w-full"
+                        value={profileData.company_name}
+                        onChange={(e) => setProfileData('company_name', e.target.value)}
+                        required
+                        placeholder={t("Company name")}
+                      />
+                      <InputError className="mt-2" message={profileErrors.company_name} />
+                    </div>
+                  )}
 
                   {mustVerifyEmail && auth?.user?.email_verified_at === null && (
                     <div>

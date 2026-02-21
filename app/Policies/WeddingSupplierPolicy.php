@@ -19,10 +19,10 @@ class WeddingSupplierPolicy
             return true;
         }
 
-        if ($user->type === 'company' || $user->type === 'company_user') { // Assuming 'company_user' exists or similar logic
-            // For company users, check if their company (creator) has the feature
-            $company = $user->type === 'company' ? $user : $user->creator;
-            return $company && $company->hasFeature('wedding_suppliers_module');
+        // For company owners and their staff, allow viewing if feature is enabled
+        $company = $user->type === 'company' ? $user : $user->creator;
+        if ($company && $company->type === 'company') {
+            return $company->hasFeature('wedding_suppliers_module');
         }
 
         return false;

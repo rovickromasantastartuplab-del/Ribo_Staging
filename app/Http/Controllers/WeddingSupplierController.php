@@ -48,6 +48,9 @@ class WeddingSupplierController extends Controller
             'can' => [
                 'create_supplier' => auth()->user()->can('create', WeddingSupplier::class),
                 'edit_supplier' => auth()->user()->can('update', new WeddingSupplier),
+                'delete_supplier' => auth()->user()->can('delete', new WeddingSupplier),
+                'export_supplier' => auth()->user()->isSuperAdmin(),
+                'import_supplier' => auth()->user()->isSuperAdmin(),
                 'manage_categories' => auth()->user()->can('create', WeddingSupplierCategory::class),
             ]
         ]);
@@ -176,7 +179,7 @@ class WeddingSupplierController extends Controller
      */
     public function fileExport()
     {
-        $this->authorize('viewAny', WeddingSupplier::class);
+        $this->authorize('create', WeddingSupplier::class);
 
         $name = 'wedding_suppliers_' . date('Y-m-d_H-i-s');
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\WeddingSupplierExport(), $name . '.xlsx');

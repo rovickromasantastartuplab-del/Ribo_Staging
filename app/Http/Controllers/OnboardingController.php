@@ -31,6 +31,7 @@ class OnboardingController extends Controller
 
         return Inertia::render('onboarding/company', [
             'companyName' => $user->company_name,
+            'isLegacy' => $user->isLegacyAccount(),
         ]);
     }
 
@@ -58,7 +59,16 @@ class OnboardingController extends Controller
         // Create default team roles for this company
         $this->createDefaultRoles($user);
 
-        // Step 1 → Step 2 (Plan)
+        // Soft Bypass Logic: If this is an existing Legacy Account, they already have plans and staff.
+        // Once they provide a Company Name, they are done!
+        if ($user->isLegacyAccount()) {
+            $user->update([
+                'onboarding_completed_at' => now(),
+            ]);
+            return redirect()->route('dashboard')->with('success', __('Welcome back! Your Company Name has been saved.'));
+        }
+
+        // Step 1 → Step 2 (Plan) for entirely new registrations
         return redirect()->route('onboarding.plan');
     }
 
@@ -327,7 +337,6 @@ class OnboardingController extends Controller
 
             // Send invitation email
             try {
-                \App\Services\MailConfigService::setDynamicConfig();
                 $invitationUrl = route('invitation.accept', ['token' => $token]);
                 $companyName = $user->company_name ?? $user->name;
                 Mail::to($newUser->email)->send(new \App\Mail\TeamInvitationMail($newUser, $invitationUrl, $companyName));
@@ -360,6 +369,11 @@ class OnboardingController extends Controller
         $currentStep = $request->input('current_step', 'plan');
 
         if ($currentStep === 'plan') {
+            // Activate the default plan if they skip it
+            $user->update([
+                'plan_is_active' => 1,
+            ]);
+
             // Skip plan → keep default plan, go to roles (step 3)
             return redirect()->route('onboarding.roles');
         }
@@ -405,44 +419,126 @@ class OnboardingController extends Controller
         // 2. Sales Manager role — sales-focused permissions
         $salesPermissions = Permission::whereIn('name', [
             // Dashboard
-            'manage-dashboard', 'view-dashboard',
+            'manage-dashboard',
+            'view-dashboard',
             // Contacts
-            'manage-contacts', 'view-contacts', 'create-contacts', 'edit-contacts', 'delete-contacts', 'toggle-status-contacts',
+            'manage-contacts',
+            'view-contacts',
+            'create-contacts',
+            'edit-contacts',
+            'delete-contacts',
+            'toggle-status-contacts',
             // Leads
-            'manage-leads', 'view-leads', 'create-leads', 'edit-leads', 'delete-leads', 'toggle-status-leads', 'convert-leads', 'export-leads', 'import-leads',
-            'manage-lead-statuses', 'view-lead-statuses',
-            'manage-lead-sources', 'view-lead-sources',
+            'manage-leads',
+            'view-leads',
+            'create-leads',
+            'edit-leads',
+            'delete-leads',
+            'toggle-status-leads',
+            'convert-leads',
+            'export-leads',
+            'import-leads',
+            'manage-lead-statuses',
+            'view-lead-statuses',
+            'manage-lead-sources',
+            'view-lead-sources',
             // Opportunities
-            'manage-opportunities', 'view-opportunities', 'create-opportunities', 'edit-opportunities', 'delete-opportunities', 'toggle-status-opportunities',
-            'manage-opportunity-stages', 'view-opportunity-stages',
-            'manage-opportunity-sources', 'view-opportunity-sources',
+            'manage-opportunities',
+            'view-opportunities',
+            'create-opportunities',
+            'edit-opportunities',
+            'delete-opportunities',
+            'toggle-status-opportunities',
+            'manage-opportunity-stages',
+            'view-opportunity-stages',
+            'manage-opportunity-sources',
+            'view-opportunity-sources',
             // Accounts
-            'manage-accounts', 'view-accounts', 'create-accounts', 'edit-accounts', 'delete-accounts', 'toggle-status-accounts',
-            'manage-account-types', 'view-account-types',
-            'manage-account-industries', 'view-account-industries',
+            'manage-accounts',
+            'view-accounts',
+            'create-accounts',
+            'edit-accounts',
+            'delete-accounts',
+            'toggle-status-accounts',
+            'manage-account-types',
+            'view-account-types',
+            'manage-account-industries',
+            'view-account-industries',
             // Products
-            'manage-products', 'view-products', 'create-products', 'edit-products',
-            'manage-categories', 'view-categories',
-            'manage-brands', 'view-brands',
+            'manage-products',
+            'view-products',
+            'create-products',
+            'edit-products',
+            'manage-categories',
+            'view-categories',
+            'manage-brands',
+            'view-brands',
             // Quotes & Orders
-            'manage-quotes', 'view-quotes', 'create-quotes', 'edit-quotes', 'delete-quotes', 'toggle-status-quotes', 'export-quotes',
-            'manage-sales-orders', 'view-sales-orders', 'create-sales-orders', 'edit-sales-orders', 'delete-sales-orders', 'toggle-status-sales-orders', 'export-sales-orders',
-            'manage-invoices', 'view-invoices', 'create-invoices', 'edit-invoices', 'delete-invoices', 'toggle-status-invoices', 'export-invoices',
+            'manage-quotes',
+            'view-quotes',
+            'create-quotes',
+            'edit-quotes',
+            'delete-quotes',
+            'toggle-status-quotes',
+            'export-quotes',
+            'manage-sales-orders',
+            'view-sales-orders',
+            'create-sales-orders',
+            'edit-sales-orders',
+            'delete-sales-orders',
+            'toggle-status-sales-orders',
+            'export-sales-orders',
+            'manage-invoices',
+            'view-invoices',
+            'create-invoices',
+            'edit-invoices',
+            'delete-invoices',
+            'toggle-status-invoices',
+            'export-invoices',
             // Activities
-            'manage-meetings', 'view-meetings', 'create-meetings', 'edit-meetings', 'delete-meetings',
-            'manage-calls', 'view-calls', 'create-calls', 'edit-calls', 'delete-calls',
-            'manage-calendar', 'view-calendar',
+            'manage-meetings',
+            'view-meetings',
+            'create-meetings',
+            'edit-meetings',
+            'delete-meetings',
+            'manage-calls',
+            'view-calls',
+            'create-calls',
+            'edit-calls',
+            'delete-calls',
+            'manage-calendar',
+            'view-calendar',
             // Documents
-            'manage-documents', 'view-documents', 'create-documents', 'edit-documents', 'delete-documents',
-            'manage-document-folders', 'view-document-folders', 'create-document-folders',
-            'manage-document-types', 'view-document-types',
+            'manage-documents',
+            'view-documents',
+            'create-documents',
+            'edit-documents',
+            'delete-documents',
+            'manage-document-folders',
+            'view-document-folders',
+            'create-document-folders',
+            'manage-document-types',
+            'view-document-types',
             // Projects & Tasks
-            'manage-projects', 'view-projects', 'create-projects', 'edit-projects',
-            'manage-project-tasks', 'view-project-tasks', 'create-project-tasks', 'edit-project-tasks', 'toggle-status-project-tasks',
+            'manage-projects',
+            'view-projects',
+            'create-projects',
+            'edit-projects',
+            'manage-project-tasks',
+            'view-project-tasks',
+            'create-project-tasks',
+            'edit-project-tasks',
+            'toggle-status-project-tasks',
             // Reports
-            'manage-reports', 'view-lead-reports', 'view-sales-reports', 'view-customer-reports',
+            'manage-reports',
+            'view-lead-reports',
+            'view-sales-reports',
+            'view-customer-reports',
             // Media
-            'manage-own-media', 'create-media', 'view-media', 'download-media',
+            'manage-own-media',
+            'create-media',
+            'view-media',
+            'download-media',
         ])->get();
 
         $salesManagerRole = Role::create([

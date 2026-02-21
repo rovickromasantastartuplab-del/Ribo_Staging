@@ -16,7 +16,7 @@ import { WeddingSupplier } from '../../types/wedding-supplier';
 
 export default function WeddingSuppliers() {
     const { t } = useTranslation();
-    const { auth, suppliers, categories, filters: pageFilters = {} } = usePage().props as any;
+    const { auth, suppliers, categories, filters: pageFilters = {}, can } = usePage().props as any;
     const permissions = auth?.permissions || [];
     const getInitials = useInitials();
 
@@ -124,7 +124,7 @@ export default function WeddingSuppliers() {
     const pageActions: PageAction[] = [];
 
     // Add export button
-    if (hasPermission(permissions, 'export-wedding-suppliers')) {
+    if (can?.export_supplier) {
         pageActions.push({
             label: t('Export'),
             icon: <Download className="h-4 w-4 mr-2" />,
@@ -134,7 +134,7 @@ export default function WeddingSuppliers() {
     }
 
     // Add import button
-    if (hasPermission(permissions, 'import-wedding-suppliers')) {
+    if (can?.import_supplier) {
         pageActions.push({
             label: t('Import'),
             icon: <Upload className="h-4 w-4 mr-2" />,
@@ -144,7 +144,7 @@ export default function WeddingSuppliers() {
     }
 
     // Add the "Add New" button if user has permission
-    if (hasPermission(permissions, 'create-wedding-suppliers')) { // Adjust permission name if specific one exists
+    if (can?.create_supplier) {
         pageActions.push({
             label: t('Add Supplier'),
             icon: <Plus className="h-4 w-4 mr-2" />,
@@ -219,14 +219,14 @@ export default function WeddingSuppliers() {
             icon: 'Edit',
             action: 'edit',
             className: 'text-amber-500',
-            requiredPermission: 'create-wedding-suppliers' // Adjust permission
+            condition: () => can?.edit_supplier
         },
         {
             label: t('Delete'),
             icon: 'Trash2',
             action: 'delete',
             className: 'text-red-500',
-            requiredPermission: 'create-wedding-suppliers' // Adjust permission
+            condition: () => can?.delete_supplier
         }
     ];
 
@@ -289,12 +289,6 @@ export default function WeddingSuppliers() {
                     from={suppliers?.from || 1}
                     onAction={handleAction}
                     permissions={permissions}
-                    // Assuming blanket permission for now as per controller 'create' check
-                    entityPermissions={{
-                        view: 'view-wedding-suppliers',
-                        edit: 'create-wedding-suppliers',
-                        delete: 'create-wedding-suppliers'
-                    }}
                     showActionsAsIcons={true}
                 />
 

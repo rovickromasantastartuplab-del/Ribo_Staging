@@ -69,6 +69,16 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'display_name',
+        'avatar_url',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -109,6 +119,44 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
     public function hasCompletedOnboarding(): bool
     {
         return $this->onboarding_completed_at !== null;
+    }
+
+    /**
+     * Get the display name for the user based on their type and onboarding status.
+     * For companies, use company_name (fallback to name if not set).
+     * For everyone else, use their regular name.
+     */
+    public function getDisplayNameAttribute()
+    {
+        if ($this->type === 'company') {
+            return $this->company_name ?? $this->name;
+        }
+
+        return $this->name;
+    }
+
+    /**
+     * Get the full URL for the user's avatar.
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+
+        return asset('images/avatar/avatar.png');
+    }
+
+    /**
+     * Check if a Company Owner is a "Legacy" user (created before Onboarding existed).
+     * We use a hardcoded rollout date (Feb 21, 2026 at 17:00:00 UTC) to ensure newly registered users
+     * who wait several days before completing onboarding are never falsely authorized.
+     */
+    public function isLegacyAccount(): bool
+    {
+        return $this->type === 'company' &&
+            $this->created_at !== null &&
+            $this->created_at < '2026-02-21 17:00:00';
     }
 
     /**
@@ -291,7 +339,6 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification()
     {
         try {
-            MailConfigService::setDynamicConfig();
             parent::sendEmailVerificationNotification();
             return ['success' => true, 'message' => 'Verification email sent successfully'];
         } catch (\Exception $e) {
@@ -330,7 +377,11 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
                 $defaultPlan = Plan::getDefaultPlan();
                 if ($defaultPlan) {
                     $user->plan_id = $defaultPlan->id;
-                    $user->plan_is_active = 1;
+
+                    // New users have plan_is_active = 0 until they complete Onboarding Step 2.
+                    // Legacy users already have plan_is_active = 1 in the database.
+                    $user->plan_is_active = 0;
+
                     $user->save();
                 }
             }

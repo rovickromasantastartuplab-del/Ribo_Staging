@@ -10,19 +10,13 @@ class MailConfigService
 {
     public static function setDynamicConfig()
     {
-        $user = Auth::user();
-        if (!$user) {
+        // Always use Superadmin (ID 1) settings for global mail configuration
+        $adminUser = User::where('type', 'superadmin')->first();
+        if (!$adminUser) {
             return;
         }
-        if ($user->type == 'superadmin') {
-            $user = User::where('type', 'superadmin')->first();
-        } else if ($user->type == 'company') {
-            $user = User::where('id', $user->created_by)->first();
-        } else {
-            $user = User::where('id', $user->created_by)->first();
-        }
 
-        $getSettings = settings($user->id);
+        $getSettings = settings($adminUser->id);
 
         // $settings = [
         //     'driver' => getSetting('email_driver', 'smtp'),
@@ -35,14 +29,14 @@ class MailConfigService
         //     'fromName' => getSetting('email_from_name', 'WorkDo System')
         // ];
         $settings = [
-            'driver' => $getSettings['email_driver'] ?? 'smtp',
-            'host' => $getSettings['email_host'] ?? 'smtp.example.com',
-            'port' => $getSettings['email_port'] ?? '587',
-            'username' => $getSettings['email_username'] ?? '',
-            'password' => $getSettings['email_password'] ?? '',
-            'encryption' => $getSettings['email_encryption'] ?? 'tls',
-            'fromAddress' => $getSettings['email_from_address'] ?? 'noreply@example.com',
-            'fromName' => $getSettings['email_from_name'] ?? 'WorkDo System'
+            'driver' => $getSettings['email_driver'] ?? config('mail.default'),
+            'host' => $getSettings['email_host'] ?? config('mail.mailers.smtp.host'),
+            'port' => $getSettings['email_port'] ?? config('mail.mailers.smtp.port'),
+            'username' => $getSettings['email_username'] ?? config('mail.mailers.smtp.username'),
+            'password' => $getSettings['email_password'] ?? config('mail.mailers.smtp.password'),
+            'encryption' => $getSettings['email_encryption'] ?? config('mail.mailers.smtp.encryption'),
+            'fromAddress' => $getSettings['email_from_address'] ?? config('mail.from.address'),
+            'fromName' => $getSettings['email_from_name'] ?? config('mail.from.name')
         ];
 
         Config::set([

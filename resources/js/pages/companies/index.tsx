@@ -56,9 +56,9 @@ export default function Companies() {
   // Count active filters
   const activeFilterCount = () => {
     return (selectedStatus !== 'all' ? 1 : 0) +
-           (searchTerm ? 1 : 0) +
-           (startDate ? 1 : 0) +
-           (endDate ? 1 : 0);
+      (searchTerm ? 1 : 0) +
+      (startDate ? 1 : 0) +
+      (endDate ? 1 : 0);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -334,8 +334,8 @@ export default function Companies() {
     // Fetch available plans
     toast.loading(t('Loading plans...'));
     fetch(route('companies.plans', company.id))
-    .then(res => res.json())
-    .then(data => {
+      .then(res => res.json())
+      .then(data => {
         setAvailablePlans(data.plans);
         setIsUpgradePlanModalOpen(true);
         toast.dismiss();
@@ -706,7 +706,7 @@ export default function Companies() {
                         <div className="flex items-center">
                           <div className={`h-2 w-2 rounded-full mr-2 ${
                             company.status === 'active' ? 'bg-gray-800' : 'bg-gray-400'
-                          }`}></div>
+                            }`}></div>
                           <span className="text-sm font-medium text-gray-700">
                             {company.status === 'active' ? t('Active') : t('Inactive')}
                           </span>

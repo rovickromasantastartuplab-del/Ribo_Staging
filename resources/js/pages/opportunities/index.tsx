@@ -514,7 +514,7 @@ export default function Opportunities() {
                 { value: 'all', label: t('All Users') },
                 ...users.map((user: any) => ({
                   value: user.id.toString(),
-                  label: user.name
+                  label: (user.display_name || user.name)
                 }))
               ]
             }] : [])
@@ -784,7 +784,7 @@ export default function Opportunities() {
                                         </div>
                                         {opportunity.assigned_user && (
                                           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white text-xs">
-                                            {getInitials(opportunity.assigned_user.name)}
+                                            {getInitials((opportunity.assigned_user.display_name || opportunity.assigned_user.name))}
                                           </div>
                                         )}
                                       </div>
@@ -1191,7 +1191,7 @@ export default function Opportunities() {
               label: t('Assign To'),
               type: formMode === 'view' ? 'text' : 'select',
               options: formMode === 'view' ? [] : [
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ],
               readOnly: formMode === 'view',
               hidden: !isCompany || currentItem?.assigned_to === auth?.user?.id

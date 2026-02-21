@@ -398,7 +398,7 @@ export default function ProjectTasks() {
                 { value: 'all', label: t('All Users') },
                 ...users.map((user: any) => ({
                   value: user.id.toString(),
-                  label: user.name
+                  label: (user.display_name || user.name)
                 }))
               ]
             }] : [])
@@ -543,7 +543,7 @@ export default function ProjectTasks() {
                       </span>
                       {task.assigned_user && (
                         <span className="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">
-                          {task.assigned_user.name}
+                          {(task.assigned_user.display_name || task.assigned_user.name)}
                         </span>
                       )}
                     </div>
@@ -658,7 +658,7 @@ export default function ProjectTasks() {
               label: t('Assign To'),
               type: formMode === 'view' ? 'text' : 'select',
               options: formMode === 'view' ? [] : [
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ],
               readOnly: formMode === 'view'
             }] : [])

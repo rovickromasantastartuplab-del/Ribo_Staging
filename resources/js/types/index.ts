@@ -5,10 +5,17 @@ export interface SharedData {
         user: {
             id: number;
             name: string;
+            display_name?: string;
             email: string;
+            avatar?: string;
+            avatar_url?: string;
+            type?: string;
+            [key: string]: any;
         } | null;
     };
 }
+
+export type User = NonNullable<SharedData['auth']['user']>;
 
 export interface NavItem {
     title: string;

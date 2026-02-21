@@ -25,6 +25,7 @@ class CompanyController extends Controller
         if ($request->has('search') && !empty($request->search)) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('company_name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%");
             });
         }
@@ -56,7 +57,7 @@ class CompanyController extends Controller
         $companies->getCollection()->transform(function ($company) {
             return [
                 'id' => $company->id,
-                'name' => $company->name,
+                'name' => $company->display_name,
                 'email' => $company->email,
                 'avatar' => $company->avatar,
                 'status' => $company->status,
@@ -135,6 +136,10 @@ class CompanyController extends Controller
         $this->createDefaultTaskStatuses($company->id);
 
         // Trigger email notification
+        if (getSetting('emailVerification', false)) {
+            event(new \Illuminate\Auth\Events\Registered($company));
+        }
+
         event(new \App\Events\UserCreated($company, $validated['password'] ?? ''));
 
         // Check for email errors
@@ -236,7 +241,7 @@ class CompanyController extends Controller
             ];
 
             $enabledFeatures = is_array($plan->module) ? $plan->module : [];
-            $enabledFeatures = array_values(array_unique(array_filter($enabledFeatures, fn ($v) => is_string($v) && $v !== '')));
+            $enabledFeatures = array_values(array_unique(array_filter($enabledFeatures, fn($v) => is_string($v) && $v !== '')));
 
             foreach ($enabledFeatures as $feature) {
                 if (isset($featureLabels[$feature])) {
@@ -331,7 +336,7 @@ class CompanyController extends Controller
         $planOrder->plan_id = $plan->id;
         $planOrder->billing_cycle = $request->duration === 'yearly' ? 'yearly' : 'monthly';
         $planOrder->original_price = $request->duration === 'yearly' ? ($plan->yearly_price ?? 0) : $plan->price;
-        $planOrder->discount_amount = 0;
+        $planOrder->discount_amount = 0.00;
         $planOrder->final_price = $planOrder->original_price;
         $planOrder->payment_method = 'admin_upgrade';
         $planOrder->status = 'approved';

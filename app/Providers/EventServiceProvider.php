@@ -90,7 +90,10 @@ class EventServiceProvider extends ServiceProvider
         ],
         AccountCreate::class => [
             TwilioAccountCreateListener::class,
-        ]
+        ],
+        \Illuminate\Auth\Events\Registered::class => [
+            \Illuminate\Auth\Listeners\SendEmailVerificationNotification::class,
+        ],
     ];
 
     /**

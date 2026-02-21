@@ -11,7 +11,7 @@ export default function UserShow() {
   const breadcrumbs = [
     { title: t('Dashboard'), href: route('dashboard') },
     { title: t('Users'), href: route('users.index') },
-    { title: user.name }
+    { title: (user.display_name || user.name) }
   ];
 
   const formatDate = (dateString: string) => {
@@ -25,7 +25,7 @@ export default function UserShow() {
 
   return (
     <PageTemplate
-      title={user.name}
+      title={(user.display_name || user.name)}
       breadcrumbs={breadcrumbs}
       actions={[
         {
@@ -50,7 +50,7 @@ export default function UserShow() {
               <div className="space-y-6">
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('Name')}</label>
-                  <p className="text-base font-medium text-gray-800 mt-2">{user.name}</p>
+                  <p className="text-base font-medium text-gray-800 mt-2">{(user.display_name || user.name)}</p>
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('Email')}</label>

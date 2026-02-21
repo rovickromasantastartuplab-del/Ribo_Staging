@@ -181,11 +181,11 @@ export default function ReferredUsers() {
                       <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-primary">
-                            {user.name.charAt(0).toUpperCase()}
+                            {(user.display_name || user.name).charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <h4 className="font-medium">{user.name}</h4>
+                          <h4 className="font-medium">{(user.display_name || user.name)}</h4>
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                           <div className="flex items-center space-x-2 mt-1">
                             <Calendar className="h-3 w-3 text-muted-foreground" />

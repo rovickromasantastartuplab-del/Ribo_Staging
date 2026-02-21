@@ -550,7 +550,7 @@ export default function ProjectGantt() {
               type: 'select',
               options: [
                 { value: 'unassigned', label: t('Unassigned') },
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ]
             }] : [])
           ],
@@ -601,7 +601,7 @@ export default function ProjectGantt() {
               {selectedTask.assigned_user && (
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">{t('Assigned To')}:</span>
-                  <span className="text-gray-900 dark:text-white">{selectedTask.assigned_user.name}</span>
+                  <span className="text-gray-900 dark:text-white">{(selectedTask.assigned_user.display_name || selectedTask.assigned_user.name)}</span>
                 </div>
               )}
               

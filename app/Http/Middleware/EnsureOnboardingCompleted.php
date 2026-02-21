@@ -20,9 +20,11 @@ class EnsureOnboardingCompleted
             return $next($request);
         }
 
-        // Only company-type owners need onboarding (not staff created by others)
-        if ($user->type === 'company' && $user->created_by == $user->id && !$user->hasCompletedOnboarding()) {
-            return redirect()->route('onboarding.company');
+        // Only company-type owners need onboarding
+        if ($user->type === 'company' && !$user->hasCompletedOnboarding()) {
+            if (!$request->routeIs('onboarding.*') && !$request->routeIs('logout')) {
+                return redirect()->route('onboarding.company');
+            }
         }
 
         return $next($request);

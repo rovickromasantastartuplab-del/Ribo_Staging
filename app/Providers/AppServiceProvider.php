@@ -68,9 +68,10 @@ class AppServiceProvider extends ServiceProvider
         // Register the PurchaseOrderObserver
         PurchaseOrder::observe(PurchaseOrderObserver::class);
 
-        // Configure dynamic storage disks
+        // Configure dynamic storage disks and mail settings
         try {
             \App\Services\DynamicStorageService::configureDynamicDisks();
+            \App\Services\MailConfigService::setDynamicConfig();
         } catch (\Exception $e) {
             // Silently fail during migrations or when database is not ready
         }

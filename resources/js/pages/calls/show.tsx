@@ -119,7 +119,7 @@ export default function CallShow() {
               {call.assigned_user && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('Assigned To')}</p>
-                  <p className="text-sm">{call.assigned_user.name}</p>
+                  <p className="text-sm">{(call.assigned_user.display_name || call.assigned_user.name)}</p>
                 </div>
               )}
 

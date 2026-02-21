@@ -164,6 +164,10 @@ class UserController extends BaseController
             $user->save();
 
             // Trigger email notification
+            if (getSetting('emailVerification', false)) {
+                event(new \Illuminate\Auth\Events\Registered($user));
+            }
+
             if (isEmailTemplateEnabled('User Created', createdBy()) && !IsDemo()) {
                 event(new \App\Events\UserCreated($user, $request->password));
             }

@@ -417,7 +417,7 @@ export default function Campaigns() {
               options: [
                 { value: 'all', label: t('All Users') },
                 { value: 'unassigned', label: t('Unassigned') },
-                ...users.map((user: any) => ({ value: user.id.toString(), label: user.name }))
+                ...users.map((user: any) => ({ value: user.id.toString(), label: (user.display_name || user.name) }))
               ]
             }] : [])
           ]}
@@ -664,7 +664,7 @@ export default function Campaigns() {
               label: t('Assign To'),
               type: (formMode === 'view' ? 'text' : 'select') as 'text' | 'select',
               options: formMode === 'view' ? [] : [
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ],
               readOnly: formMode === 'view',
               hidden: !isCompany || (currentItem?.assigned_to && currentItem?.assigned_to === auth?.user?.id)

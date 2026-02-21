@@ -15,7 +15,7 @@ type CompanyForm = {
     company_name: string;
 };
 
-export default function OnboardingCompany({ companyName }: { companyName?: string }) {
+export default function OnboardingCompany({ companyName, isLegacy }: { companyName?: string, isLegacy?: boolean }) {
     const { t } = useTranslation();
     const { themeColor, customColor } = useBrand();
     const primaryColor = themeColor === 'custom' ? customColor : THEME_COLORS[themeColor as keyof typeof THEME_COLORS];
@@ -32,6 +32,7 @@ export default function OnboardingCompany({ companyName }: { companyName?: strin
     return (
         <OnboardingLayout
             currentStep={1}
+            isLegacy={isLegacy}
             title={t("What's your company name?")}
             description={t("This will be used as your workspace name throughout the CRM.")}
         >

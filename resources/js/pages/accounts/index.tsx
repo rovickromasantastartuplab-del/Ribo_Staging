@@ -631,7 +631,7 @@ export default function Accounts() {
                       )}
                       {account.assigned_user && (
                         <span className="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">
-                          {account.assigned_user.name}
+                          {(account.assigned_user.display_name || account.assigned_user.name)}
                         </span>
                       )}
                     </div>

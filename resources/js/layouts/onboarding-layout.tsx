@@ -12,6 +12,7 @@ interface OnboardingLayoutProps {
     currentStep: 1 | 2 | 3 | 4;
     title: string;
     description?: string;
+    isLegacy?: boolean;
 }
 
 const steps = [
@@ -26,6 +27,7 @@ export default function OnboardingLayout({
     currentStep,
     title,
     description,
+    isLegacy = false,
 }: OnboardingLayoutProps) {
     useFavicon();
     const { t } = useTranslation();
@@ -58,59 +60,61 @@ export default function OnboardingLayout({
                 </div>
 
                 {/* Step Indicator */}
-                <div className="w-full max-w-lg mb-10">
-                    <div className="flex items-center justify-between relative">
-                        {/* Progress line background */}
-                        <div className="absolute top-5 left-[calc(16.67%)] right-[calc(16.67%)] h-0.5 bg-gray-200" />
-                        {/* Progress line filled */}
-                        <div
-                            className="absolute top-5 left-[calc(16.67%)] h-0.5 transition-all duration-500 ease-out"
-                            style={{
-                                backgroundColor: primaryColor,
-                                width: currentStep === 1 ? '0%' : currentStep === 2 ? '22%' : currentStep === 3 ? '44%' : '66%',
-                            }}
-                        />
+                {!isLegacy && (
+                    <div className="w-full max-w-lg mb-10">
+                        <div className="flex items-center justify-between relative">
+                            {/* Progress line background */}
+                            <div className="absolute top-5 left-[calc(16.67%)] right-[calc(16.67%)] h-0.5 bg-gray-200" />
+                            {/* Progress line filled */}
+                            <div
+                                className="absolute top-5 left-[calc(16.67%)] h-0.5 transition-all duration-500 ease-out"
+                                style={{
+                                    backgroundColor: primaryColor,
+                                    width: currentStep === 1 ? '0%' : currentStep === 2 ? '22%' : currentStep === 3 ? '44%' : '66%',
+                                }}
+                            />
 
-                        {steps.map((step) => {
-                            const StepIcon = step.icon;
-                            const isCompleted = step.number < currentStep;
-                            const isCurrent = step.number === currentStep;
+                            {steps.map((step) => {
+                                const StepIcon = step.icon;
+                                const isCompleted = step.number < currentStep;
+                                const isCurrent = step.number === currentStep;
 
-                            return (
-                                <div key={step.number} className="flex flex-col items-center relative z-10 flex-1">
-                                    <div
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
-                                            ? 'text-white shadow-lg'
-                                            : isCurrent
-                                                ? 'text-white shadow-lg ring-4 ring-opacity-30'
-                                                : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
-                                            }`}
-                                        style={{
-                                            ...(isCompleted || isCurrent
-                                                ? { backgroundColor: primaryColor }
-                                                : {}),
-                                            ...(isCurrent
-                                                ? { ringColor: primaryColor }
-                                                : {}),
-                                        }}
-                                    >
-                                        {isCompleted ? (
-                                            <Check className="w-5 h-5" />
-                                        ) : (
-                                            <StepIcon className="w-5 h-5" />
-                                        )}
+                                return (
+                                    <div key={step.number} className="flex flex-col items-center relative z-10 flex-1">
+                                        <div
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
+                                                ? 'text-white shadow-lg'
+                                                : isCurrent
+                                                    ? 'text-white shadow-lg ring-4 ring-opacity-30'
+                                                    : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
+                                                }`}
+                                            style={{
+                                                ...(isCompleted || isCurrent
+                                                    ? { backgroundColor: primaryColor }
+                                                    : {}),
+                                                ...(isCurrent
+                                                    ? { ringColor: primaryColor }
+                                                    : {}),
+                                            }}
+                                        >
+                                            {isCompleted ? (
+                                                <Check className="w-5 h-5" />
+                                            ) : (
+                                                <StepIcon className="w-5 h-5" />
+                                            )}
+                                        </div>
+                                        <span
+                                            className={`mt-2 text-xs font-medium transition-colors duration-300 ${isCompleted || isCurrent ? 'text-gray-900' : 'text-gray-400'
+                                                }`}
+                                        >
+                                            {t(step.label)}
+                                        </span>
                                     </div>
-                                    <span
-                                        className={`mt-2 text-xs font-medium transition-colors duration-300 ${isCompleted || isCurrent ? 'text-gray-900' : 'text-gray-400'
-                                            }`}
-                                    >
-                                        {t(step.label)}
-                                    </span>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Main Card */}
                 <div className="w-full max-w-lg">

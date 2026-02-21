@@ -482,7 +482,7 @@ export default function Documents() {
               options: [
                 { value: 'all', label: t('All Users') },
                 { value: 'unassigned', label: t('Unassigned') },
-                ...users.map((user: any) => ({ value: user.id.toString(), label: user.name }))
+                ...users.map((user: any) => ({ value: user.id.toString(), label: (user.display_name || user.name) }))
               ]
             }] : [])
           ]}
@@ -661,7 +661,7 @@ export default function Documents() {
                       {document.assigned_user && (
                         <span className="inline-flex items-center rounded-md bg-purple-100 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">
                           <User className="h-3 w-3 mr-1" />
-                          {document.assigned_user.name}
+                          {(document.assigned_user.display_name || document.assigned_user.name)}
                         </span>
                       )}
                     </div>
@@ -778,7 +778,7 @@ export default function Documents() {
               name: formMode === 'view' ? 'assigned_user_name' : 'assigned_to',
               label: t('Assign To'),
               type: formMode === 'view' ? 'text' : 'select',
-              options: formMode === 'view' ? [] : users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` })),
+              options: formMode === 'view' ? [] : users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` })),
               readOnly: formMode === 'view'
             }] : []),
             { name: 'description', label: t('Description'), type: 'textarea' },

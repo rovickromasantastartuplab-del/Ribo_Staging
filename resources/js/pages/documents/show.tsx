@@ -419,7 +419,7 @@ export default function DocumentShow() {
               type: 'select',
               options: [
                 { value: 'null', label: t('Unassigned') },
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ]
             },
             { name: 'description', label: t('Description'), type: 'textarea' },

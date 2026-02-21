@@ -510,15 +510,15 @@ export default function Users() {
                     <div className="flex items-start space-x-4">
                       <Avatar className="h-16 w-16">
                         <AvatarImage src={getAvatarUrl(user)} />
-                        <AvatarFallback className="text-lg font-bold">{getInitials(user.name)}</AvatarFallback>
+                        <AvatarFallback className="text-lg font-bold">{getInitials((user.display_name || user.name))}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{user.name}</h3>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{(user.display_name || user.name)}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{user.email}</p>
                         <div className="flex items-center">
                           <div className={`h-2 w-2 rounded-full mr-2 ${
                             user.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
-                          }`}></div>
+                            }`}></div>
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {user.status === 'active' ? t('Active') : t('Inactive')}
                           </span>

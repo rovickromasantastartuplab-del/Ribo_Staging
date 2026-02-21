@@ -335,7 +335,7 @@ export default function Calls() {
                 { value: 'unassigned', label: t('Unassigned') },
                 ...users.map((user: any) => ({
                   value: user.id.toString(),
-                  label: user.name
+                  label: (user.display_name || user.name)
                 }))
               ]
             }] : [])
@@ -452,7 +452,7 @@ export default function Calls() {
               label: t('Assign To'),
               type: 'select' as const,
               options: [
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ]
             }] : []),
             {

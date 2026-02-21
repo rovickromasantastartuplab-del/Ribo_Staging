@@ -27,24 +27,24 @@ export function ProfileMenu() {
     return window.asset('/images/avatar/avatar.png');
   };
 
-  
+
   const handleLogout = () => {
     router.post(route('logout'));
   };
 
-  const initials = user?.name
-    ? user.name
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase()
+  const initials = (user?.display_name || user?.name)
+    ? (user.display_name || user.name)
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase()
     : 'U';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 h-8 rounded-md">
-          <span className="text-sm font-medium hidden md:inline-block">{user?.name}</span>
+          <span className="text-sm font-medium hidden md:inline-block">{user?.display_name || user?.name}</span>
           <Avatar className="h-8 w-8">
             <AvatarImage src={getAvatarUrl()} />
             <AvatarFallback>{initials}</AvatarFallback>
@@ -54,7 +54,7 @@ export function ProfileMenu() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user?.name}</p>
+            <p className="text-sm font-medium leading-none">{user?.display_name || user?.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email}
             </p>
@@ -68,7 +68,7 @@ export function ProfileMenu() {
               <span>{t("Profile")}</span>
             </Link>
           </DropdownMenuItem>
-         
+
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>

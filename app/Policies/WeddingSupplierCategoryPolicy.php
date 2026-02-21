@@ -20,9 +20,9 @@ class WeddingSupplierCategoryPolicy
             return true;
         }
 
-        if ($user->type === 'company' || $user->type === 'company_user') {
-            $company = $user->type === 'company' ? $user : $user->creator;
-            return $company && $company->hasFeature('wedding_suppliers_module');
+        $company = $user->type === 'company' ? $user : $user->creator;
+        if ($company && $company->type === 'company') {
+            return $company->hasFeature('wedding_suppliers_module');
         }
 
         return false;

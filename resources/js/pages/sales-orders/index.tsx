@@ -398,7 +398,7 @@ export default function SalesOrders() {
   const assigneeOptions = [
     { value: 'all', label: t('All Users') },
     { value: 'unassigned', label: t('Unassigned') },
-    ...users.map((user: any) => ({ value: user.id.toString(), label: user.name }))
+    ...users.map((user: any) => ({ value: user.id.toString(), label: (user.display_name || user.name) }))
   ];
 
   return (
@@ -1007,7 +1007,7 @@ export default function SalesOrders() {
               label: t('Assign To'),
               type: formMode === 'view' ? 'text' : 'select',
               options: formMode === 'view' ? [] : [
-                ...users.map((user: any) => ({ value: user.id, label: `${user.name} (${user.email})` }))
+                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
               ],
               placeholder: t('Select User'),
               readOnly: formMode === 'view'
