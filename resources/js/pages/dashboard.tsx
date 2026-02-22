@@ -9,6 +9,7 @@ import { usePage } from '@inertiajs/react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from 'recharts';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import { formatCurrency } from '@/utils/currency';
 
 interface CompanyDashboardData {
   stats: {
@@ -211,7 +212,7 @@ export default function Dashboard({ dashboardData }: { dashboardData: CompanyDas
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('Company Revenue')}</p>
-                  <h3 className="mt-2 text-xl font-bold">{window.appSettings?.formatCurrency(stats.companyRevenue || 0) || `$${(stats.companyRevenue || 0).toLocaleString()}`}</h3>
+                  <h3 className="mt-2 text-xl font-bold">{formatCurrency(stats.companyRevenue || 0)}</h3>
                   <p className="text-xs text-green-600 mt-1">+{stats.monthlyGrowth}% {t('growth')}</p>
                 </div>
                 <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900">
@@ -579,7 +580,7 @@ export default function Dashboard({ dashboardData }: { dashboardData: CompanyDas
                           {sale.status?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Draft'}
                         </Badge>
                       </div>
-                      <p className="text-sm font-medium text-green-600">{window.appSettings?.formatCurrency(sale.amount) || `$${sale.amount.toLocaleString()}`}</p>
+                      <p className="text-sm font-medium text-green-600">{formatCurrency(sale.amount)}</p>
                       <p className="text-xs text-muted-foreground">
                         {window.appSettings?.formatDateTime(sale.created_at, false) || new Date(sale.created_at).toLocaleDateString()}
                       </p>

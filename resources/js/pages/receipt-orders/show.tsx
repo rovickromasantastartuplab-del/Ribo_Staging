@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { formatCurrency } from '@/utils/currency';
 
 export default function ShowReceiptOrder() {
   const { t } = useTranslation();
@@ -29,10 +30,7 @@ export default function ShowReceiptOrder() {
   const formatDate = (date: string) => {
     return window.appSettings?.formatDateTime(date, false) || new Date(date).toLocaleDateString();
   };
-
-  const formatCurrency = (amount: number) => {
-    return window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
-  };
+    // Using imported formatCurrency from @/utils/currency
 
   return (
     <PageTemplate

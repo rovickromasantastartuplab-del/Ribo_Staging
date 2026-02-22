@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { toast } from '@/components/custom-toast';
+import { formatCurrency } from '@/utils/currency';
 
 interface Invoice {
     id: number;
@@ -140,7 +141,7 @@ const StripeCheckoutForm = ({ invoice, amount, paymentType }: any) => {
                             {t('Processing...')}
                         </>
                     ) : (
-                        t('Pay {{amount}}', { amount: window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}` })
+                        t('Pay {{amount}}', { amount: formatCurrency(Number(amount || 0)) })
                     )}
                 </Button>
             </div>
@@ -159,7 +160,7 @@ export default function InvoicePayment({ invoice, paymentMethod, amount, payment
     }, [paymentMethod, paymentSettings]);
 
     const formatCurrency = (amount: number) => {
-        return window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+        return formatCurrency(Number(amount || 0));
     };
 
     return (

@@ -17,6 +17,7 @@ import Template8 from './templates/Template8';
 import Template9 from './templates/Template9';
 import Template10 from './templates/Template10';
 import IframePortal, { IframePortalHandles } from '@/components/IframePortal';
+import { formatCurrency } from '@/utils/currency';
 
 const templateComponents = {
     template1: Template1,
@@ -146,7 +147,7 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
     const [paymentAmount, setPaymentAmount] = useState(dueAmount);
 
     const formatCurrency = (amount: number) => {
-        return window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+        return formatCurrency(Number(amount || 0));
     };
 
     const formatDate = (dateString: string) => {

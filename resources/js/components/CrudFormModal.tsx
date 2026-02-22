@@ -1,5 +1,6 @@
 // components/CrudFormModal.tsx
 import { useEffect, useState } from 'react';
+import { formatCurrency } from '@/utils/currency';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -553,7 +554,7 @@ export function CrudFormModal({
                                   subField.type === 'select' && subField.options ?
                                     subField.options.find(opt => opt.value == item[subField.name])?.label || item[subField.name] :
                                     subField.type === 'number' && subField.name === 'unit_price' ?
-                                      `$${parseFloat(item[subField.name] || 0).toFixed(2)}` :
+                                      formatCurrency(parseFloat(item[subField.name] || 0)) :
                                       item[subField.name] || '-'
                                 }
                               </td>
@@ -700,7 +701,7 @@ export function CrudFormModal({
 
         const displayText = selectedOption
           ? (field.relation ? selectedOption[field.relation!.labelField] :
-             field.name === 'parent_id' ? selectedOption.name : selectedOption.label)
+            field.name === 'parent_id' ? selectedOption.name : selectedOption.label)
           : '';
 
         return (
@@ -892,11 +893,10 @@ export function CrudFormModal({
                       Remove
                     </Button>
                   </div>
-                  <div className={`gap-3 ${
-                    field.name === 'attendees'
-                      ? 'flex'
-                      : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-                  }`}>
+                  <div className={`gap-3 ${field.name === 'attendees'
+                    ? 'flex'
+                    : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
+                    }`}>
                     {field.fields?.map(subField => (
                       <div
                         key={subField.name}
@@ -1112,7 +1112,7 @@ export function CrudFormModal({
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-600">{t("Unit Price")}:</span>
-                  <span className="font-medium">${formConfig.priceSummary.unitPrice.toFixed(2)}</span>
+                  <span className="font-medium">{formatCurrency(formConfig.priceSummary.unitPrice)}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-600">{t("Quantity")}:</span>
@@ -1122,7 +1122,7 @@ export function CrudFormModal({
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">{t("Total Price")}:</span>
                     <span className="font-bold text-lg text-primary">
-                      ${calculateTotal().toFixed(2)}
+                      {formatCurrency(calculateTotal())}
                     </span>
                   </div>
                 </div>

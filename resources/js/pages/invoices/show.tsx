@@ -11,6 +11,7 @@ import { CrudFormModal } from '@/components/CrudFormModal';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 export default function InvoiceShow() {
   const { t } = useTranslation();
@@ -90,8 +91,7 @@ export default function InvoiceShow() {
       </span>
     );
   };
-
-  const formatCurrency = (amount: number) => window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+    // Using imported formatCurrency from @/utils/currency
 
   const formatDate = (dateString: string) => {
     if (!dateString) return t('-');

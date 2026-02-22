@@ -2,6 +2,7 @@ import QRCodeComponent from '@/components/QRCodeComponent';
 import React from 'react';
 import { useBrand } from '@/contexts/BrandContext';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 interface Template7Props {
     invoice: any;
@@ -25,10 +26,7 @@ export default function Template7({ invoice, items, taxesData, settings, color, 
     }, 0) || 0;
     const dueAmount = Math.max(0, (Number(invoice.total_amount) || 0) - paidAmount);
 
-    const formatCurrency = (amount: number | string) => {
-        if (typeof amount === 'string' && amount.startsWith('<')) return amount;
-        return (window as any).appSettings?.formatCurrency(Number(amount)) || `$${Number(amount)}`;
-    };
+    // formatCurrency imported from @/utils/currency
 
     const formatValue = (value: any, fallback: string = '') => {
         if (typeof value === 'string' && value.startsWith('<')) return value;

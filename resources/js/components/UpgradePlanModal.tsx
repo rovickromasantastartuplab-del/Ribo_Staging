@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, CreditCard, Circle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/components/ui/switch';
+import { formatCurrency } from '@/utils/currency';
 
 interface Plan {
   id: number;
@@ -154,7 +155,7 @@ export function UpgradePlanModal({
                   <div className="flex items-center mb-2">
                     <CreditCard className="mr-1.5 h-4 w-4 text-muted-foreground" />
                     <p className="text-xl font-bold text-primary">
-                      {window.appSettings?.formatCurrency(plan.price) || `$${plan.price}`}
+                      {formatCurrency(plan.price)}
                     </p>
                     <span className="text-sm text-muted-foreground ml-1">/ {plan.duration.toLowerCase()}</span>
                   </div>

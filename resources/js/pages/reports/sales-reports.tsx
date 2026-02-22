@@ -9,6 +9,7 @@ import { ChartCard } from '@/components/reports/chart-card';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { formatCurrency } from '@/utils/currency';
 
 export default function SalesReports() {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export default function SalesReports() {
   const summaryCards = [
     {
       title: t('Total Sales'),
-      value: window.appSettings?.formatCurrency(summary.total_sales) || `$${summary.total_sales.toLocaleString()}`,
+      value: formatCurrency(summary.total_sales),
       icon: <DollarSign className="h-6 w-6 text-green-600" />,
       iconColor: 'bg-green-100'
     },
@@ -38,7 +39,7 @@ export default function SalesReports() {
     },
     {
       title: t('Average Order Value'),
-      value: window.appSettings?.formatCurrency(summary.avg_order_value) || `$${summary.avg_order_value.toLocaleString()}`,
+      value: formatCurrency(summary.avg_order_value),
       icon: <Target className="h-6 w-6 text-purple-600" />,
       iconColor: 'bg-purple-100'
     },
@@ -82,7 +83,7 @@ export default function SalesReports() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="period" />
               <YAxis />
-              <Tooltip formatter={(value) => [window.appSettings?.formatCurrency(Number(value)) || `$${Number(value).toLocaleString()}`, t('Revenue')]} />
+              <Tooltip formatter={(value) => [formatCurrency(Number(value)), t('Revenue')]} />
               <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
@@ -94,7 +95,7 @@ export default function SalesReports() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="status" />
               <YAxis />
-              <Tooltip formatter={(value) => [window.appSettings?.formatCurrency(Number(value)) || `$${Number(value).toLocaleString()}`, t('Amount')]} />
+              <Tooltip formatter={(value) => [formatCurrency(Number(value)), t('Amount')]} />
               <Bar dataKey="amount" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
@@ -111,7 +112,7 @@ export default function SalesReports() {
                   {t('Total Sales')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
-                  {window.appSettings?.formatCurrency(summary.total_sales) || `$${summary.total_sales.toLocaleString()}`}
+                  {formatCurrency(summary.total_sales)}
                 </td>
               </tr>
               <tr>
@@ -127,7 +128,7 @@ export default function SalesReports() {
                   {t('Average Order Value')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-purple-600">
-                  {window.appSettings?.formatCurrency(summary.avg_order_value) || `$${summary.avg_order_value.toLocaleString()}`}
+                  {formatCurrency(summary.avg_order_value)}
                 </td>
               </tr>
             </tbody>

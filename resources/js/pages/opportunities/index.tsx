@@ -15,6 +15,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 import { useInitials } from '@/hooks/use-initials';
 import { Input } from '@/components/ui/input';
+import { formatCurrency } from '@/utils/currency';
 
 
 export default function Opportunities() {
@@ -344,7 +345,7 @@ export default function Opportunities() {
       key: 'amount',
       label: t('Amount'),
       sortable: true,
-      render: (value: any) => value ? (window.appSettings?.formatCurrency(parseFloat(value)) || `$${parseFloat(value).toFixed(2)}`) : '-'
+      render: (value: any) => value ? (formatCurrency(parseFloat(value))) : '-'
     },
     {
       key: 'close_date',
@@ -780,7 +781,7 @@ export default function Opportunities() {
 
                                       <div className="flex items-center justify-between">
                                         <div className="text-xs text-gray-500">
-                                          {opportunity.amount ? (window.appSettings?.formatCurrency(parseFloat(opportunity.amount)) || `$${parseFloat(opportunity.amount).toFixed(2)}`) : t('No amount')}
+                                          {opportunity.amount ? (formatCurrency(parseFloat(opportunity.amount))) : t('No amount')}
                                         </div>
                                         {opportunity.assigned_user && (
                                           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white text-xs">
@@ -899,7 +900,7 @@ export default function Opportunities() {
                   <div className="border border-gray-200 dark:border-gray-700 rounded-md p-3 mb-4">
                     <div className="mb-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('Amount')}: {opportunity.amount ? (window.appSettings?.formatCurrency(parseFloat(opportunity.amount)) || `$${parseFloat(opportunity.amount).toFixed(2)}`) : t('-')}
+                        {t('Amount')}: {opportunity.amount ? (formatCurrency(parseFloat(opportunity.amount))) : t('-')}
                       </span>
                     </div>
                     <div className="mb-2">
@@ -1076,7 +1077,7 @@ export default function Opportunities() {
                         {t('Subtotal')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}
+                        {formatCurrency(subtotal)}
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
@@ -1084,7 +1085,7 @@ export default function Opportunities() {
                         {t('Total Tax')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}
+                        {formatCurrency(totalTax)}
                       </td>
                     </tr>
                     <tr className="bg-gray-100 font-bold">
@@ -1092,7 +1093,7 @@ export default function Opportunities() {
                         {t('Grand Total')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}
+                        {formatCurrency(subtotal + totalTax)}
                       </td>
                     </tr>
                   </>
@@ -1118,15 +1119,15 @@ export default function Opportunities() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Subtotal')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Total Tax')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(totalTax)}</span>
                     </div>
                     <div className="flex justify-between items-center border-t pt-2">
                       <span className="font-bold text-gray-900">{t('Grand Total')}:</span>
-                      <span className="font-bold text-lg text-primary">{window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}</span>
+                      <span className="font-bold text-lg text-primary">{formatCurrency(subtotal + totalTax)}</span>
                     </div>
                   </div>
                 );
@@ -1139,7 +1140,7 @@ export default function Opportunities() {
                   required: true,
                   options: products.map((product: any) => ({
                     value: product.id,
-                    label: `${product.name} - ${window.appSettings?.formatCurrency(parseFloat(product.price || 0)) || `$${parseFloat(product.price || 0).toFixed(2)}`}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
+                    label: `${product.name} - ${formatCurrency(parseFloat(product.price || 0))}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
                   }))
                 },
                 {
@@ -1168,7 +1169,7 @@ export default function Opportunities() {
                     const unitPrice = parseFloat(item.unit_price) || 0;
                     const lineTotal = quantity * unitPrice;
                     const taxAmount = product?.tax ? (lineTotal * product.tax.rate) / 100 : 0;
-                    return window.appSettings?.formatCurrency(taxAmount) || `$${taxAmount.toFixed(2)}`;
+                    return formatCurrency(taxAmount);
                   }
                 },
                 {
@@ -1179,7 +1180,7 @@ export default function Opportunities() {
                     const quantity = parseFloat(item.quantity) || 0;
                     const unitPrice = parseFloat(item.unit_price) || 0;
                     const lineTotal = quantity * unitPrice;
-                    return window.appSettings?.formatCurrency(lineTotal) || `$${lineTotal.toFixed(2)}`;
+                    return formatCurrency(lineTotal);
                   }
                 }
               ]

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 export default function ReturnOrderShow() {
   const { t } = useTranslation();
@@ -40,10 +41,7 @@ export default function ReturnOrderShow() {
     };
     return reasonLabels[reason as keyof typeof reasonLabels] || reason;
   };
-
-  const formatCurrency = (amount: number) => {
-    return window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
-  };
+    // Using imported formatCurrency from @/utils/currency
 
   const formatDate = (dateString: string) => {
     if (!dateString) return t('-');

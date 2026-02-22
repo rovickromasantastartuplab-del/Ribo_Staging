@@ -13,6 +13,7 @@ import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
+import { formatCurrency } from '@/utils/currency';
 
 export default function Projects() {
   const { t } = useTranslation();
@@ -257,7 +258,7 @@ export default function Projects() {
     {
       key: 'budget',
       label: t('Budget'),
-      render: (value: number) => value ? (window.appSettings?.formatCurrency(value) || `$${value.toLocaleString()}`) : '-'
+      render: (value: number) => value ? (formatCurrency(value)) : '-'
     },
     {
       key: 'priority',
@@ -544,7 +545,7 @@ export default function Projects() {
                     </div>
                     <div className="mb-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Budget: {project.budget ? (window.appSettings?.formatCurrency(project.budget) || `$${project.budget.toLocaleString()}`) : '-'}
+                        Budget: {project.budget ? (formatCurrency(project.budget)) : '-'}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">

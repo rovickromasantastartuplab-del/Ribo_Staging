@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Plus, Check, X } from 'lucide-react';
 import { useForm } from '@inertiajs/react';
 import { toast } from '@/components/custom-toast';
+import { formatCurrency } from '@/utils/currency';
 
 interface PayoutRequestsProps {
     userType: string;
@@ -153,8 +154,8 @@ export default function PayoutRequests({ userType, payoutRequests, settings, sta
                                         {errors.amount && <p className="text-sm text-red-500">{errors.amount}</p>}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
-                                        <p>{t('Available Balance')}: {window.appSettings?.formatCurrency(stats.availableBalance) || `$${stats.availableBalance}`}</p>
-                                        <p>{t('Minimum Amount')}: {window.appSettings?.formatCurrency(settings.threshold_amount) || `$${settings.threshold_amount}`}</p>
+                                        <p>{t('Available Balance')}: {formatCurrency(stats.availableBalance)}</p>
+                                        <p>{t('Minimum Amount')}: {formatCurrency(settings.threshold_amount)}</p>
                                     </div>
                                     <div className="flex justify-end space-x-2">
                                         <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
@@ -171,8 +172,8 @@ export default function PayoutRequests({ userType, payoutRequests, settings, sta
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
                             {stats.availableBalance < settings.threshold_amount
-                                ? t('You need at least {{amount}} to request a payout', { amount: window.appSettings?.formatCurrency(settings.threshold_amount) || `$${settings.threshold_amount}` })
-                                : t('You can request up to {{amount}} for payout', { amount: window.appSettings?.formatCurrency(stats.availableBalance) || `$${stats.availableBalance}` })}
+                                ? t('You need at least {{amount}} to request a payout', { amount: formatCurrency(settings.threshold_amount) })
+                                : t('You can request up to {{amount}} for payout', { amount: formatCurrency(stats.availableBalance) })}
                         </p>
                     </CardContent>
                 </Card>
@@ -206,7 +207,7 @@ export default function PayoutRequests({ userType, payoutRequests, settings, sta
                                             </div>
                                         </TableCell>
                                     )}
-                                    <TableCell>{window.appSettings?.formatCurrency(request.amount) || `$${request.amount}`}</TableCell>
+                                    <TableCell>{formatCurrency(request.amount)}</TableCell>
                                     <TableCell>{getStatusBadge(request.status)}</TableCell>
                                     <TableCell>{window.appSettings?.formatDateTime(request.created_at, false) || new Date(request.created_at).toLocaleDateString()}</TableCell>
                                     {userType === 'superadmin' && request.status === 'pending' && (

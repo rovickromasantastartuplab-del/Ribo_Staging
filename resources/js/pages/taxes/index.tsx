@@ -10,6 +10,7 @@ import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
+import { formatCurrency } from '@/utils/currency';
 
 export default function Taxes() {
   const { t } = useTranslation();
@@ -228,7 +229,7 @@ export default function Taxes() {
       sortable: true,
       render: (value: any, item: any) => {
         const rate = parseFloat(value || 0);
-        return item.type === 'percentage' ? `${rate}%` : `$${rate.toFixed(2)}`;
+        return item.type === 'percentage' ? `${rate}%` : formatCurrency(rate);
       }
     },
     {

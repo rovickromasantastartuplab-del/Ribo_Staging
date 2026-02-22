@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { hasPermission } from '@/utils/authorization';
+import { formatCurrency } from '@/utils/currency';
 // import { ProductBarcode } from '@/components/Barcode';
 
 export default function ProductShow() {
@@ -34,7 +35,7 @@ export default function ProductShow() {
     );
   };
 
-  const formatCurrency = (amount: number) => window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrency(Number(amount || 0));
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-';

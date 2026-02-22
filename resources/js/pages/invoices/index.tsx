@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, XCircle } from 'lucide-react';
+import { formatCurrency } from '@/utils/currency';
 
 
 export default function Invoices() {
@@ -408,7 +409,7 @@ export default function Invoices() {
     {
       key: 'total_amount',
       label: t('Total Amount'),
-      render: (value: any) => window.appSettings?.formatCurrency(Number(value || 0)) || `$${Number(value || 0).toFixed(2)}`
+      render: (value: any) => formatCurrency(Number(value || 0))
     },
     {
       key: 'status',
@@ -585,7 +586,7 @@ export default function Invoices() {
                       </p>
                       <p className="text-sm text-gray-500">
                         {payment.payment_method === 'bank' ? t('Bank Transfer') : payment.payment_method} - 
-                        {window.appSettings?.formatCurrency(Number(payment.amount)) || `$${Number(payment.amount).toFixed(2)}`} ({payment.payment_type})
+                        {formatCurrency(Number(payment.amount))} ({payment.payment_type})
                       </p>
                     </div>
                     <div className="text-sm text-gray-500">
@@ -781,7 +782,7 @@ export default function Invoices() {
                         {t('Total Discount')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right text-red-600">
-                        -{window.appSettings?.formatCurrency(totalDiscount) || `$${totalDiscount.toFixed(2)}`}
+                        -{formatCurrency(totalDiscount)}
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
@@ -789,7 +790,7 @@ export default function Invoices() {
                         {t('Subtotal')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}
+                        {formatCurrency(subtotal)}
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
@@ -797,7 +798,7 @@ export default function Invoices() {
                         {t('Total Tax')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}
+                        {formatCurrency(totalTax)}
                       </td>
                     </tr>
                     <tr className="bg-gray-100 font-bold">
@@ -805,7 +806,7 @@ export default function Invoices() {
                         {t('Grand Total')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}
+                        {formatCurrency(subtotal + totalTax)}
                       </td>
                     </tr>
                   </>
@@ -851,19 +852,19 @@ export default function Invoices() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Total Discount')}:</span>
-                      <span className="font-medium text-red-600">-{window.appSettings?.formatCurrency(totalDiscount) || `$${totalDiscount.toFixed(2)}`}</span>
+                      <span className="font-medium text-red-600">-{formatCurrency(totalDiscount)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Subtotal')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Total Tax')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(totalTax)}</span>
                     </div>
                     <div className="flex justify-between items-center border-t pt-2">
                       <span className="font-bold text-gray-900">{t('Grand Total')}:</span>
-                      <span className="font-bold text-lg text-primary">{window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}</span>
+                      <span className="font-bold text-lg text-primary">{formatCurrency(subtotal + totalTax)}</span>
                     </div>
                   </div>
                 );
@@ -876,7 +877,7 @@ export default function Invoices() {
                   required: true,
                   options: products?.map((product: any) => ({
                     value: product.id,
-                    label: `${product.name} - ${window.appSettings?.formatCurrency(parseFloat(product.price || 0)) || `$${parseFloat(product.price || 0).toFixed(2)}`}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
+                    label: `${product.name} - ${formatCurrency(parseFloat(product.price || 0))}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
                   })) || []
                 },
                 {

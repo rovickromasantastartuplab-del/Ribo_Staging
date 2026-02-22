@@ -13,6 +13,7 @@ import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
+import { formatCurrency } from '@/utils/currency';
 
 export default function Campaigns() {
   const { t } = useTranslation();
@@ -273,13 +274,13 @@ export default function Campaigns() {
       key: 'budget',
       label: t('Budget'),
       sortable: true,
-      render: (value: any) => value ? (window.appSettings?.formatCurrency(parseFloat(value)) || `$${parseFloat(value).toFixed(2)}`) : '-'
+      render: (value: any) => value ? (formatCurrency(parseFloat(value))) : '-'
     },
     {
       key: 'actual_cost',
       label: t('Actual Cost'),
       sortable: true,
-      render: (value: any) => window.appSettings?.formatCurrency(parseFloat(value || 0)) || `$${parseFloat(value || 0).toFixed(2)}`
+      render: (value: any) => formatCurrency(parseFloat(value || 0))
     },
     {
       key: 'target_list',
@@ -540,12 +541,12 @@ export default function Campaigns() {
                     </div>
                     <div className="mb-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('Budget')}: {campaign.budget ? (window.appSettings?.formatCurrency(parseFloat(campaign.budget)) || `$${parseFloat(campaign.budget).toFixed(2)}`) : '-'}
+                        {t('Budget')}: {campaign.budget ? (formatCurrency(parseFloat(campaign.budget))) : '-'}
                       </span>
                     </div>
                     <div className="mb-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('Actual Cost')}: {window.appSettings?.formatCurrency(parseFloat(campaign.actual_cost || 0)) || `$${parseFloat(campaign.actual_cost || 0).toFixed(2)}`}
+                        {t('Actual Cost')}: {formatCurrency(parseFloat(campaign.actual_cost || 0))}
                       </span>
                     </div>
                     {campaign.target_list && (

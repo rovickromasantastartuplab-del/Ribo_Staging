@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/utils/currency';
 
 
 export default function ReceiptOrders() {
@@ -252,7 +253,7 @@ export default function ReceiptOrders() {
     {
       key: 'total_amount',
       label: t('Total Amount'),
-      render: (value: any) => window.appSettings?.formatCurrency(Number(value || 0)) || `$${Number(value || 0).toFixed(2)}`
+      render: (value: any) => formatCurrency(Number(value || 0))
     },
     {
       key: 'status',
@@ -537,19 +538,19 @@ export default function ReceiptOrders() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Total Discount')}:</span>
-                      <span className="font-medium text-red-600">-{window.appSettings?.formatCurrency(totalDiscount) || `$${totalDiscount.toFixed(2)}`}</span>
+                      <span className="font-medium text-red-600">-{formatCurrency(totalDiscount)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Subtotal')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Total Tax')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(totalTax)}</span>
                     </div>
                     <div className="flex justify-between items-center border-t pt-2">
                       <span className="font-bold text-gray-900">{t('Grand Total')}:</span>
-                      <span className="font-bold text-lg text-primary">{window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}</span>
+                      <span className="font-bold text-lg text-primary">{formatCurrency(subtotal + totalTax)}</span>
                     </div>
                   </div>
                 );
@@ -597,7 +598,7 @@ export default function ReceiptOrders() {
                         {t('Total Discount')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right text-red-600">
-                        -{window.appSettings?.formatCurrency(totalDiscount) || `$${totalDiscount.toFixed(2)}`}
+                        -{formatCurrency(totalDiscount)}
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
@@ -605,7 +606,7 @@ export default function ReceiptOrders() {
                         {t('Subtotal')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}
+                        {formatCurrency(subtotal)}
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
@@ -613,7 +614,7 @@ export default function ReceiptOrders() {
                         {t('Total Tax')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}
+                        {formatCurrency(totalTax)}
                       </td>
                     </tr>
                     <tr className="bg-gray-100 font-bold">
@@ -621,7 +622,7 @@ export default function ReceiptOrders() {
                         {t('Grand Total')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}
+                        {formatCurrency(subtotal + totalTax)}
                       </td>
                     </tr>
                   </>
@@ -635,7 +636,7 @@ export default function ReceiptOrders() {
                   required: true,
                   options: products?.map((product: any) => ({
                     value: product.id,
-                    label: `${product.name} - ${window.appSettings?.formatCurrency(parseFloat(product.price || 0)) || `$${parseFloat(product.price || 0).toFixed(2)}`}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
+                    label: `${product.name} - ${formatCurrency(parseFloat(product.price || 0))}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
                   })) || []
                 },
                 {
@@ -691,9 +692,9 @@ export default function ReceiptOrders() {
                       }
 
                       const finalTotal = lineTotal - discountAmount;
-                      return window.appSettings?.formatCurrency(finalTotal) || `$${finalTotal.toFixed(2)}`;
+                      return formatCurrency(finalTotal);
                     } catch (error) {
-                      return window.appSettings?.formatCurrency(0) || '$0.00';
+                      return formatCurrency(0);
                     }
                   }
                 }

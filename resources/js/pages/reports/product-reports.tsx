@@ -7,6 +7,7 @@ import { ReportFilters } from '@/components/reports/report-filters';
 import { SummaryCards } from '@/components/reports/summary-cards';
 import { ChartCard } from '@/components/reports/chart-card';
 import { Card } from '@/components/ui/card';
+import { formatCurrency } from '@/utils/currency';
 
 export default function ProductReports() {
   const { t } = useTranslation();
@@ -33,7 +34,7 @@ export default function ProductReports() {
     },
     {
       title: t('Total Revenue'),
-      value: window.appSettings?.formatCurrency(summary.total_revenue) || `$${summary.total_revenue.toLocaleString()}`,
+      value: formatCurrency(summary.total_revenue),
       icon: <DollarSign className="h-6 w-6 text-purple-600" />,
       iconColor: 'bg-purple-100'
     },
@@ -60,7 +61,7 @@ export default function ProductReports() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={150} />
-              <Tooltip formatter={(value) => [window.appSettings?.formatCurrency(Number(value)) || `$${Number(value).toLocaleString()}`, t('Revenue')]} />
+              <Tooltip formatter={(value) => [formatCurrency(Number(value)), t('Revenue')]} />
               <Bar dataKey="revenue" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
@@ -94,7 +95,7 @@ export default function ProductReports() {
                     {product.quantity.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
-                    {window.appSettings?.formatCurrency(product.revenue) || `$${product.revenue.toLocaleString()}`}
+                    {formatCurrency(product.revenue)}
                   </td>
                 </tr>
               ))}

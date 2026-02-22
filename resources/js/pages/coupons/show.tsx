@@ -8,6 +8,7 @@ import { usePage, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
+import { formatCurrency } from '@/utils/currency';
 
 interface CouponUsage {
   id: number;
@@ -56,12 +57,12 @@ export default function CouponDetailsPage() {
     { 
       key: 'amount', 
       label: t('Order Amount'), 
-      render: (value: number) => window.appSettings?.formatCurrency(value) || `$${value.toFixed(2)}`
+      render: (value: number) => formatCurrency(value)
     },
     { 
       key: 'discount_amount', 
       label: t('Discount Applied'), 
-      render: (value: number) => window.appSettings?.formatCurrency(value) || `$${value.toFixed(2)}`
+      render: (value: number) => formatCurrency(value)
     },
     { 
       key: 'used_at', 
@@ -74,7 +75,7 @@ export default function CouponDetailsPage() {
   const formatDiscount = (type: string, amount: number) => {
     return type === 'percentage' 
       ? `${amount}%` 
-      : (window.appSettings?.formatCurrency(amount) || `$${amount.toFixed(2)}`);
+      : (formatCurrency(amount));
   };
 
   const getStatusBadge = (status: boolean) => {
@@ -198,13 +199,13 @@ export default function CouponDetailsPage() {
               {coupon.minimum_spend && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">{t('Minimum Spend')}</label>
-                  <p className="text-sm">{window.appSettings?.formatCurrency(coupon.minimum_spend) || `$${coupon.minimum_spend.toFixed(2)}`}</p>
+                  <p className="text-sm">{formatCurrency(coupon.minimum_spend)}</p>
                 </div>
               )}
               {coupon.maximum_spend && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">{t('Maximum Spend')}</label>
-                  <p className="text-sm">{window.appSettings?.formatCurrency(coupon.maximum_spend) || `$${coupon.maximum_spend.toFixed(2)}`}</p>
+                  <p className="text-sm">{formatCurrency(coupon.maximum_spend)}</p>
                 </div>
               )}
               <div>

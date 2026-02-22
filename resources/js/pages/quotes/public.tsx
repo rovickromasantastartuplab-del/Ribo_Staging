@@ -17,6 +17,7 @@ import Template8 from './templates/Template8';
 import Template9 from './templates/Template9';
 import Template10 from './templates/Template10';
 import IframePortal, { IframePortalHandles } from '@/components/IframePortal';
+import { formatCurrency } from '@/utils/currency';
 
 interface Quote {
     id: number;
@@ -138,10 +139,7 @@ export default function PublicQuote({ quote, templateId = 'template1', color = '
     const themeColors = { blue: '#3b82f6', green: '#10b77f', purple: '#8b5cf6', orange: '#f97316', red: '#ef4444' };
     const currentThemeColor = themeColor === 'custom' ? customColor : themeColors[themeColor as keyof typeof themeColors] || '#3b82f6';
     const template = { primary: currentThemeColor, secondary: currentThemeColor };
-
-    const formatCurrency = (amount: number) => {
-        return window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
-    };
+    // formatCurrency imported from @/utils/currency
 
     const formatDate = (dateString: string) => {
         if (!dateString) return t('-');

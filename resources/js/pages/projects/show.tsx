@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Calendar, DollarSign, User, Building2, AlertTriangle, Clock, LayoutGrid, Edit, ArrowLeft, BarChart3 } from 'lucide-react';
 import { hasPermission } from '@/utils/authorization';
+import { formatCurrency } from '@/utils/currency';
 
 export default function ProjectShow() {
   const { t } = useTranslation();
@@ -242,7 +243,7 @@ export default function ProjectShow() {
                   {t('Budget')}
                 </p>
                 <p className="text-sm mt-1">
-                  {project.budget ? (window.appSettings?.formatCurrency(project.budget) || `$${project.budget.toLocaleString()}`) : 'Not set'}
+                  {project.budget ? (formatCurrency(project.budget)) : 'Not set'}
                 </p>
               </div>
               <div>

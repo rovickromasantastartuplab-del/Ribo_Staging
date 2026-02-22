@@ -39,6 +39,7 @@ import { InvoiceKhaltiPaymentForm } from './invoice-khalti-payment-form';
 import { InvoiceEasebuzzPaymentForm } from './invoice-easebuzz-payment-form';
 import { InvoiceOzowPaymentForm } from './invoice-ozow-payment-form';
 import { InvoiceCashfreePaymentForm } from './invoice-cashfree-payment-form';
+import { formatCurrency } from '@/utils/currency';
 
 interface PaymentMethod {
     id: string;
@@ -373,7 +374,7 @@ export function InvoicePaymentProcessor({
     }, [invoice.paymentMethods]);
 
     const formatCurrency = (amount: number) => {
-        return window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+        return formatCurrency(Number(amount || 0));
     };
 
     // Calculate due amount (total - already paid)

@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
+import { formatCurrency } from '@/utils/currency';
 
 export default function SalesOrderShow() {
     const { t } = useTranslation();
@@ -44,8 +45,7 @@ export default function SalesOrderShow() {
             </span>
         );
     };
-
-    const formatCurrency = (amount: number) => window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+    // Using imported formatCurrency from @/utils/currency
 
     const formatDate = (dateString: string) => {
         if (!dateString) return t('-');

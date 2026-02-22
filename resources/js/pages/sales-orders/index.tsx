@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { formatCurrency } from '@/utils/currency';
 
 export default function SalesOrders() {
   const { t } = useTranslation();
@@ -308,7 +309,7 @@ export default function SalesOrders() {
     {
       key: 'total_amount',
       label: t('Total Amount'),
-      render: (value: any) => window.appSettings?.formatCurrency(Number(value || 0)) || `$${Number(value || 0).toFixed(2)}`
+      render: (value: any) => formatCurrency(Number(value || 0))
     },
     {
       key: 'status',
@@ -627,7 +628,7 @@ export default function SalesOrders() {
                         {t('Total Discount')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right text-red-600">
-                        -{window.appSettings?.formatCurrency(totalDiscount) || `$${totalDiscount.toFixed(2)}`}
+                        -{formatCurrency(totalDiscount)}
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
@@ -635,7 +636,7 @@ export default function SalesOrders() {
                         {t('Subtotal')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}
+                        {formatCurrency(subtotal)}
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
@@ -643,7 +644,7 @@ export default function SalesOrders() {
                         {t('Total Tax')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}
+                        {formatCurrency(totalTax)}
                       </td>
                     </tr>
                     <tr className="bg-gray-100 font-bold">
@@ -651,7 +652,7 @@ export default function SalesOrders() {
                         {t('Grand Total')}:
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}
+                        {formatCurrency(subtotal + totalTax)}
                       </td>
                     </tr>
                   </>
@@ -697,19 +698,19 @@ export default function SalesOrders() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Total Discount')}:</span>
-                      <span className="font-medium text-red-600">-{window.appSettings?.formatCurrency(totalDiscount) || `$${totalDiscount.toFixed(2)}`}</span>
+                      <span className="font-medium text-red-600">-{formatCurrency(totalDiscount)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Subtotal')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(subtotal) || `$${subtotal.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">{t('Total Tax')}:</span>
-                      <span className="font-medium">{window.appSettings?.formatCurrency(totalTax) || `$${totalTax.toFixed(2)}`}</span>
+                      <span className="font-medium">{formatCurrency(totalTax)}</span>
                     </div>
                     <div className="flex justify-between items-center border-t pt-2">
                       <span className="font-bold text-gray-900">{t('Grand Total')}:</span>
-                      <span className="font-bold text-lg text-primary">{window.appSettings?.formatCurrency(subtotal + totalTax) || `$${(subtotal + totalTax).toFixed(2)}`}</span>
+                      <span className="font-bold text-lg text-primary">{formatCurrency(subtotal + totalTax)}</span>
                     </div>
                   </div>
                 );
@@ -722,7 +723,7 @@ export default function SalesOrders() {
                   required: true,
                   options: products?.map((product: any) => ({
                     value: product.id,
-                    label: `${product.name} - ${window.appSettings?.formatCurrency(parseFloat(product.price || 0)) || `$${parseFloat(product.price || 0).toFixed(2)}`}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
+                    label: `${product.name} - ${formatCurrency(parseFloat(product.price || 0))}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
                   })) || []
                 },
                 {
@@ -770,7 +771,7 @@ export default function SalesOrders() {
                       const discountType = item.discount_type;
                       const discountValue = parseFloat(item.discount_value) || 0;
 
-                      if (!discountType || discountType === 'none' || !discountValue) return window.appSettings?.formatCurrency(0) || '$0.00';
+                      if (!discountType || discountType === 'none' || !discountValue) return formatCurrency(0);
 
                       let discountAmount = 0;
                       if (discountType === 'percentage') {
@@ -779,9 +780,9 @@ export default function SalesOrders() {
                         discountAmount = Math.min(discountValue, lineTotal);
                       }
 
-                      return window.appSettings?.formatCurrency(discountAmount) || `$${discountAmount.toFixed(2)}`;
+                      return formatCurrency(discountAmount);
                     } catch (error) {
-                      return window.appSettings?.formatCurrency(0) || '$0.00';
+                      return formatCurrency(0);
                     }
                   }
                 },
@@ -808,9 +809,9 @@ export default function SalesOrders() {
 
                       const discountedTotal = lineTotal - discountAmount;
                       const taxAmount = product?.tax ? (discountedTotal * product.tax.rate) / 100 : 0;
-                      return window.appSettings?.formatCurrency(taxAmount) || `$${taxAmount.toFixed(2)}`;
+                      return formatCurrency(taxAmount);
                     } catch (error) {
-                      return window.appSettings?.formatCurrency(0) || '$0.00';
+                      return formatCurrency(0);
                     }
                   }
                 },
@@ -835,9 +836,9 @@ export default function SalesOrders() {
                       }
 
                       const finalTotal = lineTotal - discountAmount;
-                      return window.appSettings?.formatCurrency(finalTotal) || `$${finalTotal.toFixed(2)}`;
+                      return formatCurrency(finalTotal);
                     } catch (error) {
-                      return window.appSettings?.formatCurrency(0) || '$0.00';
+                      return formatCurrency(0);
                     }
                   }
                 }

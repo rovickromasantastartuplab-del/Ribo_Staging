@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { formatCurrency } from '@/utils/currency';
 
 export default function LeadShow() {
   const { t } = useTranslation();
@@ -40,7 +41,7 @@ export default function LeadShow() {
     );
   };
 
-  const formatCurrency = (amount: number) => window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrency(Number(amount || 0));
 
 
 
@@ -319,7 +320,7 @@ export default function LeadShow() {
                 <div>
                   <p className="text-base font-medium text-gray-700">{lead.campaign.name}</p>
                   <p className="text-sm text-gray-600">{lead.campaign.campaign_type?.name || t('Campaign')}</p>
-                  <p className="text-sm text-gray-500">{t('Budget')}: {window.appSettings?.formatCurrency(Number(lead.campaign.budget || 0)) || `$${Number(lead.campaign.budget || 0).toFixed(2)}`}</p>
+                  <p className="text-sm text-gray-500">{t('Budget')}: {formatCurrency(Number(lead.campaign.budget || 0))}</p>
                 </div>
                 <Link href={route('campaigns.show', lead.campaign.id)}>
                   <Button variant="outline" size="sm" className="bg-white">

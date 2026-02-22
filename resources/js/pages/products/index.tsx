@@ -14,6 +14,7 @@ import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
+import { formatCurrency } from '@/utils/currency';
 
 // import { ProductBarcode } from '@/components/Barcode';
 
@@ -298,7 +299,7 @@ export default function Products() {
       sortable: true,
       render: (value: any) => (
         <span className="font-semibold text-green-600">
-          {window.appSettings?.formatCurrency(parseFloat(value || 0)) || `$${parseFloat(value || 0).toFixed(2)}`}
+          {formatCurrency(parseFloat(value || 0))}
         </span>
       )
     },
@@ -623,7 +624,7 @@ export default function Products() {
                   {/* Price & Stock */}
                   <div className="flex items-center justify-between">
                     <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                      {window.appSettings?.formatCurrency(parseFloat(product.price || 0)) || `$${parseFloat(product.price || 0).toFixed(2)}`}
+                      {formatCurrency(parseFloat(product.price || 0))}
                     </div>
                     <div className={`text-xs font-medium px-2 py-1 rounded-full ${
                       product.stock_quantity > 10 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :

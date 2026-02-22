@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 export default function DeliveryOrderShow() {
   const { t } = useTranslation();
@@ -30,7 +31,7 @@ export default function DeliveryOrderShow() {
   };
 
   const formatCurrency = (amount: number) => {
-    return window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+    return formatCurrency(Number(amount || 0));
   };
 
 

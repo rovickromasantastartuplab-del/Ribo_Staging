@@ -2,6 +2,7 @@ import QRCodeComponent from '@/components/QRCodeComponent';
 import React from 'react';
 import { useBrand } from '@/contexts/BrandContext';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 interface Template6Props {
     quote: any;
@@ -20,10 +21,7 @@ export default function Template6({ quote, items, taxesData, settings, color, qr
     const fontColor = color === 'ffffff' || color === 'fbdd03' || color === 'c1d82f' || color === '46de98' || color === '40c7d0' || color === 'fac168' ? '#000000' : '#ffffff';
     const borderColor = color === 'ffffff' ? '#000000' : `#${color}`;
 
-    const formatCurrency = (amount: number | string) => {
-        if (typeof amount === 'string' && amount.startsWith('<')) return amount;
-        return (window as any).appSettings?.formatCurrency(Number(amount)) || `$${Number(amount)}`;
-    };
+    // formatCurrency imported from @/utils/currency
 
     const formatValue = (value: any, fallback: string = '') => {
         if (typeof value === 'string' && value.startsWith('<')) return value;

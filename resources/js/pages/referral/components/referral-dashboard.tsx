@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Copy, Check, Users, DollarSign, FileText, TrendingUp, Award, Clock } from 'lucide-react';
 import { toast } from '@/components/custom-toast';
+import { formatCurrency } from '@/utils/currency';
 
 interface ReferralDashboardProps {
   userType: string;
@@ -58,7 +59,7 @@ export default function ReferralDashboard({ userType, stats, referralLink, recen
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.totalCommissionPaid}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.totalCommissionPaid)}</div>
             </CardContent>
           </Card>
 
@@ -93,7 +94,7 @@ export default function ReferralDashboard({ userType, stats, referralLink, recen
                     </div>
                     <div className="text-right">
                       <p className="font-medium">{company.referral_count} referrals</p>
-                      <p className="text-sm text-muted-foreground">${company.total_earned}</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(company.total_earned)}</p>
                     </div>
                   </div>
                 ))}

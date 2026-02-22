@@ -9,6 +9,7 @@ import { ChartCard } from '@/components/reports/chart-card';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { formatCurrency } from '@/utils/currency';
 
 export default function CustomerReports() {
   const { t } = useTranslation();
@@ -44,7 +45,7 @@ export default function CustomerReports() {
     },
     {
       title: t('Contact Lifetime Value'),
-      value: window.appSettings?.formatCurrency(summary.contact_lifetime_value) || `$${summary.contact_lifetime_value.toLocaleString()}`,
+      value: formatCurrency(summary.contact_lifetime_value),
       icon: <DollarSign className="h-6 w-6 text-orange-600" />,
       iconColor: 'bg-orange-100'
     }
@@ -113,7 +114,7 @@ export default function CustomerReports() {
                     {contact.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
-                    {window.appSettings?.formatCurrency(contact.total_spent) || `$${contact.total_spent.toLocaleString()}`}
+                    {formatCurrency(contact.total_spent)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {contact.order_count}

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 import { useInitials } from '@/hooks/use-initials';
+import { formatCurrency } from '@/utils/currency';
 
 
 
@@ -416,7 +417,7 @@ export default function Leads() {
       key: 'value',
       label: t('Value'),
       sortable: true,
-      render: (value: any) => value ? (window.appSettings?.formatCurrency(parseFloat(value)) || `$${parseFloat(value).toFixed(2)}`) : t('-')
+      render: (value: any) => value ? (formatCurrency(parseFloat(value))) : t('-')
     },
     {
       key: 'lead_status',
@@ -871,7 +872,7 @@ export default function Leads() {
 
                                       <div className="flex items-center justify-between">
                                         <div className="text-xs text-gray-500">
-                                          {lead.value ? (window.appSettings?.formatCurrency(parseFloat(lead.value)) || `$${parseFloat(lead.value).toFixed(2)}`) : t('No value')}
+                                          {lead.value ? (formatCurrency(parseFloat(lead.value))) : t('No value')}
                                         </div>
                                         {lead.assigned_user && (
                                           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white text-xs">
@@ -997,7 +998,7 @@ export default function Leads() {
                     </div>
                     <div className="mb-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('Value')}: {lead.value ? (window.appSettings?.formatCurrency(parseFloat(lead.value)) || `$${parseFloat(lead.value).toFixed(2)}`) : t('-')}
+                        {t('Value')}: {lead.value ? (formatCurrency(parseFloat(lead.value))) : t('-')}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">

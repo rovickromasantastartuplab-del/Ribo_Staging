@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { router } from '@inertiajs/react';
+import { formatCurrency } from '@/utils/currency';
 
 
 interface PaymentLog {
@@ -169,7 +170,7 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('Total Revenue')}</p>
-                  <h3 className="mt-2 text-xl font-bold">${(stats.totalRevenue || 0).toLocaleString()}</h3>
+                  <h3 className="mt-2 text-xl font-bold">{formatCurrency(stats.totalRevenue || 0)}</h3>
                 </div>
                 <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900">
                   <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
@@ -230,7 +231,7 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${plan.revenue.toLocaleString()}</p>
+                      <p className="font-semibold">{formatCurrency(plan.revenue)}</p>
                       <p className="text-xs text-muted-foreground">revenue</p>
                     </div>
                   </div>

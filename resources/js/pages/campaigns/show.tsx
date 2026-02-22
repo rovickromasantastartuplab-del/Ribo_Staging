@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 export default function CampaignShow() {
   const { t } = useTranslation();
@@ -29,7 +30,7 @@ export default function CampaignShow() {
     );
   };
 
-  const formatCurrency = (amount: number) => window.appSettings?.formatCurrency(Number(amount || 0)) || `$${Number(amount || 0).toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrency(Number(amount || 0));
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-';
