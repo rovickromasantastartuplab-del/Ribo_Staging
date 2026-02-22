@@ -272,7 +272,8 @@ class HitPayPaymentController extends Controller
 
     /**
      * Verify HMAC-SHA256 signature from HitPay webhook.
-     * Ported from the ticketing project's computeLegacyHmac logic.
+     * Verify HMAC-SHA256 signature from HitPay webhook.
+     * Ported from the ticketing project's multi-candidate HMAC logic.
      */
     private function verifyHmac(array $payload, string $salt, string $rawPayload = '', ?string $headerSignature = null, array &$debug = []): bool
     {
@@ -280,8 +281,6 @@ class HitPayPaymentController extends Controller
         if ($headerSignature && !empty($rawPayload)) {
             $computedHmacHex = hash_hmac('sha256', $rawPayload, $salt);
             $computedHmacBase64 = base64_encode(hash_hmac('sha256', $rawPayload, $salt, true));
-
-            // Remove sha256= prefix if it exists depending on how HitPay formats it
             $receivedSignature = preg_replace('/^sha256=/i', '', trim($headerSignature));
 
             $debug['v2'] = [
@@ -289,7 +288,6 @@ class HitPayPaymentController extends Controller
                 'parsed_received' => $receivedSignature,
                 'computed_hex' => $computedHmacHex,
                 'computed_base64' => $computedHmacBase64,
-                'raw_payload' => $rawPayload,
             ];
 
             if (hash_equals($computedHmacHex, $receivedSignature) || hash_equals($computedHmacBase64, $receivedSignature)) {
@@ -297,42 +295,127 @@ class HitPayPaymentController extends Controller
             }
         }
 
-        // 2. Fallback to Legacy Validation (HMAC in payload)
+        // 2. Legacy Validation — try MULTIPLE candidate formats (ported from Node.js project)
         $receivedHmac = $payload['hmac'] ?? null;
-
         if (!$receivedHmac) {
-            \Log::error('HitPay HMAC Verification Failed', ['debug' => $debug, 'salt_preview' => substr($salt, 0, 4) . '...']);
+            \Log::error('HitPay HMAC: no hmac in payload', ['debug' => $debug]);
             return false;
         }
 
-        // Build signature string: sort keys alphabetically, concatenate key+value, excluding 'hmac'
-        $signatureData = [];
-        foreach ($payload as $key => $value) {
-            if ($key === 'hmac' || $value === null || $value === '') {
-                continue;
+        // Build all candidate strings to hash, just like the Node.js buildLegacyHmacCandidates
+        $candidates = [];
+
+        // --- Candidates from raw body (form-encoded) ---
+        if (!empty($rawPayload)) {
+            // Candidate: raw body as-is
+            $candidates[] = $rawPayload;
+
+            // Candidate: raw body with hmac= param stripped
+            $parts = explode('&', $rawPayload);
+            $withoutHmac = implode('&', array_filter($parts, function ($part) {
+                return stripos($part, 'hmac=') !== 0;
+            }));
+            if ($withoutHmac) {
+                $candidates[] = $withoutHmac;
+                // URL-decoded version
+                $decoded = urldecode($withoutHmac);
+                if ($decoded !== $withoutHmac) {
+                    $candidates[] = $decoded;
+                }
             }
-            $signatureData[$key] = $value;
+
+            // Candidate: parsed, sorted, re-encoded query string (without hmac)
+            parse_str($rawPayload, $parsedParams);
+            unset($parsedParams['hmac']);
+            ksort($parsedParams);
+            $sortedQuery = http_build_query($parsedParams);
+            if ($sortedQuery) {
+                $candidates[] = $sortedQuery;
+            }
         }
 
-        ksort($signatureData);
-        $signatureString = '';
-        foreach ($signatureData as $key => $value) {
-            $signatureString .= $key . $value;
+        // --- Candidates from parsed payload array ---
+        // Filter: exclude 'hmac', keep everything else (including empty strings)
+        $entries = [];
+        foreach ($payload as $key => $value) {
+            if ($key === 'hmac')
+                continue;
+            $entries[$key] = ($value === null) ? '' : (string) $value;
+        }
+        ksort($entries);
+
+        // Candidate: key=value&key2=value2
+        $kvPairs = [];
+        foreach ($entries as $k => $v) {
+            $kvPairs[] = $k . '=' . $v;
+        }
+        $candidates[] = implode('&', $kvPairs);
+
+        // Candidate: URL-encoded key=value pairs
+        $kvEncoded = [];
+        foreach ($entries as $k => $v) {
+            $kvEncoded[] = urlencode($k) . '=' . urlencode($v);
+        }
+        $encodedStr = implode('&', $kvEncoded);
+        if ($encodedStr !== implode('&', $kvPairs)) {
+            $candidates[] = $encodedStr;
         }
 
-        $computedLegacyHex = hash_hmac('sha256', $signatureString, $salt);
-        $computedLegacyBase64 = base64_encode(hash_hmac('sha256', $signatureString, $salt, true));
+        // Candidate: pipe-separated key:value
+        $pipeParts = [];
+        foreach ($entries as $k => $v) {
+            $pipeParts[] = $k . ':' . $v;
+        }
+        $candidates[] = implode('|', $pipeParts);
+
+        // Candidate: simple concatenation key1value1key2value2 (original approach)
+        $concatStr = '';
+        foreach ($entries as $k => $v) {
+            $concatStr .= $k . $v;
+        }
+        $candidates[] = $concatStr;
+
+        // Also try concat WITHOUT empty values (some HitPay versions skip them)
+        $concatNoEmpty = '';
+        $entriesNoEmpty = array_filter($entries, function ($v) {
+            return $v !== ''; });
+        foreach ($entriesNoEmpty as $k => $v) {
+            $concatNoEmpty .= $k . $v;
+        }
+        if ($concatNoEmpty !== $concatStr) {
+            $candidates[] = $concatNoEmpty;
+        }
+
+        // Deduplicate
+        $candidates = array_unique($candidates);
+
+        // Try each candidate
+        $candidateResults = [];
+        foreach ($candidates as $idx => $candidate) {
+            $hex = hash_hmac('sha256', $candidate, $salt);
+            $base64 = base64_encode(hash_hmac('sha256', $candidate, $salt, true));
+
+            $candidateResults[] = [
+                'index' => $idx,
+                'length' => strlen($candidate),
+                'preview' => substr($candidate, 0, 80),
+                'hex_prefix' => substr($hex, 0, 8),
+            ];
+
+            if (hash_equals($hex, $receivedHmac) || hash_equals($base64, $receivedHmac)) {
+                $debug['v1_matched'] = [
+                    'candidate_index' => $idx,
+                    'candidate' => $candidate,
+                ];
+                return true;
+            }
+        }
 
         $debug['v1'] = [
             'payload_hmac' => $receivedHmac,
-            'computed_hex' => $computedLegacyHex,
-            'computed_base64' => $computedLegacyBase64,
-            'signature_string' => $signatureString,
+            'candidates_tried' => count($candidates),
+            'candidate_results' => $candidateResults,
         ];
-
-        if (hash_equals($computedLegacyHex, $receivedHmac) || hash_equals($computedLegacyBase64, $receivedHmac)) {
-            return true; // Validated successfully
-        }
 
         \Log::error('HitPay Legacy HMAC Verification Failed', ['debug' => $debug, 'salt_preview' => substr($salt, 0, 4) . '...']);
         return false;
