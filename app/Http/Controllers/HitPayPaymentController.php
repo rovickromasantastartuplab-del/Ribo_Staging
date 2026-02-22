@@ -64,8 +64,8 @@ class HitPayPaymentController extends Controller
                 'amount' => number_format($pricing['final_price'], 2, '.', ''),
                 'currency' => strtoupper($currency),
                 'reference_number' => $paymentId,
-                'redirect_url' => route('hitpay.success') . '?payment_id=' . $paymentId,
-                'webhook' => route('hitpay.callback'),
+                'redirect_url' => secure_url('payments/hitpay/success') . '?payment_id=' . $paymentId,
+                'webhook' => secure_url('payments/hitpay/webhook'),
                 'purpose' => 'Subscription to ' . $plan->name . ' plan - ' . ucfirst($validated['billing_cycle']),
                 'email' => auth()->user()->email,
                 'name' => auth()->user()->name,
@@ -127,6 +127,10 @@ class HitPayPaymentController extends Controller
      */
     public function callback(Request $request)
     {
+        \Log::info('HitPay webhook triggered', [
+            'has_header_signature' => !empty($request->header('x-hitpay-signature') ?: $request->header('hitpay-signature'))
+        ]);
+
         try {
             $superAdminId = User::where('type', 'superadmin')->first()?->id;
             $settings = getPaymentMethodConfig('hitpay', $superAdminId);
@@ -151,10 +155,14 @@ class HitPayPaymentController extends Controller
                 return response('Invalid signature', 401);
             }
 
-            $paymentId = $payload['reference_number'] ?? null;
-            $status = strtoupper($payload['status'] ?? '');
+            // HitPay v2 webhooks nest data inside 'data' or 'data.payment_request'
+            $eventData = $payload['data']['payment_request'] ?? $payload['data'] ?? $payload['payment_request'] ?? $payload;
+
+            $paymentId = $eventData['reference_number'] ?? $payload['reference_number'] ?? $eventData['id'] ?? null;
+            $status = strtoupper($eventData['status'] ?? $payload['status'] ?? '');
 
             if (!$paymentId) {
+                \Log::error('HitPay webhook: Missing reference_number in payload', ['payload' => $payload]);
                 return response('Missing reference_number', 400);
             }
 
