@@ -432,7 +432,7 @@ export default function Settings() {
                     )}
 
                     {/* Payment Settings Section */}
-                    {(auth.permissions?.includes('manage-payment-settings') || auth.roles?.includes('superadmin')) && (
+                    {isSuperAdmin && (
                         <section id="payment-settings" ref={paymentSettingsRef} className="mb-8">
                             <PaymentSettings settings={paymentSettings} />
                         </section>

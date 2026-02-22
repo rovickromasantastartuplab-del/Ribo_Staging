@@ -274,6 +274,13 @@ class PaymentSettingController extends Controller
         $userId = auth()->id();
 
         foreach ($settings as $key => $value) {
+            // Do not override if the value is masked with asterisks
+            if (is_string($value) && preg_match('/^\*{8,}$/', $value)) {
+                continue;
+            }
+            if ($value === 'Bank: ****\nAccount: ****\nRouting: ****') {
+                continue;
+            }
             PaymentSetting::updateOrCreateSetting($userId, $key, $value);
         }
     }
