@@ -91,7 +91,8 @@ export default function Settings() {
             title: t('Payment Settings'),
             href: '#payment-settings',
             icon: <CreditCard className="h-4 w-4 mr-2" />,
-            permission: 'manage-payment-settings'
+            permission: 'manage-payment-settings',
+            role: 'superadmin'
         },
         {
             title: t('Quote Templates'),

@@ -73,13 +73,11 @@ class PaymentSetting extends Model
             && !empty($value)
             && !is_bool($value)
         ) {
-            try {
-                // If it successfully decrypts, it's ALREADY an encrypted payload 
-                // that the frontend sent back to us. Save it as-is.
-                Crypt::decryptString((string) $value);
-                $this->attributes['value'] = (string) $value;
-            } catch (DecryptException $e) {
-                // If it fails to decrypt, it's a plaintext API key typed by the user. Encrypt it!
+            // Prevent double-encryption: Laravel encrypted strings always begin with "eyJpdi" 
+            // (the base64 encoding of {"iv"). If it's already encrypted, save it exactly as-is.
+            if (is_string($value) && str_starts_with($value, 'eyJpdi')) {
+                $this->attributes['value'] = $value;
+            } else {
                 $this->attributes['value'] = Crypt::encryptString((string) $value);
             }
             return;
@@ -132,7 +130,7 @@ class PaymentSetting extends Model
             return $value === '1' || $value === 1 || $value === true;
         }
 
-        // Decrypt sensitive keys when reading from the database for actual payment processing
+        // Decrypt sensitive keys when reading from the database
         if (
             isset($this->key)
             && in_array($this->key, $this->sensitiveKeys)
@@ -164,9 +162,9 @@ class PaymentSetting extends Model
             return [];
         }
 
-        // For the Settings UI, we want to send the raw ENCRYPTED cipher text for sensitive keys
-        // (so the eye icon reveals the cipher text, not the plaintext API key),
-        // but we still want the normal getValueAttribute accessor for booleans.
+        // We must map it through Eloquent models so the `getValueAttribute` decryption runs,
+        // BUT for sensitive keys, we want to deliver the raw cipher text to the frontend so the 
+        // user's "eye" toggle reveals cipher text instead of the true API key.
         return self::where('user_id', $userId)->get()->mapWithKeys(function (PaymentSetting $setting) {
             if (in_array($setting->key, $setting->sensitiveKeys)) {
                 return [$setting->key => $setting->getRawOriginal('value')];

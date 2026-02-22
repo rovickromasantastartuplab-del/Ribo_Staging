@@ -88,8 +88,10 @@ class SettingsController extends Controller
         $currencies = Currency::all();
         $paymentSettings = PaymentSetting::getUserSettings($user->id);
 
-        // Always mask sensitive data for display for security purposes
-        $paymentSettings = $this->maskSensitiveData($paymentSettings);
+        // Mask sensitive data for display in demo mode
+        if (config('app.is_demo', false)) {
+            $paymentSettings = $this->maskSensitiveDataForDemo($paymentSettings);
+        }
         $webhooks = Webhook::where('user_id', $user->id)
             ->get();
 
@@ -115,9 +117,9 @@ class SettingsController extends Controller
     }
 
     /**
-     * Mask sensitive payment data for display
+     * Mask sensitive payment data for demo mode display
      */
-    private function maskSensitiveData(array $settings): array
+    private function maskSensitiveDataForDemo(array $settings): array
     {
         $sensitiveKeys = [
             'stripe_key',
@@ -176,7 +178,7 @@ class SettingsController extends Controller
 
         foreach ($sensitiveKeys as $key) {
             if (isset($settings[$key]) && !empty($settings[$key])) {
-                $settings[$key] = '****************';
+                $settings[$key] = str_repeat('*', strlen(100));
             }
         }
 
