@@ -77,12 +77,9 @@ export function PaymentProcessor({
 }: PaymentProcessorProps) {
   const { t } = useTranslation();
 
-  // Centralized currency formatting using admin settings
+  // Format currency respecting the specific plan's currency symbol passed down via props
   const formatCurrency = (amount: number) => {
-    if (typeof window !== 'undefined' && window.appSettings?.formatCurrency) {
-      return window.appSettings.formatCurrency(amount, { showSymbol: true });
-    }
-    return `${currencySymbol}${amount.toFixed(2)}`;
+    return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [couponCode, setCouponCode] = useState('');
