@@ -131,6 +131,13 @@ class HitPayPaymentController extends Controller
         $payload = $request->all();
         $rawPayload = $request->getContent();
 
+        // HitPay sends form-urlencoded POST data. Laravel may consume php://input 
+        // before we read it, leaving getContent() empty. Reconstruct it from $request->all()
+        // just like the Node.js project's express.raw() + URLSearchParams approach.
+        if (empty($rawPayload) && !empty($payload)) {
+            $rawPayload = http_build_query($payload);
+        }
+
         // Always try to log the incoming webhook first
         $webhookLog = HitpayWebhookLog::create([
             'request_payload' => $payload,
@@ -139,7 +146,10 @@ class HitPayPaymentController extends Controller
 
         \Log::info('HitPay webhook triggered', [
             'has_header_signature' => !empty($request->header('x-hitpay-signature') ?: $request->header('hitpay-signature')),
-            'log_id' => $webhookLog->id
+            'log_id' => $webhookLog->id,
+            'content_type' => $request->header('content-type'),
+            'raw_body_length' => strlen($rawPayload),
+            'raw_body_source' => $request->getContent() ? 'php_input' : 'reconstructed',
         ]);
 
         try {
@@ -378,7 +388,8 @@ class HitPayPaymentController extends Controller
         // Also try concat WITHOUT empty values (some HitPay versions skip them)
         $concatNoEmpty = '';
         $entriesNoEmpty = array_filter($entries, function ($v) {
-            return $v !== ''; });
+            return $v !== '';
+        });
         foreach ($entriesNoEmpty as $k => $v) {
             $concatNoEmpty .= $k . $v;
         }
