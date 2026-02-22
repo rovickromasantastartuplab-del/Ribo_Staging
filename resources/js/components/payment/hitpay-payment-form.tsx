@@ -36,6 +36,7 @@ export function HitpayPaymentForm({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
@@ -55,9 +56,10 @@ export function HitpayPaymentForm({
                 setIsProcessing(false);
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('HitPay payment error:', error);
-            toast.error(t('Payment failed. Please try again.'));
+            const errorMsg = error?.message || error?.toString() || 'Unknown fetch error';
+            toast.error(t('Payment failed') + ': ' + errorMsg);
             setIsProcessing(false);
         }
     };
