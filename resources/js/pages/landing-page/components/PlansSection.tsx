@@ -176,11 +176,10 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
               style={{ backgroundColor: billingCycle === 'yearly' ? brandColor : '#e5e7eb' }}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  billingCycle === 'yearly' 
-                    ? 'translate-x-6 rtl:-translate-x-6' 
-                    : 'translate-x-1 rtl:-translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${billingCycle === 'yearly'
+                  ? 'translate-x-6 rtl:-translate-x-6'
+                  : 'translate-x-1 rtl:-translate-x-1'
+                  }`}
               />
             </button>
             <span className={`text-sm ${billingCycle === 'yearly' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>
@@ -198,11 +197,10 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
           {displayPlans.map((plan) => (
             <div
               key={plan.id}
-              className={`group relative h-full flex flex-col ${
-                plan.is_popular
-                  ? 'z-10 scale-[1.02]'
-                  : ''
-              }`}
+              className={`group relative h-full flex flex-col ${plan.is_popular
+                ? 'z-10 scale-[1.02]'
+                : ''
+                }`}
             >
               {/* Card with decorative elements */}
               <div
@@ -253,7 +251,7 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
                       className="text-3xl font-extrabold"
                       style={{ color: plan.is_popular ? brandColor : 'inherit' }}
                     >
-                      {getPrice(plan) === 0 ? '$0' : formatCurrency(getPrice(plan))}
+                      {formatCurrency(getPrice(plan))}
                     </span>
                     <span className="text-muted-foreground text-sm">
                       /{billingCycle === 'yearly' ? t('year') : t('month')}
