@@ -906,7 +906,34 @@ if (!function_exists('processPaymentSuccess')) {
         $plan = Plan::findOrFail($data['plan_id']);
         $user = User::findOrFail($data['user_id']);
 
-        $planOrder = createPlanOrder(array_merge($data, ['status' => 'approved']));
+        // First, try to find an existing pending order with the same payment_id
+        // (created by processPayment before redirecting to the gateway)
+        $planOrder = null;
+        if (!empty($data['payment_id'])) {
+            $planOrder = PlanOrder::where('payment_id', $data['payment_id'])
+                ->where('status', 'pending')
+                ->first();
+        }
+
+        if ($planOrder) {
+            // Update the existing pending order to approved
+            $planOrder->update(['status' => 'approved']);
+        } else {
+            // No existing pending order found — check if already approved to prevent duplicates
+            if (!empty($data['payment_id'])) {
+                $existingApproved = PlanOrder::where('payment_id', $data['payment_id'])
+                    ->where('status', 'approved')
+                    ->first();
+                if ($existingApproved) {
+                    // Already processed, skip to avoid duplicate
+                    return $existingApproved;
+                }
+            }
+
+            // Create a new order only as a last resort
+            $planOrder = createPlanOrder(array_merge($data, ['status' => 'approved']));
+        }
+
         assignPlanToUser($user, $plan, $data['billing_cycle']);
 
         // Verify the plan was assigned
