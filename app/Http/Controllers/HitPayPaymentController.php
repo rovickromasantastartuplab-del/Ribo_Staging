@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Plan;
 use App\Models\PlanOrder;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class HitPayPaymentController extends Controller
@@ -55,7 +56,7 @@ class HitPayPaymentController extends Controller
                 : 'https://api.sandbox.hit-pay.com';
 
             // Get currency
-            $generalSettings = settings($superAdminId);
+            $generalSettings = Setting::getUserSettings($superAdminId);
             $currency = $generalSettings['defaultCurrency'] ?? 'PHP';
 
             // Build HitPay payment request payload
@@ -85,18 +86,20 @@ class HitPayPaymentController extends Controller
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
 
-            $data = json_decode($response, true);
+            $data = $response ? json_decode($response, true) : null;
 
             if ($httpCode !== 200 && $httpCode !== 201) {
                 \Log::error('HitPay checkout creation failed', [
                     'httpCode' => $httpCode,
+                    'curlError' => $curlError,
                     'response' => $data,
                 ]);
                 return response()->json([
                     'success' => false,
-                    'error' => $data['message'] ?? $data['error'] ?? __('Failed to create HitPay payment request'),
+                    'error' => $data['message'] ?? $data['error'] ?? __('Failed to create HitPay payment request. Endpoint unreachable.'),
                 ]);
             }
 
@@ -112,9 +115,9 @@ class HitPayPaymentController extends Controller
                 'checkoutUrl' => $checkoutUrl,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Log::error('HitPay processPayment error', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'error' => __('Payment failed')]);
+            return response()->json(['success' => false, 'error' => __('Payment failed with internal error')]);
         }
     }
 
