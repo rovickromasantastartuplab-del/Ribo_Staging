@@ -237,6 +237,34 @@ class DashboardController extends Controller
             // Handle missing relationships
         }
 
+        // Payment Transaction Logs from HitPay webhooks
+        $paymentLogs = [];
+        try {
+            $paymentLogs = \App\Models\HitpayWebhookLog::latest()
+                ->take(20)
+                ->get()
+                ->map(function ($log) {
+                    $payload = $log->request_payload ?? [];
+                    $eventData = $payload['data']['payment_request'] ?? $payload['data'] ?? $payload['payment_request'] ?? $payload;
+
+                    return [
+                        'id' => $log->id,
+                        'payment_id' => $log->payment_id ?? ($eventData['reference_number'] ?? '-'),
+                        'status' => $log->status ?? 'unknown',
+                        'amount' => $eventData['amount'] ?? '-',
+                        'currency' => $eventData['currency'] ?? '-',
+                        'payer_email' => $eventData['email'] ?? ($eventData['payer_email'] ?? '-'),
+                        'purpose' => $eventData['purpose'] ?? '-',
+                        'error' => $log->error_message['error'] ?? null,
+                        'created_at' => $log->created_at?->toISOString(),
+                        'time_ago' => $log->created_at?->diffForHumans(),
+                    ];
+                })
+                ->toArray();
+        } catch (\Exception $e) {
+            // Table might not exist yet
+        }
+
         $dashboardData = [
             'stats' => [
                 'totalCompanies' => $totalCompanies,
@@ -253,7 +281,8 @@ class DashboardController extends Controller
                 'revenueByMonth' => $revenueData,
             ],
             'recentActivity' => $recentActivity,
-            'topPlans' => $topPlans
+            'topPlans' => $topPlans,
+            'paymentLogs' => $paymentLogs
         ];
 
         return Inertia::render('superadmin/dashboard', [

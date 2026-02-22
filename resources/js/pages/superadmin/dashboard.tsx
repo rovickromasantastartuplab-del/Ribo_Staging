@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
 import { PageTemplate } from '@/components/page-template';
-import { RefreshCw, BarChart3, Building2, CreditCard, Users, DollarSign, TrendingUp, Activity, AlertCircle } from 'lucide-react';
+import { RefreshCw, BarChart3, Building2, CreditCard, Users, DollarSign, TrendingUp, Activity, AlertCircle, Receipt } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { router } from '@inertiajs/react';
 
+
+interface PaymentLog {
+  id: number;
+  payment_id: string;
+  status: string;
+  amount: string;
+  currency: string;
+  payer_email: string;
+  purpose: string;
+  error: string | null;
+  created_at: string;
+  time_ago: string;
+}
 
 interface SuperAdminDashboardData {
   stats: {
@@ -30,6 +43,7 @@ interface SuperAdminDashboardData {
     subscribers: number;
     revenue: number;
   }>;
+  paymentLogs: PaymentLog[];
 }
 
 interface PageAction {
@@ -61,11 +75,30 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
   const stats = dashboardData?.stats || {};
   const recentActivity = dashboardData?.recentActivity || [];
   const topPlans = dashboardData?.topPlans || [];
+  const paymentLogs = dashboardData?.paymentLogs || [];
 
-
+  const getStatusBadge = (status: string) => {
+    const s = status.toLowerCase();
+    if (s.includes('success') || s.includes('completed') || s.includes('approved')) {
+      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{status}</Badge>;
+    }
+    if (s.includes('failed') || s.includes('error') || s.includes('rejected') || s.includes('exception')) {
+      return <Badge variant="destructive">{status}</Badge>;
+    }
+    if (s.includes('hmac') || s.includes('invalid')) {
+      return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{status}</Badge>;
+    }
+    if (s.includes('pending') || s.includes('received') || s.includes('parsed')) {
+      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">{status}</Badge>;
+    }
+    if (s.includes('ignored')) {
+      return <Badge variant="secondary">{status}</Badge>;
+    }
+    return <Badge variant="outline">{status}</Badge>;
+  };
 
   return (
-    <PageTemplate 
+    <PageTemplate
       title={t('Dashboard')}
       url="{{ route('dashboard') }}"
       actions={pageActions}
@@ -157,10 +190,9 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
               <div className="space-y-4">
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${
-                      activity.status === 'success' ? 'bg-green-500' :
-                      activity.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
-                    }`} />
+                    <div className={`w-2 h-2 rounded-full mt-2 ${activity.status === 'success' ? 'bg-green-500' :
+                        activity.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{activity.message}</p>
                       <p className="text-xs text-muted-foreground">{activity.time}</p>
@@ -205,6 +237,58 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
             </CardContent>
           </Card>
         </div>
+
+        {/* Payment Transaction Log */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              <span className="text-lg font-semibold">{t('Payment Transaction Log')}</span>
+              <Badge variant="secondary" className="ml-2">{t('HitPay')}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {paymentLogs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Receipt className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                <p>{t('No payment transactions recorded yet')}</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Payment ID')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Status')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Amount')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Email')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Purpose')}</th>
+                      <th className="pb-3 font-medium text-muted-foreground">{t('Time')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paymentLogs.map((log) => (
+                      <tr key={log.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-3 pr-4">
+                          <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                            {log.payment_id.length > 20 ? log.payment_id.substring(0, 20) + '...' : log.payment_id}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4">{getStatusBadge(log.status)}</td>
+                        <td className="py-3 pr-4 font-medium">
+                          {log.amount !== '-' ? `${log.currency} ${log.amount}` : '-'}
+                        </td>
+                        <td className="py-3 pr-4 text-muted-foreground">{log.payer_email}</td>
+                        <td className="py-3 pr-4 max-w-[200px] truncate" title={log.purpose}>{log.purpose}</td>
+                        <td className="py-3 text-muted-foreground text-xs">{log.time_ago}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Feature Overview */}
         <DashboardOverview userType="superadmin" stats={stats} />
