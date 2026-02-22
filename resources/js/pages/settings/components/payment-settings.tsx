@@ -135,6 +135,10 @@ interface PaymentSettings {
   payfast_merchant_key: string;
   payfast_passphrase: string;
   payfast_mode: 'sandbox' | 'live';
+  is_hitpay_enabled: boolean;
+  hitpay_api_key: string;
+  hitpay_salt: string;
+  hitpay_mode: string;
 }
 
 interface PaymentSettingsProps {
@@ -270,6 +274,10 @@ export default function PaymentSettings({
     payfast_merchant_key: settings.payfast_merchant_key || '',
     payfast_passphrase: settings.payfast_passphrase || '',
     payfast_mode: settings.payfast_mode || 'sandbox',
+    is_hitpay_enabled: settings.is_hitpay_enabled === true || settings.is_hitpay_enabled === '1',
+    hitpay_api_key: settings.hitpay_api_key || '',
+    hitpay_salt: settings.hitpay_salt || '',
+    hitpay_mode: settings.hitpay_mode || 'sandbox',
   });
 
 
@@ -277,39 +285,40 @@ export default function PaymentSettings({
   // Payment methods data for search
   const paymentMethods = useMemo(() => {
     const methods = [
-    { key: 'bank', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.BANK]) },
-    { key: 'stripe', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.STRIPE]) },
-    { key: 'paypal', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYPAL]) },
-    { key: 'razorpay', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.RAZORPAY]) },
-    { key: 'mercadopago', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MERCADOPAGO]) },
-    { key: 'paystack', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYSTACK]) },
-    { key: 'flutterwave', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.FLUTTERWAVE]) },
-    { key: 'paytabs', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTABS]) },
-    { key: 'skrill', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.SKRILL]) },
-    { key: 'coingate', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.COINGATE]) },
-    { key: 'payfast', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYFAST]) },
-    { key: 'tap', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TAP]) },
-    { key: 'xendit', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.XENDIT]) },
-    { key: 'paytr', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTR]) },
-    { key: 'mollie', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MOLLIE]) },
-    { key: 'toyyibpay', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TOYYIBPAY]) },
-    { key: 'paymentwall', name: t('PaymentWall') },
-    { key: 'sspay', name: t('SSPay') },
-    { key: 'benefit', name: t('Benefit') },
-    { key: 'iyzipay', name: t('Iyzipay') },
-    { key: 'aamarpay', name: t('Aamarpay') },
-    { key: 'midtrans', name: t('Midtrans') },
-    { key: 'yookassa', name: t('YooKassa') },
-    { key: 'nepalste', name: t('Nepalste') },
-    { key: 'paiement', name: t('Paiement Pro') },
-    { key: 'cinetpay', name: t('CinetPay') },
-    { key: 'payhere', name: t('PayHere') },
-    { key: 'fedapay', name: t('FedaPay') },
-    { key: 'authorizenet', name: t('AuthorizeNet') },
-    { key: 'khalti', name: t('Khalti') },
-    { key: 'easebuzz', name: t('Easebuzz') },
-    { key: 'ozow', name: t('Ozow') },
-    { key: 'cashfree', name: t('Cashfree') },
+      { key: 'bank', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.BANK]) },
+      { key: 'stripe', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.STRIPE]) },
+      { key: 'paypal', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYPAL]) },
+      { key: 'razorpay', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.RAZORPAY]) },
+      { key: 'mercadopago', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MERCADOPAGO]) },
+      { key: 'paystack', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYSTACK]) },
+      { key: 'flutterwave', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.FLUTTERWAVE]) },
+      { key: 'paytabs', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTABS]) },
+      { key: 'skrill', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.SKRILL]) },
+      { key: 'coingate', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.COINGATE]) },
+      { key: 'payfast', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYFAST]) },
+      { key: 'tap', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TAP]) },
+      { key: 'xendit', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.XENDIT]) },
+      { key: 'paytr', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTR]) },
+      { key: 'mollie', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MOLLIE]) },
+      { key: 'toyyibpay', name: t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TOYYIBPAY]) },
+      { key: 'paymentwall', name: t('PaymentWall') },
+      { key: 'sspay', name: t('SSPay') },
+      { key: 'benefit', name: t('Benefit') },
+      { key: 'iyzipay', name: t('Iyzipay') },
+      { key: 'aamarpay', name: t('Aamarpay') },
+      { key: 'midtrans', name: t('Midtrans') },
+      { key: 'yookassa', name: t('YooKassa') },
+      { key: 'nepalste', name: t('Nepalste') },
+      { key: 'paiement', name: t('Paiement Pro') },
+      { key: 'cinetpay', name: t('CinetPay') },
+      { key: 'payhere', name: t('PayHere') },
+      { key: 'fedapay', name: t('FedaPay') },
+      { key: 'authorizenet', name: t('AuthorizeNet') },
+      { key: 'khalti', name: t('Khalti') },
+      { key: 'easebuzz', name: t('Easebuzz') },
+      { key: 'ozow', name: t('Ozow') },
+      { key: 'cashfree', name: t('Cashfree') },
+      { key: 'hitpay', name: t('HitPay') },
     ];
 
     if (Array.isArray(allowedMethodKeys) && allowedMethodKeys.length > 0) {
@@ -350,8 +359,8 @@ export default function PaymentSettings({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     post(route(submitRouteName), {
-       preserveScroll: true,
-       onSuccess: (page) => {
+      preserveScroll: true,
+      onSuccess: (page) => {
         const successMessage = page.props.flash?.success;
         const errorMessage = page.props.flash?.error;
         if (successMessage) {
@@ -495,769 +504,769 @@ export default function PaymentSettings({
 
               {/* Bank Transfer */}
               {shouldShowMethod('bank') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.BANK])}
-                icon={<Banknote className="h-5 w-5" />}
-                enabled={data.is_bank_enabled}
-                onToggle={(checked) => setData('is_bank_enabled', checked)}
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="bank_detail">{t("Bank Details")}</Label>
-                  <Textarea
-                    id="bank_detail"
-                    value={data.bank_detail}
-                    onChange={(e) => setData('bank_detail', e.target.value)}
-                    placeholder={t("Bank: Your Bank Name\nAccount Number: 0000 0000\nRouting Number: 000000000")}
-                    rows={6}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t("Enter your bank details that customers will use for manual transfers")}
-                  </p>
-                  {errors.bank_detail && (
-                    <p className="text-sm text-destructive">{errors.bank_detail}</p>
-                  )}
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.BANK])}
+                  icon={<Banknote className="h-5 w-5" />}
+                  enabled={data.is_bank_enabled}
+                  onToggle={(checked) => setData('is_bank_enabled', checked)}
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_detail">{t("Bank Details")}</Label>
+                    <Textarea
+                      id="bank_detail"
+                      value={data.bank_detail}
+                      onChange={(e) => setData('bank_detail', e.target.value)}
+                      placeholder={t("Bank: Your Bank Name\nAccount Number: 0000 0000\nRouting Number: 000000000")}
+                      rows={6}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("Enter your bank details that customers will use for manual transfers")}
+                    </p>
+                    {errors.bank_detail && (
+                      <p className="text-sm text-destructive">{errors.bank_detail}</p>
+                    )}
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Stripe */}
               {shouldShowMethod('stripe') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.STRIPE])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_stripe_enabled}
-                onToggle={(checked) => setData('is_stripe_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.STRIPE]}
-                helpText={t("Get your Stripe API keys from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="stripe_key"
-                    label={t("Publishable Key")}
-                    value={data.stripe_key}
-                    onChange={(value) => setData('stripe_key', value)}
-                    placeholder="pk_test_..."
-                    error={errors.stripe_key}
-                  />
-                  <PaymentInputField
-                    id="stripe_secret"
-                    label={t("Secret Key")}
-                    value={data.stripe_secret}
-                    onChange={(value) => setData('stripe_secret', value)}
-                    placeholder="sk_test_..."
-                    isSecret
-                    error={errors.stripe_secret}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.STRIPE])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_stripe_enabled}
+                  onToggle={(checked) => setData('is_stripe_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.STRIPE]}
+                  helpText={t("Get your Stripe API keys from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="stripe_key"
+                      label={t("Publishable Key")}
+                      value={data.stripe_key}
+                      onChange={(value) => setData('stripe_key', value)}
+                      placeholder="pk_test_..."
+                      error={errors.stripe_key}
+                    />
+                    <PaymentInputField
+                      id="stripe_secret"
+                      label={t("Secret Key")}
+                      value={data.stripe_secret}
+                      onChange={(value) => setData('stripe_secret', value)}
+                      placeholder="sk_test_..."
+                      isSecret
+                      error={errors.stripe_secret}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* PayPal */}
               {shouldShowMethod('paypal') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYPAL])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_paypal_enabled}
-                onToggle={(checked) => setData('is_paypal_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYPAL]}
-                helpText={t("Get your PayPal API credentials from your")}
-              >
-                <div className="space-y-4">
-                  <PaymentModeSelector
-                    value={data.paypal_mode}
-                    onChange={(mode) => setData('paypal_mode', mode)}
-                    name="paypal"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <PaymentInputField
-                      id="paypal_client_id"
-                      label={t("Client ID")}
-                      value={data.paypal_client_id}
-                      onChange={(value) => setData('paypal_client_id', value)}
-                      placeholder={t("Client ID")}
-                      error={errors.paypal_client_id}
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYPAL])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_paypal_enabled}
+                  onToggle={(checked) => setData('is_paypal_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYPAL]}
+                  helpText={t("Get your PayPal API credentials from your")}
+                >
+                  <div className="space-y-4">
+                    <PaymentModeSelector
+                      value={data.paypal_mode}
+                      onChange={(mode) => setData('paypal_mode', mode)}
+                      name="paypal"
                     />
-                    <PaymentInputField
-                      id="paypal_secret_key"
-                      label={t("Secret Key")}
-                      value={data.paypal_secret_key}
-                      onChange={(value) => setData('paypal_secret_key', value)}
-                      placeholder={t("Secret Key")}
-                      isSecret
-                      error={errors.paypal_secret_key}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <PaymentInputField
+                        id="paypal_client_id"
+                        label={t("Client ID")}
+                        value={data.paypal_client_id}
+                        onChange={(value) => setData('paypal_client_id', value)}
+                        placeholder={t("Client ID")}
+                        error={errors.paypal_client_id}
+                      />
+                      <PaymentInputField
+                        id="paypal_secret_key"
+                        label={t("Secret Key")}
+                        value={data.paypal_secret_key}
+                        onChange={(value) => setData('paypal_secret_key', value)}
+                        placeholder={t("Secret Key")}
+                        isSecret
+                        error={errors.paypal_secret_key}
+                      />
+                    </div>
                   </div>
-                </div>
-              </PaymentMethodCard>
+                </PaymentMethodCard>
               )}
 
               {/* Razorpay */}
               {shouldShowMethod('razorpay') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.RAZORPAY])}
-                icon={<IndianRupee className="h-5 w-5" />}
-                enabled={data.is_razorpay_enabled}
-                onToggle={(checked) => setData('is_razorpay_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.RAZORPAY]}
-                helpText={t("Get your Razorpay API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="razorpay_key"
-                    label={t("Key ID")}
-                    value={data.razorpay_key}
-                    onChange={(value) => setData('razorpay_key', value)}
-                    placeholder="rzp_test_..."
-                    error={errors.razorpay_key}
-                  />
-                  <PaymentInputField
-                    id="razorpay_secret"
-                    label={t("Secret Key")}
-                    value={data.razorpay_secret}
-                    onChange={(value) => setData('razorpay_secret', value)}
-                    placeholder="..."
-                    isSecret
-                    error={errors.razorpay_secret}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.RAZORPAY])}
+                  icon={<IndianRupee className="h-5 w-5" />}
+                  enabled={data.is_razorpay_enabled}
+                  onToggle={(checked) => setData('is_razorpay_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.RAZORPAY]}
+                  helpText={t("Get your Razorpay API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="razorpay_key"
+                      label={t("Key ID")}
+                      value={data.razorpay_key}
+                      onChange={(value) => setData('razorpay_key', value)}
+                      placeholder="rzp_test_..."
+                      error={errors.razorpay_key}
+                    />
+                    <PaymentInputField
+                      id="razorpay_secret"
+                      label={t("Secret Key")}
+                      value={data.razorpay_secret}
+                      onChange={(value) => setData('razorpay_secret', value)}
+                      placeholder="..."
+                      isSecret
+                      error={errors.razorpay_secret}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Mercado Pago */}
               {shouldShowMethod('mercadopago') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MERCADOPAGO])}
-                icon={<Wallet className="h-5 w-5" />}
-                enabled={data.is_mercadopago_enabled}
-                onToggle={(checked) => setData('is_mercadopago_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.MERCADOPAGO]}
-                helpText={t("Get your Mercado Pago API credentials from your")}
-              >
-                <div className="space-y-4">
-                  <PaymentModeSelector
-                    value={data.mercadopago_mode}
-                    onChange={(mode) => setData('mercadopago_mode', mode)}
-                    name="mercadopago"
-                  />
-                  <PaymentInputField
-                    id="mercadopago_access_token"
-                    label={t("Access Token")}
-                    value={data.mercadopago_access_token}
-                    onChange={(value) => setData('mercadopago_access_token', value)}
-                    placeholder={data.mercadopago_mode === 'sandbox' ? 'TEST-' : 'APP_USR-'}
-                    isSecret
-                    error={errors.mercadopago_access_token}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t("For server-side API integration, use your Private Access Token (NOT your public key). You can find this in your MercadoPago Developer Dashboard under Credentials > Production/Test Credentials > Access token.")}
-                  </p>
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      {t("Important: Do not use your Public Key here. The Access Token is different and is required for server-side operations.")}
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MERCADOPAGO])}
+                  icon={<Wallet className="h-5 w-5" />}
+                  enabled={data.is_mercadopago_enabled}
+                  onToggle={(checked) => setData('is_mercadopago_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.MERCADOPAGO]}
+                  helpText={t("Get your Mercado Pago API credentials from your")}
+                >
+                  <div className="space-y-4">
+                    <PaymentModeSelector
+                      value={data.mercadopago_mode}
+                      onChange={(mode) => setData('mercadopago_mode', mode)}
+                      name="mercadopago"
+                    />
+                    <PaymentInputField
+                      id="mercadopago_access_token"
+                      label={t("Access Token")}
+                      value={data.mercadopago_access_token}
+                      onChange={(value) => setData('mercadopago_access_token', value)}
+                      placeholder={data.mercadopago_mode === 'sandbox' ? 'TEST-' : 'APP_USR-'}
+                      isSecret
+                      error={errors.mercadopago_access_token}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("For server-side API integration, use your Private Access Token (NOT your public key). You can find this in your MercadoPago Developer Dashboard under Credentials > Production/Test Credentials > Access token.")}
+                    </p>
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {t("Important: Do not use your Public Key here. The Access Token is different and is required for server-side operations.")}
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Paystack */}
               {shouldShowMethod('paystack') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYSTACK])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_paystack_enabled}
-                onToggle={(checked) => setData('is_paystack_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYSTACK]}
-                helpText={t("Get your Paystack API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="paystack_public_key"
-                    label={t("Public Key")}
-                    value={data.paystack_public_key}
-                    onChange={(value) => setData('paystack_public_key', value)}
-                    placeholder="pk_test_..."
-                    error={errors.paystack_public_key}
-                  />
-                  <PaymentInputField
-                    id="paystack_secret_key"
-                    label={t("Secret Key")}
-                    value={data.paystack_secret_key}
-                    onChange={(value) => setData('paystack_secret_key', value)}
-                    placeholder="sk_test_..."
-                    isSecret
-                    error={errors.paystack_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYSTACK])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_paystack_enabled}
+                  onToggle={(checked) => setData('is_paystack_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYSTACK]}
+                  helpText={t("Get your Paystack API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="paystack_public_key"
+                      label={t("Public Key")}
+                      value={data.paystack_public_key}
+                      onChange={(value) => setData('paystack_public_key', value)}
+                      placeholder="pk_test_..."
+                      error={errors.paystack_public_key}
+                    />
+                    <PaymentInputField
+                      id="paystack_secret_key"
+                      label={t("Secret Key")}
+                      value={data.paystack_secret_key}
+                      onChange={(value) => setData('paystack_secret_key', value)}
+                      placeholder="sk_test_..."
+                      isSecret
+                      error={errors.paystack_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Flutterwave */}
               {shouldShowMethod('flutterwave') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.FLUTTERWAVE])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_flutterwave_enabled}
-                onToggle={(checked) => setData('is_flutterwave_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.FLUTTERWAVE]}
-                helpText={t("Get your Flutterwave API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="flutterwave_public_key"
-                    label={t("Public Key")}
-                    value={data.flutterwave_public_key}
-                    onChange={(value) => setData('flutterwave_public_key', value)}
-                    placeholder="FLWPUBK_TEST-..."
-                    error={errors.flutterwave_public_key}
-                  />
-                  <PaymentInputField
-                    id="flutterwave_secret_key"
-                    label={t("Secret Key")}
-                    value={data.flutterwave_secret_key}
-                    onChange={(value) => setData('flutterwave_secret_key', value)}
-                    placeholder="FLWSECK_TEST-..."
-                    isSecret
-                    error={errors.flutterwave_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.FLUTTERWAVE])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_flutterwave_enabled}
+                  onToggle={(checked) => setData('is_flutterwave_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.FLUTTERWAVE]}
+                  helpText={t("Get your Flutterwave API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="flutterwave_public_key"
+                      label={t("Public Key")}
+                      value={data.flutterwave_public_key}
+                      onChange={(value) => setData('flutterwave_public_key', value)}
+                      placeholder="FLWPUBK_TEST-..."
+                      error={errors.flutterwave_public_key}
+                    />
+                    <PaymentInputField
+                      id="flutterwave_secret_key"
+                      label={t("Secret Key")}
+                      value={data.flutterwave_secret_key}
+                      onChange={(value) => setData('flutterwave_secret_key', value)}
+                      placeholder="FLWSECK_TEST-..."
+                      isSecret
+                      error={errors.flutterwave_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* PayTabs */}
               {shouldShowMethod('paytabs') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTABS])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_paytabs_enabled}
-                onToggle={(checked) => setData('is_paytabs_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYTABS]}
-                helpText={t("Get your PayTabs API credentials from your")}
-              >
-                <div className="space-y-4">
-                  <PaymentModeSelector
-                    value={data.paytabs_mode}
-                    onChange={(mode) => setData('paytabs_mode', mode)}
-                    name="paytabs"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <PaymentInputField
-                      id="paytabs_profile_id"
-                      label={t("Profile ID")}
-                      value={data.paytabs_profile_id}
-                      onChange={(value) => setData('paytabs_profile_id', value)}
-                      placeholder={t("Profile ID")}
-                      error={errors.paytabs_profile_id}
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTABS])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_paytabs_enabled}
+                  onToggle={(checked) => setData('is_paytabs_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYTABS]}
+                  helpText={t("Get your PayTabs API credentials from your")}
+                >
+                  <div className="space-y-4">
+                    <PaymentModeSelector
+                      value={data.paytabs_mode}
+                      onChange={(mode) => setData('paytabs_mode', mode)}
+                      name="paytabs"
                     />
-                    <PaymentInputField
-                      id="paytabs_server_key"
-                      label={t("Server Key")}
-                      value={data.paytabs_server_key}
-                      onChange={(value) => setData('paytabs_server_key', value)}
-                      placeholder={t("Server Key")}
-                      isSecret
-                      error={errors.paytabs_server_key}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <PaymentInputField
+                        id="paytabs_profile_id"
+                        label={t("Profile ID")}
+                        value={data.paytabs_profile_id}
+                        onChange={(value) => setData('paytabs_profile_id', value)}
+                        placeholder={t("Profile ID")}
+                        error={errors.paytabs_profile_id}
+                      />
+                      <PaymentInputField
+                        id="paytabs_server_key"
+                        label={t("Server Key")}
+                        value={data.paytabs_server_key}
+                        onChange={(value) => setData('paytabs_server_key', value)}
+                        placeholder={t("Server Key")}
+                        isSecret
+                        error={errors.paytabs_server_key}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="paytabs_region">{t("Region")}</Label>
+                      <Select value={data.paytabs_region} onValueChange={(value) => setData('paytabs_region', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("Select Region")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ARE">{t("UAE")}</SelectItem>
+                          <SelectItem value="SAU">{t("Saudi Arabia")}</SelectItem>
+                          <SelectItem value="OMN">{t("Oman")}</SelectItem>
+                          <SelectItem value="JOR">{t("Jordan")}</SelectItem>
+                          <SelectItem value="EGY">{t("Egypt")}</SelectItem>
+                          <SelectItem value="IRQ">{t("Iraq")}</SelectItem>
+                          <SelectItem value="GLOBAL">{t("Global")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.paytabs_region && (
+                        <p className="text-sm text-destructive">{errors.paytabs_region}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="paytabs_region">{t("Region")}</Label>
-                    <Select value={data.paytabs_region} onValueChange={(value) => setData('paytabs_region', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("Select Region")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ARE">{t("UAE")}</SelectItem>
-                        <SelectItem value="SAU">{t("Saudi Arabia")}</SelectItem>
-                        <SelectItem value="OMN">{t("Oman")}</SelectItem>
-                        <SelectItem value="JOR">{t("Jordan")}</SelectItem>
-                        <SelectItem value="EGY">{t("Egypt")}</SelectItem>
-                        <SelectItem value="IRQ">{t("Iraq")}</SelectItem>
-                        <SelectItem value="GLOBAL">{t("Global")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.paytabs_region && (
-                      <p className="text-sm text-destructive">{errors.paytabs_region}</p>
-                    )}
-                  </div>
-                </div>
-              </PaymentMethodCard>
+                </PaymentMethodCard>
               )}
 
               {/* Skrill */}
               {shouldShowMethod('skrill') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.SKRILL])}
-                icon={<Wallet className="h-5 w-5" />}
-                enabled={data.is_skrill_enabled}
-                onToggle={(checked) => setData('is_skrill_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.SKRILL]}
-                helpText={t("Get your Skrill merchant credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="skrill_merchant_id"
-                    label={t("Merchant ID")}
-                    value={data.skrill_merchant_id}
-                    onChange={(value) => setData('skrill_merchant_id', value)}
-                    placeholder={t("Merchant ID")}
-                    error={errors.skrill_merchant_id}
-                  />
-                  <PaymentInputField
-                    id="skrill_secret_word"
-                    label={t("Secret Word")}
-                    value={data.skrill_secret_word}
-                    onChange={(value) => setData('skrill_secret_word', value)}
-                    placeholder={t("Secret Word")}
-                    isSecret
-                    error={errors.skrill_secret_word}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.SKRILL])}
+                  icon={<Wallet className="h-5 w-5" />}
+                  enabled={data.is_skrill_enabled}
+                  onToggle={(checked) => setData('is_skrill_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.SKRILL]}
+                  helpText={t("Get your Skrill merchant credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="skrill_merchant_id"
+                      label={t("Merchant ID")}
+                      value={data.skrill_merchant_id}
+                      onChange={(value) => setData('skrill_merchant_id', value)}
+                      placeholder={t("Merchant ID")}
+                      error={errors.skrill_merchant_id}
+                    />
+                    <PaymentInputField
+                      id="skrill_secret_word"
+                      label={t("Secret Word")}
+                      value={data.skrill_secret_word}
+                      onChange={(value) => setData('skrill_secret_word', value)}
+                      placeholder={t("Secret Word")}
+                      isSecret
+                      error={errors.skrill_secret_word}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* CoinGate */}
               {shouldShowMethod('coingate') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.COINGATE])}
-                icon={<Coins className="h-5 w-5" />}
-                enabled={data.is_coingate_enabled}
-                onToggle={(checked) => setData('is_coingate_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.COINGATE]}
-                helpText={t("Get your CoinGate API credentials from your")}
-              >
-                <div className="space-y-4">
-                  <PaymentModeSelector
-                    value={data.coingate_mode}
-                    onChange={(mode) => setData('coingate_mode', mode)}
-                    name="coingate"
-                  />
-                  <PaymentInputField
-                    id="coingate_api_token"
-                    label={t("API Token")}
-                    value={data.coingate_api_token}
-                    onChange={(value) => setData('coingate_api_token', value)}
-                    placeholder={t("API Token")}
-                    isSecret
-                    error={errors.coingate_api_token}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.COINGATE])}
+                  icon={<Coins className="h-5 w-5" />}
+                  enabled={data.is_coingate_enabled}
+                  onToggle={(checked) => setData('is_coingate_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.COINGATE]}
+                  helpText={t("Get your CoinGate API credentials from your")}
+                >
+                  <div className="space-y-4">
+                    <PaymentModeSelector
+                      value={data.coingate_mode}
+                      onChange={(mode) => setData('coingate_mode', mode)}
+                      name="coingate"
+                    />
+                    <PaymentInputField
+                      id="coingate_api_token"
+                      label={t("API Token")}
+                      value={data.coingate_api_token}
+                      onChange={(value) => setData('coingate_api_token', value)}
+                      placeholder={t("API Token")}
+                      isSecret
+                      error={errors.coingate_api_token}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Payfast */}
               {shouldShowMethod('payfast') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYFAST])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_payfast_enabled}
-                onToggle={(checked) => setData('is_payfast_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYFAST]}
-                helpText={t("Get your Payfast merchant credentials from your")}
-              >
-                <div className="space-y-4">
-                  <PaymentModeSelector
-                    value={data.payfast_mode}
-                    onChange={(mode) => setData('payfast_mode', mode)}
-                    name="payfast"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <PaymentInputField
-                      id="payfast_merchant_id"
-                      label={t("Merchant ID")}
-                      value={data.payfast_merchant_id}
-                      onChange={(value) => setData('payfast_merchant_id', value)}
-                      placeholder={t("Merchant ID")}
-                      error={errors.payfast_merchant_id}
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYFAST])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_payfast_enabled}
+                  onToggle={(checked) => setData('is_payfast_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYFAST]}
+                  helpText={t("Get your Payfast merchant credentials from your")}
+                >
+                  <div className="space-y-4">
+                    <PaymentModeSelector
+                      value={data.payfast_mode}
+                      onChange={(mode) => setData('payfast_mode', mode)}
+                      name="payfast"
                     />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <PaymentInputField
+                        id="payfast_merchant_id"
+                        label={t("Merchant ID")}
+                        value={data.payfast_merchant_id}
+                        onChange={(value) => setData('payfast_merchant_id', value)}
+                        placeholder={t("Merchant ID")}
+                        error={errors.payfast_merchant_id}
+                      />
+                      <PaymentInputField
+                        id="payfast_merchant_key"
+                        label={t("Merchant Key")}
+                        value={data.payfast_merchant_key}
+                        onChange={(value) => setData('payfast_merchant_key', value)}
+                        placeholder={t("Merchant Key")}
+                        isSecret
+                        error={errors.payfast_merchant_key}
+                      />
+                    </div>
                     <PaymentInputField
-                      id="payfast_merchant_key"
-                      label={t("Merchant Key")}
-                      value={data.payfast_merchant_key}
-                      onChange={(value) => setData('payfast_merchant_key', value)}
-                      placeholder={t("Merchant Key")}
-                      isSecret
-                      error={errors.payfast_merchant_key}
+                      id="payfast_passphrase"
+                      label={t("Passphrase")}
+                      value={data.payfast_passphrase}
+                      onChange={(value) => setData('payfast_passphrase', value)}
+                      placeholder={t("Passphrase (optional)")}
+                      error={errors.payfast_passphrase}
                     />
                   </div>
-                  <PaymentInputField
-                    id="payfast_passphrase"
-                    label={t("Passphrase")}
-                    value={data.payfast_passphrase}
-                    onChange={(value) => setData('payfast_passphrase', value)}
-                    placeholder={t("Passphrase (optional)")}
-                    error={errors.payfast_passphrase}
-                  />
-                </div>
-              </PaymentMethodCard>
+                </PaymentMethodCard>
               )}
 
               {/* Tap */}
               {shouldShowMethod('tap') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TAP])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_tap_enabled}
-                onToggle={(checked) => setData('is_tap_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.TAP]}
-                helpText={t("Get your Tap API credentials from your")}
-              >
-                <PaymentInputField
-                  id="tap_secret_key"
-                  label={t("Secret Key")}
-                  value={data.tap_secret_key}
-                  onChange={(value) => setData('tap_secret_key', value)}
-                  placeholder={t("Secret Key")}
-                  isSecret
-                  error={errors.tap_secret_key}
-                />
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TAP])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_tap_enabled}
+                  onToggle={(checked) => setData('is_tap_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.TAP]}
+                  helpText={t("Get your Tap API credentials from your")}
+                >
+                  <PaymentInputField
+                    id="tap_secret_key"
+                    label={t("Secret Key")}
+                    value={data.tap_secret_key}
+                    onChange={(value) => setData('tap_secret_key', value)}
+                    placeholder={t("Secret Key")}
+                    isSecret
+                    error={errors.tap_secret_key}
+                  />
+                </PaymentMethodCard>
               )}
 
               {/* Xendit */}
               {shouldShowMethod('xendit') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.XENDIT])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_xendit_enabled}
-                onToggle={(checked) => setData('is_xendit_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.XENDIT]}
-                helpText={t("Get your Xendit API credentials from your")}
-              >
-                <PaymentInputField
-                  id="xendit_api_key"
-                  label={t("API Key")}
-                  value={data.xendit_api_key}
-                  onChange={(value) => setData('xendit_api_key', value)}
-                  placeholder={t("API Key")}
-                  isSecret
-                  error={errors.xendit_api_key}
-                />
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.XENDIT])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_xendit_enabled}
+                  onToggle={(checked) => setData('is_xendit_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.XENDIT]}
+                  helpText={t("Get your Xendit API credentials from your")}
+                >
+                  <PaymentInputField
+                    id="xendit_api_key"
+                    label={t("API Key")}
+                    value={data.xendit_api_key}
+                    onChange={(value) => setData('xendit_api_key', value)}
+                    placeholder={t("API Key")}
+                    isSecret
+                    error={errors.xendit_api_key}
+                  />
+                </PaymentMethodCard>
               )}
 
               {/* PayTR */}
               {shouldShowMethod('paytr') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTR])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_paytr_enabled}
-                onToggle={(checked) => setData('is_paytr_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYTR]}
-                helpText={t("Get your PayTR merchant credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.PAYTR])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_paytr_enabled}
+                  onToggle={(checked) => setData('is_paytr_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYTR]}
+                  helpText={t("Get your PayTR merchant credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="paytr_merchant_id"
+                      label={t("Merchant ID")}
+                      value={data.paytr_merchant_id}
+                      onChange={(value) => setData('paytr_merchant_id', value)}
+                      placeholder={t("Merchant ID")}
+                      error={errors.paytr_merchant_id}
+                    />
+                    <PaymentInputField
+                      id="paytr_merchant_key"
+                      label={t("Merchant Key")}
+                      value={data.paytr_merchant_key}
+                      onChange={(value) => setData('paytr_merchant_key', value)}
+                      placeholder={t("Merchant Key")}
+                      isSecret
+                      error={errors.paytr_merchant_key}
+                    />
+                  </div>
                   <PaymentInputField
-                    id="paytr_merchant_id"
-                    label={t("Merchant ID")}
-                    value={data.paytr_merchant_id}
-                    onChange={(value) => setData('paytr_merchant_id', value)}
-                    placeholder={t("Merchant ID")}
-                    error={errors.paytr_merchant_id}
-                  />
-                  <PaymentInputField
-                    id="paytr_merchant_key"
-                    label={t("Merchant Key")}
-                    value={data.paytr_merchant_key}
-                    onChange={(value) => setData('paytr_merchant_key', value)}
-                    placeholder={t("Merchant Key")}
+                    id="paytr_merchant_salt"
+                    label={t("Merchant Salt")}
+                    value={data.paytr_merchant_salt}
+                    onChange={(value) => setData('paytr_merchant_salt', value)}
+                    placeholder={t("Merchant Salt")}
                     isSecret
-                    error={errors.paytr_merchant_key}
+                    error={errors.paytr_merchant_salt}
                   />
-                </div>
-                <PaymentInputField
-                  id="paytr_merchant_salt"
-                  label={t("Merchant Salt")}
-                  value={data.paytr_merchant_salt}
-                  onChange={(value) => setData('paytr_merchant_salt', value)}
-                  placeholder={t("Merchant Salt")}
-                  isSecret
-                  error={errors.paytr_merchant_salt}
-                />
-              </PaymentMethodCard>
+                </PaymentMethodCard>
               )}
 
               {/* Mollie */}
               {shouldShowMethod('mollie') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MOLLIE])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_mollie_enabled}
-                onToggle={(checked) => setData('is_mollie_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.MOLLIE]}
-                helpText={t("Get your Mollie API credentials from your")}
-              >
-                <PaymentInputField
-                  id="mollie_api_key"
-                  label={t("API Key")}
-                  value={data.mollie_api_key}
-                  onChange={(value) => setData('mollie_api_key', value)}
-                  placeholder={t("API Key")}
-                  isSecret
-                  error={errors.mollie_api_key}
-                />
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.MOLLIE])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_mollie_enabled}
+                  onToggle={(checked) => setData('is_mollie_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.MOLLIE]}
+                  helpText={t("Get your Mollie API credentials from your")}
+                >
+                  <PaymentInputField
+                    id="mollie_api_key"
+                    label={t("API Key")}
+                    value={data.mollie_api_key}
+                    onChange={(value) => setData('mollie_api_key', value)}
+                    placeholder={t("API Key")}
+                    isSecret
+                    error={errors.mollie_api_key}
+                  />
+                </PaymentMethodCard>
               )}
 
               {/* toyyibPay */}
               {shouldShowMethod('toyyibpay') && (
-              <PaymentMethodCard
-                title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TOYYIBPAY])}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_toyyibpay_enabled}
-                onToggle={(checked) => setData('is_toyyibpay_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.TOYYIBPAY]}
-                helpText={t("Get your toyyibPay credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="toyyibpay_category_code"
-                    label={t("Category Code")}
-                    value={data.toyyibpay_category_code}
-                    onChange={(value) => setData('toyyibpay_category_code', value)}
-                    placeholder={t("Category Code")}
-                    error={errors.toyyibpay_category_code}
-                  />
-                  <PaymentInputField
-                    id="toyyibpay_secret_key"
-                    label={t("Secret Key")}
-                    value={data.toyyibpay_secret_key}
-                    onChange={(value) => setData('toyyibpay_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.toyyibpay_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t(PAYMENT_METHOD_LABELS[PAYMENT_METHODS.TOYYIBPAY])}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_toyyibpay_enabled}
+                  onToggle={(checked) => setData('is_toyyibpay_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.TOYYIBPAY]}
+                  helpText={t("Get your toyyibPay credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="toyyibpay_category_code"
+                      label={t("Category Code")}
+                      value={data.toyyibpay_category_code}
+                      onChange={(value) => setData('toyyibpay_category_code', value)}
+                      placeholder={t("Category Code")}
+                      error={errors.toyyibpay_category_code}
+                    />
+                    <PaymentInputField
+                      id="toyyibpay_secret_key"
+                      label={t("Secret Key")}
+                      value={data.toyyibpay_secret_key}
+                      onChange={(value) => setData('toyyibpay_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.toyyibpay_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* PaymentWall */}
               {shouldShowMethod('paymentwall') && (
-              <PaymentMethodCard
-                title={t('PaymentWall')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_paymentwall_enabled}
-                onToggle={(checked) => setData('is_paymentwall_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYMENTWALL]}
-                helpText={t("Get your PaymentWall API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="paymentwall_public_key"
-                    label={t("Public Key")}
-                    value={data.paymentwall_public_key}
-                    onChange={(value) => setData('paymentwall_public_key', value)}
-                    placeholder={t("Public Key")}
-                    error={errors.paymentwall_public_key}
-                  />
-                  <PaymentInputField
-                    id="paymentwall_private_key"
-                    label={t("Private Key")}
-                    value={data.paymentwall_private_key}
-                    onChange={(value) => setData('paymentwall_private_key', value)}
-                    placeholder={t("Private Key")}
-                    isSecret
-                    error={errors.paymentwall_private_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('PaymentWall')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_paymentwall_enabled}
+                  onToggle={(checked) => setData('is_paymentwall_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYMENTWALL]}
+                  helpText={t("Get your PaymentWall API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="paymentwall_public_key"
+                      label={t("Public Key")}
+                      value={data.paymentwall_public_key}
+                      onChange={(value) => setData('paymentwall_public_key', value)}
+                      placeholder={t("Public Key")}
+                      error={errors.paymentwall_public_key}
+                    />
+                    <PaymentInputField
+                      id="paymentwall_private_key"
+                      label={t("Private Key")}
+                      value={data.paymentwall_private_key}
+                      onChange={(value) => setData('paymentwall_private_key', value)}
+                      placeholder={t("Private Key")}
+                      isSecret
+                      error={errors.paymentwall_private_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* SSPay */}
               {shouldShowMethod('sspay') && (
-              <PaymentMethodCard
-                title={t('SSPay')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_sspay_enabled}
-                onToggle={(checked) => setData('is_sspay_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.SSPAY]}
-                helpText={t("Get your SSPay API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="sspay_category_code"
-                    label={t("Category Code")}
-                    value={data.sspay_category_code}
-                    onChange={(value) => setData('sspay_category_code', value)}
-                    placeholder={t("Category Code")}
-                    error={errors.sspay_category_code}
-                  />
-                  <PaymentInputField
-                    id="sspay_secret_key"
-                    label={t("Secret Key")}
-                    value={data.sspay_secret_key}
-                    onChange={(value) => setData('sspay_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.sspay_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('SSPay')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_sspay_enabled}
+                  onToggle={(checked) => setData('is_sspay_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.SSPAY]}
+                  helpText={t("Get your SSPay API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="sspay_category_code"
+                      label={t("Category Code")}
+                      value={data.sspay_category_code}
+                      onChange={(value) => setData('sspay_category_code', value)}
+                      placeholder={t("Category Code")}
+                      error={errors.sspay_category_code}
+                    />
+                    <PaymentInputField
+                      id="sspay_secret_key"
+                      label={t("Secret Key")}
+                      value={data.sspay_secret_key}
+                      onChange={(value) => setData('sspay_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.sspay_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Benefit */}
               {shouldShowMethod('benefit') && (
-              <PaymentMethodCard
-                title={t('Benefit')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_benefit_enabled}
-                onToggle={(checked) => setData('is_benefit_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.BENEFIT]}
-                helpText={t("Get your Benefit API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.benefit_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('benefit_mode', mode)}
-                  name="benefit"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="benefit_public_key"
-                    label={t("Public Key")}
-                    value={data.benefit_public_key}
-                    onChange={(value) => setData('benefit_public_key', value)}
-                    placeholder={t("Public Key")}
-                    error={errors.benefit_public_key}
+                <PaymentMethodCard
+                  title={t('Benefit')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_benefit_enabled}
+                  onToggle={(checked) => setData('is_benefit_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.BENEFIT]}
+                  helpText={t("Get your Benefit API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.benefit_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('benefit_mode', mode)}
+                    name="benefit"
                   />
-                  <PaymentInputField
-                    id="benefit_secret_key"
-                    label={t("Secret Key")}
-                    value={data.benefit_secret_key}
-                    onChange={(value) => setData('benefit_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.benefit_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="benefit_public_key"
+                      label={t("Public Key")}
+                      value={data.benefit_public_key}
+                      onChange={(value) => setData('benefit_public_key', value)}
+                      placeholder={t("Public Key")}
+                      error={errors.benefit_public_key}
+                    />
+                    <PaymentInputField
+                      id="benefit_secret_key"
+                      label={t("Secret Key")}
+                      value={data.benefit_secret_key}
+                      onChange={(value) => setData('benefit_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.benefit_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Iyzipay */}
               {shouldShowMethod('iyzipay') && (
-              <PaymentMethodCard
-                title={t('Iyzipay')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_iyzipay_enabled}
-                onToggle={(checked) => setData('is_iyzipay_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.IYZIPAY]}
-                helpText={t("Get your Iyzipay API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.iyzipay_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('iyzipay_mode', mode)}
-                  name="iyzipay"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="iyzipay_public_key"
-                    label={t("Public Key")}
-                    value={data.iyzipay_public_key}
-                    onChange={(value) => setData('iyzipay_public_key', value)}
-                    placeholder={t("Public Key")}
-                    error={errors.iyzipay_public_key}
+                <PaymentMethodCard
+                  title={t('Iyzipay')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_iyzipay_enabled}
+                  onToggle={(checked) => setData('is_iyzipay_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.IYZIPAY]}
+                  helpText={t("Get your Iyzipay API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.iyzipay_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('iyzipay_mode', mode)}
+                    name="iyzipay"
                   />
-                  <PaymentInputField
-                    id="iyzipay_secret_key"
-                    label={t("Secret Key")}
-                    value={data.iyzipay_secret_key}
-                    onChange={(value) => setData('iyzipay_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.iyzipay_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="iyzipay_public_key"
+                      label={t("Public Key")}
+                      value={data.iyzipay_public_key}
+                      onChange={(value) => setData('iyzipay_public_key', value)}
+                      placeholder={t("Public Key")}
+                      error={errors.iyzipay_public_key}
+                    />
+                    <PaymentInputField
+                      id="iyzipay_secret_key"
+                      label={t("Secret Key")}
+                      value={data.iyzipay_secret_key}
+                      onChange={(value) => setData('iyzipay_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.iyzipay_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Aamarpay */}
               {shouldShowMethod('aamarpay') && (
-              <PaymentMethodCard
-                title={t('Aamarpay')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_aamarpay_enabled}
-                onToggle={(checked) => setData('is_aamarpay_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.AAMARPAY]}
-                helpText={t("Get your Aamarpay API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="aamarpay_store_id"
-                    label={t("Store ID")}
-                    value={data.aamarpay_store_id}
-                    onChange={(value) => setData('aamarpay_store_id', value)}
-                    placeholder={t("Store ID")}
-                    error={errors.aamarpay_store_id}
-                  />
-                  <PaymentInputField
-                    id="aamarpay_signature"
-                    label={t("Signature")}
-                    value={data.aamarpay_signature}
-                    onChange={(value) => setData('aamarpay_signature', value)}
-                    placeholder={t("Signature")}
-                    isSecret
-                    error={errors.aamarpay_signature}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('Aamarpay')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_aamarpay_enabled}
+                  onToggle={(checked) => setData('is_aamarpay_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.AAMARPAY]}
+                  helpText={t("Get your Aamarpay API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="aamarpay_store_id"
+                      label={t("Store ID")}
+                      value={data.aamarpay_store_id}
+                      onChange={(value) => setData('aamarpay_store_id', value)}
+                      placeholder={t("Store ID")}
+                      error={errors.aamarpay_store_id}
+                    />
+                    <PaymentInputField
+                      id="aamarpay_signature"
+                      label={t("Signature")}
+                      value={data.aamarpay_signature}
+                      onChange={(value) => setData('aamarpay_signature', value)}
+                      placeholder={t("Signature")}
+                      isSecret
+                      error={errors.aamarpay_signature}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Midtrans */}
               {shouldShowMethod('midtrans') && (
-              <PaymentMethodCard
-                title={t('Midtrans')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_midtrans_enabled}
-                onToggle={(checked) => setData('is_midtrans_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.MIDTRANS]}
-                helpText={t("Get your Midtrans API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.midtrans_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('midtrans_mode', mode)}
-                  name="midtrans"
-                />
-                <PaymentInputField
-                  id="midtrans_secret_key"
-                  label={t("Secret Key")}
-                  value={data.midtrans_secret_key}
-                  onChange={(value) => setData('midtrans_secret_key', value)}
-                  placeholder={t("Secret Key")}
-                  isSecret
-                  error={errors.midtrans_secret_key}
-                />
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('Midtrans')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_midtrans_enabled}
+                  onToggle={(checked) => setData('is_midtrans_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.MIDTRANS]}
+                  helpText={t("Get your Midtrans API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.midtrans_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('midtrans_mode', mode)}
+                    name="midtrans"
+                  />
+                  <PaymentInputField
+                    id="midtrans_secret_key"
+                    label={t("Secret Key")}
+                    value={data.midtrans_secret_key}
+                    onChange={(value) => setData('midtrans_secret_key', value)}
+                    placeholder={t("Secret Key")}
+                    isSecret
+                    error={errors.midtrans_secret_key}
+                  />
+                </PaymentMethodCard>
               )}
 
               {/* YooKassa */}
               {shouldShowMethod('yookassa') && (
-              <PaymentMethodCard
-                title={t('YooKassa')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_yookassa_enabled}
-                onToggle={(checked) => setData('is_yookassa_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.YOOKASSA]}
-                helpText={t("Get your YooKassa API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="yookassa_shop_id"
-                    label={t("Shop ID")}
-                    value={data.yookassa_shop_id}
-                    onChange={(value) => setData('yookassa_shop_id', value)}
-                    placeholder={t("Shop ID")}
-                    error={errors.yookassa_shop_id}
-                  />
-                  <PaymentInputField
-                    id="yookassa_secret_key"
-                    label={t("Secret Key")}
-                    value={data.yookassa_secret_key}
-                    onChange={(value) => setData('yookassa_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.yookassa_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('YooKassa')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_yookassa_enabled}
+                  onToggle={(checked) => setData('is_yookassa_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.YOOKASSA]}
+                  helpText={t("Get your YooKassa API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="yookassa_shop_id"
+                      label={t("Shop ID")}
+                      value={data.yookassa_shop_id}
+                      onChange={(value) => setData('yookassa_shop_id', value)}
+                      placeholder={t("Shop ID")}
+                      error={errors.yookassa_shop_id}
+                    />
+                    <PaymentInputField
+                      id="yookassa_secret_key"
+                      label={t("Secret Key")}
+                      value={data.yookassa_secret_key}
+                      onChange={(value) => setData('yookassa_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.yookassa_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Nepalste */}
@@ -1299,345 +1308,385 @@ export default function PaymentSettings({
 
               {/* Paiement Pro */}
               {shouldShowMethod('paiement') && (
-              <PaymentMethodCard
-                title={t('Paiement Pro')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_paiement_enabled}
-                onToggle={(checked) => setData('is_paiement_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAIEMENT]}
-                helpText={t("Get your Paiement Pro API credentials from your")}
-              >
-                <PaymentInputField
-                  id="paiement_merchant_id"
-                  label={t("Merchant ID")}
-                  value={data.paiement_merchant_id}
-                  onChange={(value) => setData('paiement_merchant_id', value)}
-                  placeholder={t("Merchant ID")}
-                  error={errors.paiement_merchant_id}
-                />
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('Paiement Pro')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_paiement_enabled}
+                  onToggle={(checked) => setData('is_paiement_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAIEMENT]}
+                  helpText={t("Get your Paiement Pro API credentials from your")}
+                >
+                  <PaymentInputField
+                    id="paiement_merchant_id"
+                    label={t("Merchant ID")}
+                    value={data.paiement_merchant_id}
+                    onChange={(value) => setData('paiement_merchant_id', value)}
+                    placeholder={t("Merchant ID")}
+                    error={errors.paiement_merchant_id}
+                  />
+                </PaymentMethodCard>
               )}
 
               {/* CinetPay */}
               {shouldShowMethod('cinetpay') && (
-              <PaymentMethodCard
-                title={t('CinetPay')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_cinetpay_enabled}
-                onToggle={(checked) => setData('is_cinetpay_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.CINETPAY]}
-                helpText={t("Get your CinetPay API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <PaymentInputField
-                    id="cinetpay_site_id"
-                    label={t("Site ID")}
-                    value={data.cinetpay_site_id}
-                    onChange={(value) => setData('cinetpay_site_id', value)}
-                    placeholder={t("Site ID")}
-                    error={errors.cinetpay_site_id}
-                  />
-                  <PaymentInputField
-                    id="cinetpay_api_key"
-                    label={t("API Key")}
-                    value={data.cinetpay_api_key}
-                    onChange={(value) => setData('cinetpay_api_key', value)}
-                    placeholder={t("API Key")}
-                    error={errors.cinetpay_api_key}
-                  />
-                  <PaymentInputField
-                    id="cinetpay_secret_key"
-                    label={t("Secret Key")}
-                    value={data.cinetpay_secret_key}
-                    onChange={(value) => setData('cinetpay_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.cinetpay_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('CinetPay')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_cinetpay_enabled}
+                  onToggle={(checked) => setData('is_cinetpay_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.CINETPAY]}
+                  helpText={t("Get your CinetPay API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <PaymentInputField
+                      id="cinetpay_site_id"
+                      label={t("Site ID")}
+                      value={data.cinetpay_site_id}
+                      onChange={(value) => setData('cinetpay_site_id', value)}
+                      placeholder={t("Site ID")}
+                      error={errors.cinetpay_site_id}
+                    />
+                    <PaymentInputField
+                      id="cinetpay_api_key"
+                      label={t("API Key")}
+                      value={data.cinetpay_api_key}
+                      onChange={(value) => setData('cinetpay_api_key', value)}
+                      placeholder={t("API Key")}
+                      error={errors.cinetpay_api_key}
+                    />
+                    <PaymentInputField
+                      id="cinetpay_secret_key"
+                      label={t("Secret Key")}
+                      value={data.cinetpay_secret_key}
+                      onChange={(value) => setData('cinetpay_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.cinetpay_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* PayHere */}
               {shouldShowMethod('payhere') && (
-              <PaymentMethodCard
-                title={t('PayHere')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_payhere_enabled}
-                onToggle={(checked) => setData('is_payhere_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYHERE]}
-                helpText={t("Get your PayHere API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.payhere_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('payhere_mode', mode)}
-                  name="payhere"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="payhere_merchant_id"
-                    label={t("Merchant ID")}
-                    value={data.payhere_merchant_id}
-                    onChange={(value) => setData('payhere_merchant_id', value)}
-                    placeholder={t("Merchant ID")}
-                    error={errors.payhere_merchant_id}
+                <PaymentMethodCard
+                  title={t('PayHere')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_payhere_enabled}
+                  onToggle={(checked) => setData('is_payhere_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.PAYHERE]}
+                  helpText={t("Get your PayHere API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.payhere_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('payhere_mode', mode)}
+                    name="payhere"
                   />
-                  <PaymentInputField
-                    id="payhere_merchant_secret"
-                    label={t("Merchant Secret")}
-                    value={data.payhere_merchant_secret}
-                    onChange={(value) => setData('payhere_merchant_secret', value)}
-                    placeholder={t("Merchant Secret")}
-                    isSecret
-                    error={errors.payhere_merchant_secret}
-                  />
-                  <PaymentInputField
-                    id="payhere_app_id"
-                    label={t("App ID")}
-                    value={data.payhere_app_id}
-                    onChange={(value) => setData('payhere_app_id', value)}
-                    placeholder={t("App ID")}
-                    error={errors.payhere_app_id}
-                  />
-                  <PaymentInputField
-                    id="payhere_app_secret"
-                    label={t("App Secret")}
-                    value={data.payhere_app_secret}
-                    onChange={(value) => setData('payhere_app_secret', value)}
-                    placeholder={t("App Secret")}
-                    isSecret
-                    error={errors.payhere_app_secret}
-                  />
-                </div>
-              </PaymentMethodCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="payhere_merchant_id"
+                      label={t("Merchant ID")}
+                      value={data.payhere_merchant_id}
+                      onChange={(value) => setData('payhere_merchant_id', value)}
+                      placeholder={t("Merchant ID")}
+                      error={errors.payhere_merchant_id}
+                    />
+                    <PaymentInputField
+                      id="payhere_merchant_secret"
+                      label={t("Merchant Secret")}
+                      value={data.payhere_merchant_secret}
+                      onChange={(value) => setData('payhere_merchant_secret', value)}
+                      placeholder={t("Merchant Secret")}
+                      isSecret
+                      error={errors.payhere_merchant_secret}
+                    />
+                    <PaymentInputField
+                      id="payhere_app_id"
+                      label={t("App ID")}
+                      value={data.payhere_app_id}
+                      onChange={(value) => setData('payhere_app_id', value)}
+                      placeholder={t("App ID")}
+                      error={errors.payhere_app_id}
+                    />
+                    <PaymentInputField
+                      id="payhere_app_secret"
+                      label={t("App Secret")}
+                      value={data.payhere_app_secret}
+                      onChange={(value) => setData('payhere_app_secret', value)}
+                      placeholder={t("App Secret")}
+                      isSecret
+                      error={errors.payhere_app_secret}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* FedaPay */}
               {shouldShowMethod('fedapay') && (
-              <PaymentMethodCard
-                title={t('FedaPay')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_fedapay_enabled}
-                onToggle={(checked) => setData('is_fedapay_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.FEDAPAY]}
-                helpText={t("Get your FedaPay API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.fedapay_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('fedapay_mode', mode)}
-                  name="fedapay"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="fedapay_public_key"
-                    label={t("Public Key")}
-                    value={data.fedapay_public_key}
-                    onChange={(value) => setData('fedapay_public_key', value)}
-                    placeholder={t("Public Key")}
-                    error={errors.fedapay_public_key}
+                <PaymentMethodCard
+                  title={t('FedaPay')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_fedapay_enabled}
+                  onToggle={(checked) => setData('is_fedapay_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.FEDAPAY]}
+                  helpText={t("Get your FedaPay API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.fedapay_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('fedapay_mode', mode)}
+                    name="fedapay"
                   />
-                  <PaymentInputField
-                    id="fedapay_secret_key"
-                    label={t("Secret Key")}
-                    value={data.fedapay_secret_key}
-                    onChange={(value) => setData('fedapay_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.fedapay_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="fedapay_public_key"
+                      label={t("Public Key")}
+                      value={data.fedapay_public_key}
+                      onChange={(value) => setData('fedapay_public_key', value)}
+                      placeholder={t("Public Key")}
+                      error={errors.fedapay_public_key}
+                    />
+                    <PaymentInputField
+                      id="fedapay_secret_key"
+                      label={t("Secret Key")}
+                      value={data.fedapay_secret_key}
+                      onChange={(value) => setData('fedapay_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.fedapay_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* AuthorizeNet */}
               {shouldShowMethod('authorizenet') && (
-              <PaymentMethodCard
-                title={t('AuthorizeNet')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_authorizenet_enabled}
-                onToggle={(checked) => setData('is_authorizenet_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.AUTHORIZENET]}
-                helpText={t("Get your AuthorizeNet API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.authorizenet_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('authorizenet_mode', mode)}
-                  name="authorizenet"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="authorizenet_merchant_id"
-                    label={t("Merchant ID")}
-                    value={data.authorizenet_merchant_id}
-                    onChange={(value) => setData('authorizenet_merchant_id', value)}
-                    placeholder={t("Merchant ID")}
-                    error={errors.authorizenet_merchant_id}
+                <PaymentMethodCard
+                  title={t('AuthorizeNet')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_authorizenet_enabled}
+                  onToggle={(checked) => setData('is_authorizenet_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.AUTHORIZENET]}
+                  helpText={t("Get your AuthorizeNet API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.authorizenet_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('authorizenet_mode', mode)}
+                    name="authorizenet"
                   />
-                  <PaymentInputField
-                    id="authorizenet_transaction_key"
-                    label={t("Transaction Key")}
-                    value={data.authorizenet_transaction_key}
-                    onChange={(value) => setData('authorizenet_transaction_key', value)}
-                    placeholder={t("Transaction Key")}
-                    isSecret
-                    error={errors.authorizenet_transaction_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="authorizenet_merchant_id"
+                      label={t("Merchant ID")}
+                      value={data.authorizenet_merchant_id}
+                      onChange={(value) => setData('authorizenet_merchant_id', value)}
+                      placeholder={t("Merchant ID")}
+                      error={errors.authorizenet_merchant_id}
+                    />
+                    <PaymentInputField
+                      id="authorizenet_transaction_key"
+                      label={t("Transaction Key")}
+                      value={data.authorizenet_transaction_key}
+                      onChange={(value) => setData('authorizenet_transaction_key', value)}
+                      placeholder={t("Transaction Key")}
+                      isSecret
+                      error={errors.authorizenet_transaction_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Khalti */}
               {shouldShowMethod('khalti') && (
-              <PaymentMethodCard
-                title={t('Khalti')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_khalti_enabled}
-                onToggle={(checked) => setData('is_khalti_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.KHALTI]}
-                helpText={t("Get your Khalti API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="khalti_public_key"
-                    label={t("Public Key")}
-                    value={data.khalti_public_key}
-                    onChange={(value) => setData('khalti_public_key', value)}
-                    placeholder={t("Public Key")}
-                    error={errors.khalti_public_key}
-                  />
-                  <PaymentInputField
-                    id="khalti_secret_key"
-                    label={t("Secret Key")}
-                    value={data.khalti_secret_key}
-                    onChange={(value) => setData('khalti_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.khalti_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('Khalti')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_khalti_enabled}
+                  onToggle={(checked) => setData('is_khalti_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.KHALTI]}
+                  helpText={t("Get your Khalti API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="khalti_public_key"
+                      label={t("Public Key")}
+                      value={data.khalti_public_key}
+                      onChange={(value) => setData('khalti_public_key', value)}
+                      placeholder={t("Public Key")}
+                      error={errors.khalti_public_key}
+                    />
+                    <PaymentInputField
+                      id="khalti_secret_key"
+                      label={t("Secret Key")}
+                      value={data.khalti_secret_key}
+                      onChange={(value) => setData('khalti_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.khalti_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Easebuzz */}
               {shouldShowMethod('easebuzz') && (
-              <PaymentMethodCard
-                title={t('Easebuzz')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_easebuzz_enabled}
-                onToggle={(checked) => setData('is_easebuzz_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.EASEBUZZ]}
-                helpText={t("Get your Easebuzz API credentials from your")}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <PaymentInputField
-                    id="easebuzz_merchant_key"
-                    label={t("Merchant Key")}
-                    value={data.easebuzz_merchant_key}
-                    onChange={(value) => setData('easebuzz_merchant_key', value)}
-                    placeholder={t("Merchant Key")}
-                    error={errors.easebuzz_merchant_key}
-                  />
-                  <PaymentInputField
-                    id="easebuzz_salt_key"
-                    label={t("Salt Key")}
-                    value={data.easebuzz_salt_key}
-                    onChange={(value) => setData('easebuzz_salt_key', value)}
-                    placeholder={t("Salt Key")}
-                    isSecret
-                    error={errors.easebuzz_salt_key}
-                  />
-                  <PaymentInputField
-                    id="easebuzz_environment"
-                    label={t("Environment")}
-                    value={data.easebuzz_environment}
-                    onChange={(value) => setData('easebuzz_environment', value)}
-                    placeholder={t("prod/test")}
-                    error={errors.easebuzz_environment}
-                  />
-                </div>
-              </PaymentMethodCard>
+                <PaymentMethodCard
+                  title={t('Easebuzz')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_easebuzz_enabled}
+                  onToggle={(checked) => setData('is_easebuzz_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.EASEBUZZ]}
+                  helpText={t("Get your Easebuzz API credentials from your")}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <PaymentInputField
+                      id="easebuzz_merchant_key"
+                      label={t("Merchant Key")}
+                      value={data.easebuzz_merchant_key}
+                      onChange={(value) => setData('easebuzz_merchant_key', value)}
+                      placeholder={t("Merchant Key")}
+                      error={errors.easebuzz_merchant_key}
+                    />
+                    <PaymentInputField
+                      id="easebuzz_salt_key"
+                      label={t("Salt Key")}
+                      value={data.easebuzz_salt_key}
+                      onChange={(value) => setData('easebuzz_salt_key', value)}
+                      placeholder={t("Salt Key")}
+                      isSecret
+                      error={errors.easebuzz_salt_key}
+                    />
+                    <PaymentInputField
+                      id="easebuzz_environment"
+                      label={t("Environment")}
+                      value={data.easebuzz_environment}
+                      onChange={(value) => setData('easebuzz_environment', value)}
+                      placeholder={t("prod/test")}
+                      error={errors.easebuzz_environment}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Ozow */}
               {shouldShowMethod('ozow') && (
-              <PaymentMethodCard
-                title={t('Ozow')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_ozow_enabled}
-                onToggle={(checked) => setData('is_ozow_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.OZOW]}
-                helpText={t("Get your Ozow API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.ozow_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('ozow_mode', mode)}
-                  name="ozow"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <PaymentInputField
-                    id="ozow_site_key"
-                    label={t("Site Key")}
-                    value={data.ozow_site_key}
-                    onChange={(value) => setData('ozow_site_key', value)}
-                    placeholder={t("Site Key")}
-                    error={errors.ozow_site_key}
+                <PaymentMethodCard
+                  title={t('Ozow')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_ozow_enabled}
+                  onToggle={(checked) => setData('is_ozow_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.OZOW]}
+                  helpText={t("Get your Ozow API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.ozow_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('ozow_mode', mode)}
+                    name="ozow"
                   />
-                  <PaymentInputField
-                    id="ozow_private_key"
-                    label={t("Private Key")}
-                    value={data.ozow_private_key}
-                    onChange={(value) => setData('ozow_private_key', value)}
-                    placeholder={t("Private Key")}
-                    isSecret
-                    error={errors.ozow_private_key}
-                  />
-                  <PaymentInputField
-                    id="ozow_api_key"
-                    label={t("API Key")}
-                    value={data.ozow_api_key}
-                    onChange={(value) => setData('ozow_api_key', value)}
-                    placeholder={t("API Key")}
-                    error={errors.ozow_api_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <PaymentInputField
+                      id="ozow_site_key"
+                      label={t("Site Key")}
+                      value={data.ozow_site_key}
+                      onChange={(value) => setData('ozow_site_key', value)}
+                      placeholder={t("Site Key")}
+                      error={errors.ozow_site_key}
+                    />
+                    <PaymentInputField
+                      id="ozow_private_key"
+                      label={t("Private Key")}
+                      value={data.ozow_private_key}
+                      onChange={(value) => setData('ozow_private_key', value)}
+                      placeholder={t("Private Key")}
+                      isSecret
+                      error={errors.ozow_private_key}
+                    />
+                    <PaymentInputField
+                      id="ozow_api_key"
+                      label={t("API Key")}
+                      value={data.ozow_api_key}
+                      onChange={(value) => setData('ozow_api_key', value)}
+                      placeholder={t("API Key")}
+                      error={errors.ozow_api_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
               )}
 
               {/* Cashfree */}
               {shouldShowMethod('cashfree') && (
-              <PaymentMethodCard
-                title={t('Cashfree')}
-                icon={<CreditCard className="h-5 w-5" />}
-                enabled={data.is_cashfree_enabled}
-                onToggle={(checked) => setData('is_cashfree_enabled', checked)}
-                helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.CASHFREE]}
-                helpText={t("Get your Cashfree API credentials from your")}
-              >
-                <PaymentModeSelector
-                  value={data.cashfree_mode as 'sandbox' | 'live'}
-                  onChange={(mode) => setData('cashfree_mode', mode)}
-                  name="cashfree"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PaymentInputField
-                    id="cashfree_public_key"
-                    label={t("Public Key")}
-                    value={data.cashfree_public_key}
-                    onChange={(value) => setData('cashfree_public_key', value)}
-                    placeholder={t("Public Key")}
-                    error={errors.cashfree_public_key}
+                <PaymentMethodCard
+                  title={t('Cashfree')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_cashfree_enabled}
+                  onToggle={(checked) => setData('is_cashfree_enabled', checked)}
+                  helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.CASHFREE]}
+                  helpText={t("Get your Cashfree API credentials from your")}
+                >
+                  <PaymentModeSelector
+                    value={data.cashfree_mode as 'sandbox' | 'live'}
+                    onChange={(mode) => setData('cashfree_mode', mode)}
+                    name="cashfree"
                   />
-                  <PaymentInputField
-                    id="cashfree_secret_key"
-                    label={t("Secret Key")}
-                    value={data.cashfree_secret_key}
-                    onChange={(value) => setData('cashfree_secret_key', value)}
-                    placeholder={t("Secret Key")}
-                    isSecret
-                    error={errors.cashfree_secret_key}
-                  />
-                </div>
-              </PaymentMethodCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PaymentInputField
+                      id="cashfree_public_key"
+                      label={t("Public Key")}
+                      value={data.cashfree_public_key}
+                      onChange={(value) => setData('cashfree_public_key', value)}
+                      placeholder={t("Public Key")}
+                      error={errors.cashfree_public_key}
+                    />
+                    <PaymentInputField
+                      id="cashfree_secret_key"
+                      label={t("Secret Key")}
+                      value={data.cashfree_secret_key}
+                      onChange={(value) => setData('cashfree_secret_key', value)}
+                      placeholder={t("Secret Key")}
+                      isSecret
+                      error={errors.cashfree_secret_key}
+                    />
+                  </div>
+                </PaymentMethodCard>
+              )}
+
+              {/* HitPay */}
+              {shouldShowMethod('hitpay') && (
+                <PaymentMethodCard
+                  title={t('HitPay')}
+                  icon={<CreditCard className="h-5 w-5" />}
+                  enabled={data.is_hitpay_enabled}
+                  onToggle={(checked) => setData('is_hitpay_enabled', checked)}
+                  helpUrl="https://dashboard.hit-pay.com"
+                  helpText={t("Get your HitPay API credentials from your")}
+                >
+                  <div className="space-y-4">
+                    <PaymentModeSelector
+                      value={data.hitpay_mode as 'sandbox' | 'live'}
+                      onChange={(mode) => setData('hitpay_mode', mode)}
+                      name="hitpay"
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <PaymentInputField
+                        id="hitpay_api_key"
+                        label={t("API Key")}
+                        value={data.hitpay_api_key}
+                        onChange={(value) => setData('hitpay_api_key', value)}
+                        placeholder={t("API Key")}
+                        isSecret
+                        error={errors.hitpay_api_key}
+                      />
+                      <PaymentInputField
+                        id="hitpay_salt"
+                        label={t("Salt (Webhook Secret)")}
+                        value={data.hitpay_salt}
+                        onChange={(value) => setData('hitpay_salt', value)}
+                        placeholder={t("Salt")}
+                        isSecret
+                        error={errors.hitpay_salt}
+                      />
+                    </div>
+                  </div>
+                </PaymentMethodCard>
               )}
             </CardContent>
           </Card>

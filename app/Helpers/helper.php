@@ -31,7 +31,7 @@ if (!function_exists('getCacheSize')) {
     }
 }
 
-if (! function_exists('settings')) {
+if (!function_exists('settings')) {
     function settings($user_id = null)
     {
         // Skip database queries during installation
@@ -75,7 +75,7 @@ if (! function_exists('settings')) {
     }
 }
 
-if (! function_exists('formatDateTime')) {
+if (!function_exists('formatDateTime')) {
     function formatDateTime($date, $includeTime = true)
     {
         if (!$date) {
@@ -94,7 +94,7 @@ if (! function_exists('formatDateTime')) {
     }
 }
 
-if (! function_exists('getSetting')) {
+if (!function_exists('getSetting')) {
     function getSetting($key, $default = null, $user_id = null)
     {
         $settings = settings($user_id);
@@ -109,7 +109,7 @@ if (! function_exists('getSetting')) {
     }
 }
 
-if (! function_exists('updateSetting')) {
+if (!function_exists('updateSetting')) {
     function updateSetting($key, $value, $user_id = null)
     {
         if (is_null($user_id)) {
@@ -136,14 +136,14 @@ if (! function_exists('updateSetting')) {
     }
 }
 
-if (! function_exists('isLandingPageEnabled')) {
+if (!function_exists('isLandingPageEnabled')) {
     function isLandingPageEnabled()
     {
         return getSetting('landingPageEnabled', true) === true || getSetting('landingPageEnabled', true) === '1';
     }
 }
 
-if (! function_exists('defaultRoleAndSetting')) {
+if (!function_exists('defaultRoleAndSetting')) {
     function defaultRoleAndSetting($user)
     {
         $companyRole = Role::where('name', 'company')->first();
@@ -168,7 +168,7 @@ if (! function_exists('defaultRoleAndSetting')) {
     }
 }
 
-if (! function_exists('createDefaultEmailTemplateSettings')) {
+if (!function_exists('createDefaultEmailTemplateSettings')) {
     /**
      * Create default email template settings for a user
      *
@@ -188,7 +188,7 @@ if (! function_exists('createDefaultEmailTemplateSettings')) {
     }
 }
 
-if (! function_exists('isNotificationTemplateEnabled')) {
+if (!function_exists('isNotificationTemplateEnabled')) {
     /**
      * Check if a notification template is enabled for a user
      *
@@ -215,7 +215,7 @@ if (! function_exists('isNotificationTemplateEnabled')) {
     }
 }
 
-if (! function_exists('createDefaultNotificationTemplateSettings')) {
+if (!function_exists('createDefaultNotificationTemplateSettings')) {
     /**
      * Create default notification template settings for a user
      *
@@ -235,7 +235,7 @@ if (! function_exists('createDefaultNotificationTemplateSettings')) {
     }
 }
 
-if (! function_exists('getPaymentSettings')) {
+if (!function_exists('getPaymentSettings')) {
     /**
      * Get payment settings for a user
      *
@@ -252,7 +252,7 @@ if (! function_exists('getPaymentSettings')) {
     }
 }
 
-if (! function_exists('updatePaymentSetting')) {
+if (!function_exists('updatePaymentSetting')) {
     /**
      * Update or create a payment setting
      *
@@ -271,7 +271,7 @@ if (! function_exists('updatePaymentSetting')) {
     }
 }
 
-if (! function_exists('isPaymentMethodEnabled')) {
+if (!function_exists('isPaymentMethodEnabled')) {
     /**
      * Check if a payment method is enabled
      *
@@ -288,7 +288,7 @@ if (! function_exists('isPaymentMethodEnabled')) {
     }
 }
 
-if (! function_exists('getPaymentMethodConfig')) {
+if (!function_exists('getPaymentMethodConfig')) {
     /**
      * Get configuration for a specific payment method
      *
@@ -508,13 +508,21 @@ if (! function_exists('getPaymentMethodConfig')) {
                     'private_key' => $settings['paymentwall_private_key'] ?? null,
                 ];
 
+            case 'hitpay':
+                return [
+                    'enabled' => isPaymentMethodEnabled('hitpay', $userId),
+                    'mode' => $settings['hitpay_mode'] ?? 'sandbox',
+                    'api_key' => $settings['hitpay_api_key'] ?? null,
+                    'salt' => $settings['hitpay_salt'] ?? null,
+                ];
+
             default:
                 return [];
         }
     }
 }
 
-if (! function_exists('getEnabledPaymentMethods')) {
+if (!function_exists('getEnabledPaymentMethods')) {
     /**
      * Get all enabled payment methods
      *
@@ -523,7 +531,7 @@ if (! function_exists('getEnabledPaymentMethods')) {
      */
     function getEnabledPaymentMethods($userId = null)
     {
-        $methods = ['stripe', 'paypal', 'razorpay', 'mercadopago', 'paystack', 'flutterwave', 'bank', 'paytabs', 'skrill', 'coingate', 'payfast', 'tap', 'xendit', 'paytr', 'mollie', 'toyyibpay', 'cashfree', 'iyzipay', 'benefit', 'ozow', 'easebuzz', 'khalti', 'authorizenet', 'fedapay', 'payhere', 'cinetpay', 'paymentwall'];
+        $methods = ['stripe', 'paypal', 'razorpay', 'mercadopago', 'paystack', 'flutterwave', 'bank', 'paytabs', 'skrill', 'coingate', 'payfast', 'tap', 'xendit', 'paytr', 'mollie', 'toyyibpay', 'cashfree', 'iyzipay', 'benefit', 'ozow', 'easebuzz', 'khalti', 'authorizenet', 'fedapay', 'payhere', 'cinetpay', 'paymentwall', 'hitpay'];
         $enabled = [];
 
         foreach ($methods as $method) {
@@ -536,7 +544,7 @@ if (! function_exists('getEnabledPaymentMethods')) {
     }
 }
 
-if (! function_exists('validatePaymentMethodConfig')) {
+if (!function_exists('validatePaymentMethodConfig')) {
     /**
      * Validate payment method configuration
      *
@@ -815,10 +823,14 @@ if (! function_exists('validatePaymentMethodConfig')) {
     }
 }
 
-if (! function_exists('calculatePlanPricing')) {
+if (!function_exists('calculatePlanPricing')) {
     function calculatePlanPricing($plan, $couponCode = null, $billingCycle = 'monthly')
     {
-        $originalPrice = $plan->getPriceForCycle($billingCycle);
+        $superAdminId = User::where('type', 'superadmin')->first()?->id;
+        $generalSettings = Setting::getUserSettings($superAdminId);
+        $currency = $generalSettings['defaultCurrency'] ?? 'USD';
+
+        $originalPrice = $plan->getPriceForCurrency($currency, $billingCycle);
         $discountAmount = 0;
         $finalPrice = $originalPrice;
         $couponId = null;
@@ -848,7 +860,7 @@ if (! function_exists('calculatePlanPricing')) {
     }
 }
 
-if (! function_exists('createPlanOrder')) {
+if (!function_exists('createPlanOrder')) {
     function createPlanOrder($data)
     {
         $plan = Plan::findOrFail($data['plan_id']);
@@ -871,7 +883,7 @@ if (! function_exists('createPlanOrder')) {
     }
 }
 
-if (! function_exists('assignPlanToUser')) {
+if (!function_exists('assignPlanToUser')) {
     function assignPlanToUser($user, $plan, $billingCycle)
     {
         $expiresAt = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
@@ -888,7 +900,7 @@ if (! function_exists('assignPlanToUser')) {
     }
 }
 
-if (! function_exists('processPaymentSuccess')) {
+if (!function_exists('processPaymentSuccess')) {
     function processPaymentSuccess($data)
     {
         $plan = Plan::findOrFail($data['plan_id']);
@@ -907,7 +919,7 @@ if (! function_exists('processPaymentSuccess')) {
     }
 }
 
-if (! function_exists('getPaymentGatewaySettings')) {
+if (!function_exists('getPaymentGatewaySettings')) {
     function getPaymentGatewaySettings()
     {
         $superAdminId = User::where('type', 'superadmin')->first()?->id;
@@ -920,7 +932,7 @@ if (! function_exists('getPaymentGatewaySettings')) {
     }
 }
 
-if (! function_exists('validatePaymentRequest')) {
+if (!function_exists('validatePaymentRequest')) {
     function validatePaymentRequest($request, $additionalRules = [])
     {
         $baseRules = [
@@ -933,14 +945,14 @@ if (! function_exists('validatePaymentRequest')) {
     }
 }
 
-if (! function_exists('handlePaymentError')) {
+if (!function_exists('handlePaymentError')) {
     function handlePaymentError($e, $method = 'payment')
     {
         return back()->withErrors(['error' => __('Payment processing failed: :message', ['message' => $e->getMessage()])]);
     }
 }
 
-if (! function_exists('defaultSettings')) {
+if (!function_exists('defaultSettings')) {
     /**
      * Get default settings for System, Brand, Storage, and Currency configurations
      *
@@ -1010,7 +1022,7 @@ if (! function_exists('defaultSettings')) {
     }
 }
 
-if (! function_exists('createDefaultSettings')) {
+if (!function_exists('createDefaultSettings')) {
     /**
      * Create default settings for a user
      *
@@ -1026,7 +1038,7 @@ if (! function_exists('createDefaultSettings')) {
             $settingsData[] = [
                 'user_id' => $userId,
                 'key' => $key,
-                'value' => is_bool($value) ? ($value ? '1' : '0') : (string)$value,
+                'value' => is_bool($value) ? ($value ? '1' : '0') : (string) $value,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -1036,7 +1048,7 @@ if (! function_exists('createDefaultSettings')) {
     }
 }
 
-if (! function_exists('copySettingsFromSuperAdmin')) {
+if (!function_exists('copySettingsFromSuperAdmin')) {
     /**
      * Copy system and brand settings from superadmin to company user
      *
@@ -1124,7 +1136,7 @@ if (! function_exists('copySettingsFromSuperAdmin')) {
     }
 }
 
-if (! function_exists('getCompanyName')) {
+if (!function_exists('getCompanyName')) {
     function getCompanyName()
     {
         $company = User::find(createdBy());
@@ -1136,7 +1148,7 @@ if (! function_exists('getCompanyName')) {
     }
 }
 
-if (! function_exists('getCompanyLogo')) {
+if (!function_exists('getCompanyLogo')) {
     function getCompanyLogo()
     {
         $company = getSetting('logoDark', '/images/logos/logo-dark.png', createdBy());
@@ -1148,7 +1160,7 @@ if (! function_exists('getCompanyLogo')) {
     }
 }
 
-if (! function_exists('createdBy')) {
+if (!function_exists('createdBy')) {
     function createdBy()
     {
         if (Auth::user()->type == 'superadmin') {
@@ -1156,12 +1168,12 @@ if (! function_exists('createdBy')) {
         } else if (Auth::user()->type == 'company') {
             return Auth::user()->id;
         } else {
-            return  Auth::user()->created_by;
+            return Auth::user()->created_by;
         }
     }
 }
 
-if (! function_exists('IsDemo')) {
+if (!function_exists('IsDemo')) {
     function IsDemo()
     {
         if (config('app.is_demo')) {
@@ -1172,7 +1184,7 @@ if (! function_exists('IsDemo')) {
     }
 }
 
-if (! function_exists('createDefaultNotificationTemplates')) {
+if (!function_exists('createDefaultNotificationTemplates')) {
     /**
      * Create default notification templates for a new company
      *
@@ -1216,7 +1228,7 @@ if (! function_exists('createDefaultNotificationTemplates')) {
     }
 }
 
-if (! function_exists('isEmailTemplateEnabled')) {
+if (!function_exists('isEmailTemplateEnabled')) {
     /**
      * Check if an email template is enabled for a user
      *
@@ -1243,7 +1255,7 @@ if (! function_exists('isEmailTemplateEnabled')) {
     }
 }
 
-if (! function_exists('getTwilioConfig')) {
+if (!function_exists('getTwilioConfig')) {
     function getTwilioConfig()
     {
         return [
@@ -1302,26 +1314,26 @@ if (!function_exists('getDemoCalendarData')) {
         $events = [];
 
         $rangeStart = Carbon::create(2025, 12, 1);
-        $rangeEnd   = Carbon::create(2026, 12, 31);
+        $rangeEnd = Carbon::create(2026, 12, 31);
 
         // Fixed templates (no randomness)
         $demoEvents = [
-            ['type' => 'meeting', 'title' => 'Team Standup',        'duration' => 30],
+            ['type' => 'meeting', 'title' => 'Team Standup', 'duration' => 30],
             ['type' => 'meeting', 'title' => 'Client Presentation', 'duration' => 60],
-            ['type' => 'meeting', 'title' => 'Product Review',      'duration' => 45],
-            ['type' => 'call',    'title' => 'Sales Call',          'duration' => 30],
-            ['type' => 'call',    'title' => 'Follow-up Call',      'duration' => 20],
-            ['type' => 'call',    'title' => 'Support Call',        'duration' => 25],
-            ['type' => 'task',    'title' => 'Prepare Report',      'duration' => 0],
-            ['type' => 'task',    'title' => 'Review Documents',    'duration' => 0],
-            ['type' => 'task',    'title' => 'Update Website',      'duration' => 0],
+            ['type' => 'meeting', 'title' => 'Product Review', 'duration' => 45],
+            ['type' => 'call', 'title' => 'Sales Call', 'duration' => 30],
+            ['type' => 'call', 'title' => 'Follow-up Call', 'duration' => 20],
+            ['type' => 'call', 'title' => 'Support Call', 'duration' => 25],
+            ['type' => 'task', 'title' => 'Prepare Report', 'duration' => 0],
+            ['type' => 'task', 'title' => 'Review Documents', 'duration' => 0],
+            ['type' => 'task', 'title' => 'Update Website', 'duration' => 0],
         ];
 
         // Predefined static values
-        $statusesTask    = ['pending', 'in_progress', 'completed'];
-        $statusesEvent   = ['scheduled', 'completed', 'cancelled'];
-        $timeSlots       = ['09:00', '10:00', '11:30', '14:00', '15:30', '16:30'];
-        $locations       = ['Conference Room A', 'Zoom', 'Office'];
+        $statusesTask = ['pending', 'in_progress', 'completed'];
+        $statusesEvent = ['scheduled', 'completed', 'cancelled'];
+        $timeSlots = ['09:00', '10:00', '11:30', '14:00', '15:30', '16:30'];
+        $locations = ['Conference Room A', 'Zoom', 'Office'];
 
         $eventId = 1;
         $currentDate = $rangeStart->copy();
@@ -1330,21 +1342,21 @@ if (!function_exists('getDemoCalendarData')) {
 
             // Rotate event templates deterministically
             $template = $demoEvents[$eventId % count($demoEvents)];
-            $type     = $template['type'];
+            $type = $template['type'];
 
             if ($type === 'task') {
                 $events[] = [
-                    'id'              => "task-{$eventId}",
-                    'title'           => $template['title'],
-                    'start'           => $currentDate->format('Y-m-d'),
-                    'type'            => 'task',
+                    'id' => "task-{$eventId}",
+                    'title' => $template['title'],
+                    'start' => $currentDate->format('Y-m-d'),
+                    'type' => 'task',
                     'backgroundColor' => '#f59e0b',
-                    'borderColor'     => '#d97706',
-                    'task_id'         => $eventId,
-                    'project_id'      => ($eventId % 5) + 1,
-                    'description'     => 'Demo task description',
-                    'status'          => $statusesTask[$eventId % count($statusesTask)],
-                    'parent_name'     => 'Demo Project ' . (($eventId % 3) + 1),
+                    'borderColor' => '#d97706',
+                    'task_id' => $eventId,
+                    'project_id' => ($eventId % 5) + 1,
+                    'description' => 'Demo task description',
+                    'status' => $statusesTask[$eventId % count($statusesTask)],
+                    'parent_name' => 'Demo Project ' . (($eventId % 3) + 1),
                 ];
             } else {
                 $time = $timeSlots[$eventId % count($timeSlots)];
@@ -1356,29 +1368,29 @@ if (!function_exists('getDemoCalendarData')) {
                 $endDateTime = $startDateTime->copy()->addMinutes($template['duration']);
 
                 $event = [
-                    'id'              => "{$type}-{$eventId}",
-                    'title'           => $template['title'],
-                    'start'           => $startDateTime->format('Y-m-d H:i:s'),
-                    'end'             => $endDateTime->format('Y-m-d H:i:s'),
-                    'type'            => $type,
-                    'description'     => "Demo {$type} description",
-                    'status'          => $statusesEvent[$eventId % count($statusesEvent)],
-                    'parent_name'     => $type === 'meeting'
+                    'id' => "{$type}-{$eventId}",
+                    'title' => $template['title'],
+                    'start' => $startDateTime->format('Y-m-d H:i:s'),
+                    'end' => $endDateTime->format('Y-m-d H:i:s'),
+                    'type' => $type,
+                    'description' => "Demo {$type} description",
+                    'status' => $statusesEvent[$eventId % count($statusesEvent)],
+                    'parent_name' => $type === 'meeting'
                         ? 'Demo Lead ' . (($eventId % 5) + 1)
                         : 'Demo Contact ' . (($eventId % 5) + 1),
-                    'startDateTime'   => $startDateTime->format('H:i:s'),
-                    'endDateTime'     => $endDateTime->format('H:i:s'),
+                    'startDateTime' => $startDateTime->format('H:i:s'),
+                    'endDateTime' => $endDateTime->format('H:i:s'),
                 ];
 
                 if ($type === 'meeting') {
                     $event['backgroundColor'] = '#3b82f6';
-                    $event['borderColor']     = '#2563eb';
-                    $event['meeting_id']      = $eventId;
-                    $event['location']        = $locations[$eventId % count($locations)];
+                    $event['borderColor'] = '#2563eb';
+                    $event['meeting_id'] = $eventId;
+                    $event['location'] = $locations[$eventId % count($locations)];
                 } else {
                     $event['backgroundColor'] = '#10b77f';
-                    $event['borderColor']     = '#059669';
-                    $event['call_id']         = $eventId;
+                    $event['borderColor'] = '#059669';
+                    $event['call_id'] = $eventId;
                 }
 
                 $events[] = $event;

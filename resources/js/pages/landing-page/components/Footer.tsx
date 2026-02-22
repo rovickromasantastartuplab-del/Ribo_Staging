@@ -205,7 +205,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
           <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
             {/* Copyright */}
             <div className="text-gray-400 text-sm">
-              {settings.footerText || `Â© 2026 Ribo CRM. All rights reserved.`}
+              {settings.footerText || `© 2026 Ribo CRM. All rights reserved.`}
             </div>
 
             {/* Social Links */}

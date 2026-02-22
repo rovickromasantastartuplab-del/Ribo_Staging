@@ -15,6 +15,7 @@ interface Plan {
   storage_limit: number;
   enable_branding: string;
   enable_chatgpt: string;
+  enable_wedding_suppliers: string;
   module: string[] | null;
   is_trial: string | null;
   trial_day: number;
@@ -22,11 +23,33 @@ interface Plan {
   is_default: boolean;
 }
 
+interface AvailableCurrency {
+  id: number;
+  code: string;
+  symbol: string;
+  name: string;
+}
+
+interface CurrencyPrice {
+  code: string;
+  monthly: number | string;
+  yearly: number | string;
+}
+
 interface Props {
   plan: Plan;
   otherDefaultPlanExists: boolean;
+  availableCurrencies?: AvailableCurrency[];
+  currencyPrices?: CurrencyPrice[];
 }
 
-export default function EditPlan({ plan, otherDefaultPlanExists }: Props) {
-  return <PlanForm plan={plan} otherDefaultPlanExists={otherDefaultPlanExists} />;
+export default function EditPlan({ plan, otherDefaultPlanExists, availableCurrencies = [], currencyPrices = [] }: Props) {
+  return (
+    <PlanForm
+      plan={plan}
+      otherDefaultPlanExists={otherDefaultPlanExists}
+      availableCurrencies={availableCurrencies}
+      currencyPrices={currencyPrices}
+    />
+  );
 }

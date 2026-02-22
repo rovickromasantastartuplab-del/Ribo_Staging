@@ -38,7 +38,7 @@ import { hasPlanFeature } from '@/utils/planFeatures';
 export default function Settings() {
     const { t } = useTranslation();
     const { position } = useLayout();
-    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}} = usePage().props as any;
+    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {} } = usePage().props as any;
     const [activeSection, setActiveSection] = useState('system-settings');
 
     const isSuperAdmin =
@@ -92,12 +92,6 @@ export default function Settings() {
             href: '#payment-settings',
             icon: <CreditCard className="h-4 w-4 mr-2" />,
             permission: 'manage-payment-settings'
-        },
-        {
-            title: t('Company Payment Settings'),
-            href: '#company-payment-settings',
-            icon: <CreditCard className="h-4 w-4 mr-2" />,
-            permission: 'settings'
         },
         {
             title: t('Quote Templates'),
@@ -182,7 +176,6 @@ export default function Settings() {
             if (item.href === '#email-settings') return false;
             if (item.href === '#email-notification-settings') return false;
             if (item.href === '#twilio-notification-settings') return false;
-            if (item.href === '#company-payment-settings') return false;
         }
 
         // Check for both role and permission if both exist
@@ -200,7 +193,7 @@ export default function Settings() {
         // For company users, only show specific settings
         if (auth.roles?.includes('company')) {
             // Only allow system settings, email settings, brand settings, currency settings, webhook settings, email notifications, and settings
-            return ['manage-system-settings', 'manage-email-settings', 'manage-brand-settings', 'manage-currency-settings', 'manage-webhook-settings', 'manage-email-notifications', 'manage-twilio-notifications','manage-quotes-settings','manage-sales-orders-settings','manage-invoices-settings', 'settings'].includes(item.permission);
+            return ['manage-system-settings', 'manage-email-settings', 'manage-brand-settings', 'manage-currency-settings', 'manage-webhook-settings', 'manage-email-notifications', 'manage-twilio-notifications', 'manage-quotes-settings', 'manage-sales-orders-settings', 'manage-invoices-settings', 'settings'].includes(item.permission);
         }
         return false;
     });
@@ -218,7 +211,6 @@ export default function Settings() {
     const currencySettingsRef = useRef<HTMLDivElement>(null);
     const emailSettingsRef = useRef<HTMLDivElement>(null);
     const paymentSettingsRef = useRef<HTMLDivElement>(null);
-    const companyPaymentSettingsRef = useRef<HTMLDivElement>(null);
     const quoteTemplatesRef = useRef<HTMLDivElement>(null);
     const salesOrderTemplatesRef = useRef<HTMLDivElement>(null);
     const invoiceTemplatesRef = useRef<HTMLDivElement>(null);
@@ -248,7 +240,6 @@ export default function Settings() {
             const currencySettingsPosition = currencySettingsRef.current?.offsetTop || 0;
             const emailSettingsPosition = emailSettingsRef.current?.offsetTop || 0;
             const paymentSettingsPosition = paymentSettingsRef.current?.offsetTop || 0;
-            const companyPaymentSettingsPosition = companyPaymentSettingsRef.current?.offsetTop || 0;
             const quoteTemplatesPosition = quoteTemplatesRef.current?.offsetTop || 0;
             const salesOrderTemplatesPosition = salesOrderTemplatesRef.current?.offsetTop || 0;
             const invoiceTemplatesPosition = invoiceTemplatesRef.current?.offsetTop || 0;
@@ -293,8 +284,6 @@ export default function Settings() {
                 setActiveSection('quote-templates');
             } else if (scrollPosition >= invoiceTemplatesPosition) {
                 setActiveSection('invoice-templates');
-            } else if (scrollPosition >= companyPaymentSettingsPosition) {
-                setActiveSection('company-payment-settings');
             } else if (scrollPosition >= paymentSettingsPosition) {
                 setActiveSection('payment-settings');
             } else if (scrollPosition >= emailSettingsPosition) {
@@ -361,21 +350,21 @@ export default function Settings() {
                                 {filteredSidebarNavItems
                                     .filter((item): item is (typeof item & { href: string }) => typeof item.href === 'string')
                                     .map((item) => {
-                                    const href = item.href;
-                                    return (
-                                    <Button
-                                        key={href}
-                                        variant="ghost"
-                                        className={cn('w-full justify-start', {
-                                            'bg-muted font-medium': activeSection === href.replace('#', ''),
-                                        })}
-                                        onClick={() => handleNavClick(href)}
-                                    >
-                                        {item.icon}
-                                        {item.title}
-                                    </Button>
-                                    );
-                                })}
+                                        const href = item.href;
+                                        return (
+                                            <Button
+                                                key={href}
+                                                variant="ghost"
+                                                className={cn('w-full justify-start', {
+                                                    'bg-muted font-medium': activeSection === href.replace('#', ''),
+                                                })}
+                                                onClick={() => handleNavClick(href)}
+                                            >
+                                                {item.icon}
+                                                {item.title}
+                                            </Button>
+                                        );
+                                    })}
                             </div>
                         </ScrollArea>
                     </div>
@@ -443,15 +432,8 @@ export default function Settings() {
                     )}
 
                     {/* Payment Settings Section */}
-                    {(auth.permissions?.includes('manage-payment-settings') || auth.roles?.includes('superadmin')) && (
+                    {(auth.permissions?.includes('manage-payment-settings') || auth.roles?.includes('superadmin') || auth.roles?.includes('company')) && (
                         <section id="payment-settings" ref={paymentSettingsRef} className="mb-8">
-                            <PaymentSettings settings={paymentSettings} />
-                        </section>
-                    )}
-
-                    {/* Company Payment Settings Section */}
-                    {isSuperAdmin && (
-                        <section id="company-payment-settings" ref={companyPaymentSettingsRef} className="mb-8">
                             <PaymentSettings settings={paymentSettings} />
                         </section>
                     )}

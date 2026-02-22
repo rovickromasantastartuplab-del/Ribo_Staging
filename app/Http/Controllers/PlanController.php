@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Currency;
 use App\Models\Plan;
+use App\Models\PlanCurrencyPrice;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,7 +23,7 @@ class PlanController extends Controller
         // Admin view
         $billingCycle = $request->input('billing_cycle', 'monthly');
 
-        $dbPlans = Plan::all();
+        $dbPlans = Plan::with('currencyPrices')->get();
         $hasDefaultPlan = $dbPlans->where('is_default', true)->count() > 0;
         $settings = settings();
 
@@ -36,7 +37,7 @@ class PlanController extends Controller
             $currencySymbol = $currencyData ? $currencyData->symbol : '$';
         }
 
-        $plans = $dbPlans->map(function ($plan) use ($billingCycle) {
+        $plans = $dbPlans->map(function ($plan) use ($billingCycle, $currency, $currencySymbol) {
             // Determine features based on plan attributes
             $features = [];
             if ($plan->enable_chatgpt === 'on')
@@ -48,11 +49,11 @@ class PlanController extends Controller
             if (is_array($plan->module) && in_array('wedding_suppliers_module', $plan->module))
                 $features[] = 'Wedding Suppliers';
 
-            // Get price based on billing cycle
-            $price = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->price;
+            // Get price for the active currency
+            $price = $plan->getPriceForCurrency($currency, $billingCycle);
 
             // Format price with currency symbol
-            $formattedPrice = '$' . number_format($price, 2);
+            $formattedPrice = $currencySymbol . number_format($price, 2);
 
             // Set duration based on billing cycle
             $duration = $billingCycle === 'yearly' ? 'Yearly' : 'Monthly';
@@ -124,7 +125,8 @@ class PlanController extends Controller
         $hasDefaultPlan = Plan::where('is_default', true)->exists();
 
         return Inertia::render('plans/create', [
-            'hasDefaultPlan' => $hasDefaultPlan
+            'hasDefaultPlan' => $hasDefaultPlan,
+            'availableCurrencies' => Currency::orderBy('code')->get(['id', 'code', 'symbol', 'name']),
         ]);
     }
 
@@ -152,6 +154,10 @@ class PlanController extends Controller
             'trial_day' => 'nullable|integer|min:0',
             'is_plan_enable' => 'nullable|in:on,off',
             'is_default' => 'nullable|boolean',
+            'currency_prices' => 'nullable|array',
+            'currency_prices.*.code' => 'required_with:currency_prices|string|max:10',
+            'currency_prices.*.monthly' => 'required_with:currency_prices|numeric|min:0',
+            'currency_prices.*.yearly' => 'nullable|numeric|min:0',
         ]);
 
         // Set default values for nullable fields
@@ -188,8 +194,21 @@ class PlanController extends Controller
         $validated['module'] = array_values(array_unique($features));
 
         // Create the plan
-        Plan::create($validated);
+        $currencyPricesData = $request->input('currency_prices', []);
+        $plan = Plan::create($validated);
 
+        // Save currency-specific prices
+        foreach ($currencyPricesData as $cp) {
+            if (($cp['monthly'] ?? 0) > 0) {
+                PlanCurrencyPrice::create([
+                    'plan_id' => $plan->id,
+                    'currency_code' => strtoupper($cp['code']),
+                    'monthly_price' => $cp['monthly'],
+                    'yearly_price' => $cp['yearly'] ?? null,
+                ]);
+            }
+        }
+    
         return redirect()->route('plans.index')->with('success', __('Plan created successfully.'));
     }
 
@@ -211,7 +230,13 @@ class PlanController extends Controller
 
         return Inertia::render('plans/edit', [
             'plan' => $planData,
-            'otherDefaultPlanExists' => $otherDefaultPlanExists
+            'otherDefaultPlanExists' => $otherDefaultPlanExists,
+            'availableCurrencies' => Currency::orderBy('code')->get(['id', 'code', 'symbol', 'name']),
+            'currencyPrices' => $plan->currencyPrices->map(fn($cp) => [
+                'code' => $cp->currency_code,
+                'monthly' => $cp->monthly_price,
+                'yearly' => $cp->yearly_price,
+            ]),
         ]);
     }
 
@@ -239,6 +264,10 @@ class PlanController extends Controller
             'trial_day' => 'nullable|integer|min:0',
             'is_plan_enable' => 'nullable|in:on,off',
             'is_default' => 'nullable|boolean',
+            'currency_prices' => 'nullable|array',
+            'currency_prices.*.code' => 'required_with:currency_prices|string|max:10',
+            'currency_prices.*.monthly' => 'required_with:currency_prices|numeric|min:0',
+            'currency_prices.*.yearly' => 'nullable|numeric|min:0',
         ]);
 
         // Set default values for nullable fields
@@ -275,7 +304,23 @@ class PlanController extends Controller
         $validated['module'] = array_values(array_unique($features));
 
         // Update the plan
+        $currencyPricesData = $request->input('currency_prices', []);
         $plan->update($validated);
+
+        // Upsert currency-specific prices
+        foreach ($currencyPricesData as $cp) {
+            $code = strtoupper($cp['code']);
+            if (($cp['monthly'] ?? 0) > 0) {
+                PlanCurrencyPrice::updateOrCreate(
+                    ['plan_id' => $plan->id, 'currency_code' => $code],
+                    ['monthly_price' => $cp['monthly'], 'yearly_price' => $cp['yearly'] ?? null]
+                );
+            } else {
+                PlanCurrencyPrice::where('plan_id', $plan->id)
+                    ->where('currency_code', $code)
+                    ->delete();
+            }
+        }
 
         return redirect()->route('plans.index')->with('success', __('Plan updated successfully.'));
     }
@@ -305,7 +350,7 @@ class PlanController extends Controller
         $user = auth()->user();
         $billingCycle = $request->input('billing_cycle', 'monthly');
 
-        $dbPlans = Plan::where('is_plan_enable', 'on')->get();
+        $dbPlans = Plan::with('currencyPrices')->where('is_plan_enable', 'on')->get();
 
         // Always use super admin currency for plan pricing
         $superAdmin = User::where('type', 'superadmin')->first();
@@ -317,8 +362,8 @@ class PlanController extends Controller
             $currencySymbol = $currencyData ? $currencyData->symbol : '$';
         }
 
-        $plans = $dbPlans->map(function ($plan) use ($billingCycle, $user) {
-            $price = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->price;
+        $plans = $dbPlans->map(function ($plan) use ($billingCycle, $user, $currency, $currencySymbol) {
+            $price = $plan->getPriceForCurrency($currency, $billingCycle);
 
             $features = [];
             if ($plan->enable_chatgpt === 'on')
@@ -334,7 +379,7 @@ class PlanController extends Controller
                 'id' => $plan->id,
                 'name' => $plan->name,
                 'price' => $price,
-                'formatted_price' => '$' . number_format($price, 2),
+                'formatted_price' => $currencySymbol . number_format($price, 2),
                 'duration' => $billingCycle === 'yearly' ? 'Yearly' : 'Monthly',
                 'description' => $plan->description,
                 'trial_days' => $plan->trial_day,

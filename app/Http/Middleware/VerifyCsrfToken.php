@@ -22,5 +22,6 @@ class VerifyCsrfToken extends Middleware
         'payments/easebuzz/callback',
         'payments/paytabs/callback',
         'payments/iyzipay/callback',
+        'payments/hitpay/webhook',
     ];
 }

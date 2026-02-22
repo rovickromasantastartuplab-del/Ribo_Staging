@@ -1,10 +1,18 @@
 import React from 'react';
 import PlanForm from './form';
 
-interface Props {
-  hasDefaultPlan: boolean;
+interface AvailableCurrency {
+  id: number;
+  code: string;
+  symbol: string;
+  name: string;
 }
 
-export default function CreatePlan({ hasDefaultPlan }: Props) {
-  return <PlanForm hasDefaultPlan={hasDefaultPlan} />;
+interface Props {
+  hasDefaultPlan: boolean;
+  availableCurrencies?: AvailableCurrency[];
+}
+
+export default function CreatePlan({ hasDefaultPlan, availableCurrencies = [] }: Props) {
+  return <PlanForm hasDefaultPlan={hasDefaultPlan} availableCurrencies={availableCurrencies} currencyPrices={[]} />;
 }

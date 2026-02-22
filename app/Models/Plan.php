@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PlanCurrencyPrice;
 
 class Plan extends Model
 {
@@ -25,7 +26,7 @@ class Plan extends Model
         'is_default',
         'module',
     ];
-    
+
     protected $casts = [
         'themes' => 'array',
         'module' => 'array',
@@ -33,7 +34,7 @@ class Plan extends Model
         'price' => 'float',
         'yearly_price' => 'float',
     ];
-    
+
     /**
      * Get the default plan
      *
@@ -43,7 +44,7 @@ class Plan extends Model
     {
         return self::where('is_default', true)->first();
     }
-    
+
     /**
      * Check if the plan is the default plan
      *
@@ -53,7 +54,7 @@ class Plan extends Model
     {
         return (bool) $this->is_default;
     }
-    
+
     /**
      * Get the price based on billing cycle
      *
@@ -65,10 +66,38 @@ class Plan extends Model
         if ($cycle === 'yearly' && $this->yearly_price) {
             return $this->yearly_price;
         }
-        
+
         return $this->price;
     }
-    
+
+    /**
+     * Get currency-specific price for a given currency code and billing cycle.
+     * Falls back to the base price/yearly_price columns if no currency-specific price exists.
+     */
+    public function getPriceForCurrency(string $currencyCode, string $cycle = 'monthly'): float
+    {
+        $currencyPrice = $this->currencyPrices
+            ->firstWhere('currency_code', strtoupper($currencyCode));
+
+        if ($currencyPrice) {
+            if ($cycle === 'yearly' && $currencyPrice->yearly_price !== null) {
+                return (float) $currencyPrice->yearly_price;
+            }
+            return (float) $currencyPrice->monthly_price;
+        }
+
+        // Fallback to legacy price columns
+        return $this->getPriceForCycle($cycle);
+    }
+
+    /**
+     * Get currency-specific prices for this plan
+     */
+    public function currencyPrices()
+    {
+        return $this->hasMany(PlanCurrencyPrice::class);
+    }
+
     /**
      * Get users subscribed to this plan
      */
@@ -76,7 +105,7 @@ class Plan extends Model
     {
         return $this->hasMany(User::class);
     }
-    
+
     /**
      * Get plan orders for this plan
      */

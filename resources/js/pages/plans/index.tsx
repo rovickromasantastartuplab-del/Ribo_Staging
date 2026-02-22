@@ -61,6 +61,7 @@ interface Plan {
   is_default?: boolean;
   is_current?: boolean;
   is_trial_available?: boolean;
+  paymentMethods?: any;
 }
 
 interface Props {
@@ -490,6 +491,15 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
       methods.push({
         id: 'sspay',
         name: t('SSPay'),
+        icon: <CreditCard className="h-5 w-5" />,
+        enabled: true
+      });
+    }
+
+    if (paymentSettings?.is_hitpay_enabled === true || paymentSettings?.is_hitpay_enabled === '1') {
+      methods.push({
+        id: 'hitpay',
+        name: t('HitPay'),
         icon: <CreditCard className="h-5 w-5" />,
         enabled: true
       });

@@ -6,10 +6,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
+interface CurrencyPrice {
+  code: string;
+  monthly: number | string;
+  yearly: number | string;
+}
+
+interface AvailableCurrency {
+  id: number;
+  code: string;
+  symbol: string;
+  name: string;
+}
 
 interface Plan {
   id: number;
@@ -37,9 +48,11 @@ interface Props {
   plan?: Plan;
   hasDefaultPlan?: boolean;
   otherDefaultPlanExists?: boolean;
+  availableCurrencies?: AvailableCurrency[];
+  currencyPrices?: CurrencyPrice[];
 }
 
-export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPlanExists = false }: Props) {
+export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPlanExists = false, availableCurrencies = [], currencyPrices = [] }: Props) {
   const { t } = useTranslation();
   const [processing, setProcessing] = useState(false);
 
@@ -65,6 +78,27 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
     is_default: plan?.is_default || false,
   });
 
+  // Build initial currency prices from props, keyed by code
+  const buildInitialCurrencyPrices = (): Record<string, CurrencyPrice> => {
+    const map: Record<string, CurrencyPrice> = {};
+    for (const c of availableCurrencies) {
+      const existing = currencyPrices.find(cp => cp.code === c.code);
+      map[c.code] = existing
+        ? { code: c.code, monthly: existing.monthly, yearly: existing.yearly ?? '' }
+        : { code: c.code, monthly: '', yearly: '' };
+    }
+    return map;
+  };
+
+  const [currencyPriceMap, setCurrencyPriceMap] = useState<Record<string, CurrencyPrice>>(buildInitialCurrencyPrices);
+
+  const handleCurrencyPriceChange = (code: string, field: 'monthly' | 'yearly', value: string) => {
+    setCurrencyPriceMap(prev => ({
+      ...prev,
+      [code]: { ...prev[code], [field]: value },
+    }));
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -82,12 +116,23 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
     e.preventDefault();
     setProcessing(true);
 
+    // Convert currencyPriceMap to array, only including rows with a monthly price set
+    const currency_prices = Object.values(currencyPriceMap)
+      .filter(cp => cp.monthly !== '' && Number(cp.monthly) >= 0)
+      .map(cp => ({
+        code: cp.code,
+        monthly: Number(cp.monthly),
+        yearly: cp.yearly !== '' ? Number(cp.yearly) : null,
+      }));
+
+    const payload = { ...formData, currency_prices };
+
     if (isEdit) {
-      router.put(route('plans.update', plan.id), formData, {
+      router.put(route('plans.update', plan.id), payload, {
         onFinish: () => setProcessing(false)
       });
     } else {
-      router.post(route('plans.store'), formData, {
+      router.post(route('plans.store'), payload, {
         onFinish: () => setProcessing(false)
       });
     }
@@ -120,7 +165,10 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
               </div>
 
               <div>
-                <Label htmlFor="price">{t("Monthly Price")}</Label>
+                <Label htmlFor="price">
+                  {t("Base Monthly Price")}
+                  <span className="text-xs text-muted-foreground ml-1">({t("fallback if no currency price set")})</span>
+                </Label>
                 <Input
                   id="price"
                   name="price"
@@ -133,7 +181,10 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
               </div>
 
               <div>
-                <Label htmlFor="yearly_price">{t("Yearly Price")} <span className="text-sm text-muted-foreground">({t("Optional")})</span></Label>
+                <Label htmlFor="yearly_price">
+                  {t("Base Yearly Price")}
+                  <span className="text-sm text-muted-foreground ml-1">({t("Optional")})</span>
+                </Label>
                 <Input
                   id="yearly_price"
                   name="yearly_price"
@@ -235,6 +286,61 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
             </div>
           </div>
 
+          {/* Currency Prices */}
+          {availableCurrencies.length > 0 && (
+            <div className="border rounded-lg p-4 space-y-3">
+              <div>
+                <h3 className="font-medium">{t("Currency Prices")}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t("Set the exact price per currency. Leave empty to fall back to the base price above.")}
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="pb-2 font-medium text-muted-foreground w-32">{t("Currency")}</th>
+                      <th className="pb-2 font-medium text-muted-foreground">{t("Monthly Price")}</th>
+                      <th className="pb-2 font-medium text-muted-foreground">{t("Yearly Price")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {availableCurrencies.map(cur => (
+                      <tr key={cur.code}>
+                        <td className="py-2 pr-4">
+                          <span className="font-medium">{cur.code}</span>
+                          <span className="text-muted-foreground ml-1 text-xs">{cur.symbol}</span>
+                        </td>
+                        <td className="py-2 pr-4">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder={t("e.g. 999")}
+                            value={currencyPriceMap[cur.code]?.monthly ?? ''}
+                            onChange={e => handleCurrencyPriceChange(cur.code, 'monthly', e.target.value)}
+                            className="h-8 w-36"
+                          />
+                        </td>
+                        <td className="py-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder={t("Optional")}
+                            value={currencyPriceMap[cur.code]?.yearly ?? ''}
+                            onChange={e => handleCurrencyPriceChange(cur.code, 'yearly', e.target.value)}
+                            className="h-8 w-36"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           <div className="border rounded-lg p-4 space-y-4">
             <h3 className="font-medium">{t("Features")}</h3>
 
@@ -275,8 +381,6 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
                 />
               </div>
             </div>
-
-
           </div>
 
           <div className="border rounded-lg p-4 space-y-4">

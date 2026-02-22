@@ -31,7 +31,8 @@ export const PAYMENT_METHODS = {
   KHALTI: 'khalti',
   EASEBUZZ: 'easebuzz',
   OZOW: 'ozow',
-  CASHFREE: 'cashfree'
+  CASHFREE: 'cashfree',
+  HITPAY: 'hitpay'
 } as const;
 
 export const PAYMENT_METHOD_LABELS = {
@@ -67,7 +68,8 @@ export const PAYMENT_METHOD_LABELS = {
   [PAYMENT_METHODS.KHALTI]: 'Khalti',
   [PAYMENT_METHODS.EASEBUZZ]: 'Easebuzz',
   [PAYMENT_METHODS.OZOW]: 'Ozow',
-  [PAYMENT_METHODS.CASHFREE]: 'Cashfree'
+  [PAYMENT_METHODS.CASHFREE]: 'Cashfree',
+  [PAYMENT_METHODS.HITPAY]: 'HitPay'
 } as const;
 
 export const PAYMENT_METHOD_HELP_URLS = {
@@ -102,7 +104,8 @@ export const PAYMENT_METHOD_HELP_URLS = {
   [PAYMENT_METHODS.KHALTI]: 'https://docs.khalti.com/',
   [PAYMENT_METHODS.EASEBUZZ]: 'https://www.easebuzz.in/developer/',
   [PAYMENT_METHODS.OZOW]: 'https://developers.ozow.com/',
-  [PAYMENT_METHODS.CASHFREE]: 'https://docs.cashfree.com/'
+  [PAYMENT_METHODS.CASHFREE]: 'https://docs.cashfree.com/',
+  [PAYMENT_METHODS.HITPAY]: 'https://dashboard.hit-pay.com'
 } as const;
 
 export const PAYMENT_MODES = {
@@ -211,15 +214,20 @@ export function validatePaymentMethodCredentials(method: PaymentMethod, config: 
       if (!config.category_code) errors.push('toyyibPay category code is required');
       if (!config.secret_key) errors.push('toyyibPay secret key is required');
       break;
-      
+
     case PAYMENT_METHODS.IYZIPAY:
       if (!config.public_key) errors.push('Iyzipay API key is required');
       if (!config.secret_key) errors.push('Iyzipay secret key is required');
       break;
-      
+
     case PAYMENT_METHODS.BENEFIT:
       if (!config.public_key) errors.push('Benefit API key is required');
       if (!config.secret_key) errors.push('Benefit secret key is required');
+      break;
+
+    case PAYMENT_METHODS.HITPAY:
+      if (!config.api_key) errors.push('HitPay API key is required');
+      if (!config.salt) errors.push('HitPay salt (webhook secret) is required');
       break;
   }
 
@@ -227,7 +235,7 @@ export function validatePaymentMethodCredentials(method: PaymentMethod, config: 
 }
 
 export function getPaymentMethodIcon(method: PaymentMethod): string {
-  const icons = {
+  const icons: Record<string, string> = {
     [PAYMENT_METHODS.STRIPE]: 'credit-card',
     [PAYMENT_METHODS.PAYPAL]: 'credit-card',
     [PAYMENT_METHODS.RAZORPAY]: 'indian-rupee',
@@ -245,7 +253,8 @@ export function getPaymentMethodIcon(method: PaymentMethod): string {
     [PAYMENT_METHODS.MOLLIE]: 'credit-card',
     [PAYMENT_METHODS.TOYYIBPAY]: 'credit-card',
     [PAYMENT_METHODS.IYZIPAY]: 'credit-card',
-    [PAYMENT_METHODS.BENEFIT]: 'credit-card'
+    [PAYMENT_METHODS.BENEFIT]: 'credit-card',
+    [PAYMENT_METHODS.HITPAY]: 'credit-card'
   };
 
   return icons[method] || 'credit-card';

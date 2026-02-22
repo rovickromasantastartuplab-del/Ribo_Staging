@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class PaymentSetting extends Model
 {
@@ -14,6 +15,50 @@ class PaymentSetting extends Model
         'user_id' => 'integer',
     ];
 
+    /**
+     * Keys whose values must be encrypted at rest in the database.
+     * These are secret/private keys for payment gateways.
+     */
+    protected array $sensitiveKeys = [
+        'stripe_secret',
+        'paypal_secret_key',
+        'razorpay_secret',
+        'paystack_secret_key',
+        'flutterwave_secret_key',
+        'paytabs_server_key',
+        'skrill_secret_word',
+        'coingate_api_token',
+        'payfast_passphrase',
+        'payfast_merchant_key',
+        'tap_secret_key',
+        'xendit_api_key',
+        'paytr_merchant_key',
+        'paytr_merchant_salt',
+        'mollie_api_key',
+        'toyyibpay_secret_key',
+        'paymentwall_private_key',
+        'sspay_secret_key',
+        'benefit_secret_key',
+        'iyzipay_secret_key',
+        'aamarpay_signature',
+        'midtrans_secret_key',
+        'yookassa_secret_key',
+        'nepalste_secret_key',
+        'cinetpay_secret_key',
+        'payhere_merchant_secret',
+        'payhere_app_secret',
+        'fedapay_secret_key',
+        'authorizenet_transaction_key',
+        'khalti_secret_key',
+        'easebuzz_salt_key',
+        'ozow_private_key',
+        'ozow_api_key',
+        'cashfree_secret_key',
+        'mercadopago_access_token',
+        'hitpay_api_key',
+        'hitpay_salt',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -21,16 +66,27 @@ class PaymentSetting extends Model
 
     public function setValueAttribute($value)
     {
+        // Encrypt sensitive keys before saving to the database
+        if (
+            isset($this->attributes['key'])
+            && in_array($this->attributes['key'], $this->sensitiveKeys)
+            && !empty($value)
+            && !is_bool($value)
+        ) {
+            $this->attributes['value'] = Crypt::encryptString((string) $value);
+            return;
+        }
+
         $this->attributes['value'] = is_bool($value) ? ($value ? '1' : '0') : $value;
     }
 
     public function getValueAttribute($value)
     {
         $booleanKeys = [
-            'is_manually_enabled', 
-            'is_bank_enabled', 
-            'is_stripe_enabled', 
-            'is_paypal_enabled', 
+            'is_manually_enabled',
+            'is_bank_enabled',
+            'is_stripe_enabled',
+            'is_paypal_enabled',
             'is_razorpay_enabled',
             'is_mercadopago_enabled',
             'is_paystack_enabled',
@@ -60,13 +116,29 @@ class PaymentSetting extends Model
             'is_khalti_enabled',
             'is_easebuzz_enabled',
             'is_ozow_enabled',
-            'is_cashfree_enabled'
+            'is_cashfree_enabled',
+            'is_hitpay_enabled'
         ];
-        
+
         if (isset($this->key) && in_array($this->key, $booleanKeys)) {
             return $value === '1' || $value === 1 || $value === true;
         }
-        
+
+        // Decrypt sensitive keys when reading from the database
+        if (
+            isset($this->key)
+            && in_array($this->key, $this->sensitiveKeys)
+            && !empty($value)
+        ) {
+            try {
+                return Crypt::decryptString($value);
+            } catch (DecryptException $e) {
+                // Backwards compatibility: value is still plain text from before encryption was added.
+                // It will auto-encrypt when the admin saves settings next time.
+                return $value;
+            }
+        }
+
         return $value;
     }
 
@@ -83,7 +155,7 @@ class PaymentSetting extends Model
         if (!$userId) {
             return [];
         }
-        
+
         return self::where('user_id', $userId)->pluck('value', 'key')->toArray();
     }
 }

@@ -33,7 +33,8 @@ class PaymentSettingController extends Controller
 
         // Add default currency to payment settings
         $settings = settings($superAdminId);
-        $safeSettings['defaultCurrency'] = $settings['defaultCurrency'] ?? 'usd';
+        $safeSettings['defaultCurrency'] = $settings['defaultCurrency'] ?? 'USD';
+        $safeSettings['currency'] = $settings['defaultCurrency'] ?? 'USD';
 
         return response()->json($safeSettings);
     }
@@ -122,6 +123,9 @@ class PaymentSettingController extends Controller
                 'cashfree_mode' => 'in:sandbox,live',
                 'cashfree_secret_key' => 'nullable|string',
                 'cashfree_public_key' => 'nullable|string',
+                'hitpay_api_key' => 'nullable|string',
+                'hitpay_salt' => 'nullable|string',
+                'hitpay_mode' => 'in:sandbox,live',
             ]);
 
             $settings = $this->preparePaymentSettings($request, $validatedData);
@@ -173,6 +177,7 @@ class PaymentSettingController extends Controller
             'is_easebuzz_enabled' => $request->boolean('is_easebuzz_enabled'),
             'is_ozow_enabled' => $request->boolean('is_ozow_enabled'),
             'is_cashfree_enabled' => $request->boolean('is_cashfree_enabled'),
+            'is_hitpay_enabled' => $request->boolean('is_hitpay_enabled'),
             'paypal_mode' => $validatedData['paypal_mode'] ?? 'sandbox',
             'mercadopago_mode' => $validatedData['mercadopago_mode'] ?? 'sandbox',
             'bank_detail' => $validatedData['bank_detail'],
@@ -253,6 +258,9 @@ class PaymentSettingController extends Controller
             'cashfree_mode' => $validatedData['cashfree_mode'] ?? 'sandbox',
             'cashfree_secret_key' => $validatedData['cashfree_secret_key'],
             'cashfree_public_key' => $validatedData['cashfree_public_key'],
+            'hitpay_api_key' => $validatedData['hitpay_api_key'],
+            'hitpay_salt' => $validatedData['hitpay_salt'],
+            'hitpay_mode' => $validatedData['hitpay_mode'] ?? 'sandbox',
         ];
     }
 
@@ -282,32 +290,90 @@ class PaymentSettingController extends Controller
         $safeSettings = [];
 
         $enabledKeys = [
-            'is_manually_enabled', 'is_bank_enabled', 'is_stripe_enabled', 'is_paypal_enabled',
-            'is_razorpay_enabled', 'is_mercadopago_enabled', 'is_paystack_enabled', 'is_flutterwave_enabled',
-            'is_paytabs_enabled', 'is_skrill_enabled', 'is_coingate_enabled', 'is_payfast_enabled',
-            'is_tap_enabled', 'is_xendit_enabled', 'is_paytr_enabled', 'is_mollie_enabled',
-            'is_toyyibpay_enabled', 'is_paymentwall_enabled', 'is_sspay_enabled', 'is_benefit_enabled',
-            'is_iyzipay_enabled', 'is_aamarpay_enabled', 'is_midtrans_enabled', 'is_yookassa_enabled',
-            'is_nepalste_enabled', 'is_paiement_enabled', 'is_cinetpay_enabled', 'is_payhere_enabled',
-            'is_fedapay_enabled', 'is_authorizenet_enabled', 'is_khalti_enabled', 'is_easebuzz_enabled',
-            'is_ozow_enabled', 'is_cashfree_enabled'
+            'is_manually_enabled',
+            'is_bank_enabled',
+            'is_stripe_enabled',
+            'is_paypal_enabled',
+            'is_razorpay_enabled',
+            'is_mercadopago_enabled',
+            'is_paystack_enabled',
+            'is_flutterwave_enabled',
+            'is_paytabs_enabled',
+            'is_skrill_enabled',
+            'is_coingate_enabled',
+            'is_payfast_enabled',
+            'is_tap_enabled',
+            'is_xendit_enabled',
+            'is_paytr_enabled',
+            'is_mollie_enabled',
+            'is_toyyibpay_enabled',
+            'is_paymentwall_enabled',
+            'is_sspay_enabled',
+            'is_benefit_enabled',
+            'is_iyzipay_enabled',
+            'is_aamarpay_enabled',
+            'is_midtrans_enabled',
+            'is_yookassa_enabled',
+            'is_nepalste_enabled',
+            'is_paiement_enabled',
+            'is_cinetpay_enabled',
+            'is_payhere_enabled',
+            'is_fedapay_enabled',
+            'is_authorizenet_enabled',
+            'is_khalti_enabled',
+            'is_easebuzz_enabled',
+            'is_ozow_enabled',
+            'is_cashfree_enabled',
+            'is_hitpay_enabled'
         ];
 
         $modeKeys = [
-            'paypal_mode', 'mercadopago_mode', 'paytabs_mode', 'coingate_mode', 'payfast_mode',
-            'benefit_mode', 'iyzipay_mode', 'midtrans_mode', 'nepalste_mode', 'payhere_mode',
-            'fedapay_mode', 'authorizenet_mode', 'ozow_mode', 'cashfree_mode'
+            'paypal_mode',
+            'mercadopago_mode',
+            'paytabs_mode',
+            'coingate_mode',
+            'payfast_mode',
+            'benefit_mode',
+            'iyzipay_mode',
+            'midtrans_mode',
+            'nepalste_mode',
+            'payhere_mode',
+            'fedapay_mode',
+            'authorizenet_mode',
+            'ozow_mode',
+            'cashfree_mode',
+            'hitpay_mode'
         ];
 
         $frontendKeys = [
-            'stripe_key', 'razorpay_key', 'paystack_public_key', 'flutterwave_public_key',
-            'khalti_public_key', 'cashfree_public_key', 'iyzipay_public_key', 'benefit_public_key',
-            'fedapay_public_key', 'nepalste_public_key', 'paymentwall_public_key',
-            'paypal_client_id', 'toyyibpay_category_code', 'aamarpay_store_id',
-            'authorizenet_merchant_id', 'cinetpay_site_id', 'easebuzz_merchant_key',
-            'ozow_site_key', 'paiement_merchant_id', 'payhere_merchant_id', 'paytr_merchant_id',
-            'skrill_merchant_id', 'yookassa_shop_id', 'bank_detail','tap_secret_key', 'xendit_api_key',
-            'midtrans_secret_key','sspay_secret_key'
+            'stripe_key',
+            'razorpay_key',
+            'paystack_public_key',
+            'flutterwave_public_key',
+            'khalti_public_key',
+            'cashfree_public_key',
+            'iyzipay_public_key',
+            'benefit_public_key',
+            'fedapay_public_key',
+            'nepalste_public_key',
+            'paymentwall_public_key',
+            'paypal_client_id',
+            'toyyibpay_category_code',
+            'aamarpay_store_id',
+            'authorizenet_merchant_id',
+            'cinetpay_site_id',
+            'easebuzz_merchant_key',
+            'ozow_site_key',
+            'paiement_merchant_id',
+            'payhere_merchant_id',
+            'paytr_merchant_id',
+            'skrill_merchant_id',
+            'yookassa_shop_id',
+            'bank_detail',
+            'tap_secret_key',
+            'xendit_api_key',
+            'midtrans_secret_key',
+            'sspay_secret_key'
         ];
 
         foreach (array_merge($enabledKeys, $modeKeys, $frontendKeys) as $key) {

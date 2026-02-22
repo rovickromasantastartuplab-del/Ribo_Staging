@@ -41,6 +41,7 @@ import { PaymentWallPaymentForm } from './paymentwall-payment-form';
 import { SSPayPaymentForm } from './sspay-payment-form';
 import { TapPaymentForm } from './tap-payment-form';
 import { XenditPaymentForm } from './xendit-payment-form';
+import { HitpayPaymentForm } from './hitpay-payment-form';
 
 interface PaymentMethod {
   id: string;
@@ -75,6 +76,14 @@ export function PaymentProcessor({
   onCancel
 }: PaymentProcessorProps) {
   const { t } = useTranslation();
+
+  // Centralized currency formatting using admin settings
+  const formatCurrency = (amount: number) => {
+    if (typeof window !== 'undefined' && window.appSettings?.formatCurrency) {
+      return window.appSettings.formatCurrency(amount, { showSymbol: true });
+    }
+    return `${currencySymbol}${amount.toFixed(2)}`;
+  };
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
@@ -469,6 +478,14 @@ export function PaymentProcessor({
             currency={plan.paymentMethods?.currency || 'PHP'}
           />
         );
+      case 'hitpay':
+        return (
+          <HitpayPaymentForm
+            {...commonProps}
+            planPrice={Number(plan.price)}
+            currency={plan.paymentMethods?.currency || 'PHP'}
+          />
+        );
       default:
         return null;
     }
@@ -501,7 +518,7 @@ export function PaymentProcessor({
               </p>
             </div>
             <div className="text-right">
-              <div className="text-lg font-bold">{currencySymbol} {plan.price}</div>
+              <div className="text-lg font-bold">{formatCurrency(Number(plan.price))}</div>
               <div className="text-sm text-muted-foreground">
                 /{t(billingCycle)}
               </div>
@@ -523,8 +540,8 @@ export function PaymentProcessor({
               <Card
                 key={`${method.id}-${index}`}
                 className={`cursor-pointer transition-colors ${selectedPaymentMethod === method.id
-                    ? 'border-primary bg-primary/5'
-                    : 'hover:border-gray-300'
+                  ? 'border-primary bg-primary/5'
+                  : 'hover:border-gray-300'
                   }`}
                 onClick={() => setSelectedPaymentMethod(method.id)}
               >
@@ -591,7 +608,7 @@ export function PaymentProcessor({
                 {t('Coupon Applied')}: {appliedCoupon.code}
               </span>
               <span className="text-green-600">
-                -{appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `${currencySymbol}${appliedCoupon.value}`}
+                -{appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : formatCurrency(appliedCoupon.value)}
               </span>
             </div>
           </div>
@@ -604,18 +621,18 @@ export function PaymentProcessor({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{t('Subtotal')}</span>
-              <span>{currencySymbol}{originalPrice}</span>
+              <span>{formatCurrency(originalPrice)}</span>
             </div>
             {appliedCoupon && (
               <div className="flex justify-between text-sm text-green-600">
                 <span>{t('Discount')}</span>
-                <span>-{currencySymbol}{discountAmount}</span>
+                <span>-{formatCurrency(discountAmount)}</span>
               </div>
             )}
             <div className="border-t pt-2">
               <div className="flex justify-between font-medium">
                 <span>{t('Total')}</span>
-                <span>{currencySymbol}{finalPrice.toFixed(2)}</span>
+                <span>{formatCurrency(finalPrice)}</span>
               </div>
             </div>
           </div>
@@ -632,7 +649,7 @@ export function PaymentProcessor({
           disabled={enabledPaymentMethods.length === 0}
           className="flex-1"
         >
-          {t('Pay')} {currencySymbol} {finalPrice}
+          {t('Pay')} {formatCurrency(finalPrice)}
         </Button>
       </div>
     </div>

@@ -53,6 +53,7 @@ use App\Http\Controllers\AamarpayPaymentController;
 use App\Http\Controllers\MidtransPaymentController;
 use App\Http\Controllers\PaymentWallPaymentController;
 use App\Http\Controllers\SSPayPaymentController;
+use App\Http\Controllers\HitPayPaymentController;
 use App\Http\Controllers\PublicFormController;
 use App\Http\Controllers\SalesOrderController;
 use App\Http\Controllers\OnboardingController;
@@ -192,6 +193,10 @@ Route::match(['GET', 'POST'], 'payments/coingate/callback', [CoinGatePaymentCont
 Route::get('payments/xendit/success', [XenditPaymentController::class, 'success'])->name('xendit.success');
 Route::post('payments/xendit/callback', [XenditPaymentController::class, 'callback'])->name('xendit.callback');
 
+// HitPay payment routes (public routes — webhook + success redirect)
+Route::get('payments/hitpay/success', [HitPayPaymentController::class, 'success'])->name('hitpay.success');
+Route::post('payments/hitpay/webhook', [HitPayPaymentController::class, 'callback'])->name('hitpay.callback');
+
 // PWA Manifest routes removed
 
 Route::get('/landing-page', [LandingPageController::class, 'settings'])->name('landing-page');
@@ -249,6 +254,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('payments/midtrans', [MidtransPaymentController::class, 'processPayment'])->name('midtrans.payment');
     Route::post('payments/paymentwall', [PaymentWallPaymentController::class, 'processPayment'])->name('paymentwall.payment');
     Route::post('payments/sspay', [SSPayPaymentController::class, 'processPayment'])->name('sspay.payment');
+    Route::post('payments/hitpay', [HitPayPaymentController::class, 'processPayment'])->name('hitpay.payment');
 
     // Payment gateway specific routes
     Route::post('razorpay/create-order', [RazorpayController::class, 'createOrder'])->name('razorpay.create-order');

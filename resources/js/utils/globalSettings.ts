@@ -42,7 +42,7 @@ export function initializeGlobalSettings(settings: Record<string, any>) {
         currencySymbolPosition: settings.currencySymbolPosition || 'before',
         currencySymbol: settings.currencySymbol || '$',
         currencyCode: settings.currencyCode || 'USD',
-        currencyName: settings.currencyNname || 'US Dollar'
+        currencyName: settings.currencyName || 'US Dollar'
     };
 
     window.appSettings = {
@@ -106,7 +106,7 @@ export function initializeGlobalSettings(settings: Record<string, any>) {
             try {
                 const dateObj = typeof date === 'string' ? new Date(date) : date;
                 let phpFormat = settings.dateFormat ?? 'D, M j, Y';
-                
+
                 // Add time format if includeTime is true
                 if (includeTime) {
                     const timeFormat = settings.timeFormat ?? 'H:i';
@@ -154,16 +154,16 @@ export function initializeGlobalSettings(settings: Record<string, any>) {
         },
         formatTime: (time: string) => {
             if (!time) return time;
-            
+
             try {
                 const [hours, minutes] = time.split(':');
                 if (!hours || !minutes || isNaN(Number(hours)) || isNaN(Number(minutes))) return time;
-                
+
                 const dateObj = new Date();
                 dateObj.setHours(Number(hours), Number(minutes), 0, 0);
-                
+
                 const timeFormat = settings.timeFormat ?? 'H:i';
-                
+
                 function convertPhpTimeFormat(phpFormat: string, dateObj: Date): string {
                     return phpFormat.replace(/[a-zA-Z]/g, (match) => {
                         switch (match) {
@@ -179,7 +179,7 @@ export function initializeGlobalSettings(settings: Record<string, any>) {
                         }
                     });
                 }
-                
+
                 return convertPhpTimeFormat(timeFormat, dateObj);
             } catch (error) {
                 return time;
