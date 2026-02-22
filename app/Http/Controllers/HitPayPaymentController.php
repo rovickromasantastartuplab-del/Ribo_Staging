@@ -137,10 +137,17 @@ class HitPayPaymentController extends Controller
             }
 
             $payload = $request->all();
+            $rawPayload = $request->getContent();
+            $headerSignature = $request->header('x-hitpay-signature')
+                ?: $request->header('hitpay-signature')
+                ?: $request->header('x-signature');
 
             // Verify HMAC signature
-            if (!$this->verifyHmac($payload, $settings['salt'])) {
-                \Log::error('HitPay webhook: invalid HMAC signature', ['payload' => $payload]);
+            if (!$this->verifyHmac($payload, $settings['salt'], $rawPayload, $headerSignature)) {
+                \Log::error('HitPay webhook: invalid HMAC signature', [
+                    'payload' => $payload,
+                    'header_signature' => $headerSignature
+                ]);
                 return response('Invalid signature', 401);
             }
 
@@ -218,8 +225,22 @@ class HitPayPaymentController extends Controller
      * Verify HMAC-SHA256 signature from HitPay webhook.
      * Ported from the ticketing project's computeLegacyHmac logic.
      */
-    private function verifyHmac(array $payload, string $salt): bool
+    private function verifyHmac(array $payload, string $salt, string $rawPayload = '', ?string $headerSignature = null): bool
     {
+        // 1. Try V2 Validation (Header Signature against Raw Body)
+        if ($headerSignature && !empty($rawPayload)) {
+            $computedHmacHex = hash_hmac('sha256', $rawPayload, $salt);
+            $computedHmacBase64 = base64_encode(hash_hmac('sha256', $rawPayload, $salt, true));
+
+            // Remove sha256= prefix if it exists depending on how HitPay formats it
+            $receivedSignature = preg_replace('/^sha256=/i', '', trim($headerSignature));
+
+            if (hash_equals($computedHmacHex, $receivedSignature) || hash_equals($computedHmacBase64, $receivedSignature)) {
+                return true;
+            }
+        }
+
+        // 2. Fallback to Legacy Validation (HMAC in payload)
         $receivedHmac = $payload['hmac'] ?? null;
 
         if (!$receivedHmac) {
