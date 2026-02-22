@@ -156,6 +156,9 @@ class PaymentSetting extends Model
             return [];
         }
 
-        return self::where('user_id', $userId)->pluck('value', 'key')->toArray();
+        // We must map it through Eloquent models so the `getValueAttribute` decryption runs
+        return self::where('user_id', $userId)->get()->mapWithKeys(function ($setting) {
+            return [$setting->key => $setting->value];
+        })->toArray();
     }
 }
