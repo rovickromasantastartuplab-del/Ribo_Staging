@@ -246,7 +246,6 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
             <CardTitle className="flex items-center gap-2">
               <Receipt className="h-5 w-5" />
               <span className="text-lg font-semibold">{t('Payment Transaction Log')}</span>
-              <Badge variant="secondary" className="ml-2">{t('HitPay')}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
