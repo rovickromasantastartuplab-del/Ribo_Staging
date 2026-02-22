@@ -247,14 +247,24 @@ class DashboardController extends Controller
                     $payload = $log->request_payload ?? [];
                     $eventData = $payload['data']['payment_request'] ?? $payload['data'] ?? $payload['payment_request'] ?? $payload;
 
+                    // Join with PlanOrder → User and Plan to get subscriber info
+                    $order = null;
+                    if ($log->payment_id) {
+                        $order = PlanOrder::with(['user:id,name,email', 'plan:id,name'])
+                            ->where('payment_id', $log->payment_id)
+                            ->first();
+                    }
+
                     return [
                         'id' => $log->id,
                         'payment_id' => $log->payment_id ?? ($eventData['reference_number'] ?? '-'),
                         'status' => $log->status ?? 'unknown',
                         'amount' => $eventData['amount'] ?? '-',
                         'currency' => $eventData['currency'] ?? '-',
-                        'payer_email' => $eventData['email'] ?? ($eventData['payer_email'] ?? '-'),
-                        'purpose' => $eventData['purpose'] ?? '-',
+                        'company_name' => $order?->user?->name ?? '-',
+                        'payer_email' => $order?->user?->email ?? ($eventData['email'] ?? '-'),
+                        'plan_name' => $order?->plan?->name ?? ($eventData['purpose'] ?? '-'),
+                        'order_status' => $order?->status ?? '-',
                         'error' => $log->error_message['error'] ?? null,
                         'created_at' => $log->created_at?->toISOString(),
                         'time_ago' => $log->created_at?->diffForHumans(),

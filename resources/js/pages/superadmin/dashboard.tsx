@@ -14,8 +14,10 @@ interface PaymentLog {
   status: string;
   amount: string;
   currency: string;
+  company_name: string;
   payer_email: string;
-  purpose: string;
+  plan_name: string;
+  order_status: string;
   error: string | null;
   created_at: string;
   time_ago: string;
@@ -191,7 +193,7 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                     <div className={`w-2 h-2 rounded-full mt-2 ${activity.status === 'success' ? 'bg-green-500' :
-                        activity.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                      activity.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
                       }`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{activity.message}</p>
@@ -258,29 +260,35 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left">
-                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Payment ID')}</th>
-                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Status')}</th>
-                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Amount')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Company')}</th>
                       <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Email')}</th>
-                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Purpose')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Plan')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Amount')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Status')}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{t('Payment ID')}</th>
                       <th className="pb-3 font-medium text-muted-foreground">{t('Time')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paymentLogs.map((log) => (
                       <tr key={log.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-3 pr-4 font-medium">{log.company_name}</td>
+                        <td className="py-3 pr-4 text-muted-foreground text-xs">{log.payer_email}</td>
                         <td className="py-3 pr-4">
-                          <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                            {log.payment_id.length > 20 ? log.payment_id.substring(0, 20) + '...' : log.payment_id}
-                          </span>
+                          {log.plan_name !== '-' ? (
+                            <Badge variant="outline">{log.plan_name}</Badge>
+                          ) : '-'}
                         </td>
-                        <td className="py-3 pr-4">{getStatusBadge(log.status)}</td>
                         <td className="py-3 pr-4 font-medium">
                           {log.amount !== '-' ? `${log.currency} ${log.amount}` : '-'}
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">{log.payer_email}</td>
-                        <td className="py-3 pr-4 max-w-[200px] truncate" title={log.purpose}>{log.purpose}</td>
-                        <td className="py-3 text-muted-foreground text-xs">{log.time_ago}</td>
+                        <td className="py-3 pr-4">{getStatusBadge(log.status)}</td>
+                        <td className="py-3 pr-4">
+                          <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                            {log.payment_id.length > 16 ? log.payment_id.substring(0, 16) + '...' : log.payment_id}
+                          </span>
+                        </td>
+                        <td className="py-3 text-muted-foreground text-xs whitespace-nowrap">{log.time_ago}</td>
                       </tr>
                     ))}
                   </tbody>
