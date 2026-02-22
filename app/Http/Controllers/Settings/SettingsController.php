@@ -86,7 +86,7 @@ class SettingsController extends Controller
         }
 
         $currencies = Currency::all();
-        $paymentSettings = PaymentSetting::getUserSettings($user->id);
+        $paymentSettings = PaymentSetting::getUserSettings($user->id, true);
 
         // Mask sensitive data for display in demo mode
         if (config('app.is_demo', false)) {

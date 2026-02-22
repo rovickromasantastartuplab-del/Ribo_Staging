@@ -156,17 +156,17 @@ class PaymentSetting extends Model
         );
     }
 
-    public static function getUserSettings($userId)
+    public static function getUserSettings($userId, $forFrontend = false)
     {
         if (!$userId) {
             return [];
         }
 
-        // We must map it through Eloquent models so the `getValueAttribute` decryption runs,
-        // BUT for sensitive keys, we want to deliver the raw cipher text to the frontend so the 
+        // We must map it through Eloquent models so the `getValueAttribute` decryption runs.
+        // If $forFrontend is true, we deliver the raw cipher text to the frontend so the 
         // user's "eye" toggle reveals cipher text instead of the true API key.
-        return self::where('user_id', $userId)->get()->mapWithKeys(function (PaymentSetting $setting) {
-            if (in_array($setting->key, $setting->sensitiveKeys)) {
+        return self::where('user_id', $userId)->get()->mapWithKeys(function (PaymentSetting $setting) use ($forFrontend) {
+            if ($forFrontend && in_array($setting->key, $setting->sensitiveKeys)) {
                 return [$setting->key => $setting->getRawOriginal('value')];
             }
             return [$setting->key => $setting->value];
