@@ -73,7 +73,15 @@ class PaymentSetting extends Model
             && !empty($value)
             && !is_bool($value)
         ) {
-            $this->attributes['value'] = Crypt::encryptString((string) $value);
+            try {
+                // If it successfully decrypts, it's ALREADY an encrypted payload 
+                // that the frontend sent back to us. Save it as-is.
+                Crypt::decryptString((string) $value);
+                $this->attributes['value'] = (string) $value;
+            } catch (DecryptException $e) {
+                // If it fails to decrypt, it's a plaintext API key typed by the user. Encrypt it!
+                $this->attributes['value'] = Crypt::encryptString((string) $value);
+            }
             return;
         }
 
@@ -124,7 +132,7 @@ class PaymentSetting extends Model
             return $value === '1' || $value === 1 || $value === true;
         }
 
-        // Decrypt sensitive keys when reading from the database
+        // Decrypt sensitive keys when reading from the database for actual payment processing
         if (
             isset($this->key)
             && in_array($this->key, $this->sensitiveKeys)
@@ -156,8 +164,13 @@ class PaymentSetting extends Model
             return [];
         }
 
-        // We must map it through Eloquent models so the `getValueAttribute` decryption runs
-        return self::where('user_id', $userId)->get()->mapWithKeys(function ($setting) {
+        // For the Settings UI, we want to send the raw ENCRYPTED cipher text for sensitive keys
+        // (so the eye icon reveals the cipher text, not the plaintext API key),
+        // but we still want the normal getValueAttribute accessor for booleans.
+        return self::where('user_id', $userId)->get()->mapWithKeys(function (PaymentSetting $setting) {
+            if (in_array($setting->key, $setting->sensitiveKeys)) {
+                return [$setting->key => $setting->getRawOriginal('value')];
+            }
             return [$setting->key => $setting->value];
         })->toArray();
     }
