@@ -156,12 +156,20 @@ class HitPayPaymentController extends Controller
                 ?: $request->header('hitpay-signature')
                 ?: $request->header('x-signature');
 
+            $debugData = [];
             // Verify HMAC signature
-            if (!$this->verifyHmac($payload, $settings['salt'], $rawPayload, $headerSignature)) {
-                $webhookLog->update(['status' => 'hmac_failed', 'error_message' => ['error' => 'Invalid HMAC signature']]);
+            if (!$this->verifyHmac($payload, $settings['salt'], $rawPayload, $headerSignature, $debugData)) {
+                $webhookLog->update([
+                    'status' => 'hmac_failed',
+                    'error_message' => [
+                        'error' => 'Invalid HMAC signature',
+                        'debug_trace' => $debugData
+                    ]
+                ]);
                 \Log::error('HitPay webhook: invalid HMAC signature', [
                     'payload' => $payload,
-                    'header_signature' => $headerSignature
+                    'header_signature' => $headerSignature,
+                    'debug_trace' => $debugData
                 ]);
                 return response('Invalid signature', 401);
             }
@@ -266,7 +274,7 @@ class HitPayPaymentController extends Controller
      * Verify HMAC-SHA256 signature from HitPay webhook.
      * Ported from the ticketing project's computeLegacyHmac logic.
      */
-    private function verifyHmac(array $payload, string $salt, string $rawPayload = '', ?string $headerSignature = null): bool
+    private function verifyHmac(array $payload, string $salt, string $rawPayload = '', ?string $headerSignature = null, array &$debug = []): bool
     {
         // 1. Try V2 Validation (Header Signature against Raw Body)
         if ($headerSignature && !empty($rawPayload)) {
@@ -275,6 +283,14 @@ class HitPayPaymentController extends Controller
 
             // Remove sha256= prefix if it exists depending on how HitPay formats it
             $receivedSignature = preg_replace('/^sha256=/i', '', trim($headerSignature));
+
+            $debug['v2'] = [
+                'header_signature' => $headerSignature,
+                'parsed_received' => $receivedSignature,
+                'computed_hex' => $computedHmacHex,
+                'computed_base64' => $computedHmacBase64,
+                'raw_payload' => $rawPayload,
+            ];
 
             if (hash_equals($computedHmacHex, $receivedSignature) || hash_equals($computedHmacBase64, $receivedSignature)) {
                 return true;
@@ -285,6 +301,7 @@ class HitPayPaymentController extends Controller
         $receivedHmac = $payload['hmac'] ?? null;
 
         if (!$receivedHmac) {
+            \Log::error('HitPay HMAC Verification Failed', ['debug' => $debug, 'salt_preview' => substr($salt, 0, 4) . '...']);
             return false;
         }
 
@@ -298,14 +315,26 @@ class HitPayPaymentController extends Controller
         }
 
         ksort($signatureData);
-
-        $message = '';
+        $signatureString = '';
         foreach ($signatureData as $key => $value) {
-            $message .= $key . $value;
+            $signatureString .= $key . $value;
         }
 
-        $computedHmac = hash_hmac('sha256', $message, $salt);
+        $computedLegacyHex = hash_hmac('sha256', $signatureString, $salt);
+        $computedLegacyBase64 = base64_encode(hash_hmac('sha256', $signatureString, $salt, true));
 
-        return hash_equals($computedHmac, $receivedHmac);
+        $debug['v1'] = [
+            'payload_hmac' => $receivedHmac,
+            'computed_hex' => $computedLegacyHex,
+            'computed_base64' => $computedLegacyBase64,
+            'signature_string' => $signatureString,
+        ];
+
+        if (hash_equals($computedLegacyHex, $receivedHmac) || hash_equals($computedLegacyBase64, $receivedHmac)) {
+            return true; // Validated successfully
+        }
+
+        \Log::error('HitPay Legacy HMAC Verification Failed', ['debug' => $debug, 'salt_preview' => substr($salt, 0, 4) . '...']);
+        return false;
     }
 }
