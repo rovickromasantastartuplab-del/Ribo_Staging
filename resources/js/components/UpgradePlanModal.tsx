@@ -8,6 +8,8 @@ import { CheckCircle2, CreditCard, Circle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/components/ui/switch';
 import { formatCurrency } from '@/utils/currency';
+import { Checkbox } from '@/components/ui/checkbox';
+import axios from 'axios';
 
 interface Plan {
   id: number;
@@ -39,6 +41,7 @@ interface UpgradePlanModalProps {
   plans: Plan[];
   currentPlanId?: number;
   companyName: string;
+  showHideOption?: boolean;
 }
 
 export function UpgradePlanModal({
@@ -47,12 +50,14 @@ export function UpgradePlanModal({
   onConfirm,
   plans,
   currentPlanId,
-  companyName
+  companyName,
+  showHideOption = false
 }: UpgradePlanModalProps) {
   const { t } = useTranslation();
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [isYearly, setIsYearly] = useState(false);
-  
+  const [hideNextTime, setHideNextTime] = useState(false);
+
   // Filter plans based on billing period
   const filteredPlans = plans.filter(plan => {
     const duration = plan.duration.toLowerCase();
@@ -63,7 +68,7 @@ export function UpgradePlanModal({
   useEffect(() => {
     if (isOpen && filteredPlans && filteredPlans.length > 0) {
       const currentPlan = filteredPlans.find(plan => plan.is_current === true);
-      
+
       if (currentPlan) {
         setSelectedPlanId(currentPlan.id);
       } else if (currentPlanId) {
@@ -84,15 +89,25 @@ export function UpgradePlanModal({
       }
     }
   }, [isYearly]);
-  
+
   const handleConfirm = () => {
     if (selectedPlanId) {
       onConfirm(selectedPlanId, isYearly ? 'yearly' : 'monthly');
     }
   };
 
+  const handleClose = () => {
+    if (showHideOption && hideNextTime) {
+      axios.post('/user/hide-plan-modal').finally(() => {
+        onClose();
+      });
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("Upgrade Plan for")} {companyName}</DialogTitle>
@@ -100,7 +115,7 @@ export function UpgradePlanModal({
             {t("Select a new plan for this company")}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="py-4">
           {/* Billing Period Toggle */}
           <div className="flex items-center justify-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
@@ -122,8 +137,8 @@ export function UpgradePlanModal({
             )}
           </div>
 
-          <RadioGroup 
-            value={selectedPlanId?.toString() || ""} 
+          <RadioGroup
+            value={selectedPlanId?.toString() || ""}
             onValueChange={(value) => setSelectedPlanId(parseInt(value))}
             className="space-y-4"
           >
@@ -131,16 +146,15 @@ export function UpgradePlanModal({
               {filteredPlans.length > 0 ? filteredPlans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`relative rounded-lg border p-4 cursor-pointer transition-all ${
-                    selectedPlanId === plan.id ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 hover:border-gray-300'
-                  } ${plan.is_current ? 'bg-blue-50' : ''}`}
+                  className={`relative rounded-lg border p-4 cursor-pointer transition-all ${selectedPlanId === plan.id ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 hover:border-gray-300'
+                    } ${plan.is_current ? 'bg-blue-50' : ''}`}
                   onClick={() => setSelectedPlanId(plan.id)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem 
-                        value={plan.id.toString()} 
-                        id={`plan-${plan.id}`} 
+                      <RadioGroupItem
+                        value={plan.id.toString()}
+                        id={`plan-${plan.id}`}
                         className="h-5 w-5"
                       />
                       <h3 className="text-lg font-semibold">{plan.name}</h3>
@@ -151,7 +165,7 @@ export function UpgradePlanModal({
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center mb-2">
                     <CreditCard className="mr-1.5 h-4 w-4 text-muted-foreground" />
                     <p className="text-xl font-bold text-primary">
@@ -159,11 +173,11 @@ export function UpgradePlanModal({
                     </p>
                     <span className="text-sm text-muted-foreground ml-1">/ {plan.duration.toLowerCase()}</span>
                   </div>
-                  
+
                   {plan.description && (
                     <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
                   )}
-                  
+
                   <div className="mb-4">
                     <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('Plan Limits')}</h4>
                     <div className="grid grid-cols-2 gap-3">
@@ -198,17 +212,31 @@ export function UpgradePlanModal({
             </div>
           </RadioGroup>
         </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            {t("Cancel")}
-          </Button>
-          <Button 
-            onClick={handleConfirm} 
-            disabled={!selectedPlanId || filteredPlans.length === 0}
-          >
-            {t("Upgrade Plan")}
-          </Button>
+
+        <DialogFooter className="flex-col sm:flex-row sm:justify-between items-center sm:items-end gap-4 mt-2">
+          {showHideOption && (
+            <div className="flex items-center space-x-2 mr-auto">
+              <Checkbox
+                id="hide-modal"
+                checked={hideNextTime}
+                onCheckedChange={(checked) => setHideNextTime(checked as boolean)}
+              />
+              <label htmlFor="hide-modal" className="text-sm text-gray-500 cursor-pointer">
+                {t("Don't show this again")}
+              </label>
+            </div>
+          )}
+          <div className="flex space-x-2 w-full sm:w-auto mt-2 sm:mt-0 ml-auto">
+            <Button variant="outline" onClick={handleClose}>
+              {t("Cancel")}
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={!selectedPlanId || filteredPlans.length === 0}
+            >
+              {t("Upgrade Plan")}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

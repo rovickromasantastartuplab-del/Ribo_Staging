@@ -68,8 +68,8 @@ class OnboardingController extends Controller
             return redirect()->route('dashboard')->with('success', __('Welcome back! Your Company Name has been saved.'));
         }
 
-        // Step 1 → Step 2 (Plan) for entirely new registrations
-        return redirect()->route('onboarding.plan');
+        // Step 1 → Step 3 (Roles) directly, skipping Plan
+        return redirect()->route('onboarding.roles');
     }
 
     /**

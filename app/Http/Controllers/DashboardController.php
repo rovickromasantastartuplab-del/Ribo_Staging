@@ -587,8 +587,21 @@ class DashboardController extends Controller
             ]
         ];
 
+        $user = auth()->user();
+        $plans = Plan::where('is_plan_enable', 'on')->get();
+        $defaultPlanId = Plan::getDefaultPlan()?->id;
+
+        $showUpgradeModal = false;
+        if ($user && $user->type === 'company' && $user->plan_id && $defaultPlanId && $user->plan_id === $defaultPlanId && !$user->hide_plan_modal) {
+            $showUpgradeModal = true;
+        }
+
         return Inertia::render('dashboard', [
-            'dashboardData' => $dashboardData
+            'dashboardData' => $dashboardData,
+            'plans' => $plans,
+            'showUpgradeModal' => $showUpgradeModal,
+            'currentPlanId' => $user->plan_id,
+            'companyName' => $user->company_name
         ]);
     }
 

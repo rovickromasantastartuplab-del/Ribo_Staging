@@ -320,5 +320,17 @@ class UserController extends BaseController
         ]);
     }
 
-    // switchBusiness method removed
+    /**
+     * Hide the upgrade plan modal on dashboard permanently
+     */
+    public function hidePlanModal()
+    {
+        $user = Auth::user();
+        if ($user) {
+            $user->hide_plan_modal = true;
+            $user->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
 }

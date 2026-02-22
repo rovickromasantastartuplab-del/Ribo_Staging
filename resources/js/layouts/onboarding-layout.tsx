@@ -17,9 +17,8 @@ interface OnboardingLayoutProps {
 
 const steps = [
     { number: 1, label: 'Company', icon: Building2 },
-    { number: 2, label: 'Plan', icon: CreditCard },
-    { number: 3, label: 'Roles', icon: Shield },
-    { number: 4, label: 'Members', icon: Users },
+    { number: 2, label: 'Roles', icon: Shield },
+    { number: 3, label: 'Members', icon: Users },
 ];
 
 export default function OnboardingLayout({
@@ -70,7 +69,7 @@ export default function OnboardingLayout({
                                 className="absolute top-5 left-[calc(16.67%)] h-0.5 transition-all duration-500 ease-out"
                                 style={{
                                     backgroundColor: primaryColor,
-                                    width: currentStep === 1 ? '0%' : currentStep === 2 ? '22%' : currentStep === 3 ? '44%' : '66%',
+                                    width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
                                 }}
                             />
 

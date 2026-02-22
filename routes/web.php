@@ -391,6 +391,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('users/{user}/reset-password', [UserController::class, 'resetPassword'])->middleware('permission:reset-password-users')->name('users.reset-password');
             Route::put('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->middleware('permission:toggle-status-users')->name('users.toggle-status');
             Route::get('users-logs', [UserController::class, 'allUserLogs'])->middleware('permission:view-users')->name('users.all-logs');
+            Route::post('user/hide-plan-modal', [UserController::class, 'hidePlanModal'])->name('user.hide-plan-modal');
         });
 
         // Plans management routes (admin only)

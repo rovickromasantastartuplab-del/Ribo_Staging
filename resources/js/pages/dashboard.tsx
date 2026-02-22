@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { RefreshCw, Users, Building2, Briefcase, UserPlus, Calendar, Clock, TrendingUp, BarChart3, Bell, DollarSign, Target, PieChart, HardDrive } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useTranslation } from 'react-i18next';
-import { usePage } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from 'recharts';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { formatCurrency } from '@/utils/currency';
+import { UpgradePlanModal } from '@/components/UpgradePlanModal';
 
 interface CompanyDashboardData {
   stats: {
@@ -48,7 +49,19 @@ interface PageAction {
   onClick: () => void;
 }
 
-export default function Dashboard({ dashboardData }: { dashboardData: CompanyDashboardData }) {
+export default function Dashboard({
+  dashboardData,
+  plans,
+  showUpgradeModal,
+  currentPlanId,
+  companyName
+}: {
+  dashboardData: CompanyDashboardData,
+  plans?: any[],
+  showUpgradeModal?: boolean,
+  currentPlanId?: number,
+  companyName?: string
+}) {
   const { t } = useTranslation();
   const { auth } = usePage().props as any;
 
@@ -60,6 +73,14 @@ export default function Dashboard({ dashboardData }: { dashboardData: CompanyDas
       onClick: () => window.location.reload()
     }
   ];
+
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(showUpgradeModal || false);
+
+  const handleUpgradeConfirm = (planId: number, duration: string) => {
+    router.post(route('plans.request'), { plan_id: planId, duration }, {
+      onSuccess: () => setIsUpgradeModalOpen(false)
+    });
+  };
 
   const stats = dashboardData?.stats || {};
   const charts = dashboardData?.charts || {};
@@ -121,6 +142,7 @@ export default function Dashboard({ dashboardData }: { dashboardData: CompanyDas
   return (
     <PageTemplate
       title={t('Company Dashboard')}
+      description={t('Overview of your company metrics')}
       url={route('dashboard')}
       actions={pageActions}
     >
@@ -664,6 +686,16 @@ export default function Dashboard({ dashboardData }: { dashboardData: CompanyDas
           </Card>
         </motion.div>
       </motion.div>
+
+      <UpgradePlanModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        onConfirm={handleUpgradeConfirm}
+        plans={plans || []}
+        currentPlanId={currentPlanId}
+        companyName={companyName || auth?.user?.company_name || ""}
+        showHideOption={true}
+      />
     </PageTemplate>
   );
 }
