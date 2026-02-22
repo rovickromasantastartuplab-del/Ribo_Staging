@@ -252,13 +252,17 @@ class HitPayPaymentController extends Controller
 
     /**
      * Success redirect — user lands here after completing payment on HitPay.
+     * HitPay redirects here for ALL outcomes (success, cancel, back button).
+     * We must verify the actual payment status before showing any message.
      */
     public function success(Request $request)
     {
         $paymentId = $request->get('payment_id');
+        $hitpayStatus = $request->get('status'); // HitPay appends this on redirect
+        $hitpayReference = $request->get('reference'); // HitPay payment request ID
 
+        // Find the plan order
         if (!$paymentId && auth()->check()) {
-            // Find the most recent pending HitPay order for this user
             $planOrder = PlanOrder::where('user_id', auth()->id())
                 ->where('payment_method', 'hitpay')
                 ->where('status', 'pending')
@@ -268,16 +272,90 @@ class HitPayPaymentController extends Controller
             $planOrder = PlanOrder::where('payment_id', $paymentId)->first();
         }
 
+        // If already processed by webhook, show the real result
         if ($planOrder && $planOrder->status === 'approved') {
             return redirect()->route('plans.index')->with('success', __('Payment completed and plan activated!'));
         }
-
-        // The webhook may not have arrived yet — show a pending message
-        if ($planOrder && $planOrder->status === 'pending') {
-            return redirect()->route('plans.index')->with('success', __('Payment is being processed. Your plan will be activated shortly.'));
+        if ($planOrder && $planOrder->status === 'rejected') {
+            return redirect()->route('plans.index')->with('error', __('Payment was canceled or failed. Please try again.'));
         }
 
-        return redirect()->route('plans.index')->with('error', __('Payment verification failed'));
+        // If HitPay sent a status query param, use it for immediate feedback
+        if ($hitpayStatus) {
+            $normalizedStatus = strtolower($hitpayStatus);
+            if (in_array($normalizedStatus, ['canceled', 'cancelled', 'failed', 'expired'])) {
+                // Mark the order as rejected immediately so it doesn't stay as "pending"
+                if ($planOrder && $planOrder->status === 'pending') {
+                    $planOrder->update(['status' => 'rejected']);
+                }
+                return redirect()->route('plans.index')->with('error', __('Payment was canceled. No charges were made.'));
+            }
+        }
+
+        // For pending orders, try to verify the actual status via HitPay API
+        if ($planOrder && $planOrder->status === 'pending' && $hitpayReference) {
+            try {
+                $superAdminId = User::where('type', 'superadmin')->first()?->id;
+                $settings = getPaymentMethodConfig('hitpay', $superAdminId);
+
+                if (!empty($settings['api_key'])) {
+                    $isLive = ($settings['mode'] ?? 'sandbox') === 'live';
+                    $baseUrl = $isLive
+                        ? 'https://api.hit-pay.com'
+                        : 'https://api.sandbox.hit-pay.com';
+
+                    $ch = curl_init();
+                    curl_setopt_array($ch, [
+                        CURLOPT_URL => $baseUrl . '/v1/payment-requests/' . $hitpayReference,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_HTTPHEADER => [
+                            'X-BUSINESS-API-KEY: ' . $settings['api_key'],
+                        ],
+                    ]);
+
+                    $response = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+
+                    if ($httpCode === 200 && $response) {
+                        $data = json_decode($response, true);
+                        $apiStatus = strtoupper($data['status'] ?? '');
+
+                        if (in_array($apiStatus, ['COMPLETED', 'SUCCEEDED'])) {
+                            // Webhook may be delayed — process it now
+                            if ($planOrder->status === 'pending') {
+                                processPaymentSuccess([
+                                    'user_id' => $planOrder->user_id,
+                                    'plan_id' => $planOrder->plan_id,
+                                    'billing_cycle' => $planOrder->billing_cycle,
+                                    'payment_method' => 'hitpay',
+                                    'coupon_code' => $planOrder->coupon_code,
+                                    'payment_id' => $planOrder->payment_id,
+                                ]);
+                            }
+                            return redirect()->route('plans.index')->with('success', __('Payment completed and plan activated!'));
+                        }
+
+                        if (in_array($apiStatus, ['FAILED', 'CANCELLED', 'EXPIRED'])) {
+                            $planOrder->update(['status' => 'rejected']);
+                            return redirect()->route('plans.index')->with('error', __('Payment was canceled or failed. Please try again.'));
+                        }
+
+                        // Still pending on HitPay's side
+                        return redirect()->route('plans.index')->with('info', __('Payment is still being processed. Your plan will be activated once payment is confirmed.'));
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::error('HitPay status check failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Fallback: order is still pending and we couldn't verify
+        if ($planOrder && $planOrder->status === 'pending') {
+            return redirect()->route('plans.index')->with('info', __('Payment is being verified. Your plan will be activated once confirmed.'));
+        }
+
+        return redirect()->route('plans.index')->with('error', __('Payment verification failed. Please contact support.'));
     }
 
     /**
