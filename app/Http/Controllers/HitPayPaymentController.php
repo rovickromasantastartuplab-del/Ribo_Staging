@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Models\PlanOrder;
+use App\Models\HitpayWebhookLog;
 use App\Models\User;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -127,8 +128,18 @@ class HitPayPaymentController extends Controller
      */
     public function callback(Request $request)
     {
+        $payload = $request->all();
+        $rawPayload = $request->getContent();
+
+        // Always try to log the incoming webhook first
+        $webhookLog = HitpayWebhookLog::create([
+            'request_payload' => $payload,
+            'status' => 'received'
+        ]);
+
         \Log::info('HitPay webhook triggered', [
-            'has_header_signature' => !empty($request->header('x-hitpay-signature') ?: $request->header('hitpay-signature'))
+            'has_header_signature' => !empty($request->header('x-hitpay-signature') ?: $request->header('hitpay-signature')),
+            'log_id' => $webhookLog->id
         ]);
 
         try {
@@ -136,18 +147,18 @@ class HitPayPaymentController extends Controller
             $settings = getPaymentMethodConfig('hitpay', $superAdminId);
 
             if (empty($settings['salt'])) {
+                $webhookLog->update(['status' => 'error', 'error_message' => ['error' => 'Salt not configured']]);
                 \Log::error('HitPay webhook: salt not configured');
                 return response('Configuration error', 500);
             }
 
-            $payload = $request->all();
-            $rawPayload = $request->getContent();
             $headerSignature = $request->header('x-hitpay-signature')
                 ?: $request->header('hitpay-signature')
                 ?: $request->header('x-signature');
 
             // Verify HMAC signature
             if (!$this->verifyHmac($payload, $settings['salt'], $rawPayload, $headerSignature)) {
+                $webhookLog->update(['status' => 'hmac_failed', 'error_message' => ['error' => 'Invalid HMAC signature']]);
                 \Log::error('HitPay webhook: invalid HMAC signature', [
                     'payload' => $payload,
                     'header_signature' => $headerSignature
@@ -161,7 +172,14 @@ class HitPayPaymentController extends Controller
             $paymentId = $eventData['reference_number'] ?? $payload['reference_number'] ?? $eventData['id'] ?? null;
             $status = strtoupper($eventData['status'] ?? $payload['status'] ?? '');
 
+            // Update log with parsed fields
+            $webhookLog->update([
+                'payment_id' => $paymentId,
+                'status' => 'parsed_' . strtolower($status)
+            ]);
+
             if (!$paymentId) {
+                $webhookLog->update(['error_message' => ['error' => 'Missing reference_number']]);
                 \Log::error('HitPay webhook: Missing reference_number in payload', ['payload' => $payload]);
                 return response('Missing reference_number', 400);
             }
@@ -169,6 +187,7 @@ class HitPayPaymentController extends Controller
             $planOrder = PlanOrder::where('payment_id', $paymentId)->first();
 
             if (!$planOrder) {
+                $webhookLog->update(['error_message' => ['error' => 'Order not found']]);
                 \Log::error('HitPay webhook: order not found', ['payment_id' => $paymentId]);
                 return response('Order not found', 404);
             }
@@ -185,15 +204,29 @@ class HitPayPaymentController extends Controller
                         'payment_id' => $paymentId,
                     ]);
 
+                    $webhookLog->update(['status' => 'processed_success']);
                     \Log::info('HitPay payment succeeded', ['payment_id' => $paymentId]);
+                } else {
+                    $webhookLog->update(['status' => 'ignored_already_processed']);
                 }
             } elseif (in_array($status, ['FAILED', 'CANCELLED', 'EXPIRED'])) {
                 $planOrder->update(['status' => 'rejected']);
+                $webhookLog->update(['status' => 'processed_failed']);
                 \Log::info('HitPay payment failed/cancelled', ['payment_id' => $paymentId, 'status' => $status]);
             }
 
             return response('OK', 200);
         } catch (\Exception $e) {
+            if (isset($webhookLog)) {
+                $webhookLog->update([
+                    'status' => 'exception',
+                    'error_message' => [
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]
+                ]);
+            }
             \Log::error('HitPay webhook error', ['error' => $e->getMessage()]);
             return response('Error', 500);
         }
