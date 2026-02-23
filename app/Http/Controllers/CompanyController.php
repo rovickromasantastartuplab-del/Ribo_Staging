@@ -228,77 +228,7 @@ class CompanyController extends Controller
             return response()->json(['error' => __('Invalid company record')], 400);
         }
 
-        $plans = Plan::where('is_plan_enable', 'on')->get();
-
-        $formattedPlans = [];
-
-        foreach ($plans as $plan) {
-            // Format features
-            $features = [];
-            $featureLabels = [
-                'ai_integration' => __('AI Integration'),
-                'password_protection' => __('Password Protection'),
-            ];
-
-            $enabledFeatures = is_array($plan->module) ? $plan->module : [];
-            $enabledFeatures = array_values(array_unique(array_filter($enabledFeatures, fn($v) => is_string($v) && $v !== '')));
-
-            foreach ($enabledFeatures as $feature) {
-                if (isset($featureLabels[$feature])) {
-                    $features[] = $featureLabels[$feature];
-                }
-            }
-
-            // Fallback to legacy columns
-            if ($plan->enable_chatgpt === 'on' && !in_array(__('AI Integration'), $features, true)) {
-                $features[] = __('AI Integration');
-            }
-
-            // Monthly plan
-            $formattedPlans[] = [
-                'id' => $plan->id,
-                'name' => $plan->name,
-                'price' => $plan->price,
-                'duration' => 'Monthly',
-                'description' => $plan->description,
-                'features' => $features,
-                'max_users' => $plan->max_users,
-                'max_projects' => $plan->max_projects,
-                'max_contacts' => $plan->max_contacts,
-                'max_accounts' => $plan->max_accounts,
-                'storage_limit' => $plan->storage_limit,
-                'enable_branding' => $plan->enable_branding,
-                'enable_chatgpt' => $plan->enable_chatgpt,
-                'module' => is_array($plan->module) ? $plan->module : [],
-                'is_trial' => $plan->is_trial,
-                'trial_day' => $plan->trial_day,
-                'is_current' => $company->plan_id === $plan->id,
-                'is_default' => $plan->is_default
-            ];
-
-            // Yearly plan (create a separate entry)
-            $yearlyPrice = $plan->yearly_price ?? ($plan->price * 12 * 0.8);
-            $formattedPlans[] = [
-                'id' => $plan->id,
-                'name' => $plan->name,
-                'price' => $yearlyPrice,
-                'duration' => 'Yearly',
-                'description' => $plan->description,
-                'features' => $features,
-                'max_users' => $plan->max_users,
-                'max_projects' => $plan->max_projects,
-                'max_contacts' => $plan->max_contacts,
-                'max_accounts' => $plan->max_accounts,
-                'storage_limit' => $plan->storage_limit,
-                'enable_branding' => $plan->enable_branding,
-                'enable_chatgpt' => $plan->enable_chatgpt,
-                'module' => is_array($plan->module) ? $plan->module : [],
-                'is_trial' => $plan->is_trial,
-                'trial_day' => $plan->trial_day,
-                'is_current' => $company->plan_id === $plan->id,
-                'is_default' => $plan->is_default
-            ];
-        }
+        $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans($company);
 
         return response()->json([
             'plans' => $formattedPlans,

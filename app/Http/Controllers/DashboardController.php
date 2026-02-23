@@ -588,7 +588,8 @@ class DashboardController extends Controller
         ];
 
         $user = auth()->user();
-        $plans = Plan::where('is_plan_enable', 'on')->get();
+
+        $plans = \App\Services\PlanPricingService::getFormattedPlans($user);
         $defaultPlanId = Plan::getDefaultPlan()?->id;
 
         $showUpgradeModal = false;

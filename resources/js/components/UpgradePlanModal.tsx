@@ -18,6 +18,9 @@ interface Plan {
   name: string;
   price: string | number;
   yearly_price?: string | number;
+  monthly_price?: string | number;
+  formatted_yearly_price?: string;
+  formatted_monthly_price?: string;
   duration: string;
   description?: string;
   features?: string[];
@@ -65,38 +68,21 @@ export function UpgradePlanModal({
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [selectedPlanDetails, setSelectedPlanDetails] = useState<any>(null);
 
-  // Filter plans by billing cycle based on toggle
-  const filteredPlans = plans.filter((plan) =>
-    isYearly
-      ? plan.duration?.toLowerCase() === 'yearly'
-      : plan.duration?.toLowerCase() === 'monthly'
-  );
-
   // Initialize with current plan ID when modal opens
   useEffect(() => {
-    if (isOpen && filteredPlans && filteredPlans.length > 0) {
-      const currentPlan = filteredPlans.find(plan => plan.is_current === true);
+    if (isOpen && plans && plans.length > 0) {
+      const currentPlan = plans.find(plan => plan.is_current === true);
 
       if (currentPlan) {
         setSelectedPlanId(currentPlan.id);
       } else if (currentPlanId) {
-        const planExists = filteredPlans.find(plan => plan.id === currentPlanId);
-        setSelectedPlanId(planExists ? currentPlanId : filteredPlans[0].id);
+        const planExists = plans.find(plan => plan.id === currentPlanId);
+        setSelectedPlanId(planExists ? currentPlanId : plans[0].id);
       } else {
-        setSelectedPlanId(filteredPlans[0].id);
+        setSelectedPlanId(plans[0].id);
       }
     }
-  }, [isOpen, plans, isYearly]);
-
-  // Reset selected plan when switching billing periods if current selection is not available
-  useEffect(() => {
-    if (filteredPlans.length > 0 && selectedPlanId) {
-      const currentSelected = filteredPlans.find(plan => plan.id === selectedPlanId);
-      if (!currentSelected) {
-        setSelectedPlanId(filteredPlans[0].id);
-      }
-    }
-  }, [isYearly]);
+  }, [isOpen, plans]);
 
   const handleConfirm = async () => {
     if (selectedPlanId) {
@@ -105,14 +91,22 @@ export function UpgradePlanModal({
         return;
       }
 
-      const plan = filteredPlans.find(p => p.id === selectedPlanId);
+      const plan = plans.find(p => p.id === selectedPlanId);
       if (plan) {
         try {
           const response = await fetch('/payment-methods');
           const methods = await response.json();
           const formattedMethods = formatPaymentMethods(methods, (key: string) => key); // fallback string mapper wrapper since t() is complex here
           setPaymentMethods(formattedMethods);
-          setSelectedPlanDetails({ ...plan, paymentMethods: methods });
+
+          // We must override plan.price if yearly is selected to pass the correct amount to the checkout processor.
+          const planForCheckout = {
+            ...plan,
+            price: isYearly ? plan.yearly_price : plan.monthly_price,
+            paymentMethods: methods
+          };
+
+          setSelectedPlanDetails(planForCheckout);
           setIsSubscriptionModalOpen(true);
         } catch (error) {
           console.error('Failed to load payment methods', error);
@@ -169,7 +163,7 @@ export function UpgradePlanModal({
               className="space-y-4"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                {filteredPlans.length > 0 ? filteredPlans.map((plan) => (
+                {plans.length > 0 ? plans.map((plan) => (
                   <div
                     key={plan.id}
                     className={`relative rounded-lg border p-4 cursor-pointer transition-all ${selectedPlanId === plan.id ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 hover:border-gray-300'
@@ -195,9 +189,9 @@ export function UpgradePlanModal({
                     <div className="flex items-center mb-2">
                       <CreditCard className="mr-1.5 h-4 w-4 text-muted-foreground" />
                       <p className="text-xl font-bold text-primary">
-                        {formatCurrency(isYearly && plan.yearly_price ? plan.yearly_price : plan.price)}
+                        {isYearly ? plan.formatted_yearly_price : plan.formatted_monthly_price}
                       </p>
-                      <span className="text-sm text-muted-foreground ml-1">/ {plan.duration.toLowerCase()}</span>
+                      <span className="text-sm text-muted-foreground ml-1">/ {isYearly ? t('yearly') : t('monthly')}</span>
                     </div>
 
                     {plan.description && (
@@ -258,7 +252,7 @@ export function UpgradePlanModal({
               </Button>
               <Button
                 onClick={handleConfirm}
-                disabled={!selectedPlanId || filteredPlans.length === 0}
+                disabled={!selectedPlanId || plans.length === 0}
               >
                 {t("Upgrade Plan")}
               </Button>
