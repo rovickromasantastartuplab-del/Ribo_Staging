@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PageTemplate, PageAction } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus, Edit, Trash2, Download, Upload, Eye, Layers } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, Upload, Eye, Layers, Globe } from 'lucide-react';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
@@ -203,7 +203,19 @@ export default function WeddingSuppliers() {
         {
             key: 'website',
             label: t('Website'),
-            render: (value: string) => value ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{value}</a> : t('-')
+            render: (value: string) => value ? (
+                <a
+                    href={value.startsWith('http') ? value : `https://${value}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700 flex justify-center w-full"
+                    title={value}
+                >
+                    <Globe className="h-5 w-5" />
+                </a>
+            ) : (
+                <div className="flex justify-center w-full text-gray-400">{t('-')}</div>
+            )
         },
         {
             key: 'contacts',
