@@ -40,8 +40,8 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('/payment-settings', [PaymentSettingController::class, 'store'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('payment.settings');
 
     // Company Payment Settings (uses same as admin)
-    Route::post('/company-payment-settings', [CompanyPaymentSettingController::class, 'store'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('company.payment.settings');
-    Route::get('/company-payment-methods', [CompanyPaymentSettingController::class, 'getCompanyPaymentMethods'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('company.payment.methods');
+    Route::post('/company-payment-settings', [CompanyPaymentSettingController::class, 'store'])->name('company.payment.settings');
+    Route::get('/company-payment-methods', [CompanyPaymentSettingController::class, 'getCompanyPaymentMethods'])->name('company.payment.methods');
 
     // Invoice Stripe Payment
     Route::post('/invoice-stripe-payment', [InvoiceStripePaymentController::class, 'processPayment'])->name('settings.invoice.stripe.payment');

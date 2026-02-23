@@ -92,7 +92,7 @@ export default function Settings() {
             href: '#payment-settings',
             icon: <CreditCard className="h-4 w-4 mr-2" />,
             permission: 'manage-payment-settings',
-            role: 'superadmin'
+            role: 'company' // Changed from superadmin so companies can see it
         },
         {
             title: t('Quote Templates'),
@@ -194,7 +194,7 @@ export default function Settings() {
         // For company users, only show specific settings
         if (auth.roles?.includes('company')) {
             // Only allow system settings, email settings, brand settings, currency settings, webhook settings, email notifications, and settings
-            return ['manage-system-settings', 'manage-email-settings', 'manage-brand-settings', 'manage-currency-settings', 'manage-webhook-settings', 'manage-email-notifications', 'manage-twilio-notifications', 'manage-quotes-settings', 'manage-sales-orders-settings', 'manage-invoices-settings', 'settings'].includes(item.permission);
+            return ['manage-system-settings', 'manage-email-settings', 'manage-brand-settings', 'manage-currency-settings', 'manage-webhook-settings', 'manage-email-notifications', 'manage-twilio-notifications', 'manage-quotes-settings', 'manage-sales-orders-settings', 'manage-invoices-settings', 'manage-payment-settings', 'settings'].includes(item.permission);
         }
         return false;
     });
@@ -433,7 +433,7 @@ export default function Settings() {
                     )}
 
                     {/* Payment Settings Section */}
-                    {isSuperAdmin && (
+                    {(isSuperAdmin || (auth.roles?.includes('company') && auth.permissions?.includes('manage-payment-settings'))) && (
                         <section id="payment-settings" ref={paymentSettingsRef} className="mb-8">
                             <PaymentSettings settings={paymentSettings} />
                         </section>
