@@ -169,7 +169,7 @@ export function UpgradePlanModal({
                   <div className="flex items-center mb-2">
                     <CreditCard className="mr-1.5 h-4 w-4 text-muted-foreground" />
                     <p className="text-xl font-bold text-primary">
-                      {formatCurrency(plan.price)}
+                      {formatCurrency(isYearly && plan.yearly_price ? plan.yearly_price : plan.price)}
                     </p>
                     <span className="text-sm text-muted-foreground ml-1">/ {plan.duration.toLowerCase()}</span>
                   </div>

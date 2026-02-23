@@ -69,7 +69,7 @@ export default function OnboardingLayout({
                                 className="absolute top-5 left-[calc(16.67%)] h-0.5 transition-all duration-500 ease-out"
                                 style={{
                                     backgroundColor: primaryColor,
-                                    width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
+                                    width: currentStep === 1 ? '0%' : currentStep === 2 ? '33.33%' : '66.67%',
                                 }}
                             />
 
