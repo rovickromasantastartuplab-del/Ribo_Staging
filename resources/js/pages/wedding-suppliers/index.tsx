@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { PageTemplate, PageAction } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus, Edit, Trash2, Download, Upload, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, Upload, Eye, Layers } from 'lucide-react';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { ImportModal } from '@/components/ImportModal';
 import { WeddingSupplierFormModal } from '@/components/WeddingSupplierFormModal';
+import { WeddingSupplierCategoryManager } from '@/components/WeddingSupplierCategoryManager';
 import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
@@ -28,6 +29,7 @@ export default function WeddingSuppliers() {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState<WeddingSupplier | null>(null);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
 
@@ -140,6 +142,16 @@ export default function WeddingSuppliers() {
             icon: <Upload className="h-4 w-4 mr-2" />,
             variant: 'outline',
             onClick: () => setIsImportModalOpen(true)
+        });
+    }
+
+    // Add manage categories button
+    if (can?.manage_categories) {
+        pageActions.push({
+            label: t('Manage Categories'),
+            icon: <Layers className="h-4 w-4 mr-2" />,
+            variant: 'outline',
+            onClick: () => setIsCategoryManagerOpen(true)
         });
     }
 
@@ -354,6 +366,12 @@ export default function WeddingSuppliers() {
                     { key: 'contact_phone', required: false },
                     { key: 'contact_email', required: false },
                 ]}
+            />
+
+            <WeddingSupplierCategoryManager
+                isOpen={isCategoryManagerOpen}
+                onClose={() => setIsCategoryManagerOpen(false)}
+                categories={categories}
             />
         </PageTemplate>
     );

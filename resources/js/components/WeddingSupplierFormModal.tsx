@@ -1,5 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Dialog,
@@ -16,7 +16,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { WeddingSupplier, WeddingSupplierCategory } from '@/types/wedding-supplier';
 import { Plus, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { WeddingSupplierCategoryManager } from '@/components/WeddingSupplierCategoryManager';
 
 
 interface WeddingSupplierFormModalProps {
@@ -29,8 +28,6 @@ interface WeddingSupplierFormModalProps {
 
 export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, categories }: WeddingSupplierFormModalProps) {
     const { t } = useTranslation();
-    const { can } = usePage().props as any;
-    const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: '',
@@ -132,20 +129,7 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
                         </div>
 
                         <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <Label htmlFor="category_id">{t('Category')} *</Label>
-                                {can?.manage_categories && (
-                                    <Button
-                                        type="button"
-                                        variant="link"
-                                        size="sm"
-                                        className="h-auto p-0 text-xs"
-                                        onClick={() => setIsCategoryManagerOpen(true)}
-                                    >
-                                        {t('Manage Categories')}
-                                    </Button>
-                                )}
-                            </div>
+                            <Label htmlFor="category_id">{t('Category')} *</Label>
                             <select
                                 id="category_id"
                                 value={data.category_id}
@@ -279,12 +263,6 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
                     </DialogFooter>
                 </form>
             </DialogContent>
-
-            <WeddingSupplierCategoryManager
-                isOpen={isCategoryManagerOpen}
-                onClose={() => setIsCategoryManagerOpen(false)}
-                categories={categories}
-            />
         </Dialog>
     );
 }
