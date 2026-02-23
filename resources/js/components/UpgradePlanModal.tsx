@@ -97,7 +97,7 @@ export function UpgradePlanModal({
       const plan = filteredPlans.find(p => p.id === selectedPlanId);
       if (plan) {
         try {
-          const response = await fetch('/payment/methods');
+          const response = await fetch('/payment-methods');
           const methods = await response.json();
           const formattedMethods = formatPaymentMethods(methods, (key: string) => key); // fallback string mapper wrapper since t() is complex here
           setPaymentMethods(formattedMethods);

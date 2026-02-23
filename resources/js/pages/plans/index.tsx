@@ -189,9 +189,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
     const plan = plans.find(p => p.id === planId);
     if (plan) {
       try {
-        const response = await fetch(route('payment.methods'));
-        const paymentSettings = await response.json();
-        const paymentMethods = formatPaymentMethods(paymentSettings, t);
+        const response = await fetch('/payment-methods');
+        const paymentMethods = await response.json();
         setSelectedPlan({ ...plan, paymentMethods });
         setIsSubscriptionModalOpen(true);
       } catch (error) {
