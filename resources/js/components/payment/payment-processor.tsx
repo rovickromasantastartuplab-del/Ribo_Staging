@@ -145,7 +145,31 @@ export function PaymentProcessor({
     setCouponCode('');
   };
 
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
+    if (finalPrice <= 0) {
+      setCouponLoading(true);
+      try {
+        const response = await axios.post(route('plans.checkout.free'), {
+          plan_id: plan.id,
+          billing_cycle: billingCycle,
+          coupon_code: couponCode
+        });
+
+        if (response.data.success) {
+          toast.success(t('Subscription successful'));
+          onSuccess();
+        } else {
+          toast.error(response.data.error || t('Subscription failed'));
+        }
+      } catch (error: any) {
+        const errorMsg = error.response?.data?.message || error.message || 'Error processing free subscription';
+        toast.error(t(errorMsg));
+      } finally {
+        setCouponLoading(false);
+      }
+      return;
+    }
+
     if (!selectedPaymentMethod) {
       toast.error(t('Please select a payment method'));
       return;
@@ -634,10 +658,10 @@ export function PaymentProcessor({
         </Button>
         <Button
           onClick={handlePayNow}
-          disabled={enabledPaymentMethods.length === 0}
+          disabled={finalPrice > 0 && enabledPaymentMethods.length === 0}
           className="flex-1"
         >
-          {t('Pay')} {formatCurrency(finalPrice)}
+          {finalPrice <= 0 ? t('Subscribe for Free') : `${t('Pay')} ${formatCurrency(finalPrice)}`}
         </Button>
       </div>
     </div>

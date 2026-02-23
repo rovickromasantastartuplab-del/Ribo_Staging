@@ -208,7 +208,7 @@ class PlanController extends Controller
                 ]);
             }
         }
-    
+
         return redirect()->route('plans.index')->with('success', __('Plan created successfully.'));
     }
 
@@ -508,6 +508,38 @@ class PlanController extends Controller
             'status' => 'pending'
         ]);
 
-        return back()->with('success', __('Subscription request submitted successfully'));
+    }
+
+    public function freeCheckout(Request $request)
+    {
+        $request->validate([
+            'plan_id' => 'required|exists:plans,id',
+            'billing_cycle' => 'required|in:monthly,yearly',
+            'coupon_code' => 'nullable|string'
+        ]);
+
+        $plan = Plan::findOrFail($request->plan_id);
+        $pricing = calculatePlanPricing($plan, $request->coupon_code, $request->billing_cycle);
+
+        if ($pricing['final_price'] > 0) {
+            return response()->json(['success' => false, 'error' => __('This transaction is not free.')]);
+        }
+
+        // Generate a synthetic payment ID for free orders to track them
+        $paymentId = 'free_' . $plan->id . '_' . time() . '_' . uniqid();
+
+        // Create the free plan order and immediately process it using the helper
+        processPaymentSuccess([
+            'user_id' => auth()->id(),
+            'plan_id' => $plan->id,
+            'billing_cycle' => $request->billing_cycle,
+            'payment_method' => 'free',
+            'payment_id' => $paymentId,
+            'coupon_code' => $request->coupon_code,
+            'original_price' => $pricing['original_price'],
+            'final_price' => $pricing['final_price'],
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }
