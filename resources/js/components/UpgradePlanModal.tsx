@@ -63,8 +63,12 @@ export function UpgradePlanModal({
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [selectedPlanDetails, setSelectedPlanDetails] = useState<any>(null);
 
-  // Plans contain both monthly and yearly prices, so we use the full list
-  const filteredPlans = plans;
+  // Filter plans by billing cycle based on toggle
+  const filteredPlans = plans.filter((plan) =>
+    isYearly
+      ? plan.duration?.toLowerCase() === 'yearly'
+      : plan.duration?.toLowerCase() === 'monthly'
+  );
 
   // Initialize with current plan ID when modal opens
   useEffect(() => {
