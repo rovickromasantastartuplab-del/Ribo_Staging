@@ -23,10 +23,20 @@ interface Plan {
     id: number;
     name: string;
     description: string;
-    price: number;
-    yearly_price?: number;
+    price: number | string;
+    yearly_price?: number | string;
+    monthly_price?: number | string;
+    formatted_monthly_price?: string;
+    formatted_yearly_price?: string;
     duration: string;
     features?: string[];
+    stats?: {
+        users: string | number;
+        projects: string | number;
+        contacts: string | number;
+        accounts: string | number;
+        storage: string;
+    };
     is_popular?: boolean;
     is_plan_enable: string;
 }
@@ -85,7 +95,7 @@ interface CustomPage {
     slug: string;
 }
 
-interface PageProps {
+interface PageProps extends Record<string, unknown> {
     plans: Plan[];
     testimonials: Testimonial[];
     faqs: Faq[];
