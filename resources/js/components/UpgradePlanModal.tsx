@@ -44,6 +44,7 @@ interface UpgradePlanModalProps {
   currentPlanId?: number;
   companyName: string;
   showHideOption?: boolean;
+  directUpgrade?: boolean;
 }
 
 export function UpgradePlanModal({
@@ -53,7 +54,8 @@ export function UpgradePlanModal({
   plans,
   currentPlanId,
   companyName,
-  showHideOption = false
+  showHideOption = false,
+  directUpgrade = false
 }: UpgradePlanModalProps) {
   const { t } = useTranslation();
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
@@ -98,6 +100,11 @@ export function UpgradePlanModal({
 
   const handleConfirm = async () => {
     if (selectedPlanId) {
+      if (directUpgrade) {
+        onConfirm(selectedPlanId, isYearly ? 'yearly' : 'monthly');
+        return;
+      }
+
       const plan = filteredPlans.find(p => p.id === selectedPlanId);
       if (plan) {
         try {
