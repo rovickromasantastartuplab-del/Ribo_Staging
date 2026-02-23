@@ -77,9 +77,8 @@ export default function Dashboard({
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(showUpgradeModal || false);
 
   const handleUpgradeConfirm = (planId: number, duration: string) => {
-    router.post(route('plans.request'), { plan_id: planId, duration }, {
-      onSuccess: () => setIsUpgradeModalOpen(false)
-    });
+    setIsUpgradeModalOpen(false);
+    router.get(route('plans.index'), { billing_cycle: duration });
   };
 
   const stats = dashboardData?.stats || {};

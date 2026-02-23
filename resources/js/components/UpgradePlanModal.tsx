@@ -144,7 +144,7 @@ export function UpgradePlanModal({
                 <div
                   key={plan.id}
                   className={`relative rounded-lg border p-4 cursor-pointer transition-all ${selectedPlanId === plan.id ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 hover:border-gray-300'
-                    } ${plan.is_current ? 'bg-blue-50' : ''}`}
+                    } ${plan.is_current || plan.id === currentPlanId ? 'bg-blue-50/50 border-blue-100' : ''}`}
                   onClick={() => setSelectedPlanId(plan.id)}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -156,7 +156,7 @@ export function UpgradePlanModal({
                       />
                       <h3 className="text-lg font-semibold">{plan.name}</h3>
                     </div>
-                    {plan.is_current && (
+                    {(plan.is_current || plan.id === currentPlanId) && (
                       <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
                         {t("Current")}
                       </Badge>
