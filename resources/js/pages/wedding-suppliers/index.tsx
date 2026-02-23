@@ -217,17 +217,7 @@ export default function WeddingSuppliers() {
                 <div className="flex justify-center w-full text-gray-400">{t('-')}</div>
             )
         },
-        {
-            key: 'contacts',
-            label: t('Contacts'),
-            render: (value: any[]) => value && value.length > 0 ? (
-                <div className="flex -space-x-2 overflow-hidden">
-                    <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                        {value.length} {value.length === 1 ? t('contact') : t('contacts')}
-                    </span>
-                </div>
-            ) : t('-')
-        }
+
     ];
 
     // Define table actions
