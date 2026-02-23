@@ -146,5 +146,5 @@ jobs:
         --exclude='*.swp' \
         --exclude='*.swo' \
         ./ \
-        ribocrm@160.153.176.66:/home/ribocrm/public
+        ribocrm@160.153.176.66:/home/ribocrm/public_html
       working-directory: repo
