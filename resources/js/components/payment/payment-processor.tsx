@@ -97,7 +97,8 @@ export function PaymentProcessor({
 
   const originalPrice = currentPrice;
   const discountAmount = appliedCoupon ? (appliedCoupon.type === 'percentage' ? (originalPrice * appliedCoupon.value / 100) : appliedCoupon.value) : 0;
-  const finalPrice = Math.max(0, originalPrice - discountAmount);
+  // Apply true rounding to ensure the value doesn't suffer from math engine floating-point errors (e.g., 28.990000000002)
+  const finalPrice = Number(Math.max(0, originalPrice - discountAmount).toFixed(2));
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
