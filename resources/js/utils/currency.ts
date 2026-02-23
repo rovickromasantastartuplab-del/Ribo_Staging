@@ -10,13 +10,15 @@
  * Never hardcodes a specific currency symbol — falls back to reading from
  * window.appSettings.currencySettings if the formatCurrency method isn't loaded yet.
  */
-export function formatCurrency(amount: number | string): string {
+export function formatCurrency(amount: number | string, options: any = { showSymbol: true }): string {
     if (window.appSettings?.formatCurrency) {
-        return window.appSettings.formatCurrency(amount);
+        // Use numeric value if available
+        const numericAmount = typeof amount === 'number' ? amount : parseFloat(amount as string);
+        return window.appSettings.formatCurrency(numericAmount, options);
     }
 
     // Fallback: read symbol from currencySettings (never hardcoded)
-    const symbol = window.appSettings?.currencySettings?.currencySymbol || '';
+    const symbol = options?.showSymbol !== false ? (window.appSettings?.currencySettings?.currencySymbol || '') : '';
     const num = typeof amount === 'string' ? parseFloat(amount) : (amount || 0);
 
     if (isNaN(num)) return `${symbol}0.00`;

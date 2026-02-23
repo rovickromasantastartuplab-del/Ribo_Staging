@@ -593,7 +593,11 @@ class DashboardController extends Controller
 
         $showUpgradeModal = false;
         if ($user && $user->type === 'company' && $user->plan_id && $defaultPlanId && $user->plan_id === $defaultPlanId && !$user->hide_plan_modal) {
-            $showUpgradeModal = true;
+            // Only show modal once per session
+            if (!session()->has('upgrade_modal_shown')) {
+                $showUpgradeModal = true;
+                session()->put('upgrade_modal_shown', true);
+            }
         }
 
         return Inertia::render('dashboard', [

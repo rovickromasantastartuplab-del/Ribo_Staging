@@ -91,9 +91,6 @@ class EventServiceProvider extends ServiceProvider
         AccountCreate::class => [
             TwilioAccountCreateListener::class,
         ],
-        \Illuminate\Auth\Events\Registered::class => [
-            \Illuminate\Auth\Listeners\SendEmailVerificationNotification::class,
-        ],
     ];
 
     /**
@@ -102,6 +99,20 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+    }
+
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        $this->booting(function () {
+            foreach ($this->listen as $event => $listeners) {
+                foreach (array_unique(array_filter($listeners)) as $listener) {
+                    \Illuminate\Support\Facades\Event::listen($event, $listener);
+                }
+            }
+        });
     }
 
     /**

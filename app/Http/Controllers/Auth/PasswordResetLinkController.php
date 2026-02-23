@@ -75,21 +75,15 @@ class PasswordResetLinkController extends Controller
 
         $settings = settings($configUser->id);
 
-        if (!isset($settings['email_driver']) || !isset($settings['email_host']) || !isset($settings['email_port']) ||
-            !isset($settings['email_username']) || !isset($settings['email_password']) ||
-            !isset($settings['email_from_address']) || !isset($settings['email_from_name'])) {
-            return false;
-        }
-
         Config::set([
-            'mail.default' => $settings['email_driver'],
-            'mail.mailers.smtp.host' => $settings['email_host'],
-            'mail.mailers.smtp.port' => $settings['email_port'],
-            'mail.mailers.smtp.encryption' => $settings['email_encryption'] === 'none' ? null : $settings['email_encryption'],
-            'mail.mailers.smtp.username' => $settings['email_username'],
-            'mail.mailers.smtp.password' => $settings['email_password'],
-            'mail.from.address' => $settings['email_from_address'],
-            'mail.from.name' => $settings['email_from_name'],
+            'mail.default' => $settings['email_driver'] ?? config('mail.default'),
+            'mail.mailers.smtp.host' => $settings['email_host'] ?? config('mail.mailers.smtp.host'),
+            'mail.mailers.smtp.port' => $settings['email_port'] ?? config('mail.mailers.smtp.port'),
+            'mail.mailers.smtp.encryption' => ($settings['email_encryption'] ?? '') === 'none' ? null : ($settings['email_encryption'] ?? config('mail.mailers.smtp.encryption')),
+            'mail.mailers.smtp.username' => $settings['email_username'] ?? config('mail.mailers.smtp.username'),
+            'mail.mailers.smtp.password' => $settings['email_password'] ?? config('mail.mailers.smtp.password'),
+            'mail.from.address' => $settings['email_from_address'] ?? config('mail.from.address'),
+            'mail.from.name' => $settings['email_from_name'] ?? config('mail.from.name'),
         ]);
 
         return true;

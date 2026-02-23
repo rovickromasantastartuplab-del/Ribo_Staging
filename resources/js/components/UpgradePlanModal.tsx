@@ -58,11 +58,8 @@ export function UpgradePlanModal({
   const [isYearly, setIsYearly] = useState(false);
   const [hideNextTime, setHideNextTime] = useState(false);
 
-  // Filter plans based on billing period
-  const filteredPlans = plans.filter(plan => {
-    const duration = plan.duration.toLowerCase();
-    return isYearly ? duration === 'yearly' : duration === 'monthly';
-  });
+  // Plans contain both monthly and yearly prices, so we use the full list
+  const filteredPlans = plans;
 
   // Initialize with current plan ID when modal opens
   useEffect(() => {
