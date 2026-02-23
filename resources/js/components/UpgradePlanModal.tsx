@@ -10,6 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { formatCurrency } from '@/utils/currency';
 import { Checkbox } from '@/components/ui/checkbox';
 import axios from 'axios';
+import { PlanSubscriptionModal } from '@/components/plan-subscription-modal';
+import { formatPaymentMethods } from '@/utils/payment-methods';
 
 interface Plan {
   id: number;
@@ -57,6 +59,9 @@ export function UpgradePlanModal({
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [isYearly, setIsYearly] = useState(false);
   const [hideNextTime, setHideNextTime] = useState(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [selectedPlanDetails, setSelectedPlanDetails] = useState<any>(null);
 
   // Plans contain both monthly and yearly prices, so we use the full list
   const filteredPlans = plans;
@@ -87,9 +92,21 @@ export function UpgradePlanModal({
     }
   }, [isYearly]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedPlanId) {
-      onConfirm(selectedPlanId, isYearly ? 'yearly' : 'monthly');
+      const plan = filteredPlans.find(p => p.id === selectedPlanId);
+      if (plan) {
+        try {
+          const response = await fetch('/payment/methods');
+          const methods = await response.json();
+          const formattedMethods = formatPaymentMethods(methods, (key: string) => key); // fallback string mapper wrapper since t() is complex here
+          setPaymentMethods(formattedMethods);
+          setSelectedPlanDetails({ ...plan, paymentMethods: methods });
+          setIsSubscriptionModalOpen(true);
+        } catch (error) {
+          console.error('Failed to load payment methods', error);
+        }
+      }
     }
   };
 
@@ -104,138 +121,151 @@ export function UpgradePlanModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("Upgrade Plan for")} {companyName}</DialogTitle>
-          <DialogDescription>
-            {t("Select a new plan for this company")}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("Upgrade Plan for")} {companyName}</DialogTitle>
+            <DialogDescription>
+              {t("Select a new plan for this company")}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="py-4">
-          {/* Billing Period Toggle */}
-          <div className="flex items-center justify-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
-            <span className={`text-sm font-medium ${!isYearly ? 'text-primary' : 'text-gray-500'}`}>
-              {t('Monthly')}
-            </span>
-            <Switch
-              checked={isYearly}
-              onCheckedChange={setIsYearly}
-              className="data-[state=checked]:bg-primary"
-            />
-            <span className={`text-sm font-medium ${isYearly ? 'text-primary' : 'text-gray-500'}`}>
-              {t('Yearly')}
-            </span>
-            {isYearly && (
-              <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
-                {t('Save up to 20%')}
-              </Badge>
-            )}
-          </div>
-
-          <RadioGroup
-            value={selectedPlanId?.toString() || ""}
-            onValueChange={(value) => setSelectedPlanId(parseInt(value))}
-            className="space-y-4"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-              {filteredPlans.length > 0 ? filteredPlans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`relative rounded-lg border p-4 cursor-pointer transition-all ${selectedPlanId === plan.id ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 hover:border-gray-300'
-                    } ${plan.is_current || plan.id === currentPlanId ? 'bg-blue-50/50 border-blue-100' : ''}`}
-                  onClick={() => setSelectedPlanId(plan.id)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value={plan.id.toString()}
-                        id={`plan-${plan.id}`}
-                        className="h-5 w-5"
-                      />
-                      <h3 className="text-lg font-semibold">{plan.name}</h3>
-                    </div>
-                    {(plan.is_current || plan.id === currentPlanId) && (
-                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-                        {t("Current")}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="flex items-center mb-2">
-                    <CreditCard className="mr-1.5 h-4 w-4 text-muted-foreground" />
-                    <p className="text-xl font-bold text-primary">
-                      {formatCurrency(isYearly && plan.yearly_price ? plan.yearly_price : plan.price)}
-                    </p>
-                    <span className="text-sm text-muted-foreground ml-1">/ {plan.duration.toLowerCase()}</span>
-                  </div>
-
-                  {plan.description && (
-                    <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
-                  )}
-
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('Plan Limits')}</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
-                        <div className="text-2xl font-bold text-blue-600">{plan.max_users === 0 ? '∞' : plan.max_users}</div>
-                        <div className="text-xs text-gray-600 font-medium">{t('Users')}</div>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
-                        <div className="text-2xl font-bold text-green-600">{plan.max_projects === 0 ? '∞' : plan.max_projects}</div>
-                        <div className="text-xs text-gray-600 font-medium">{t('Projects')}</div>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
-                        <div className="text-2xl font-bold text-purple-600">{plan.max_contacts === 0 ? '∞' : plan.max_contacts}</div>
-                        <div className="text-xs text-gray-600 font-medium">{t('Contacts')}</div>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
-                        <div className="text-2xl font-bold text-orange-600">{plan.max_accounts === 0 ? '∞' : plan.max_accounts}</div>
-                        <div className="text-xs text-gray-600 font-medium">{t('Accounts')}</div>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center col-span-2">
-                        <div className="text-2xl font-bold text-indigo-600">{plan.storage_limit ? `${plan.storage_limit}GB` : '1GB'}</div>
-                        <div className="text-xs text-gray-600 font-medium">{t('Storage')}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )) : (
-                <div className="col-span-full text-center py-8 text-gray-500">
-                  <p>{t('No plans available for')} {isYearly ? t('yearly') : t('monthly')} {t('billing')}</p>
-                </div>
+          <div className="py-4">
+            {/* Billing Period Toggle */}
+            <div className="flex items-center justify-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <span className={`text-sm font-medium ${!isYearly ? 'text-primary' : 'text-gray-500'}`}>
+                {t('Monthly')}
+              </span>
+              <Switch
+                checked={isYearly}
+                onCheckedChange={setIsYearly}
+                className="data-[state=checked]:bg-primary"
+              />
+              <span className={`text-sm font-medium ${isYearly ? 'text-primary' : 'text-gray-500'}`}>
+                {t('Yearly')}
+              </span>
+              {isYearly && (
+                <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
+                  {t('Save up to 20%')}
+                </Badge>
               )}
             </div>
-          </RadioGroup>
-        </div>
 
-        <DialogFooter className="flex-col sm:flex-row sm:justify-between items-center sm:items-end gap-4 mt-2">
-          {showHideOption && (
-            <div className="flex items-center space-x-2 mr-auto">
-              <Checkbox
-                id="hide-modal"
-                checked={hideNextTime}
-                onCheckedChange={(checked) => setHideNextTime(checked as boolean)}
-              />
-              <label htmlFor="hide-modal" className="text-sm text-gray-500 cursor-pointer">
-                {t("Don't show this again")}
-              </label>
-            </div>
-          )}
-          <div className="flex space-x-2 w-full sm:w-auto mt-2 sm:mt-0 ml-auto">
-            <Button variant="outline" onClick={handleClose}>
-              {t("Cancel")}
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={!selectedPlanId || filteredPlans.length === 0}
+            <RadioGroup
+              value={selectedPlanId?.toString() || ""}
+              onValueChange={(value) => setSelectedPlanId(parseInt(value))}
+              className="space-y-4"
             >
-              {t("Upgrade Plan")}
-            </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                {filteredPlans.length > 0 ? filteredPlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    className={`relative rounded-lg border p-4 cursor-pointer transition-all ${selectedPlanId === plan.id ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 hover:border-gray-300'
+                      } ${plan.is_current || plan.id === currentPlanId ? 'bg-blue-50/50 border-blue-100' : ''}`}
+                    onClick={() => setSelectedPlanId(plan.id)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value={plan.id.toString()}
+                          id={`plan-${plan.id}`}
+                          className="h-5 w-5"
+                        />
+                        <h3 className="text-lg font-semibold">{plan.name}</h3>
+                      </div>
+                      {(plan.is_current || plan.id === currentPlanId) && (
+                        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                          {t("Current")}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="flex items-center mb-2">
+                      <CreditCard className="mr-1.5 h-4 w-4 text-muted-foreground" />
+                      <p className="text-xl font-bold text-primary">
+                        {formatCurrency(isYearly && plan.yearly_price ? plan.yearly_price : plan.price)}
+                      </p>
+                      <span className="text-sm text-muted-foreground ml-1">/ {plan.duration.toLowerCase()}</span>
+                    </div>
+
+                    {plan.description && (
+                      <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
+                    )}
+
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('Plan Limits')}</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                          <div className="text-2xl font-bold text-blue-600">{plan.max_users === 0 ? '∞' : plan.max_users}</div>
+                          <div className="text-xs text-gray-600 font-medium">{t('Users')}</div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                          <div className="text-2xl font-bold text-green-600">{plan.max_projects === 0 ? '∞' : plan.max_projects}</div>
+                          <div className="text-xs text-gray-600 font-medium">{t('Projects')}</div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                          <div className="text-2xl font-bold text-purple-600">{plan.max_contacts === 0 ? '∞' : plan.max_contacts}</div>
+                          <div className="text-xs text-gray-600 font-medium">{t('Contacts')}</div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                          <div className="text-2xl font-bold text-orange-600">{plan.max_accounts === 0 ? '∞' : plan.max_accounts}</div>
+                          <div className="text-xs text-gray-600 font-medium">{t('Accounts')}</div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-gray-200 text-center col-span-2">
+                          <div className="text-2xl font-bold text-indigo-600">{plan.storage_limit ? `${plan.storage_limit}GB` : '1GB'}</div>
+                          <div className="text-xs text-gray-600 font-medium">{t('Storage')}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    <p>{t('No plans available for')} {isYearly ? t('yearly') : t('monthly')} {t('billing')}</p>
+                  </div>
+                )}
+              </div>
+            </RadioGroup>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+          <DialogFooter className="flex-col sm:flex-row sm:justify-between items-center sm:items-end gap-4 mt-2">
+            {showHideOption && (
+              <div className="flex items-center space-x-2 mr-auto">
+                <Checkbox
+                  id="hide-modal"
+                  checked={hideNextTime}
+                  onCheckedChange={(checked) => setHideNextTime(checked as boolean)}
+                />
+                <label htmlFor="hide-modal" className="text-sm text-gray-500 cursor-pointer">
+                  {t("Don't show this again")}
+                </label>
+              </div>
+            )}
+            <div className="flex space-x-2 w-full sm:w-auto mt-2 sm:mt-0 ml-auto">
+              <Button variant="outline" onClick={handleClose}>
+                {t("Cancel")}
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                disabled={!selectedPlanId || filteredPlans.length === 0}
+              >
+                {t("Upgrade Plan")}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {
+        selectedPlanDetails && (
+          <PlanSubscriptionModal
+            isOpen={isSubscriptionModalOpen}
+            onClose={() => setIsSubscriptionModalOpen(false)}
+            plan={selectedPlanDetails as any}
+            billingCycle={isYearly ? 'yearly' : 'monthly'}
+            paymentMethods={paymentMethods as any}
+          />
+        )
+      }
+    </>
   );
 }
