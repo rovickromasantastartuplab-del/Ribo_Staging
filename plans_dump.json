@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "name": "Free",
+        "duration": "monthly"
+    },
+    {
+        "id": 2,
+        "name": "Starter",
+        "duration": "monthly"
+    },
+    {
+        "id": 3,
+        "name": "Pro",
+        "duration": "monthly"
+    }
+]

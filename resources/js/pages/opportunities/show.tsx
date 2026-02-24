@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency as formatCurrencyUtils } from '@/utils/currency';
 
 export default function OpportunityShow() {
   const { t } = useTranslation();
@@ -34,7 +34,7 @@ export default function OpportunityShow() {
       active: 'bg-green-50 text-green-700 ring-green-600/20',
       inactive: 'bg-red-50 text-red-700 ring-red-600/10'
     };
-    
+
     return (
       <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${statusColors[status as keyof typeof statusColors] || statusColors.active}`}>
         {status?.charAt(0).toUpperCase() + status?.slice(1) || 'Active'}
@@ -42,7 +42,7 @@ export default function OpportunityShow() {
     );
   };
 
-  const formatCurrency = (amount: number) => formatCurrency(Number(amount || 0));
+  const formatCurrency = (amount: number) => formatCurrencyUtils(Number(amount || 0));
 
   const formatDate = (dateString: string) => {
     if (!dateString) return t('-');
@@ -52,16 +52,16 @@ export default function OpportunityShow() {
   const calculateProductTotals = () => {
     let subtotal = 0;
     let totalTax = 0;
-    
+
     opportunity.products?.forEach((product: any) => {
       const lineTotal = Number(product.pivot?.total_price || 0);
       subtotal += lineTotal;
-      
+
       if (product.tax && lineTotal > 0) {
         totalTax += (lineTotal * Number(product.tax.rate || 0)) / 100;
       }
     });
-    
+
     return { subtotal, totalTax, grandTotal: subtotal + totalTax };
   };
 
@@ -146,8 +146,8 @@ export default function OpportunityShow() {
                   <div className="mt-2">
                     {opportunity.opportunity_stage ? (
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
+                        <div
+                          className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: opportunity.opportunity_stage.color }}
                         ></div>
                         <span className="text-lg font-bold text-purple-600">{opportunity.opportunity_stage.name}</span>
@@ -182,8 +182,8 @@ export default function OpportunityShow() {
                   <div className="mt-1">
                     {opportunity.opportunity_stage ? (
                       <div className="flex items-center gap-2 mt-1">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
+                        <div
+                          className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: opportunity.opportunity_stage.color }}
                         ></div>
                         <span>{opportunity.opportunity_stage.name}</span>
@@ -233,8 +233,8 @@ export default function OpportunityShow() {
               <div className="flex items-center justify-between p-6 bg-green-50 rounded-xl border border-green-200 hover:shadow-md transition-shadow">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">{t('Account')}</p>
-                  <Link 
-                    href={route('accounts.show', opportunity.account.id)} 
+                  <Link
+                    href={route('accounts.show', opportunity.account.id)}
                     className="text-sm font-medium text-green-700 hover:text-green-900 hover:underline transition-colors"
                   >
                     {opportunity.account.name}
@@ -247,13 +247,13 @@ export default function OpportunityShow() {
                 </Link>
               </div>
             )}
-            
+
             {opportunity.contact && (
               <div className="flex items-center justify-between p-6 bg-purple-50 rounded-xl border border-purple-200 hover:shadow-md transition-shadow">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">{t('Contact')}</p>
-                  <Link 
-                    href={route('contacts.show', opportunity.contact.id)} 
+                  <Link
+                    href={route('contacts.show', opportunity.contact.id)}
                     className="text-sm font-medium text-purple-700 hover:text-purple-900 hover:underline transition-colors"
                   >
                     {opportunity.contact.name}
@@ -497,8 +497,8 @@ export default function OpportunityShow() {
               <div className="sticky top-0 bg-white z-10 p-6 pb-6 border-b mb-4">
                 <div className="flex gap-3">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
-                    <img 
-                      src={auth?.user?.avatar || '/images/avatar/default.png'} 
+                    <img
+                      src={auth?.user?.avatar || '/images/avatar/default.png'}
                       alt={auth?.user?.name || 'User'}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -513,7 +513,7 @@ export default function OpportunityShow() {
                       if (newComment.trim()) {
                         router.post(route('opportunities.comments.store', opportunity.id), {
                           comment: newComment
-                        }, { 
+                        }, {
                           preserveScroll: true,
                           onSuccess: () => setNewComment('')
                         });
@@ -539,148 +539,148 @@ export default function OpportunityShow() {
                 </div>
               </div>
               <div className="p-6 pt-0 max-h-96 overflow-y-auto">
-              {streamItems && streamItems.length > 0 ? (
-                <div className="space-y-2">
-                {streamItems.map((activity: any, index: number) => {
-                  const formatRelativeTime = (dateString: string) => {
-                    const date = new Date(dateString);
-                    const now = new Date();
-                    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-                    
-                    if (diffInMinutes < 1) return t('Just now');
-                    if (diffInMinutes < 60) return t('{{count}} {{unit}} ago', { count: diffInMinutes, unit: diffInMinutes === 1 ? t('minute') : t('minutes') });
-                    
-                    const diffInHours = Math.floor(diffInMinutes / 60);
-                    if (diffInHours < 24) return t('{{count}} {{unit}} ago', { count: diffInHours, unit: diffInHours === 1 ? t('hour') : t('hours') });
-                    
-                    const diffInDays = Math.floor(diffInHours / 24);
-                    if (diffInDays < 7) return t('{{count}} {{unit}} ago', { count: diffInDays, unit: diffInDays === 1 ? t('day') : t('days') });
-                    
-                    return window.appSettings?.formatDateTime(dateString, false) || new Date(dateString).toLocaleDateString();
-                  };
+                {streamItems && streamItems.length > 0 ? (
+                  <div className="space-y-2">
+                    {streamItems.map((activity: any, index: number) => {
+                      const formatRelativeTime = (dateString: string) => {
+                        const date = new Date(dateString);
+                        const now = new Date();
+                        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-                  return (
-                    <div key={activity.id || index} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
-                          <img 
-                            src={activity.user?.avatar || '/images/avatar/default.png'} 
-                            alt={activity.user?.name || 'User'}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
-                            }}
-                          />
-                        </div>
-                        {index < streamItems.length - 1 && <div className="w-px h-8 bg-gray-200 mt-2" />}
-                      </div>
-                      <div className="flex-1 min-w-0 pb-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-400">
-                            {activity.user?.name || t('System')}
-                          </span>
-                          <span className="text-xs text-gray-500 font-medium">
-                            {formatRelativeTime(activity.created_at)}
-                          </span>
-                        </div>
-                        <div className="bg-white border rounded-lg p-3 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-900" dangerouslySetInnerHTML={{
-                              __html: activity.title.replace(
-                                new RegExp(`^(${activity.user?.name || t('System')})`, 'g'),
-                                '<span class="font-bold text-base">$1</span>'
-                              )
-                            }} />
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20">
-                                {activity.activity_type.charAt(0).toUpperCase() + activity.activity_type.slice(1)}
+                        if (diffInMinutes < 1) return t('Just now');
+                        if (diffInMinutes < 60) return t('{{count}} {{unit}} ago', { count: diffInMinutes, unit: diffInMinutes === 1 ? t('minute') : t('minutes') });
+
+                        const diffInHours = Math.floor(diffInMinutes / 60);
+                        if (diffInHours < 24) return t('{{count}} {{unit}} ago', { count: diffInHours, unit: diffInHours === 1 ? t('hour') : t('hours') });
+
+                        const diffInDays = Math.floor(diffInHours / 24);
+                        if (diffInDays < 7) return t('{{count}} {{unit}} ago', { count: diffInDays, unit: diffInDays === 1 ? t('day') : t('days') });
+
+                        return window.appSettings?.formatDateTime(dateString, false) || new Date(dateString).toLocaleDateString();
+                      };
+
+                      return (
+                        <div key={activity.id || index} className="flex gap-4">
+                          <div className="flex flex-col items-center">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
+                              <img
+                                src={activity.user?.avatar || '/images/avatar/default.png'}
+                                alt={activity.user?.name || 'User'}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                                }}
+                              />
+                            </div>
+                            {index < streamItems.length - 1 && <div className="w-px h-8 bg-gray-200 mt-2" />}
+                          </div>
+                          <div className="flex-1 min-w-0 pb-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-gray-400">
+                                {activity.user?.name || t('System')}
                               </span>
-                              {isCompany && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                  onClick={() => {
-                                    setCurrentActivity(activity);
-                                    setIsDeleteModalOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                              <span className="text-xs text-gray-500 font-medium">
+                                {formatRelativeTime(activity.created_at)}
+                              </span>
+                            </div>
+                            <div className="bg-white border rounded-lg p-3 shadow-sm">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-900" dangerouslySetInnerHTML={{
+                                  __html: activity.title.replace(
+                                    new RegExp(`^(${activity.user?.name || t('System')})`, 'g'),
+                                    '<span class="font-bold text-base">$1</span>'
+                                  )
+                                }} />
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20">
+                                    {activity.activity_type.charAt(0).toUpperCase() + activity.activity_type.slice(1)}
+                                  </span>
+                                  {isCompany && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                      onClick={() => {
+                                        setCurrentActivity(activity);
+                                        setIsDeleteModalOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              {activity.description && (
+                                <div className="mb-2">
+                                  {activity.activity_type === 'comment' ? (
+                                    <div>
+                                      {editingComment === activity.id ? (
+                                        <div className="flex gap-2">
+                                          <Input
+                                            value={editCommentText}
+                                            onChange={(e) => setEditCommentText(e.target.value)}
+                                            className="flex-1"
+                                          />
+                                          <Button
+                                            size="sm"
+                                            onClick={() => {
+                                              router.put(route('opportunities.comments.update-activity', { opportunity: opportunity.id, activity: activity.id }), {
+                                                comment: editCommentText
+                                              }, { preserveScroll: true });
+                                              setEditingComment(null);
+                                            }}
+                                          >
+                                            <Check className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setEditingComment(null)}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-start justify-between">
+                                          <p className="text-sm text-gray-600 flex-1">{activity.description}</p>
+                                          {activity.user_id === auth?.user?.id && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                                              onClick={() => {
+                                                setEditingComment(activity.id);
+                                                setEditCommentText(activity.description);
+                                              }}
+                                            >
+                                              <Edit className="h-3 w-3" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : activity.description.includes('into') ? (
+                                    <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{
+                                      __html: activity.description
+                                    }} />
+                                  ) : (
+                                    <p className="text-sm text-gray-600">{activity.description}</p>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
-                          {activity.description && (
-                            <div className="mb-2">
-                              {activity.activity_type === 'comment' ? (
-                                <div>
-                                  {editingComment === activity.id ? (
-                                    <div className="flex gap-2">
-                                      <Input
-                                        value={editCommentText}
-                                        onChange={(e) => setEditCommentText(e.target.value)}
-                                        className="flex-1"
-                                      />
-                                      <Button
-                                        size="sm"
-                                        onClick={() => {
-                                          router.put(route('opportunities.comments.update-activity', { opportunity: opportunity.id, activity: activity.id }), {
-                                            comment: editCommentText
-                                          }, { preserveScroll: true });
-                                          setEditingComment(null);
-                                        }}
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => setEditingComment(null)}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-start justify-between">
-                                      <p className="text-sm text-gray-600 flex-1">{activity.description}</p>
-                                      {activity.user_id === auth?.user?.id && (
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-                                          onClick={() => {
-                                            setEditingComment(activity.id);
-                                            setEditCommentText(activity.description);
-                                          }}
-                                        >
-                                          <Edit className="h-3 w-3" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : activity.description.includes('into') ? (
-                                <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{
-                                  __html: activity.description
-                                }} />
-                              ) : (
-                                <p className="text-sm text-gray-600">{activity.description}</p>
-                              )}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-sm">{t('No activities found')}</p>
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-sm">{t('No activities found')}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           )}

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency as formatCurrencyUtils } from '@/utils/currency';
 
 export default function LeadShow() {
   const { t } = useTranslation();
@@ -31,17 +31,16 @@ export default function LeadShow() {
 
   const getStatusBadge = (status: string) => {
     return (
-      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-        status === 'active'
+      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${status === 'active'
           ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
           : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
-      }`}>
+        }`}>
         {status === 'active' ? t('Active') : t('Inactive')}
       </span>
     );
   };
 
-  const formatCurrency = (amount: number) => formatCurrency(Number(amount || 0));
+  const formatCurrency = (amount: number) => formatCurrencyUtils(Number(amount || 0));
 
 
 
@@ -550,182 +549,181 @@ export default function LeadShow() {
                 </div>
               </div>
               <div className="p-6 pt-0 max-h-96 overflow-y-auto">
-              {streamItems && streamItems.length > 0 ? (
-                <div className="space-y-2">
-                {streamItems.map((activity: any, index: number) => {
-                  const getActivityIcon = (type: string) => {
-                    switch (type) {
-                      case 'created': return <User className="h-4 w-4 text-green-600" />;
-                      case 'updated': return <FileText className="h-4 w-4 text-blue-600" />;
-                      case 'assigned': return <UserCheck className="h-4 w-4 text-purple-600" />;
-                      case 'converted': return <Target className="h-4 w-4 text-orange-600" />;
-                      case 'comment': return <MessageCircle className="h-4 w-4 text-indigo-600" />;
-                      default: return <FileText className="h-4 w-4 text-gray-600" />;
-                    }
-                  };
+                {streamItems && streamItems.length > 0 ? (
+                  <div className="space-y-2">
+                    {streamItems.map((activity: any, index: number) => {
+                      const getActivityIcon = (type: string) => {
+                        switch (type) {
+                          case 'created': return <User className="h-4 w-4 text-green-600" />;
+                          case 'updated': return <FileText className="h-4 w-4 text-blue-600" />;
+                          case 'assigned': return <UserCheck className="h-4 w-4 text-purple-600" />;
+                          case 'converted': return <Target className="h-4 w-4 text-orange-600" />;
+                          case 'comment': return <MessageCircle className="h-4 w-4 text-indigo-600" />;
+                          default: return <FileText className="h-4 w-4 text-gray-600" />;
+                        }
+                      };
 
-                  const getActivityColor = (type: string) => {
-                    switch (type) {
-                      case 'created': return 'border-green-200 bg-green-50';
-                      case 'updated': return 'border-blue-200 bg-blue-50';
-                      case 'assigned': return 'border-purple-200 bg-purple-50';
-                      case 'converted': return 'border-orange-200 bg-orange-50';
-                      case 'comment': return 'border-indigo-200 bg-indigo-50';
-                      default: return 'border-gray-200 bg-gray-50';
-                    }
-                  };
+                      const getActivityColor = (type: string) => {
+                        switch (type) {
+                          case 'created': return 'border-green-200 bg-green-50';
+                          case 'updated': return 'border-blue-200 bg-blue-50';
+                          case 'assigned': return 'border-purple-200 bg-purple-50';
+                          case 'converted': return 'border-orange-200 bg-orange-50';
+                          case 'comment': return 'border-indigo-200 bg-indigo-50';
+                          default: return 'border-gray-200 bg-gray-50';
+                        }
+                      };
 
-                  const formatRelativeTime = (dateString: string) => {
-                    const date = new Date(dateString);
-                    const now = new Date();
-                    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+                      const formatRelativeTime = (dateString: string) => {
+                        const date = new Date(dateString);
+                        const now = new Date();
+                        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-                    if (diffInMinutes < 1) return t('Just now');
-                    if (diffInMinutes < 60) return t('{{count}} {{unit}} ago', { count: diffInMinutes, unit: diffInMinutes === 1 ? t('minute') : t('minutes') });
+                        if (diffInMinutes < 1) return t('Just now');
+                        if (diffInMinutes < 60) return t('{{count}} {{unit}} ago', { count: diffInMinutes, unit: diffInMinutes === 1 ? t('minute') : t('minutes') });
 
-                    const diffInHours = Math.floor(diffInMinutes / 60);
-                    if (diffInHours < 24) return t('{{count}} {{unit}} ago', { count: diffInHours, unit: diffInHours === 1 ? t('hour') : t('hours') });
+                        const diffInHours = Math.floor(diffInMinutes / 60);
+                        if (diffInHours < 24) return t('{{count}} {{unit}} ago', { count: diffInHours, unit: diffInHours === 1 ? t('hour') : t('hours') });
 
-                    const diffInDays = Math.floor(diffInHours / 24);
-                    if (diffInDays < 7) return t('{{count}} {{unit}} ago', { count: diffInDays, unit: diffInDays === 1 ? t('day') : t('days') });
+                        const diffInDays = Math.floor(diffInHours / 24);
+                        if (diffInDays < 7) return t('{{count}} {{unit}} ago', { count: diffInDays, unit: diffInDays === 1 ? t('day') : t('days') });
 
-                    return window.appSettings?.formatDateTime(dateString, false) || new Date(dateString).toLocaleDateString();
-                  };
+                        return window.appSettings?.formatDateTime(dateString, false) || new Date(dateString).toLocaleDateString();
+                      };
 
-                  return (
-                    <div key={activity.id || index} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
-                          <img
-                            src={activity.user?.avatar || '/images/avatar/default.png'}
-                            alt={activity.user?.name || 'User'}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
-                            }}
-                          />
-                        </div>
-                        {index < streamItems.length - 1 && <div className="w-px h-8 bg-gray-200 mt-2" />}
-                      </div>
-                      <div className="flex-1 min-w-0 pb-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-400">
-                            {activity.user?.name || t('System')}
-                          </span>
-                          <span className="text-xs text-gray-500 font-medium">
-                            {formatRelativeTime(activity.created_at)}
-                          </span>
-                        </div>
-                        <div className="bg-white border rounded-lg p-3 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-900" dangerouslySetInnerHTML={{
-                              __html: activity.title.replace(
-                                new RegExp(`^(${activity.user?.name || t('System')})`, 'g'),
-                                '<span class="font-bold text-base">$1</span>'
-                              )
-                            }} />
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20">
-                                {activity.activity_type.charAt(0).toUpperCase() + activity.activity_type.slice(1)}
+                      return (
+                        <div key={activity.id || index} className="flex gap-4">
+                          <div className="flex flex-col items-center">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
+                              <img
+                                src={activity.user?.avatar || '/images/avatar/default.png'}
+                                alt={activity.user?.name || 'User'}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                                }}
+                              />
+                            </div>
+                            {index < streamItems.length - 1 && <div className="w-px h-8 bg-gray-200 mt-2" />}
+                          </div>
+                          <div className="flex-1 min-w-0 pb-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-gray-400">
+                                {activity.user?.name || t('System')}
                               </span>
-                              {isCompany && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                  onClick={() => {
-                                    setCurrentActivity(activity);
-                                    setIsDeleteModalOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                              <span className="text-xs text-gray-500 font-medium">
+                                {formatRelativeTime(activity.created_at)}
+                              </span>
+                            </div>
+                            <div className="bg-white border rounded-lg p-3 shadow-sm">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-900" dangerouslySetInnerHTML={{
+                                  __html: activity.title.replace(
+                                    new RegExp(`^(${activity.user?.name || t('System')})`, 'g'),
+                                    '<span class="font-bold text-base">$1</span>'
+                                  )
+                                }} />
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20">
+                                    {activity.activity_type.charAt(0).toUpperCase() + activity.activity_type.slice(1)}
+                                  </span>
+                                  {isCompany && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                      onClick={() => {
+                                        setCurrentActivity(activity);
+                                        setIsDeleteModalOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              {activity.description && (
+                                <div className="mb-2">
+                                  {activity.field_changed === 'status' && (activity.description === 'Active' || activity.description === 'Inactive') ? (
+                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${activity.description === 'Active'
+                                        ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                                        : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                      }`}>
+                                      {activity.description}
+                                    </span>
+                                  ) : activity.field_changed === 'lead_status_id' ? (
+                                    <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{
+                                      __html: activity.description
+                                    }} />
+                                  ) : activity.activity_type === 'comment' ? (
+                                    <div>
+                                      {editingComment === activity.id ? (
+                                        <div className="flex gap-2">
+                                          <Input
+                                            value={editCommentText}
+                                            onChange={(e) => setEditCommentText(e.target.value)}
+                                            className="flex-1"
+                                          />
+                                          <Button
+                                            size="sm"
+                                            onClick={() => {
+                                              router.put(route('leads.comments.update-activity', { lead: lead.id, activity: activity.id }), {
+                                                comment: editCommentText
+                                              }, { preserveScroll: true });
+                                              setEditingComment(null);
+                                            }}
+                                          >
+                                            <Check className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setEditingComment(null)}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-start justify-between">
+                                          <p className="text-sm text-gray-600 flex-1">{activity.description}</p>
+                                          {activity.user_id === auth?.user?.id && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                                              onClick={() => {
+                                                setEditingComment(activity.id);
+                                                setEditCommentText(activity.description);
+                                              }}
+                                            >
+                                              <Edit className="h-3 w-3" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : activity.field_changed === 'name' || activity.field_changed === 'assigned_to' || activity.description.includes('into') ? (
+                                    <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{
+                                      __html: activity.description
+                                    }} />
+                                  ) : (
+                                    <p className="text-sm text-gray-600">{activity.description}</p>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
-                          {activity.description && (
-                            <div className="mb-2">
-                              {activity.field_changed === 'status' && (activity.description === 'Active' || activity.description === 'Inactive') ? (
-                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                                  activity.description === 'Active'
-                                    ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                    : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
-                                }`}>
-                                  {activity.description}
-                                </span>
-                              ) : activity.field_changed === 'lead_status_id' ? (
-                                <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{
-                                  __html: activity.description
-                                }} />
-                              ) : activity.activity_type === 'comment' ? (
-                                <div>
-                                  {editingComment === activity.id ? (
-                                    <div className="flex gap-2">
-                                      <Input
-                                        value={editCommentText}
-                                        onChange={(e) => setEditCommentText(e.target.value)}
-                                        className="flex-1"
-                                      />
-                                      <Button
-                                        size="sm"
-                                        onClick={() => {
-                                          router.put(route('leads.comments.update-activity', { lead: lead.id, activity: activity.id }), {
-                                            comment: editCommentText
-                                          }, { preserveScroll: true });
-                                          setEditingComment(null);
-                                        }}
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => setEditingComment(null)}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-start justify-between">
-                                      <p className="text-sm text-gray-600 flex-1">{activity.description}</p>
-                                      {activity.user_id === auth?.user?.id && (
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-                                          onClick={() => {
-                                            setEditingComment(activity.id);
-                                            setEditCommentText(activity.description);
-                                          }}
-                                        >
-                                          <Edit className="h-3 w-3" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : activity.field_changed === 'name' || activity.field_changed === 'assigned_to' || activity.description.includes('into') ? (
-                                <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{
-                                  __html: activity.description
-                                }} />
-                              ) : (
-                                <p className="text-sm text-gray-600">{activity.description}</p>
-                              )}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-sm">{t('No activities found')}</p>
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-sm">{t('No activities found')}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           )}
