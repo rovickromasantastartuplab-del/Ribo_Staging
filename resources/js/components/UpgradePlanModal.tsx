@@ -84,6 +84,24 @@ export function UpgradePlanModal({
     }
   }, [isOpen, plans]);
 
+  const handleCancelTrial = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent selecting the plan
+    if (!confirm(t('Are you sure you want to cancel your trial? You will be reverted to the free plan.'))) {
+      return;
+    }
+
+    try {
+      const response = await axios.post('/plans/cancel-trial');
+      if (response.data.success) {
+        window.location.reload();
+      } else {
+        console.error('Failed to cancel trial', response.data.error);
+      }
+    } catch (error) {
+      console.error('Failed to cancel trial', error);
+    }
+  };
+
   const handleConfirm = async () => {
     if (selectedPlanId) {
       const plan = plans.find(p => p.id === selectedPlanId);
@@ -196,9 +214,21 @@ export function UpgradePlanModal({
                         <h3 className="text-lg font-semibold">{plan.name}</h3>
                       </div>
                       {(plan.is_current || plan.id === currentPlanId) && (
-                        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-                          {t("Current")}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                            {t("Current")}
+                          </Badge>
+                          {plan.is_trial === 'on' && plan.trial_day && plan.trial_day > 0 && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="h-6 text-xs px-2 py-0"
+                              onClick={handleCancelTrial}
+                            >
+                              {t('Cancel Trial')}
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
 
