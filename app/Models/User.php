@@ -434,4 +434,12 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
 
         return array_values(array_unique($features));
     }
+
+    /**
+     * Get HitPay recurrent billing tokens matching this user ID
+     */
+    public function paymentMethods()
+    {
+        return $this->hasMany(UserPaymentMethod::class);
+    }
 }
