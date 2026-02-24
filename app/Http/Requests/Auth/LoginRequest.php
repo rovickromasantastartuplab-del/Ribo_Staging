@@ -41,32 +41,46 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // Check account status BEFORE Auth::attempt() to avoid destroying the session/CSRF token
-        $user = \App\Models\User::where('email', $this->input('email'))->first();
+        // --- Pre-flight access checks (before Auth::attempt) ---
+        // Checks run before Auth::attempt() to avoid session mutation/CSRF issues (419).
+        $candidate = \App\Models\User::where('email', $this->string('email')->value())->first();
 
-        if ($user) {
-            // Check if user account is inactive
-            if ($user->status === 'inactive') {
+        if ($candidate) {
+            // Check if account is inactive
+            if ($candidate->status === 'inactive') {
                 RateLimiter::hit($this->throttleKey());
                 throw ValidationException::withMessages([
                     'email' => __('Your account is inactive. Please contact administrator.'),
                 ]);
             }
 
-            // For staff users: block login if company is disabled by super admin
-            if ($user->type !== 'company' && $user->type !== 'superadmin') {
-                $company = \App\Models\User::find($user->created_by);
-                if ($company && $company->type === 'company' && $company->status === 'inactive') {
+            // For staff users: sync plan limits then check if login is allowed
+            if ($candidate->type !== 'company' && $candidate->type !== 'superadmin') {
+                $company = \App\Models\User::find($candidate->created_by);
+                if ($company && $company->type === 'company') {
+                    // Block login if company is disabled by super admin
+                    if ($company->status === 'inactive') {
+                        RateLimiter::hit($this->throttleKey());
+                        throw ValidationException::withMessages([
+                            'email' => __('Your company account has been disabled. Please contact administrator.'),
+                        ]);
+                    }
+
+                    syncStaffUserLoginAccess($company);
+                    $candidate->refresh();
+                }
+
+                if ((int) $candidate->is_enable_login === 0) {
                     RateLimiter::hit($this->throttleKey());
                     throw ValidationException::withMessages([
-                        'email' => __('Your company account has been disabled. Please contact administrator.'),
+                        'email' => __('Your account has been temporarily disabled because your company has exceeded its user limit. Please contact your administrator to upgrade the plan.'),
                     ]);
                 }
             }
         }
 
-        // Now attempt login — session and CSRF token are untouched if we reach here
-        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // --- Authenticate credentials ---
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -76,6 +90,7 @@ class LoginRequest extends FormRequest
 
         RateLimiter::clear($this->throttleKey());
     }
+
 
     /**
      * Ensure the login request is not rate limited.

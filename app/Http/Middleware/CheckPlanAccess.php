@@ -22,7 +22,7 @@ class CheckPlanAccess
             return $next($request);
         }
 
-        // Only company users need plan checks
+        // Staff user checks
         if ($user->type !== 'company') {
             $company = User::find($user->created_by);
             if ($company && $company->type === 'company') {
@@ -41,8 +41,21 @@ class CheckPlanAccess
                     $request->session()->regenerateToken();
                     return redirect()->route('login')->with('error', __('Access denied. Only company users can access this area.'));
                 }
+
+                // Re-evaluate which staff are within the plan limit on every request.
+                // Ensures plan changes are enforced immediately for active sessions.
+                syncStaffUserLoginAccess($company);
+
+                // Reload to get the freshly updated is_enable_login value.
+                $user->refresh();
+
+                if ((int) $user->is_enable_login === 0) {
+                    auth()->logout();
+                    return redirect()->route('login')->with('error', __('Your account has been temporarily disabled because your company has exceeded its user limit. Please contact your administrator.'));
+                }
             }
         }
+
 
         // Check if user needs plan subscription
         if ($user->needsPlanSubscription()) {

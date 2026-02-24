@@ -921,8 +921,50 @@ if (!function_exists('assignPlanToUser')) {
         ]);
 
         \Log::info('Plan assignment result: ' . ($updated ? 'success' : 'failed'));
+
+        // Re-sync staff login access based on the new plan's user limit
+        $user->refresh();
+        syncStaffUserLoginAccess($user);
     }
 }
+
+if (!function_exists('syncStaffUserLoginAccess')) {
+    /**
+     * Enable or disable staff user login access based on the company's effective plan limit.
+     *
+     * If the company's plan has expired, the default (free) plan limit is used instead.
+     * Staff are sorted oldest-first; those within max_users stay enabled, the rest are disabled.
+     * The company owner is never touched.
+     */
+    function syncStaffUserLoginAccess(User $companyUser): void
+    {
+        // Use the default plan limit if the paid plan is expired
+        if ($companyUser->isPlanExpired()) {
+            $plan = Plan::getDefaultPlan();
+        } else {
+            $plan = $companyUser->plan ?? Plan::getDefaultPlan();
+        }
+
+        $maxUsers = $plan ? (int) $plan->max_users : 0;
+
+        $staffUsers = User::where('created_by', $companyUser->id)
+            ->where('type', '!=', 'company')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        foreach ($staffUsers as $index => $staffUser) {
+            $newLoginStatus = ($index < $maxUsers) ? 1 : 0;
+
+            if ((int) $staffUser->is_enable_login !== $newLoginStatus) {
+                $staffUser->is_enable_login = $newLoginStatus;
+                $staffUser->save();
+            }
+        }
+
+        \Log::info('syncStaffUserLoginAccess: synced ' . $staffUsers->count() . ' staff for company ' . $companyUser->id . ' (max_users=' . $maxUsers . ', expired=' . ($companyUser->isPlanExpired() ? 'yes' : 'no') . ')');
+    }
+}
+
 
 if (!function_exists('processPaymentSuccess')) {
     function processPaymentSuccess($data)
