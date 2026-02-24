@@ -89,6 +89,7 @@ class PlanPricingService
                 'max_contacts' => $plan->max_contacts,
                 'max_accounts' => $plan->max_accounts,
                 'storage_limit' => $plan->storage_limit,
+                'is_plan_enable' => $plan->is_plan_enable,
                 'enable_branding' => $plan->enable_branding,
                 'enable_chatgpt' => $plan->enable_chatgpt,
                 'module' => is_array($plan->module) ? $plan->module : [],
