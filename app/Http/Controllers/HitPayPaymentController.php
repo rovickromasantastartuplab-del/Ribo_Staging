@@ -178,7 +178,7 @@ class HitPayPaymentController extends Controller
                 'description' => 'Free Trial Authorization Hold',
                 'customer_email' => auth()->user()->email,
                 'customer_name' => auth()->user()->name,
-                'amount' => number_format(1.00, 2, '.', ''),
+                'amount' => number_format(20.00, 2, '.', ''),
                 'currency' => strtoupper($currency),
                 'save_payment_method' => 'true',
                 'reference' => $paymentId,

@@ -232,7 +232,7 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
           <div className="flex items-start gap-1.5 px-1">
             <Info className="h-3.5 w-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
             <p className="text-[10px] text-amber-700">
-              {t('A temporary hold of 1.00 may be applied to verify your account. You will not be charged until your trial ends.')}
+              {t('A temporary hold of 20.00 may be applied to verify your account. You will not be charged until your trial ends.')}
             </p>
           </div>
           <Button

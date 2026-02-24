@@ -292,7 +292,7 @@ export function UpgradePlanModal({
                   <div className="flex items-start gap-2 mt-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
                     <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                     <p className="text-xs text-amber-700">
-                      {t('A temporary hold of 1.00 may be applied to verify your account. You will not be charged the full amount until your trial ends.')}
+                      {t('A temporary hold of 20.00 may be applied to verify your account. You will not be charged the full amount until your trial ends.')}
                     </p>
                   </div>
                 );
