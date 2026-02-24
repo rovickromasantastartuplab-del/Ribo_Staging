@@ -19,15 +19,18 @@ interface Plan {
   id: number;
   name: string;
   description: string;
-  price: number;
-  yearly_price?: number;
+  price: number | string;
+  yearly_price?: number | string;
+  monthly_price?: number | string;
+  formatted_monthly_price?: string;
+  formatted_yearly_price?: string;
   duration: string;
   features?: string[];
   stats?: {
-    users: string;
-    projects: string;
-    contacts: string;
-    accounts: string;
+    users: string | number;
+    projects: string | number;
+    contacts: string | number;
+    accounts: string | number;
     storage: string;
   };
   is_popular?: boolean;
@@ -54,13 +57,16 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
   const enabledPlans = plans.filter(plan => plan.is_plan_enable === 'on');
 
   // Default plans if none provided
-  const defaultPlans = [
+  const defaultPlans: Plan[] = [
     {
       id: 1,
       name: t('Starter'),
       description: t('Perfect for small teams getting started with CRM'),
       price: 0,
+      monthly_price: 0,
       yearly_price: 0,
+      formatted_monthly_price: '$0.00',
+      formatted_yearly_price: '$0.00',
       duration: 'month',
       features: [
         t('CRM & Lead Management'),
@@ -84,7 +90,10 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
       name: t('Professional'),
       description: t('Ideal for growing businesses and sales teams'),
       price: 29,
+      monthly_price: 29,
       yearly_price: 290,
+      formatted_monthly_price: '$29.00',
+      formatted_yearly_price: '$290.00',
       duration: 'month',
       features: [
         t('Advanced CRM & Lead Management'),
@@ -110,7 +119,10 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
       name: t('Enterprise'),
       description: t('For large organizations with advanced needs'),
       price: 99,
+      monthly_price: 99,
       yearly_price: 990,
+      formatted_monthly_price: '$99.00',
+      formatted_yearly_price: '$990.00',
       duration: 'month',
       features: [
         t('Everything in Professional'),
@@ -251,7 +263,9 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
                       className="text-3xl font-extrabold"
                       style={{ color: plan.is_popular ? brandColor : 'inherit' }}
                     >
-                      {formatCurrency(getPrice(plan))}
+                      {billingCycle === 'yearly'
+                        ? (plan.formatted_yearly_price || formatCurrency(plan.yearly_price || 0))
+                        : (plan.formatted_monthly_price || formatCurrency(plan.monthly_price ?? plan.price))}
                     </span>
                     <span className="text-muted-foreground text-sm">
                       /{billingCycle === 'yearly' ? t('year') : t('month')}

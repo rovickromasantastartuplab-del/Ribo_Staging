@@ -27,50 +27,18 @@ class LandingPageController extends Controller
 
         $landingSettings = LandingPageSetting::getSettings();
 
-        $plans = Plan::where('is_plan_enable', 'on')->get()->map(function ($plan) {
-            $features = [];
-            if ($plan->enable_chatgpt === 'on')
-                $features[] = 'AI Integration';
-            if ($plan->enable_branding === 'on')
-                $features[] = 'Branding';
-            if (is_array($plan->module) && in_array('wedding_suppliers_module', $plan->module))
-                $features[] = 'Wedding Suppliers';
-
-
-            return [
-                'id' => $plan->id,
-                'name' => $plan->name,
-                'price' => $plan->price,
-                'yearly_price' => $plan->yearly_price,
-                'duration' => $plan->duration,
-                'description' => $plan->description,
-                'features' => array_slice($features, 0, 6), // Limit to 6 features
-                'stats' => [
-                    'users' => $plan->max_users == -1 ? 'Unlimited' : $plan->max_users,
-                    'projects' => $plan->max_projects == -1 ? 'Unlimited' : $plan->max_projects,
-                    'contacts' => $plan->max_contacts == -1 ? 'Unlimited' : $plan->max_contacts,
-                    'accounts' => $plan->max_accounts == -1 ? 'Unlimited' : $plan->max_accounts,
-                    'storage' => $plan->storage_limit . ' GB'
-                ],
-                'is_plan_enable' => $plan->is_plan_enable,
-                'is_popular' => false // Will be set based on subscriber count
-            ];
-        });
-
-        // Mark most subscribed plan as popular
-        $planSubscriberCounts = Plan::withCount('users')->get()->pluck('users_count', 'id');
-        if ($planSubscriberCounts->isNotEmpty()) {
-            $mostSubscribedPlanId = $planSubscriberCounts->keys()->sortByDesc(function ($planId) use ($planSubscriberCounts) {
-                return $planSubscriberCounts[$planId];
-            })->first();
-
-            $plans = $plans->map(function ($plan) use ($mostSubscribedPlanId) {
-                if ($plan['id'] == $mostSubscribedPlanId && $plan['price'] != '0') {
-                    $plan['is_popular'] = true;
-                }
-                return $plan;
-            });
-        }
+        // Centralized plan generation
+        $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans();
+        $plans = \App\Services\PlanPricingService::applyRecommendation($formattedPlans)->map(function ($plan) {
+            // Trim to match Landing Page specific constraints
+            $plan['features'] = array_slice($plan['features'], 0, 6);
+            $plan['stats']['users'] = $plan['max_users'] == -1 ? 'Unlimited' : $plan['max_users'];
+            $plan['stats']['projects'] = $plan['max_projects'] == -1 ? 'Unlimited' : $plan['max_projects'];
+            $plan['stats']['contacts'] = $plan['max_contacts'] == -1 ? 'Unlimited' : $plan['max_contacts'];
+            $plan['stats']['accounts'] = $plan['max_accounts'] == -1 ? 'Unlimited' : $plan['max_accounts'];
+            $plan['is_popular'] = $plan['recommended'] ?? false;
+            return $plan;
+        })->toArray();
 
         $user = User::where('type', 'superadmin')->first()->id;
 

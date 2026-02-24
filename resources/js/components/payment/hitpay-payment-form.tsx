@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, CreditCard } from 'lucide-react';
 import { toast } from '@/components/custom-toast';
+import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 interface HitPayPaymentFormProps {
     planId: number;
@@ -32,33 +34,23 @@ export function HitpayPaymentForm({
         setIsProcessing(true);
 
         try {
-            const response = await fetch(route('hitpay.payment'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({
-                    plan_id: planId,
-                    billing_cycle: billingCycle,
-                    coupon_code: couponCode,
-                })
+            const response = await axios.post(route('hitpay.payment'), {
+                plan_id: planId,
+                billing_cycle: billingCycle,
+                coupon_code: couponCode,
             });
 
-            const data = await response.json();
-
-            if (data.success && data.checkoutUrl) {
+            if (response.data.success && response.data.checkoutUrl) {
                 // Redirect the user to HitPay's hosted checkout page
-                window.location.href = data.checkoutUrl;
+                window.location.href = response.data.checkoutUrl;
             } else {
-                toast.error(data.error || t('Payment failed'));
+                toast.error(response.data.error || t('Payment failed'));
                 setIsProcessing(false);
             }
 
         } catch (error: any) {
             console.error('HitPay payment error:', error);
-            const errorMsg = error?.message || error?.toString() || 'Unknown fetch error';
+            const errorMsg = error?.response?.data?.error || error?.message || error?.toString() || 'Unknown request error';
             toast.error(t('Payment failed') + ': ' + errorMsg);
             setIsProcessing(false);
         }

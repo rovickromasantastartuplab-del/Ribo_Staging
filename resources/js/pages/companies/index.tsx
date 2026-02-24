@@ -346,12 +346,12 @@ export default function Companies() {
       });
   };
 
-  const handleUpgradePlanConfirm = (planId: number,duration: string) => {
+  const handleUpgradePlanConfirm = (planId: number, duration: string) => {
     toast.loading(t('Upgrading plan...'));
 
     // Use Inertia router to handle the request
     router.put(route('companies.upgrade-plan', currentCompany.id), {
-      plan_id: planId ,
+      plan_id: planId,
       duration: duration
 
     }, {
@@ -381,7 +381,7 @@ export default function Companies() {
 
 
   // Define page actions
-  const pageActions = [];
+  const pageActions: any[] = [];
 
   // Add User Logs button for superadmin
   if (auth?.user?.type === 'superadmin') {
@@ -704,8 +704,7 @@ export default function Companies() {
                         <h3 className="text-lg font-bold text-gray-900 mb-2">{company.name}</h3>
                         <p className="text-sm text-gray-600 mb-3">{company.email}</p>
                         <div className="flex items-center">
-                          <div className={`h-2 w-2 rounded-full mr-2 ${
-                            company.status === 'active' ? 'bg-gray-800' : 'bg-gray-400'
+                          <div className={`h-2 w-2 rounded-full mr-2 ${company.status === 'active' ? 'bg-gray-800' : 'bg-gray-400'
                             }`}></div>
                           <span className="text-sm font-medium text-gray-700">
                             {company.status === 'active' ? t('Active') : t('Inactive')}
@@ -920,6 +919,7 @@ export default function Companies() {
         plans={availablePlans}
         currentPlanId={currentCompany?.plan_id}
         companyName={currentCompany?.name || ''}
+        directUpgrade={true}
       />
 
 

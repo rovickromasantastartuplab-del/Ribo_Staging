@@ -56,18 +56,37 @@ if (!function_exists('settings')) {
             return collect();
         }
 
+        $userForSetting = User::find($user_id);
+        if ($userForSetting && !in_array($userForSetting->type, ['superadmin', 'company'])) {
+            $user_id = $userForSetting->created_by;
+        }
+
         $userSettings = Setting::where('user_id', $user_id)->pluck('value', 'key')->toArray();
 
         // If user is not superadmin, merge with superadmin settings for specific keys
         if (auth()->check() && auth()->user()->type !== 'superadmin') {
             $superAdmin = User::where('type', 'superadmin')->first();
             if ($superAdmin) {
-                $superAdminKeys = ['dateFormat', 'timeFormat', 'calendarStartDay', 'defaultTimezone'];
+                $superAdminKeys = [
+                    'dateFormat',
+                    'timeFormat',
+                    'calendarStartDay',
+                    'defaultTimezone',
+                    'defaultCurrency',
+                    'decimalFormat',
+                    'decimalSeparator',
+                    'thousandsSeparator',
+                    'floatNumber',
+                    'currencySymbolSpace',
+                    'currencySymbolPosition'
+                ];
                 $superAdminSettings = Setting::where('user_id', $superAdmin->id)
                     ->whereIn('key', $superAdminKeys)
                     ->pluck('value', 'key')
                     ->toArray();
-                $userSettings = array_merge($superAdminSettings, $userSettings);
+
+                // Allow superAdminSettings to overwrite userSettings for these global keys
+                $userSettings = array_merge($userSettings, $superAdminSettings);
             }
         }
 
@@ -245,7 +264,12 @@ if (!function_exists('getPaymentSettings')) {
     function getPaymentSettings($userId = null)
     {
         if (is_null($userId)) {
-            $userId = auth()->id();
+            $userId = createdBy();
+        } else {
+            $userForSetting = User::find($userId);
+            if ($userForSetting && !in_array($userForSetting->type, ['superadmin', 'company'])) {
+                $userId = $userForSetting->created_by;
+            }
         }
 
         return PaymentSetting::getUserSettings($userId);
@@ -264,7 +288,7 @@ if (!function_exists('updatePaymentSetting')) {
     function updatePaymentSetting($key, $value, $userId = null)
     {
         if (is_null($userId)) {
-            $userId = auth()->id();
+            $userId = createdBy();
         }
 
         return PaymentSetting::updateOrCreateSetting($userId, $key, $value);

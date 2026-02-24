@@ -75,7 +75,7 @@ class UserController extends BaseController
         // Get plan limits for company users and staff users
         $planLimits = null;
         if ($authUser->type === 'company' && $authUser->plan) {
-            $currentUserCount = User::where('created_by', $authUser->id)->count();
+            $currentUserCount = User::where('created_by', $authUser->id)->where('id', '!=', $authUser->id)->count();
             $planLimits = [
                 'current_users' => $currentUserCount,
                 'max_users' => $authUser->plan->max_users,
@@ -86,7 +86,7 @@ class UserController extends BaseController
         elseif ($authUser->type !== 'superadmin' && $authUser->created_by) {
             $companyUser = User::find($authUser->created_by);
             if ($companyUser && $companyUser->type === 'company' && $companyUser->plan) {
-                $currentUserCount = User::where('created_by', $companyUser->id)->count();
+                $currentUserCount = User::where('created_by', $companyUser->id)->where('id', '!=', $companyUser->id)->count();
                 $planLimits = [
                     'current_users' => $currentUserCount,
                     'max_users' => $companyUser->plan->max_users,
@@ -120,7 +120,7 @@ class UserController extends BaseController
         $userLang = ($authUser && $authUser->lang) ? $authUser->lang : 'en';
         // Check plan limits for company users
         if ($authUser->type === 'company' && $authUser->plan) {
-            $currentUserCount = User::where('created_by', $authUser->id)->count();
+            $currentUserCount = User::where('created_by', $authUser->id)->where('id', '!=', $authUser->id)->count();
             $maxUsers = $authUser->plan->max_users;
 
             if ($currentUserCount >= $maxUsers) {
@@ -131,7 +131,7 @@ class UserController extends BaseController
         elseif ($authUser->type !== 'superadmin' && $authUser->created_by) {
             $companyUser = User::find($authUser->created_by);
             if ($companyUser && $companyUser->type === 'company' && $companyUser->plan) {
-                $currentUserCount = User::where('created_by', $companyUser->id)->count();
+                $currentUserCount = User::where('created_by', $companyUser->id)->where('id', '!=', $companyUser->id)->count();
                 $maxUsers = $companyUser->plan->max_users;
 
                 if ($currentUserCount >= $maxUsers) {

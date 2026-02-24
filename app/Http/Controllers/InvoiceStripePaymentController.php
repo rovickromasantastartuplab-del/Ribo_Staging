@@ -34,8 +34,13 @@ class InvoiceStripePaymentController extends Controller
                 return back()->withErrors(['error' => $validation['message']]);
             }
 
-            $companyId = $invoice->created_by;
+            $creatorId = $invoice->created_by;
+            $creatorUser = User::findOrFail($creatorId);
+
+            // Resolve to actual company ID in case a staff member created the invoice
+            $companyId = in_array($creatorUser->type, ['company', 'superadmin']) ? $creatorUser->id : $creatorUser->created_by;
             $company = User::findOrFail($companyId);
+
             $settings = $this->getInvoicePaymentSettings($companyId);
             $currency = $settings['general_settings']['defaultCurrency'] ?? 'usd';
 

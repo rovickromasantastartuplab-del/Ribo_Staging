@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { PageTemplate, PageAction } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus, Edit, Trash2, Download, Upload, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, Upload, Eye, Layers, Globe } from 'lucide-react';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { ImportModal } from '@/components/ImportModal';
 import { WeddingSupplierFormModal } from '@/components/WeddingSupplierFormModal';
+import { WeddingSupplierCategoryManager } from '@/components/WeddingSupplierCategoryManager';
 import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
@@ -28,6 +29,7 @@ export default function WeddingSuppliers() {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState<WeddingSupplier | null>(null);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
 
@@ -143,6 +145,16 @@ export default function WeddingSuppliers() {
         });
     }
 
+    // Add manage categories button
+    if (can?.manage_categories) {
+        pageActions.push({
+            label: t('Manage Categories'),
+            icon: <Layers className="h-4 w-4 mr-2" />,
+            variant: 'outline',
+            onClick: () => setIsCategoryManagerOpen(true)
+        });
+    }
+
     // Add the "Add New" button if user has permission
     if (can?.create_supplier) {
         pageActions.push({
@@ -191,19 +203,21 @@ export default function WeddingSuppliers() {
         {
             key: 'website',
             label: t('Website'),
-            render: (value: string) => value ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{value}</a> : t('-')
+            render: (value: string) => value ? (
+                <a
+                    href={value.startsWith('http') ? value : `https://${value}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700 flex justify-center w-full"
+                    title={value}
+                >
+                    <Globe className="h-5 w-5" />
+                </a>
+            ) : (
+                <div className="flex justify-center w-full text-gray-400">{t('-')}</div>
+            )
         },
-        {
-            key: 'contacts',
-            label: t('Contacts'),
-            render: (value: any[]) => value && value.length > 0 ? (
-                <div className="flex -space-x-2 overflow-hidden">
-                    <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                        {value.length} {value.length === 1 ? t('contact') : t('contacts')}
-                    </span>
-                </div>
-            ) : t('-')
-        }
+
     ];
 
     // Define table actions
@@ -354,6 +368,12 @@ export default function WeddingSuppliers() {
                     { key: 'contact_phone', required: false },
                     { key: 'contact_email', required: false },
                 ]}
+            />
+
+            <WeddingSupplierCategoryManager
+                isOpen={isCategoryManagerOpen}
+                onClose={() => setIsCategoryManagerOpen(false)}
+                categories={categories}
             />
         </PageTemplate>
     );

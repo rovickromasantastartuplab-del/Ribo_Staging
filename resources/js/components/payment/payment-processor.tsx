@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tag, Loader2 } from 'lucide-react';
 import { toast } from '@/components/custom-toast';
+import axios from 'axios';
 import { StripePaymentForm } from './stripe-payment-form';
 import { PayPalPaymentForm } from './paypal-payment-form';
 
@@ -77,8 +78,12 @@ export function PaymentProcessor({
 }: PaymentProcessorProps) {
   const { t } = useTranslation();
 
-  // Format currency respecting the specific plan's currency symbol passed down via props
+  // Format currency using global appSettings for consistency
   const formatCurrency = (amount: number) => {
+    if (typeof window !== 'undefined' && window.appSettings?.formatCurrency) {
+      return window.appSettings.formatCurrency(amount, { showSymbol: true });
+    }
+    // Fallback if appSettings is not available
     return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
@@ -96,7 +101,8 @@ export function PaymentProcessor({
 
   const originalPrice = currentPrice;
   const discountAmount = appliedCoupon ? (appliedCoupon.type === 'percentage' ? (originalPrice * appliedCoupon.value / 100) : appliedCoupon.value) : 0;
-  const finalPrice = Math.max(0, originalPrice - discountAmount);
+  // Apply true rounding to ensure the value doesn't suffer from math engine floating-point errors (e.g., 28.990000000002)
+  const finalPrice = Number(Math.max(0, originalPrice - discountAmount).toFixed(2));
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
@@ -106,24 +112,15 @@ export function PaymentProcessor({
 
     setCouponLoading(true);
     try {
-      const response = await fetch(route('coupons.validate'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-        },
-        body: JSON.stringify({
-          coupon_code: couponCode,
-          plan_id: plan.id,
-          amount: originalPrice
-        })
+      const response = await axios.post(route('coupons.validate'), {
+        coupon_code: couponCode,
+        plan_id: plan.id,
+        amount: originalPrice
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok && data.valid) {
+      if (data.valid) {
         setAppliedCoupon(data.coupon);
         if (data.message) {
           toast.success(t(data.message));
@@ -139,11 +136,8 @@ export function PaymentProcessor({
         setAppliedCoupon(null);
       }
     } catch (error: any) {
-      if (error.message) {
-        toast.error(t(error.message));
-      } else {
-        toast.error(t('Failed to validate coupon'));
-      }
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to validate coupon';
+      toast.error(t(errorMsg));
       setAppliedCoupon(null);
     } finally {
       setCouponLoading(false);
@@ -155,7 +149,31 @@ export function PaymentProcessor({
     setCouponCode('');
   };
 
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
+    if (finalPrice <= 0) {
+      setCouponLoading(true);
+      try {
+        const response = await axios.post(route('plans.checkout.free'), {
+          plan_id: plan.id,
+          billing_cycle: billingCycle,
+          coupon_code: couponCode
+        });
+
+        if (response.data.success) {
+          toast.success(t('Subscription successful'));
+          onSuccess();
+        } else {
+          toast.error(response.data.error || t('Subscription failed'));
+        }
+      } catch (error: any) {
+        const errorMsg = error.response?.data?.message || error.message || 'Error processing free subscription';
+        toast.error(t(errorMsg));
+      } finally {
+        setCouponLoading(false);
+      }
+      return;
+    }
+
     if (!selectedPaymentMethod) {
       toast.error(t('Please select a payment method'));
       return;
@@ -202,7 +220,7 @@ export function PaymentProcessor({
         return (
           <BankTransferForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             bankDetails={plan.paymentMethods?.bank_detail || ''}
           />
         );
@@ -210,7 +228,7 @@ export function PaymentProcessor({
         return (
           <RazorpayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             razorpayKey={plan.paymentMethods?.razorpay_key || ''}
             currency={plan.paymentMethods?.currency || 'INR'}
           />
@@ -219,7 +237,7 @@ export function PaymentProcessor({
         return (
           <MercadoPagoPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             accessToken={plan.paymentMethods?.mercadopago_access_token || ''}
             currency={plan.paymentMethods?.currency || 'BRL'}
           />
@@ -228,7 +246,7 @@ export function PaymentProcessor({
         return (
           <PaystackPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             paystackKey={plan.paymentMethods?.paystack_public_key || ''}
             currency={plan.paymentMethods?.currency || 'NGN'}
           />
@@ -237,7 +255,7 @@ export function PaymentProcessor({
         return (
           <FlutterwavePaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             flutterwaveKey={plan.paymentMethods?.flutterwave_public_key || ''}
             currency={plan.paymentMethods?.currency || 'NGN'}
           />
@@ -246,7 +264,7 @@ export function PaymentProcessor({
         return (
           <PayTabsPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             paytabsClientKey={''}
             currency={plan.paymentMethods?.currency || 'USD'}
           />
@@ -255,7 +273,7 @@ export function PaymentProcessor({
         return (
           <SkrillPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             skrillMerchantId={plan.paymentMethods?.skrill_merchant_id || ''}
             currency={plan.paymentMethods?.currency || 'USD'}
           />
@@ -264,8 +282,7 @@ export function PaymentProcessor({
         return (
           <CoinGatePaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
-            coinGateApiToken={plan.paymentMethods?.coingate_api_token || ''}
+            planPrice={finalPrice}
             currency={plan.paymentMethods?.currency || 'USD'}
           />
         );
@@ -273,7 +290,7 @@ export function PaymentProcessor({
         return (
           <PayfastPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             payfastMerchantId={plan.paymentMethods?.payfast_merchant_id || ''}
             currency={plan.paymentMethods?.currency || 'ZAR'}
           />
@@ -282,7 +299,7 @@ export function PaymentProcessor({
         return (
           <ToyyibPayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             toyyibpayCategoryCode={plan.paymentMethods?.toyyibpay_category_code || ''}
             currency={plan.paymentMethods?.currency || 'MYR'}
           />
@@ -291,7 +308,7 @@ export function PaymentProcessor({
         return (
           <PayTRPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             paytrMerchantId={plan.paymentMethods?.paytr_merchant_id || ''}
             currency={plan.paymentMethods?.currency || 'TRY'}
           />
@@ -300,7 +317,7 @@ export function PaymentProcessor({
         return (
           <MolliePaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             mollieApiKey={plan.paymentMethods?.mollie_api_key || ''}
             currency={plan.paymentMethods?.currency || 'EUR'}
           />
@@ -309,7 +326,7 @@ export function PaymentProcessor({
         return (
           <CashfreePaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             cashfreeAppId={plan.paymentMethods?.cashfree_public_key || ''}
             mode={plan.paymentMethods?.cashfree_mode || 'sandbox'}
             currency={plan.paymentMethods?.currency || 'INR'}
@@ -319,7 +336,7 @@ export function PaymentProcessor({
         return (
           <IyzipayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             iyzipayPublicKey={plan.paymentMethods?.iyzipay_public_key || ''}
             currency={plan.paymentMethods?.currency || 'USD'}
           />
@@ -328,7 +345,7 @@ export function PaymentProcessor({
         return (
           <BenefitPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             benefitPublicKey={plan.paymentMethods?.benefit_public_key || ''}
             currency={plan.paymentMethods?.currency || 'BHD'}
           />
@@ -337,7 +354,7 @@ export function PaymentProcessor({
         return (
           <OzowPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             ozowSiteKey={plan.paymentMethods?.ozow_site_key || ''}
             currency={plan.paymentMethods?.currency || 'ZAR'}
           />
@@ -346,7 +363,7 @@ export function PaymentProcessor({
         return (
           <EasebuzzPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             easebuzzMerchantKey={plan.paymentMethods?.easebuzz_merchant_key || ''}
             currency={plan.paymentMethods?.currency || 'INR'}
           />
@@ -355,7 +372,7 @@ export function PaymentProcessor({
         return (
           <KhaltiPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             khaltiPublicKey={plan.paymentMethods?.khalti_public_key || ''}
             currency={plan.paymentMethods?.currency || 'NPR'}
           />
@@ -364,7 +381,7 @@ export function PaymentProcessor({
         return (
           <AuthorizeNetPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             authorizenetMerchantId={plan.paymentMethods?.authorizenet_merchant_id || ''}
             currency={plan.paymentMethods?.currency || 'USD'}
           />
@@ -373,7 +390,7 @@ export function PaymentProcessor({
         return (
           <FedaPayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             fedapayPublicKey={plan.paymentMethods?.fedapay_public_key || ''}
             currency={plan.paymentMethods?.currency || 'XOF'}
           />
@@ -382,7 +399,7 @@ export function PaymentProcessor({
         return (
           <PayHerePaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             payhereMerchantId={plan.paymentMethods?.payhere_merchant_id || ''}
             currency={plan.paymentMethods?.currency || 'LKR'}
           />
@@ -391,7 +408,7 @@ export function PaymentProcessor({
         return (
           <CinetPayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             cinetpaySiteId={plan.paymentMethods?.cinetpay_site_id || ''}
             currency={plan.paymentMethods?.currency || 'XOF'}
           />
@@ -400,7 +417,7 @@ export function PaymentProcessor({
         return (
           <PaiementPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             paiementMerchantId={plan.paymentMethods?.paiement_merchant_id || ''}
             currency={plan.paymentMethods?.currency || 'XOF'}
           />
@@ -409,7 +426,7 @@ export function PaymentProcessor({
         return (
           <NepalstePaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             nepalstePublicKey={plan.paymentMethods?.nepalste_public_key || ''}
             currency={plan.paymentMethods?.currency || 'NPR'}
           />
@@ -418,7 +435,7 @@ export function PaymentProcessor({
         return (
           <YooKassaPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             yookassaShopId={plan.paymentMethods?.yookassa_shop_id || ''}
             currency={plan.paymentMethods?.currency || 'RUB'}
           />
@@ -427,7 +444,7 @@ export function PaymentProcessor({
         return (
           <AamarpayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             aamarpayStoreId={plan.paymentMethods?.aamarpay_store_id || ''}
             currency={plan.paymentMethods?.currency || 'BDT'}
           />
@@ -436,7 +453,7 @@ export function PaymentProcessor({
         return (
           <MidtransPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             midtransSecretKey={plan.paymentMethods?.midtrans_secret_key || ''}
             currency={plan.paymentMethods?.currency || 'IDR'}
           />
@@ -445,7 +462,7 @@ export function PaymentProcessor({
         return (
           <PaymentWallPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             paymentwallPublicKey={plan.paymentMethods?.paymentwall_public_key || ''}
             currency={plan.paymentMethods?.currency || 'USD'}
           />
@@ -454,7 +471,7 @@ export function PaymentProcessor({
         return (
           <SSPayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             sspaySecretKey={plan.paymentMethods?.sspay_secret_key || ''}
             currency={plan.paymentMethods?.currency || 'MYR'}
           />
@@ -463,7 +480,7 @@ export function PaymentProcessor({
         return (
           <TapPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             tapSecretKey={plan.paymentMethods?.tap_secret_key || ''}
             currency={plan.paymentMethods?.currency || 'USD'}
           />
@@ -472,7 +489,7 @@ export function PaymentProcessor({
         return (
           <XenditPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             xenditApiKey={plan.paymentMethods?.xendit_api_key || ''}
             currency={plan.paymentMethods?.currency || 'PHP'}
           />
@@ -481,7 +498,7 @@ export function PaymentProcessor({
         return (
           <HitpayPaymentForm
             {...commonProps}
-            planPrice={Number(plan.price)}
+            planPrice={finalPrice}
             currency={plan.paymentMethods?.currency || 'PHP'}
           />
         );
@@ -645,10 +662,10 @@ export function PaymentProcessor({
         </Button>
         <Button
           onClick={handlePayNow}
-          disabled={enabledPaymentMethods.length === 0}
+          disabled={finalPrice > 0 && enabledPaymentMethods.length === 0}
           className="flex-1"
         >
-          {t('Pay')} {formatCurrency(finalPrice)}
+          {finalPrice <= 0 ? t('Subscribe for Free') : `${t('Pay')} ${formatCurrency(finalPrice)}`}
         </Button>
       </div>
     </div>

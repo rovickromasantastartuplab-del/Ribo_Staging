@@ -23,86 +23,21 @@ class PlanController extends Controller
         // Admin view
         $billingCycle = $request->input('billing_cycle', 'monthly');
 
-        $dbPlans = Plan::with('currencyPrices')->get();
-        $hasDefaultPlan = $dbPlans->where('is_default', true)->count() > 0;
+        $hasDefaultPlan = Plan::where('is_default', true)->count() > 0;
         $settings = settings();
 
-        // Always use super admin currency for plan pricing
-        $superAdmin = User::where('type', 'superadmin')->first();
-        $superAdminSettings = settings($superAdmin->id);
-        $currency = $superAdminSettings ? ($superAdminSettings['defaultCurrency'] ?? 'USD') : 'USD';
-        $currencySymbol = '$';
-        if (!empty($currency)) {
-            $currencyData = Currency::where('code', $currency)->first();
-            $currencySymbol = $currencyData ? $currencyData->symbol : '$';
-        }
+        $currencyConfig = \App\Services\PlanPricingService::getGlobalCurrency();
 
-        $plans = $dbPlans->map(function ($plan) use ($billingCycle, $currency, $currencySymbol) {
-            // Determine features based on plan attributes
-            $features = [];
-            if ($plan->enable_chatgpt === 'on')
-                $features[] = 'AI Integration';
-
-            if ($plan->enable_branding === 'on')
-                $features[] = 'Branding';
-
-            if (is_array($plan->module) && in_array('wedding_suppliers_module', $plan->module))
-                $features[] = 'Wedding Suppliers';
-
-            // Get price for the active currency
-            $price = $plan->getPriceForCurrency($currency, $billingCycle);
-
-            // Format price with currency symbol
-            $formattedPrice = $currencySymbol . number_format($price, 2);
-
-            // Set duration based on billing cycle
-            $duration = $billingCycle === 'yearly' ? 'Yearly' : 'Monthly';
-
-            return [
-                'id' => $plan->id,
-                'name' => $plan->name,
-                'price' => $price,
-                'formattedPrice' => $formattedPrice,
-                'duration' => $duration,
-                'description' => $plan->description,
-                'trial_days' => $plan->trial_day,
-                'features' => $features,
-                'stats' => [
-                    'users' => $plan->max_users,
-                    'projects' => $plan->max_projects,
-                    'contacts' => $plan->max_contacts,
-                    'accounts' => $plan->max_accounts,
-                    'storage' => $plan->storage_limit . ' GB'
-                ],
-                'status' => $plan->is_plan_enable === 'on',
-                'is_default' => $plan->is_default,
-                'recommended' => false // Default to false
-            ];
-        })->toArray();
-
-        // Mark the plan with most subscribers as recommended
-        $planSubscriberCounts = Plan::withCount('users')->get()->pluck('users_count', 'id');
-        $mostSubscribedPlanId = $planSubscriberCounts->keys()->first();
-        if ($planSubscriberCounts->isNotEmpty()) {
-            $mostSubscribedPlanId = $planSubscriberCounts->keys()->sortByDesc(function ($planId) use ($planSubscriberCounts) {
-                return $planSubscriberCounts[$planId];
-            })->first();
-        }
-
-        foreach ($plans as &$plan) {
-            if ($plan['id'] == $mostSubscribedPlanId && $plan['price'] != '0') {
-                $plan['recommended'] = true;
-                break;
-            }
-        }
+        $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans(null, $billingCycle);
+        $plans = \App\Services\PlanPricingService::applyRecommendation($formattedPlans)->toArray();
 
         return Inertia::render('plans/index', [
             'plans' => $plans,
             'billingCycle' => $billingCycle,
             'hasDefaultPlan' => $hasDefaultPlan,
             'isAdmin' => true,
-            'currency' => $currency,
-            'currencySymbol' => $currencySymbol
+            'currency' => $currencyConfig['code'],
+            'currencySymbol' => $currencyConfig['symbol']
         ]);
     }
 
@@ -208,7 +143,7 @@ class PlanController extends Controller
                 ]);
             }
         }
-    
+
         return redirect()->route('plans.index')->with('success', __('Plan created successfully.'));
     }
 
@@ -350,76 +285,18 @@ class PlanController extends Controller
         $user = auth()->user();
         $billingCycle = $request->input('billing_cycle', 'monthly');
 
-        $dbPlans = Plan::with('currencyPrices')->where('is_plan_enable', 'on')->get();
+        $currencyConfig = \App\Services\PlanPricingService::getGlobalCurrency();
 
-        // Always use super admin currency for plan pricing
-        $superAdmin = User::where('type', 'superadmin')->first();
-        $superAdminSettings = settings($superAdmin->id);
-        $currency = $superAdminSettings ? ($superAdminSettings['defaultCurrency'] ?? 'USD') : 'USD';
-        $currencySymbol = '$';
-        if (!empty($currency)) {
-            $currencyData = Currency::where('code', $currency)->first();
-            $currencySymbol = $currencyData ? $currencyData->symbol : '$';
-        }
-
-        $plans = $dbPlans->map(function ($plan) use ($billingCycle, $user, $currency, $currencySymbol) {
-            $price = $plan->getPriceForCurrency($currency, $billingCycle);
-
-            $features = [];
-            if ($plan->enable_chatgpt === 'on')
-                $features[] = 'AI Integration';
-
-            if ($plan->enable_branding === 'on')
-                $features[] = 'Branding';
-
-            if (is_array($plan->module) && in_array('wedding_suppliers_module', $plan->module))
-                $features[] = 'Wedding Suppliers';
-
-            return [
-                'id' => $plan->id,
-                'name' => $plan->name,
-                'price' => $price,
-                'formatted_price' => $currencySymbol . number_format($price, 2),
-                'duration' => $billingCycle === 'yearly' ? 'Yearly' : 'Monthly',
-                'description' => $plan->description,
-                'trial_days' => $plan->trial_day,
-                'features' => $features,
-                'stats' => [
-                    'users' => $plan->max_users,
-                    'projects' => $plan->max_projects,
-                    'contacts' => $plan->max_contacts,
-                    'accounts' => $plan->max_accounts,
-                    'storage' => $plan->storage_limit . ' GB'
-                ],
-                'is_current' => $user->plan_id == $plan->id,
-                'is_trial_available' => $plan->is_trial === 'on' && !$user->is_trial,
-                'is_default' => $plan->is_default,
-                'recommended' => false // Default to false
-            ];
-        });
-
-        // Mark the plan with most subscribers as recommended
-        $planSubscriberCounts = Plan::withCount('users')->get()->pluck('users_count', 'id');
-        if ($planSubscriberCounts->isNotEmpty()) {
-            $mostSubscribedPlanId = $planSubscriberCounts->keys()->sortByDesc(function ($planId) use ($planSubscriberCounts) {
-                return $planSubscriberCounts[$planId];
-            })->first();
-
-            $plans = $plans->map(function ($plan) use ($mostSubscribedPlanId) {
-                if ($plan['id'] == $mostSubscribedPlanId) {
-                    $plan['recommended'] = true;
-                }
-                return $plan;
-            });
-        }
+        $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans($user, $billingCycle);
+        $plans = \App\Services\PlanPricingService::applyRecommendation($formattedPlans)->toArray();
 
         return Inertia::render('plans/index', [
             'plans' => $plans,
             'billingCycle' => $billingCycle,
             'currentPlan' => $user->plan,
             'userTrialUsed' => $user->is_trial,
-            'currency' => $currency,
-            'currencySymbol' => $currencySymbol
+            'currency' => $currencyConfig['code'],
+            'currencySymbol' => $currencyConfig['symbol']
         ]);
     }
 
@@ -508,6 +385,38 @@ class PlanController extends Controller
             'status' => 'pending'
         ]);
 
-        return back()->with('success', __('Subscription request submitted successfully'));
+    }
+
+    public function freeCheckout(Request $request)
+    {
+        $request->validate([
+            'plan_id' => 'required|exists:plans,id',
+            'billing_cycle' => 'required|in:monthly,yearly',
+            'coupon_code' => 'nullable|string'
+        ]);
+
+        $plan = Plan::findOrFail($request->plan_id);
+        $pricing = calculatePlanPricing($plan, $request->coupon_code, $request->billing_cycle);
+
+        if ($pricing['final_price'] > 0) {
+            return response()->json(['success' => false, 'error' => __('This transaction is not free.')]);
+        }
+
+        // Generate a synthetic payment ID for free orders to track them
+        $paymentId = 'free_' . $plan->id . '_' . time() . '_' . uniqid();
+
+        // Create the free plan order and immediately process it using the helper
+        processPaymentSuccess([
+            'user_id' => auth()->id(),
+            'plan_id' => $plan->id,
+            'billing_cycle' => $request->billing_cycle,
+            'payment_method' => 'free',
+            'payment_id' => $paymentId,
+            'coupon_code' => $request->coupon_code,
+            'original_price' => $pricing['original_price'],
+            'final_price' => $pricing['final_price'],
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

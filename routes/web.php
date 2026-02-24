@@ -224,6 +224,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('plans/request', [PlanController::class, 'requestPlan'])->name('plans.request');
     Route::post('plans/trial', [PlanController::class, 'startTrial'])->name('plans.trial');
     Route::post('plans/subscribe', [PlanController::class, 'subscribe'])->name('plans.subscribe');
+    Route::post('plans/checkout/free', [PlanController::class, 'freeCheckout'])->name('plans.checkout.free');
     Route::post('plans/coupons/validate', [CouponController::class, 'validateCoupon'])->name('coupons.validate');
 
     // Payment routes - accessible without plan check
