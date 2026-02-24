@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { PageTemplate } from '@/components/page-template';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -164,25 +165,19 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
     toast.loading(t('Starting trial...'));
 
     try {
-      const response = await fetch('/payments/hitpay/trial', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-        body: JSON.stringify({ plan_id: planId }),
+      const response = await axios.post('/payments/hitpay/trial', {
+        plan_id: planId,
       });
-      const data = await response.json();
       toast.dismiss();
 
-      if (data.success && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      if (response.data.success && response.data.checkoutUrl) {
+        window.location.href = response.data.checkoutUrl;
       } else {
-        toast.error(data.error || t('Failed to start trial'));
+        toast.error(response.data.error || t('Failed to start trial'));
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.dismiss();
-      toast.error(t('Failed to start trial'));
+      toast.error(error?.response?.data?.error || t('Failed to start trial'));
     }
   };
 

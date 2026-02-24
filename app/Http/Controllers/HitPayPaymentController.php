@@ -180,7 +180,7 @@ class HitPayPaymentController extends Controller
                 'customer_name' => auth()->user()->name,
                 'amount' => number_format(1.00, 2, '.', ''),
                 'currency' => strtoupper($currency),
-                'save_payment_method' => true,
+                'save_payment_method' => 'true',
                 'reference' => $paymentId,
                 'redirect_url' => secure_url('payments/hitpay/success') . '?payment_id=' . $paymentId,
                 'webhook' => secure_url('payments/hitpay/webhook'),

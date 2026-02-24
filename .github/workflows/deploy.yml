@@ -108,7 +108,6 @@ jobs:
         --exclude='public/storage' \
         --exclude='.phpunit.cache' \
         --exclude='/bootstrap/ssr' \
-        --exclude='/public/build' \
         --exclude='/public/hot' \
         --exclude='/storage/*.key' \
         --exclude='/storage/pail' \
