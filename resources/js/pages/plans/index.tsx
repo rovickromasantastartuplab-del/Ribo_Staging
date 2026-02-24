@@ -62,8 +62,6 @@ interface Plan {
   is_default?: boolean;
   is_current?: boolean;
   is_trial_available?: boolean;
-  is_trial?: string;
-  trial_day?: number;
   paymentMethods?: any;
 }
 

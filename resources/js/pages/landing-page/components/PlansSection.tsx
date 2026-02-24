@@ -35,8 +35,6 @@ interface Plan {
   };
   is_popular?: boolean;
   is_plan_enable: string;
-  is_trial?: string;
-  trial_day?: number;
 }
 
 interface PlansSectionProps {

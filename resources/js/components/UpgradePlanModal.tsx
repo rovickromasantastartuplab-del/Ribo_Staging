@@ -235,7 +235,7 @@ export function UpgradePlanModal({
 
           <DialogFooter className="flex-col sm:flex-row sm:justify-between items-center sm:items-end gap-4 mt-2">
             {showHideOption && (
-              <div className="flex items-center space-x-2 mr-auto cursor-pointer">
+              <div className="flex items-center space-x-2 mr-auto">
                 <Checkbox
                   id="hide-modal"
                   checked={hideNextTime}
@@ -246,37 +246,16 @@ export function UpgradePlanModal({
                 </label>
               </div>
             )}
-
-            <div className="flex flex-col items-end w-full sm:w-auto mt-2 sm:mt-0 ml-auto gap-2">
-              <div className="flex space-x-2 w-full sm:w-auto mt-2 sm:mt-0 ml-auto">
-                <Button variant="outline" onClick={handleClose}>
-                  {t("Cancel")}
-                </Button>
-                <Button
-                  onClick={handleConfirm}
-                  disabled={!selectedPlanId || plans.length === 0}
-                >
-                  {(() => {
-                    const sdPlan = plans.find(p => p.id === selectedPlanId);
-                    if (sdPlan && sdPlan.is_trial === 'on') {
-                      return `${t("Connect Bank Account")} (${sdPlan.trial_day} ${t("Day Free Trial")})`;
-                    }
-                    return t("Upgrade Plan");
-                  })()}
-                </Button>
-              </div>
-
-              {(() => {
-                const sdPlan = plans.find(p => p.id === selectedPlanId);
-                if (sdPlan && sdPlan.is_trial === 'on') {
-                  return (
-                    <p className="text-[11px] text-muted-foreground max-w-sm text-right">
-                      {t("A temporary authorization hold of 1.00 may be applied by our processor to verify your account. It will be released automatically. You will not be charged the subscription fee until your trial ends.")}
-                    </p>
-                  );
-                }
-                return null;
-              })()}
+            <div className="flex space-x-2 w-full sm:w-auto mt-2 sm:mt-0 ml-auto">
+              <Button variant="outline" onClick={handleClose}>
+                {t("Cancel")}
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                disabled={!selectedPlanId || plans.length === 0}
+              >
+                {t("Upgrade Plan")}
+              </Button>
             </div>
           </DialogFooter>
         </DialogContent>

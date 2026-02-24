@@ -60,46 +60,22 @@ class HitPayPaymentController extends Controller
             $generalSettings = Setting::getUserSettings($superAdminId);
             $currency = $generalSettings['defaultCurrency'] ?? 'PHP';
 
-            // Check if this is a Free Trial flow
-            $isTrial = $plan->is_trial === 'on';
-
-            if ($isTrial) {
-                // For Free Trials, we authorize a nominal $1.00 amount
-                // to securely generate a HitPay token for the 'recurring_billing.method_attached' webhook
-                $payloadAmount = 1.00;
-                $endpoint = '/v1/recurring-billing';
-                $purpose = 'Subscription to Free Trial - ' . $plan->name;
-            } else {
-                $payloadAmount = number_format($pricing['final_price'], 2, '.', '');
-                $endpoint = '/v1/payment-requests';
-                $purpose = 'Subscription to ' . $plan->name . ' plan - ' . ucfirst($validated['billing_cycle']);
-            }
-
             // Build HitPay payment request payload
             $payload = [
-                'amount' => $payloadAmount,
+                'amount' => number_format($pricing['final_price'], 2, '.', ''),
                 'currency' => strtoupper($currency),
-                'reference_number' => $paymentId, // Keep for backward compatibility
-                'reference' => $paymentId, // HitPay v2 recurring billing uses `reference`
+                'reference_number' => $paymentId,
                 'redirect_url' => secure_url('payments/hitpay/success') . '?payment_id=' . $paymentId,
                 'webhook' => secure_url('payments/hitpay/webhook'),
-                'purpose' => $purpose, // One-time charge identifier
-                'description' => $purpose, // Recurring billing uses `description`
-                'name' => $purpose, // Recurring billing uses `name`
-                'email' => auth()->user()->email, // Keep for one-time
-                'customer_email' => auth()->user()->email,
-                'customer_name' => auth()->user()->name,
+                'purpose' => 'Subscription to ' . $plan->name . ' plan - ' . ucfirst($validated['billing_cycle']),
+                'email' => auth()->user()->email,
+                'name' => auth()->user()->name,
             ];
-
-            if ($isTrial) {
-                $payload['save_payment_method'] = 'true';
-                $payload['payment_methods'] = ['card', 'shopee_pay', 'grabpay_direct'];
-            }
 
             // Call HitPay API
             $ch = curl_init();
             curl_setopt_array($ch, [
-                CURLOPT_URL => $baseUrl . $endpoint,
+                CURLOPT_URL => $baseUrl . '/v1/payment-requests',
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => http_build_query($payload),
                 CURLOPT_RETURNTRANSFER => true,
@@ -211,9 +187,8 @@ class HitPayPaymentController extends Controller
             // HitPay v2 webhooks nest data inside 'data' or 'data.payment_request'
             $eventData = $payload['data']['payment_request'] ?? $payload['data'] ?? $payload['payment_request'] ?? $payload;
 
-            $paymentId = $eventData['reference_number'] ?? $payload['reference_number'] ?? $eventData['reference'] ?? $payload['reference'] ?? $eventData['id'] ?? null;
+            $paymentId = $eventData['reference_number'] ?? $payload['reference_number'] ?? $eventData['id'] ?? null;
             $status = strtoupper($eventData['status'] ?? $payload['status'] ?? '');
-            $eventType = $payload['event'] ?? $payload['type'] ?? null;
 
             // Update log with parsed fields
             $webhookLog->update([
@@ -256,39 +231,6 @@ class HitPayPaymentController extends Controller
                 $planOrder->update(['status' => 'rejected']);
                 $webhookLog->update(['status' => 'processed_failed']);
                 \Log::info('HitPay payment failed/cancelled', ['payment_id' => $paymentId, 'status' => $status]);
-            } elseif ($eventType === 'recurring_billing.method_attached' && !empty($payload['payment_method_id'])) {
-                // Free Trial "Save Payment Method" Flow Success
-                \Log::info('HitPay recurring_billing.method_attached webhook received', [
-                    'payment_method_id' => $payload['payment_method_id']
-                ]);
-
-                // Create the UserPaymentMethod record linking to the user
-                \App\Models\UserPaymentMethod::updateOrCreate(
-                    [
-                        'user_id' => $planOrder->user_id,
-                        'payment_method_id' => $payload['payment_method_id'],
-                    ],
-                    [
-                        'card_brand' => $payload['payment_method']['card_brand'] ?? $payload['payment_method']['type'] ?? null,
-                        'last_4' => $payload['payment_method']['last_4'] ?? null,
-                        'status' => 'active',
-                    ]
-                );
-
-                if ($planOrder->status === 'pending') {
-                    // Provision the Free Trial!
-                    processPaymentSuccess([
-                        'user_id' => $planOrder->user_id,
-                        'plan_id' => $planOrder->plan_id,
-                        'billing_cycle' => $planOrder->billing_cycle,
-                        'payment_method' => 'hitpay', // Mark it hitpay
-                        'coupon_code' => $planOrder->coupon_code,
-                        'payment_id' => $paymentId,
-                    ]);
-
-                    $webhookLog->update(['status' => 'processed_method_attached']);
-                    \Log::info('HitPay Free Trial successfully provisioned', ['payment_method_id' => $payload['payment_method_id']]);
-                }
             }
 
             return response('OK', 200);
