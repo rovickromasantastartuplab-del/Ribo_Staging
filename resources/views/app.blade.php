@@ -8,7 +8,7 @@
 
     {{-- Inline script to detect system dark mode preference and apply it immediately --}}
     <script>
-        (function() {
+        (function () {
             const appearance = '{{ $appearance ?? 'system' }}';
 
             if (appearance === 'system') {
@@ -21,11 +21,11 @@
         })();
 
         // Define asset helper function
-        window.asset = function(path) {
+        window.asset = function (path) {
             return "{{ asset('') }}" + path;
         };
         // Define storage helper function
-        window.storage = function(path) {
+        window.storage = function (path) {
             return "{{ asset('storage') }}/" + path;
         };
     </script>
@@ -52,14 +52,20 @@
         @viteReactRefresh
     @endif
     @vite([
-    'resources/js/app.tsx',
-    'resources/css/app.css',
-    'resources/css/dark-mode.css',
-])
+        'resources/js/app.tsx',
+        'resources/css/app.css',
+        'resources/css/dark-mode.css',
+    ])
     <script>
         // Ensure base URL is correctly set for assets
-        window.baseUrl = '{{ url('/') }}';
+window.baseUrl = '{{ url('/') }}';
+        
+        // BeDesk Live Chat Configuration
+        window.BeChatSettings = {
+            widgetDomain: "{{ url('/help') }}"
+        };
     </script>
+    <script src="{{ url('/help/public/livechat-loader.js') }}"></script>
     @inertiaHead
 </head>
 
