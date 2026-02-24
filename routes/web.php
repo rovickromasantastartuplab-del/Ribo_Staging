@@ -257,6 +257,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('payments/sspay', [SSPayPaymentController::class, 'processPayment'])->name('sspay.payment');
     Route::post('payments/hitpay', [HitPayPaymentController::class, 'processPayment'])->name('hitpay.payment');
     Route::post('payments/hitpay/trial', [HitPayPaymentController::class, 'processTrialPayment'])->name('hitpay.trial');
+    Route::post('plans/cancel-trial', [HitPayPaymentController::class, 'cancelTrial'])->name('plans.cancel-trial');
 
     // Payment gateway specific routes
     Route::post('razorpay/create-order', [RazorpayController::class, 'createOrder'])->name('razorpay.create-order');

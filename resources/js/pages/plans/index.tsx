@@ -90,6 +90,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
   const { post, processing } = useForm();
+  const { auth } = usePage().props as any;
+  const isUserOnTrial = auth?.user?.is_trial === 'on';
 
   // Helper function to safely format currency
   const formatCurrency = (amount: string | number) => {
@@ -195,6 +197,28 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
     }
   };
 
+  const handleCancelTrial = async () => {
+    if (!confirm(t('Are you sure you want to cancel your trial? You will be reverted to the free plan.'))) {
+      return;
+    }
+
+    toast.loading(t('Cancelling trial...'));
+
+    try {
+      const response = await axios.post('/plans/cancel-trial');
+      toast.dismiss();
+
+      if (response.data.success) {
+        toast.success(response.data.message || t('Trial cancelled successfully.'));
+        window.location.reload();
+      } else {
+        toast.error(response.data.error || t('Failed to cancel trial'));
+      }
+    } catch (error: any) {
+      toast.dismiss();
+      toast.error(error?.response?.data?.error || t('Failed to cancel trial'));
+    }
+  };
 
 
   const getActionButton = (plan: Plan) => {
@@ -210,10 +234,22 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
 
     if (plan.is_current) {
       return (
-        <Button disabled className="w-full">
-          <Crown className="h-4 w-4 mr-2" />
-          {t('Current Plan')}
-        </Button>
+        <div className="space-y-2">
+          <Button disabled className="w-full">
+            <Crown className="h-4 w-4 mr-2" />
+            {t('Current Plan')}
+          </Button>
+          {isUserOnTrial && (
+            <Button
+              onClick={handleCancelTrial}
+              disabled={processing}
+              variant="destructive"
+              className="w-full"
+            >
+              {t('Cancel Trial')}
+            </Button>
+          )}
+        </div>
       );
     }
 

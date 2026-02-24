@@ -237,6 +237,61 @@ class HitPayPaymentController extends Controller
     }
 
     /**
+     * Cancel the user's active trial.
+     * Reverts to the default plan, revokes saved payment methods, and clears trial fields.
+     */
+    public function cancelTrial(Request $request)
+    {
+        try {
+            $user = auth()->user();
+
+            // Guard: user must be on an active trial
+            if ($user->is_trial !== 'on') {
+                return response()->json(['success' => false, 'error' => __('You are not on an active trial.')]);
+            }
+
+            // Find the default (free) plan to revert to
+            $defaultPlan = Plan::where('is_default', true)->first();
+
+            if (!$defaultPlan) {
+                \Log::error('Cancel trial: no default plan found');
+                return response()->json(['success' => false, 'error' => __('No default plan available.')]);
+            }
+
+            // Revoke all active saved payment methods for this user
+            UserPaymentMethod::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->update(['status' => 'revoked']);
+
+            // Cancel any pending/approved trial plan orders
+            PlanOrder::where('user_id', $user->id)
+                ->where('payment_method', 'hitpay_trial')
+                ->whereIn('status', ['pending', 'approved'])
+                ->update(['status' => 'cancelled']);
+
+            // Revert user to default plan and clear trial fields
+            $user->update([
+                'plan_id' => $defaultPlan->id,
+                'is_trial' => null,
+                'trial_day' => null,
+                'trial_expire_date' => null,
+                'plan_is_active' => 1,
+            ]);
+
+            \Log::info('Trial cancelled', [
+                'user_id' => $user->id,
+                'reverted_to_plan' => $defaultPlan->id,
+            ]);
+
+            return response()->json(['success' => true, 'message' => __('Trial cancelled. You have been reverted to the free plan.')]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Cancel trial error', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'error' => __('Failed to cancel trial.')]);
+        }
+    }
+
+    /**
      * Webhook callback from HitPay after payment completion.
      * Verifies HMAC signature and activates the plan.
      */
