@@ -760,225 +760,225 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('api/receipt-orders/purchase-orders/{purchaseOrder}/details', [ReceiptOrderController::class, 'getPurchaseOrderDetails'])->name('api.receipt-orders.purchase-orders.details');
             Route::get('api/receipt-orders/return-orders/{returnOrder}/details', [ReceiptOrderController::class, 'getReturnOrderDetails'])->name('api.receipt-orders.return-orders.details');
+        });
 
-            // Invoice routes
-            Route::middleware('permission:manage-invoices')->group(function () {
-                Route::get('invoices', [InvoiceController::class, 'index'])->middleware('permission:manage-invoices')->name('invoices.index');
-                Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('permission:view-invoices')->name('invoices.show');
-                Route::post('invoices', [InvoiceController::class, 'store'])->middleware('permission:create-invoices')->name('invoices.store');
-                Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])->middleware('permission:edit-invoices')->name('invoices.update');
-                Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])->middleware('permission:delete-invoices')->name('invoices.destroy');
-                Route::put('invoices/{invoice}/toggle-status', [InvoiceController::class, 'toggleStatus'])->middleware('permission:toggle-status-invoices')->name('invoices.toggle-status');
+        // Invoice routes
+        Route::middleware('permission:manage-invoices')->group(function () {
+            Route::get('invoices', [InvoiceController::class, 'index'])->middleware('permission:manage-invoices')->name('invoices.index');
+            Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('permission:view-invoices')->name('invoices.show');
+            Route::post('invoices', [InvoiceController::class, 'store'])->middleware('permission:create-invoices')->name('invoices.store');
+            Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])->middleware('permission:edit-invoices')->name('invoices.update');
+            Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])->middleware('permission:delete-invoices')->name('invoices.destroy');
+            Route::put('invoices/{invoice}/toggle-status', [InvoiceController::class, 'toggleStatus'])->middleware('permission:toggle-status-invoices')->name('invoices.toggle-status');
 
-                Route::put('invoices/{invoice}/assign-user', [InvoiceController::class, 'assignUser'])->middleware('permission:edit-invoices')->name('invoices.assign-user');
+            Route::put('invoices/{invoice}/assign-user', [InvoiceController::class, 'assignUser'])->middleware('permission:edit-invoices')->name('invoices.assign-user');
 
-                // Invoice Export route
-                Route::get('invoices/file/export/', [InvoiceController::class, 'fileExport'])->middleware('permission:export-invoices')->name('invoice.export');
+            // Invoice Export route
+            Route::get('invoices/file/export/', [InvoiceController::class, 'fileExport'])->middleware('permission:export-invoices')->name('invoice.export');
 
-                // Invoice Comments routes
-                Route::post('invoices/{invoice}/comments', [InvoiceCommentController::class, 'store'])->middleware('permission:create-invoices')->name('invoices.comments.store');
-                Route::put('invoices/{invoice}/activities/{activity}/comment', [InvoiceCommentController::class, 'updateActivity'])->middleware('permission:edit-invoices')->name('invoices.comments.update-activity');
+            // Invoice Comments routes
+            Route::post('invoices/{invoice}/comments', [InvoiceCommentController::class, 'store'])->middleware('permission:create-invoices')->name('invoices.comments.store');
+            Route::put('invoices/{invoice}/activities/{activity}/comment', [InvoiceCommentController::class, 'updateActivity'])->middleware('permission:edit-invoices')->name('invoices.comments.update-activity');
 
-                // Invoice Activity delete routes
-                Route::delete('invoices/{invoice}/activities', [InvoiceController::class, 'deleteActivities'])->middleware('permission:delete-invoices')->name('invoices.delete-activities');
-                Route::delete('invoices/{invoice}/activities/{activity}', [InvoiceController::class, 'deleteActivity'])->middleware('permission:delete-invoices')->name('invoices.delete-activity');
-            });
+            // Invoice Activity delete routes
+            Route::delete('invoices/{invoice}/activities', [InvoiceController::class, 'deleteActivities'])->middleware('permission:delete-invoices')->name('invoices.delete-activities');
+            Route::delete('invoices/{invoice}/activities/{activity}', [InvoiceController::class, 'deleteActivity'])->middleware('permission:delete-invoices')->name('invoices.delete-activity');
+        });
 
-            // Delivery Order routes
-            Route::middleware('permission:manage-delivery-orders')->group(function () {
-                Route::get('delivery-orders', [DeliveryOrderController::class, 'index'])->middleware('permission:manage-delivery-orders')->name('delivery-orders.index');
-                Route::get('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'show'])->middleware('permission:view-delivery-orders')->name('delivery-orders.show');
-                Route::post('delivery-orders', [DeliveryOrderController::class, 'store'])->middleware('permission:create-delivery-orders')->name('delivery-orders.store');
-                Route::put('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'update'])->middleware('permission:edit-delivery-orders')->name('delivery-orders.update');
-                Route::delete('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'destroy'])->middleware('permission:delete-delivery-orders')->name('delivery-orders.destroy');
-                Route::put('delivery-orders/{deliveryOrder}/toggle-status', [DeliveryOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-delivery-orders')->name('delivery-orders.toggle-status');
+        // Delivery Order routes
+        Route::middleware('permission:manage-delivery-orders')->group(function () {
+            Route::get('delivery-orders', [DeliveryOrderController::class, 'index'])->middleware('permission:manage-delivery-orders')->name('delivery-orders.index');
+            Route::get('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'show'])->middleware('permission:view-delivery-orders')->name('delivery-orders.show');
+            Route::post('delivery-orders', [DeliveryOrderController::class, 'store'])->middleware('permission:create-delivery-orders')->name('delivery-orders.store');
+            Route::put('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'update'])->middleware('permission:edit-delivery-orders')->name('delivery-orders.update');
+            Route::delete('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'destroy'])->middleware('permission:delete-delivery-orders')->name('delivery-orders.destroy');
+            Route::put('delivery-orders/{deliveryOrder}/toggle-status', [DeliveryOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-delivery-orders')->name('delivery-orders.toggle-status');
 
-                Route::put('delivery-orders/{deliveryOrder}/assign-user', [DeliveryOrderController::class, 'assignUser'])->middleware('permission:edit-delivery-orders')->name('delivery-orders.assign-user');
-            });
+            Route::put('delivery-orders/{deliveryOrder}/assign-user', [DeliveryOrderController::class, 'assignUser'])->middleware('permission:edit-delivery-orders')->name('delivery-orders.assign-user');
+        });
 
-            // Return Order routes
-            Route::middleware('permission:manage-delivery-orders')->group(function () {
-                Route::get('return-orders', [ReturnOrderController::class, 'index'])->middleware('permission:manage-delivery-orders')->name('return-orders.index');
-                Route::get('return-orders/{returnOrder}', [ReturnOrderController::class, 'show'])->middleware('permission:view-return-orders')->name('return-orders.show');
-                Route::post('return-orders', [ReturnOrderController::class, 'store'])->middleware('permission:create-return-orders')->name('return-orders.store');
-                Route::put('return-orders/{returnOrder}', [ReturnOrderController::class, 'update'])->middleware('permission:edit-return-orders')->name('return-orders.update');
-                Route::delete('return-orders/{returnOrder}', [ReturnOrderController::class, 'destroy'])->middleware('permission:delete-return-orders')->name('return-orders.destroy');
-            });
+        // Return Order routes
+        Route::middleware('permission:manage-delivery-orders')->group(function () {
+            Route::get('return-orders', [ReturnOrderController::class, 'index'])->middleware('permission:manage-delivery-orders')->name('return-orders.index');
+            Route::get('return-orders/{returnOrder}', [ReturnOrderController::class, 'show'])->middleware('permission:view-return-orders')->name('return-orders.show');
+            Route::post('return-orders', [ReturnOrderController::class, 'store'])->middleware('permission:create-return-orders')->name('return-orders.store');
+            Route::put('return-orders/{returnOrder}', [ReturnOrderController::class, 'update'])->middleware('permission:edit-return-orders')->name('return-orders.update');
+            Route::delete('return-orders/{returnOrder}', [ReturnOrderController::class, 'destroy'])->middleware('permission:delete-return-orders')->name('return-orders.destroy');
+        });
 
-            // Purchase Order routes
-            Route::middleware('permission:manage-purchase-orders')->group(function () {
-                Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->middleware('permission:manage-purchase-orders')->name('purchase-orders.index');
-                Route::get('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->middleware('permission:view-purchase-orders')->name('purchase-orders.show');
-                Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->middleware('permission:create-purchase-orders')->name('purchase-orders.store');
-                Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.update');
-                Route::delete('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.destroy');
-                Route::put('purchase-orders/{purchaseOrder}/toggle-status', [PurchaseOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-purchase-orders')->name('purchase-orders.toggle-status');
-                Route::put('purchase-orders/{purchaseOrder}/add-sales-order', [PurchaseOrderController::class, 'addSalesOrder'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.add-sales-order');
-                Route::put('purchase-orders/{purchaseOrder}/assign-user', [PurchaseOrderController::class, 'assignUser'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.assign-user');
-                Route::post('purchase-orders/{purchaseOrder}/comments', [PurchaseOrderCommentController::class, 'store'])->middleware('permission:create-purchase-orders')->name('purchase-orders.comments.store');
-                Route::put('purchase-orders/{purchaseOrder}/activities/{activity}/comment', [PurchaseOrderCommentController::class, 'updateActivity'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.comments.update-activity');
-                Route::delete('purchase-orders/{purchaseOrder}/activities', [PurchaseOrderController::class, 'deleteActivities'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.delete-activities');
-                Route::delete('purchase-orders/{purchaseOrder}/activities/{activity}', [PurchaseOrderController::class, 'deleteActivity'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.delete-activity');
-            });
+        // Purchase Order routes
+        Route::middleware('permission:manage-purchase-orders')->group(function () {
+            Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->middleware('permission:manage-purchase-orders')->name('purchase-orders.index');
+            Route::get('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->middleware('permission:view-purchase-orders')->name('purchase-orders.show');
+            Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->middleware('permission:create-purchase-orders')->name('purchase-orders.store');
+            Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.update');
+            Route::delete('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.destroy');
+            Route::put('purchase-orders/{purchaseOrder}/toggle-status', [PurchaseOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-purchase-orders')->name('purchase-orders.toggle-status');
+            Route::put('purchase-orders/{purchaseOrder}/add-sales-order', [PurchaseOrderController::class, 'addSalesOrder'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.add-sales-order');
+            Route::put('purchase-orders/{purchaseOrder}/assign-user', [PurchaseOrderController::class, 'assignUser'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.assign-user');
+            Route::post('purchase-orders/{purchaseOrder}/comments', [PurchaseOrderCommentController::class, 'store'])->middleware('permission:create-purchase-orders')->name('purchase-orders.comments.store');
+            Route::put('purchase-orders/{purchaseOrder}/activities/{activity}/comment', [PurchaseOrderCommentController::class, 'updateActivity'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.comments.update-activity');
+            Route::delete('purchase-orders/{purchaseOrder}/activities', [PurchaseOrderController::class, 'deleteActivities'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.delete-activities');
+            Route::delete('purchase-orders/{purchaseOrder}/activities/{activity}', [PurchaseOrderController::class, 'deleteActivity'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.delete-activity');
+        });
 
-            // Receipt Order routes
-            Route::middleware('permission:manage-receipt-orders')->group(function () {
-                Route::get('receipt-orders', [ReceiptOrderController::class, 'index'])->middleware('permission:manage-receipt-orders')->name('receipt-orders.index');
-                Route::get('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'show'])->middleware('permission:view-receipt-orders')->name('receipt-orders.show');
-                Route::post('receipt-orders', [ReceiptOrderController::class, 'store'])->middleware('permission:create-receipt-orders')->name('receipt-orders.store');
-                Route::put('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'update'])->middleware('permission:edit-receipt-orders')->name('receipt-orders.update');
-                Route::delete('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'destroy'])->middleware('permission:delete-receipt-orders')->name('receipt-orders.destroy');
-                Route::put('receipt-orders/{receiptOrder}/toggle-status', [ReceiptOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-receipt-orders')->name('receipt-orders.toggle-status');
-
-
-                Route::put('receipt-orders/{receiptOrder}/assign-user', [ReceiptOrderController::class, 'assignUser'])->middleware('permission:edit-receipt-orders')->name('receipt-orders.assign-user');
-            });
-
-            // Project routes
-            Route::middleware('permission:manage-projects')->group(function () {
-                Route::get('projects', [ProjectController::class, 'index'])->middleware('permission:manage-projects')->name('projects.index');
-                Route::get('projects/{project}', [ProjectController::class, 'show'])->middleware('permission:view-projects')->name('projects.show');
-                Route::post('projects', [ProjectController::class, 'store'])->middleware('permission:create-projects')->name('projects.store');
-                Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware('permission:edit-projects')->name('projects.update');
-                Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->middleware('permission:delete-projects')->name('projects.destroy');
-                Route::put('projects/{project}/toggle-status', [ProjectController::class, 'toggleStatus'])->middleware('permission:toggle-status-projects')->name('projects.toggle-status');
-
-                // Project Export route
-                Route::get('projects/file/export/', [ProjectController::class, 'fileExport'])->middleware('permission:export-projects')->name('project.export');
-            });
-
-            // Project Task routes
-            Route::middleware('permission:manage-project-tasks')->group(function () {
-                Route::get('project-tasks', [ProjectTaskController::class, 'index'])->middleware('permission:manage-project-tasks')->name('project-tasks.index');
-                Route::get('project-tasks/{task}', [ProjectTaskController::class, 'show'])->middleware('permission:view-project-tasks')->name('project-tasks.show');
-                Route::post('project-tasks', [ProjectTaskController::class, 'store'])->middleware('permission:create-project-tasks')->name('project-tasks.store');
-                Route::put('project-tasks/{task}', [ProjectTaskController::class, 'update'])->middleware('permission:edit-project-tasks')->name('project-tasks.update');
-                Route::delete('project-tasks/{task}', [ProjectTaskController::class, 'destroy'])->middleware('permission:delete-project-tasks')->name('project-tasks.destroy');
-                Route::put('project-tasks/{task}/toggle-status', [ProjectTaskController::class, 'toggleStatus'])->middleware('permission:toggle-status-project-tasks')->name('project-tasks.toggle-status');
-                Route::get('projects/{project}/kanban', [ProjectTaskController::class, 'kanban'])->middleware('permission:view-project-tasks')->name('projects.kanban');
-                Route::get('projects/{project}/gantt', [ProjectTaskController::class, 'gantt'])->middleware('permission:view-project-tasks')->name('projects.gantt');
-                Route::put('project-tasks/{task}/update-status', [ProjectTaskController::class, 'updateStatus'])->middleware('permission:edit-project-tasks')->name('project-tasks.update-status');
-                Route::get('api/project-tasks/parent-tasks/{projectId}', [ProjectTaskController::class, 'getParentTasks'])->name('api.project-tasks.parent-tasks');
-                Route::get('api/projects/{projectId}/details', [ProjectTaskController::class, 'getProjectDetails'])->name('api.projects.details');
-
-                // Project Task Export route
-                Route::get('project-tasks/file/export/', [ProjectTaskController::class, 'fileExport'])->middleware('permission:export-project-tasks')->name('project-task.export');
-            });
-
-            // Task Status routes
-            Route::middleware('permission:manage-task-statuses')->group(function () {
-                Route::get('task-statuses', [\App\Http\Controllers\TaskStatusController::class, 'index'])->middleware('permission:manage-task-statuses')->name('task-statuses.index');
-                Route::post('task-statuses', [\App\Http\Controllers\TaskStatusController::class, 'store'])->middleware('permission:create-task-statuses')->name('task-statuses.store');
-                Route::put('task-statuses/{taskStatus}', [\App\Http\Controllers\TaskStatusController::class, 'update'])->middleware('permission:edit-task-statuses')->name('task-statuses.update');
-                Route::delete('task-statuses/{taskStatus}', [\App\Http\Controllers\TaskStatusController::class, 'destroy'])->middleware('permission:delete-task-statuses')->name('task-statuses.destroy');
-                Route::put('task-statuses/{taskStatus}/toggle-status', [\App\Http\Controllers\TaskStatusController::class, 'toggleStatus'])->middleware('permission:toggle-status-task-statuses')->name('task-statuses.toggle-status');
-            });
-
-            // Meeting routes
-            Route::middleware('permission:manage-meetings')->group(function () {
-                Route::get('meetings', [MeetingController::class, 'index'])->middleware('permission:manage-meetings')->name('meetings.index');
-                Route::get('meetings/{meeting}', [MeetingController::class, 'show'])->middleware('permission:view-meetings')->name('meetings.show');
-                Route::post('meetings', [MeetingController::class, 'store'])->middleware('permission:create-meetings')->name('meetings.store');
-                Route::put('meetings/{meeting}', [MeetingController::class, 'update'])->middleware('permission:edit-meetings')->name('meetings.update');
-                Route::delete('meetings/{meeting}', [MeetingController::class, 'destroy'])->middleware('permission:delete-meetings')->name('meetings.destroy');
-                Route::put('meetings/{meeting}/toggle-status', [MeetingController::class, 'toggleStatus'])->middleware('permission:toggle-status-meetings')->name('meetings.toggle-status');
-                Route::get('api/parent-module/{module}', [MeetingController::class, 'getParentModuleRecords'])->name('api.parent-module.records');
-                Route::get('api/attendee-types/{type}', [MeetingController::class, 'getAttendeeRecords'])->name('api.attendee-types.records');
-            });
-
-            // Call routes
-            Route::middleware('permission:manage-calls')->group(function () {
-                Route::get('calls', [CallController::class, 'index'])->middleware('permission:manage-calls')->name('calls.index');
-                Route::get('calls/{call}', [CallController::class, 'show'])->middleware('permission:view-calls')->name('calls.show');
-                Route::post('calls', [CallController::class, 'store'])->middleware('permission:create-calls')->name('calls.store');
-                Route::put('calls/{call}', [CallController::class, 'update'])->middleware('permission:edit-calls')->name('calls.update');
-                Route::delete('calls/{call}', [CallController::class, 'destroy'])->middleware('permission:delete-calls')->name('calls.destroy');
-                Route::put('calls/{call}/toggle-status', [CallController::class, 'toggleStatus'])->middleware('permission:toggle-status-calls')->name('calls.toggle-status');
-                Route::get('api/calls/parent-module/{module}', [CallController::class, 'getParentModuleRecords'])->name('api.calls.parent-module.records');
-                Route::get('api/calls/attendee-types/{type}', [CallController::class, 'getAttendeeRecords'])->name('api.calls.attendee-types.records');
-            });
-
-            // Calendar route
-            Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
-
-            // Google Calendar API routes
-            Route::get('api/google-calendar/events', [\App\Http\Controllers\GoogleCalendarController::class, 'getEvents'])->name('google-calendar.events');
-            Route::post('api/google-calendar/sync', [\App\Http\Controllers\GoogleCalendarController::class, 'syncEvents'])->name('google-calendar.sync');
-            Route::get('api/google-calendar/status', [\App\Http\Controllers\GoogleCalendarController::class, 'checkStatus'])->name('google-calendar.status');
-
-            // Document Folder management
-            Route::middleware('permission:manage-document-folders')->group(function () {
-                Route::get('document-folders', [DocumentFolderController::class, 'index'])->middleware('permission:manage-document-folders')->name('document-folders.index');
-                Route::get('document-folders/{documentFolder}', [DocumentFolderController::class, 'show'])->middleware('permission:view-document-folders')->name('document-folders.show');
-                Route::post('document-folders', [DocumentFolderController::class, 'store'])->middleware('permission:create-document-folders')->name('document-folders.store');
-                Route::put('document-folders/{documentFolder}', [DocumentFolderController::class, 'update'])->middleware('permission:edit-document-folders')->name('document-folders.update');
-                Route::delete('document-folders/{documentFolder}', [DocumentFolderController::class, 'destroy'])->middleware('permission:delete-document-folders')->name('document-folders.destroy');
-                Route::put('document-folders/{documentFolder}/toggle-status', [DocumentFolderController::class, 'toggleStatus'])->middleware('permission:toggle-status-document-folders')->name('document-folders.toggle-status');
-            });
-
-            // Document Type management
-            Route::middleware('permission:manage-document-types')->group(function () {
-                Route::get('document-types', [DocumentTypeController::class, 'index'])->middleware('permission:manage-document-types')->name('document-types.index');
-                Route::get('document-types/{documentType}', [DocumentTypeController::class, 'show'])->middleware('permission:view-document-types')->name('document-types.show');
-                Route::post('document-types', [DocumentTypeController::class, 'store'])->middleware('permission:create-document-types')->name('document-types.store');
-                Route::put('document-types/{documentType}', [DocumentTypeController::class, 'update'])->middleware('permission:edit-document-types')->name('document-types.update');
-                Route::delete('document-types/{documentType}', [DocumentTypeController::class, 'destroy'])->middleware('permission:delete-document-types')->name('document-types.destroy');
-                Route::put('document-types/{documentType}/toggle-status', [DocumentTypeController::class, 'toggleStatus'])->middleware('permission:toggle-status-document-types')->name('document-types.toggle-status');
-            });
-
-            // Document management
-            Route::middleware('permission:manage-documents')->group(function () {
-                Route::get('documents', [DocumentController::class, 'index'])->middleware('permission:manage-documents')->name('documents.index');
-                Route::get('documents/{document}', [DocumentController::class, 'show'])->middleware('permission:view-documents')->name('documents.show');
-                Route::get('documents/{document}/download', [DocumentController::class, 'download'])->middleware('permission:view-documents')->name('documents.download');
-                Route::post('documents', [DocumentController::class, 'store'])->middleware('permission:create-documents')->name('documents.store');
-                Route::put('documents/{document}', [DocumentController::class, 'update'])->middleware('permission:edit-documents')->name('documents.update');
-                Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->middleware('permission:delete-documents')->name('documents.destroy');
-                Route::put('documents/{document}/toggle-status', [DocumentController::class, 'toggleStatus'])->middleware('permission:toggle-status-documents')->name('documents.toggle-status');
-            });
-
-            // ChatGPT routes
-            Route::post('api/chatgpt/generate', [ChatGptController::class, 'generate'])->name('chatgpt.generate');
+        // Receipt Order routes
+        Route::middleware('permission:manage-receipt-orders')->group(function () {
+            Route::get('receipt-orders', [ReceiptOrderController::class, 'index'])->middleware('permission:manage-receipt-orders')->name('receipt-orders.index');
+            Route::get('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'show'])->middleware('permission:view-receipt-orders')->name('receipt-orders.show');
+            Route::post('receipt-orders', [ReceiptOrderController::class, 'store'])->middleware('permission:create-receipt-orders')->name('receipt-orders.store');
+            Route::put('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'update'])->middleware('permission:edit-receipt-orders')->name('receipt-orders.update');
+            Route::delete('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'destroy'])->middleware('permission:delete-receipt-orders')->name('receipt-orders.destroy');
+            Route::put('receipt-orders/{receiptOrder}/toggle-status', [ReceiptOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-receipt-orders')->name('receipt-orders.toggle-status');
 
 
-            // Language management
-            Route::get('manage-language/{lang?}', [LanguageController::class, 'managePage'])->middleware('permission:manage-language')->name('manage-language');
-            Route::get('language/load', [LanguageController::class, 'load'])->name('language.load');
-            Route::match(['POST', 'PATCH'], 'language/save', [LanguageController::class, 'save'])->middleware('permission:edit-language')->name('language.save');
-            Route::post('languages/change', [LanguageController::class, 'changeLanguage'])->name('languages.change');
-            Route::post('languages/create', [LanguageController::class, 'createLanguage'])->middleware('App\Http\Middleware\SuperAdminMiddleware')->name('languages.create');
-            Route::delete('languages/{languageCode}', [LanguageController::class, 'deleteLanguage'])->middleware('App\Http\Middleware\SuperAdminMiddleware')->name('languages.delete');
-            Route::patch('languages/{languageCode}/toggle', [LanguageController::class, 'toggleLanguageStatus'])->middleware('App\Http\Middleware\SuperAdminMiddleware')->name('languages.toggle');
+            Route::put('receipt-orders/{receiptOrder}/assign-user', [ReceiptOrderController::class, 'assignUser'])->middleware('permission:edit-receipt-orders')->name('receipt-orders.assign-user');
+        });
 
-            // Landing Page content management (Super Admin only)
-            Route::middleware('App\Http\Middleware\SuperAdminMiddleware')->group(function () {
-                Route::get('landing-page/settings', [LandingPageController::class, 'settings'])->name('landing-page.settings');
-                Route::post('landing-page/settings', [LandingPageController::class, 'updateSettings'])->name('landing-page.settings.update');
+        // Project routes
+        Route::middleware('permission:manage-projects')->group(function () {
+            Route::get('projects', [ProjectController::class, 'index'])->middleware('permission:manage-projects')->name('projects.index');
+            Route::get('projects/{project}', [ProjectController::class, 'show'])->middleware('permission:view-projects')->name('projects.show');
+            Route::post('projects', [ProjectController::class, 'store'])->middleware('permission:create-projects')->name('projects.store');
+            Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware('permission:edit-projects')->name('projects.update');
+            Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->middleware('permission:delete-projects')->name('projects.destroy');
+            Route::put('projects/{project}/toggle-status', [ProjectController::class, 'toggleStatus'])->middleware('permission:toggle-status-projects')->name('projects.toggle-status');
 
-                Route::resource('landing-page/custom-pages', CustomPageController::class)->names([
-                    'index' => 'landing-page.custom-pages.index',
-                    'store' => 'landing-page.custom-pages.store',
-                    'update' => 'landing-page.custom-pages.update',
-                    'destroy' => 'landing-page.custom-pages.destroy'
-                ]);
+            // Project Export route
+            Route::get('projects/file/export/', [ProjectController::class, 'fileExport'])->middleware('permission:export-projects')->name('project.export');
+        });
 
-                // Contact Messages routes
-                Route::get('contact-messages', [ContactMessageController::class, 'index'])->name('contact-messages.index');
-                Route::delete('contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
+        // Project Task routes
+        Route::middleware('permission:manage-project-tasks')->group(function () {
+            Route::get('project-tasks', [ProjectTaskController::class, 'index'])->middleware('permission:manage-project-tasks')->name('project-tasks.index');
+            Route::get('project-tasks/{task}', [ProjectTaskController::class, 'show'])->middleware('permission:view-project-tasks')->name('project-tasks.show');
+            Route::post('project-tasks', [ProjectTaskController::class, 'store'])->middleware('permission:create-project-tasks')->name('project-tasks.store');
+            Route::put('project-tasks/{task}', [ProjectTaskController::class, 'update'])->middleware('permission:edit-project-tasks')->name('project-tasks.update');
+            Route::delete('project-tasks/{task}', [ProjectTaskController::class, 'destroy'])->middleware('permission:delete-project-tasks')->name('project-tasks.destroy');
+            Route::put('project-tasks/{task}/toggle-status', [ProjectTaskController::class, 'toggleStatus'])->middleware('permission:toggle-status-project-tasks')->name('project-tasks.toggle-status');
+            Route::get('projects/{project}/kanban', [ProjectTaskController::class, 'kanban'])->middleware('permission:view-project-tasks')->name('projects.kanban');
+            Route::get('projects/{project}/gantt', [ProjectTaskController::class, 'gantt'])->middleware('permission:view-project-tasks')->name('projects.gantt');
+            Route::put('project-tasks/{task}/update-status', [ProjectTaskController::class, 'updateStatus'])->middleware('permission:edit-project-tasks')->name('project-tasks.update-status');
+            Route::get('api/project-tasks/parent-tasks/{projectId}', [ProjectTaskController::class, 'getParentTasks'])->name('api.project-tasks.parent-tasks');
+            Route::get('api/projects/{projectId}/details', [ProjectTaskController::class, 'getProjectDetails'])->name('api.projects.details');
 
-                // Newsletter routes
-                Route::get('newsletters', [NewsletterController::class, 'index'])->name('newsletters.index');
-                Route::delete('newsletters/{newsletter}', [NewsletterController::class, 'destroy'])->name('newsletters.destroy');
-            });
+            // Project Task Export route
+            Route::get('project-tasks/file/export/', [ProjectTaskController::class, 'fileExport'])->middleware('permission:export-project-tasks')->name('project-task.export');
+        });
 
-            // Impersonation routes
-            Route::middleware('App\Http\Middleware\SuperAdminMiddleware')->group(function () {
-                Route::get('impersonate/{userId}', [ImpersonateController::class, 'start'])->name('impersonate.start');
-            });
+        // Task Status routes
+        Route::middleware('permission:manage-task-statuses')->group(function () {
+            Route::get('task-statuses', [\App\Http\Controllers\TaskStatusController::class, 'index'])->middleware('permission:manage-task-statuses')->name('task-statuses.index');
+            Route::post('task-statuses', [\App\Http\Controllers\TaskStatusController::class, 'store'])->middleware('permission:create-task-statuses')->name('task-statuses.store');
+            Route::put('task-statuses/{taskStatus}', [\App\Http\Controllers\TaskStatusController::class, 'update'])->middleware('permission:edit-task-statuses')->name('task-statuses.update');
+            Route::delete('task-statuses/{taskStatus}', [\App\Http\Controllers\TaskStatusController::class, 'destroy'])->middleware('permission:delete-task-statuses')->name('task-statuses.destroy');
+            Route::put('task-statuses/{taskStatus}/toggle-status', [\App\Http\Controllers\TaskStatusController::class, 'toggleStatus'])->middleware('permission:toggle-status-task-statuses')->name('task-statuses.toggle-status');
+        });
 
-            Route::post('impersonate/leave', [ImpersonateController::class, 'leave'])->name('impersonate.leave');
-        }); // End plan.access middleware group
-    });
+        // Meeting routes
+        Route::middleware('permission:manage-meetings')->group(function () {
+            Route::get('meetings', [MeetingController::class, 'index'])->middleware('permission:manage-meetings')->name('meetings.index');
+            Route::get('meetings/{meeting}', [MeetingController::class, 'show'])->middleware('permission:view-meetings')->name('meetings.show');
+            Route::post('meetings', [MeetingController::class, 'store'])->middleware('permission:create-meetings')->name('meetings.store');
+            Route::put('meetings/{meeting}', [MeetingController::class, 'update'])->middleware('permission:edit-meetings')->name('meetings.update');
+            Route::delete('meetings/{meeting}', [MeetingController::class, 'destroy'])->middleware('permission:delete-meetings')->name('meetings.destroy');
+            Route::put('meetings/{meeting}/toggle-status', [MeetingController::class, 'toggleStatus'])->middleware('permission:toggle-status-meetings')->name('meetings.toggle-status');
+            Route::get('api/parent-module/{module}', [MeetingController::class, 'getParentModuleRecords'])->name('api.parent-module.records');
+            Route::get('api/attendee-types/{type}', [MeetingController::class, 'getAttendeeRecords'])->name('api.attendee-types.records');
+        });
+
+        // Call routes
+        Route::middleware('permission:manage-calls')->group(function () {
+            Route::get('calls', [CallController::class, 'index'])->middleware('permission:manage-calls')->name('calls.index');
+            Route::get('calls/{call}', [CallController::class, 'show'])->middleware('permission:view-calls')->name('calls.show');
+            Route::post('calls', [CallController::class, 'store'])->middleware('permission:create-calls')->name('calls.store');
+            Route::put('calls/{call}', [CallController::class, 'update'])->middleware('permission:edit-calls')->name('calls.update');
+            Route::delete('calls/{call}', [CallController::class, 'destroy'])->middleware('permission:delete-calls')->name('calls.destroy');
+            Route::put('calls/{call}/toggle-status', [CallController::class, 'toggleStatus'])->middleware('permission:toggle-status-calls')->name('calls.toggle-status');
+            Route::get('api/calls/parent-module/{module}', [CallController::class, 'getParentModuleRecords'])->name('api.calls.parent-module.records');
+            Route::get('api/calls/attendee-types/{type}', [CallController::class, 'getAttendeeRecords'])->name('api.calls.attendee-types.records');
+        });
+
+        // Calendar route
+        Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
+
+        // Google Calendar API routes
+        Route::get('api/google-calendar/events', [\App\Http\Controllers\GoogleCalendarController::class, 'getEvents'])->name('google-calendar.events');
+        Route::post('api/google-calendar/sync', [\App\Http\Controllers\GoogleCalendarController::class, 'syncEvents'])->name('google-calendar.sync');
+        Route::get('api/google-calendar/status', [\App\Http\Controllers\GoogleCalendarController::class, 'checkStatus'])->name('google-calendar.status');
+
+        // Document Folder management
+        Route::middleware('permission:manage-document-folders')->group(function () {
+            Route::get('document-folders', [DocumentFolderController::class, 'index'])->middleware('permission:manage-document-folders')->name('document-folders.index');
+            Route::get('document-folders/{documentFolder}', [DocumentFolderController::class, 'show'])->middleware('permission:view-document-folders')->name('document-folders.show');
+            Route::post('document-folders', [DocumentFolderController::class, 'store'])->middleware('permission:create-document-folders')->name('document-folders.store');
+            Route::put('document-folders/{documentFolder}', [DocumentFolderController::class, 'update'])->middleware('permission:edit-document-folders')->name('document-folders.update');
+            Route::delete('document-folders/{documentFolder}', [DocumentFolderController::class, 'destroy'])->middleware('permission:delete-document-folders')->name('document-folders.destroy');
+            Route::put('document-folders/{documentFolder}/toggle-status', [DocumentFolderController::class, 'toggleStatus'])->middleware('permission:toggle-status-document-folders')->name('document-folders.toggle-status');
+        });
+
+        // Document Type management
+        Route::middleware('permission:manage-document-types')->group(function () {
+            Route::get('document-types', [DocumentTypeController::class, 'index'])->middleware('permission:manage-document-types')->name('document-types.index');
+            Route::get('document-types/{documentType}', [DocumentTypeController::class, 'show'])->middleware('permission:view-document-types')->name('document-types.show');
+            Route::post('document-types', [DocumentTypeController::class, 'store'])->middleware('permission:create-document-types')->name('document-types.store');
+            Route::put('document-types/{documentType}', [DocumentTypeController::class, 'update'])->middleware('permission:edit-document-types')->name('document-types.update');
+            Route::delete('document-types/{documentType}', [DocumentTypeController::class, 'destroy'])->middleware('permission:delete-document-types')->name('document-types.destroy');
+            Route::put('document-types/{documentType}/toggle-status', [DocumentTypeController::class, 'toggleStatus'])->middleware('permission:toggle-status-document-types')->name('document-types.toggle-status');
+        });
+
+        // Document management
+        Route::middleware('permission:manage-documents')->group(function () {
+            Route::get('documents', [DocumentController::class, 'index'])->middleware('permission:manage-documents')->name('documents.index');
+            Route::get('documents/{document}', [DocumentController::class, 'show'])->middleware('permission:view-documents')->name('documents.show');
+            Route::get('documents/{document}/download', [DocumentController::class, 'download'])->middleware('permission:view-documents')->name('documents.download');
+            Route::post('documents', [DocumentController::class, 'store'])->middleware('permission:create-documents')->name('documents.store');
+            Route::put('documents/{document}', [DocumentController::class, 'update'])->middleware('permission:edit-documents')->name('documents.update');
+            Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->middleware('permission:delete-documents')->name('documents.destroy');
+            Route::put('documents/{document}/toggle-status', [DocumentController::class, 'toggleStatus'])->middleware('permission:toggle-status-documents')->name('documents.toggle-status');
+        });
+
+        // ChatGPT routes
+        Route::post('api/chatgpt/generate', [ChatGptController::class, 'generate'])->name('chatgpt.generate');
+
+
+        // Language management
+        Route::get('manage-language/{lang?}', [LanguageController::class, 'managePage'])->middleware('permission:manage-language')->name('manage-language');
+        Route::get('language/load', [LanguageController::class, 'load'])->name('language.load');
+        Route::match(['POST', 'PATCH'], 'language/save', [LanguageController::class, 'save'])->middleware('permission:edit-language')->name('language.save');
+        Route::post('languages/change', [LanguageController::class, 'changeLanguage'])->name('languages.change');
+        Route::post('languages/create', [LanguageController::class, 'createLanguage'])->middleware('App\Http\Middleware\SuperAdminMiddleware')->name('languages.create');
+        Route::delete('languages/{languageCode}', [LanguageController::class, 'deleteLanguage'])->middleware('App\Http\Middleware\SuperAdminMiddleware')->name('languages.delete');
+        Route::patch('languages/{languageCode}/toggle', [LanguageController::class, 'toggleLanguageStatus'])->middleware('App\Http\Middleware\SuperAdminMiddleware')->name('languages.toggle');
+
+        // Landing Page content management (Super Admin only)
+        Route::middleware('App\Http\Middleware\SuperAdminMiddleware')->group(function () {
+            Route::get('landing-page/settings', [LandingPageController::class, 'settings'])->name('landing-page.settings');
+            Route::post('landing-page/settings', [LandingPageController::class, 'updateSettings'])->name('landing-page.settings.update');
+
+            Route::resource('landing-page/custom-pages', CustomPageController::class)->names([
+                'index' => 'landing-page.custom-pages.index',
+                'store' => 'landing-page.custom-pages.store',
+                'update' => 'landing-page.custom-pages.update',
+                'destroy' => 'landing-page.custom-pages.destroy'
+            ]);
+
+            // Contact Messages routes
+            Route::get('contact-messages', [ContactMessageController::class, 'index'])->name('contact-messages.index');
+            Route::delete('contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
+
+            // Newsletter routes
+            Route::get('newsletters', [NewsletterController::class, 'index'])->name('newsletters.index');
+            Route::delete('newsletters/{newsletter}', [NewsletterController::class, 'destroy'])->name('newsletters.destroy');
+        });
+
+        // Impersonation routes
+        Route::middleware('App\Http\Middleware\SuperAdminMiddleware')->group(function () {
+            Route::get('impersonate/{userId}', [ImpersonateController::class, 'start'])->name('impersonate.start');
+        });
+
+        Route::post('impersonate/leave', [ImpersonateController::class, 'leave'])->name('impersonate.leave');
+    }); // End plan.access middleware group
 });
 
 require __DIR__ . '/settings.php';

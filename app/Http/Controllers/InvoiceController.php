@@ -81,33 +81,33 @@ class InvoiceController extends Controller
             'invoices' => $invoices,
             'accounts' => Account::where('created_by', createdBy())
                 ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function($q) {
+                ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name')->get(),
             'contacts' => Contact::where('created_by', createdBy())
                 ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company' && !$canViewContacts, function($q) {
+                ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name')->get(),
             'salesOrders' => SalesOrder::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company', function($q) {
+                ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name', 'order_number')->get(),
             'availableSalesOrders' => SalesOrder::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company', function($q) {
+                ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name', 'order_number')->get(),
             'quotes' => Quote::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company' && !$canViewQuotes, function($q) {
+                ->when(auth()->user()->type !== 'company' && !$canViewQuotes, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name', 'quote_number')->get(),
             'opportunities' => Opportunity::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function($q) {
+                ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name')->get(),
@@ -158,31 +158,32 @@ class InvoiceController extends Controller
     public function create()
     {
         $canViewAccounts = auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts');
+        $canViewContacts = auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts');
 
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $salesOrders = SalesOrder::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name', 'order_number')->get();
         $quotes = Quote::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name', 'quote_number')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
@@ -218,35 +219,36 @@ class InvoiceController extends Controller
             'assignedUser',
             'products.tax'
         ])
-        ->where('created_by', createdBy())
-        ->findOrFail($id);
+            ->where('created_by', createdBy())
+            ->findOrFail($id);
 
         $canViewAccounts = auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts');
+        $canViewContacts = auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts');
 
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $salesOrders = SalesOrder::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name', 'order_number')->get();
         $quotes = Quote::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name', 'quote_number')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
@@ -297,9 +299,12 @@ class InvoiceController extends Controller
                 Rule::exists('contacts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'invoice_date' => 'required|date',
@@ -319,10 +324,7 @@ class InvoiceController extends Controller
                 'required',
                 Rule::exists('products', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->where('status', 'active');
                 }),
             ],
             'products.*.quantity' => 'required|integer|min:1',
@@ -402,9 +404,12 @@ class InvoiceController extends Controller
                 Rule::exists('contacts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'invoice_date' => 'required|date',
@@ -424,10 +429,7 @@ class InvoiceController extends Controller
                 'required',
                 Rule::exists('products', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->where('status', 'active');
                 }),
             ],
             'products.*.quantity' => 'required|integer|min:1',

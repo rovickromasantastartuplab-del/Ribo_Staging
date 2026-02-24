@@ -69,7 +69,7 @@ class QuoteController extends Controller
                 ->select('id', 'name', 'email')
                 ->get();
         }
-        
+
         $canViewAccounts = auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts');
         $canViewContacts = auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts');
         $canViewOpportunities = auth()->user()->can('manage-opportunities') || auth()->user()->can('view-opportunities');
@@ -135,15 +135,18 @@ class QuoteController extends Controller
 
     public function create()
     {
+        $canViewAccounts = auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts');
+        $canViewContacts = auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts');
+
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function ($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function ($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
@@ -192,15 +195,18 @@ class QuoteController extends Controller
             ->where('created_by', createdBy())
             ->findOrFail($id);
 
+        $canViewAccounts = auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts');
+        $canViewContacts = auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts');
+
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function ($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function ($q) {
+            ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
@@ -245,9 +251,12 @@ class QuoteController extends Controller
                 Rule::exists('accounts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'billing_contact_id' => [
@@ -255,9 +264,12 @@ class QuoteController extends Controller
                 Rule::exists('contacts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'shipping_contact_id' => [
@@ -265,9 +277,12 @@ class QuoteController extends Controller
                 Rule::exists('contacts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'shipping_provider_type_id' => [
@@ -296,9 +311,6 @@ class QuoteController extends Controller
                 Rule::exists('products', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active');
-                    if (auth()->user()->type !== 'company') {
-                        $query->where('assigned_to', auth()->id());
-                    }
                 }),
             ],
             'products.*.quantity' => 'required|integer|min:1',
@@ -393,9 +405,12 @@ class QuoteController extends Controller
                 Rule::exists('accounts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'billing_contact_id' => [
@@ -403,9 +418,12 @@ class QuoteController extends Controller
                 Rule::exists('contacts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'shipping_contact_id' => [
@@ -413,9 +431,12 @@ class QuoteController extends Controller
                 Rule::exists('contacts', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
+                        ->when(
+                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                            function ($q) {
+                                $q->where('assigned_to', auth()->id());
+                            }
+                        );
                 }),
             ],
             'shipping_provider_type_id' => [
@@ -444,9 +465,6 @@ class QuoteController extends Controller
                 Rule::exists('products', 'id')->where(function ($query) {
                     $query->where('created_by', createdBy())
                         ->where('status', 'active');
-                    if (auth()->user()->type !== 'company') {
-                        $query->where('assigned_to', auth()->id());
-                    }
                 }),
             ],
             'products.*.quantity' => 'required|integer|min:1',
@@ -702,7 +720,7 @@ class QuoteController extends Controller
 
         $name = 'quote_' . date('Y-m-d_H-i-s');
         ob_start();
-        
+
         $data = Excel::download(new QuoteExport(), $name . '.xlsx');
         ob_end_clean();
 
@@ -728,16 +746,11 @@ class QuoteController extends Controller
 
     private function getFilteredProducts()
     {
-        if (auth()->user()->type === 'company') {
-            return Product::where('created_by', createdBy())->where('status', 'active')->with('tax')->select('id', 'name', 'price', 'tax_id')->get();
-        } else {
-            return Product::where('created_by', createdBy())
-                ->where('status', 'active')
-                ->where('assigned_to', auth()->id())
-                ->with('tax')
-                ->select('id', 'name', 'price', 'tax_id')
-                ->get();
-        }
+        return Product::where('created_by', createdBy())
+            ->where('status', 'active')
+            ->with('tax')
+            ->select('id', 'name', 'price', 'tax_id')
+            ->get();
     }
 
     public function publicView($quoteId)
@@ -769,7 +782,7 @@ class QuoteController extends Controller
             $qrEnabled = ($settings['quoteQrEnabled'] ?? 'off') === 'on';
             $themeColor = $settings['themeColor'] ?? 'blue';
             $customColor = $settings['customColor'] ?? null;
-            
+
             if (!empty($settings['quoteLogoId'])) {
                 $media = Media::find($settings['quoteLogoId']);
                 $settings['quoteLogo'] = $media ? $media->getUrl() : null;
