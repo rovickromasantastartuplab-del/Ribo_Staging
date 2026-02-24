@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight, Clock } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +35,8 @@ interface Plan {
   };
   is_popular?: boolean;
   is_plan_enable: string;
+  is_trial?: string | null;
+  trial_day?: number | null;
 }
 
 interface PlansSectionProps {
@@ -271,6 +273,12 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
                       /{billingCycle === 'yearly' ? t('year') : t('month')}
                     </span>
                   </div>
+                  {plan.is_trial === 'on' && plan.trial_day && plan.trial_day > 0 && (
+                    <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold mb-2">
+                      <Clock className="h-3 w-3" />
+                      {t('{{days}} Day Free Trial', { days: plan.trial_day })}
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3">
                     {plan.description}
                   </p>

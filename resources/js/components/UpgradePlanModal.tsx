@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, CreditCard, Circle } from 'lucide-react';
+import { CheckCircle2, CreditCard, Circle, Zap, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/components/ui/switch';
 import { formatCurrency } from '@/utils/currency';
@@ -86,31 +86,47 @@ export function UpgradePlanModal({
 
   const handleConfirm = async () => {
     if (selectedPlanId) {
+      const plan = plans.find(p => p.id === selectedPlanId);
+      if (!plan) return;
+
+      // Trial plan flow: redirect to HitPay recurring billing checkout
+      if (plan.is_trial === 'on' && plan.trial_day && plan.trial_day > 0) {
+        try {
+          const response = await axios.post('/payments/hitpay/trial', {
+            plan_id: plan.id,
+          });
+          if (response.data.success && response.data.checkoutUrl) {
+            window.location.href = response.data.checkoutUrl;
+          } else {
+            console.error('Trial payment failed', response.data.error);
+          }
+        } catch (error) {
+          console.error('Failed to start trial via HitPay', error);
+        }
+        return;
+      }
+
       if (directUpgrade) {
         onConfirm(selectedPlanId, isYearly ? 'yearly' : 'monthly');
         return;
       }
 
-      const plan = plans.find(p => p.id === selectedPlanId);
-      if (plan) {
-        try {
-          const response = await fetch('/payment-methods');
-          const methods = await response.json();
-          const formattedMethods = formatPaymentMethods(methods, (key: string) => key); // fallback string mapper wrapper since t() is complex here
-          setPaymentMethods(formattedMethods);
+      try {
+        const response = await fetch('/payment-methods');
+        const methods = await response.json();
+        const formattedMethods = formatPaymentMethods(methods, (key: string) => key);
+        setPaymentMethods(formattedMethods);
 
-          // We must override plan.price if yearly is selected to pass the correct amount to the checkout processor.
-          const planForCheckout = {
-            ...plan,
-            price: isYearly ? plan.yearly_price : plan.monthly_price,
-            paymentMethods: methods
-          };
+        const planForCheckout = {
+          ...plan,
+          price: isYearly ? plan.yearly_price : plan.monthly_price,
+          paymentMethods: methods
+        };
 
-          setSelectedPlanDetails(planForCheckout);
-          setIsSubscriptionModalOpen(true);
-        } catch (error) {
-          console.error('Failed to load payment methods', error);
-        }
+        setSelectedPlanDetails(planForCheckout);
+        setIsSubscriptionModalOpen(true);
+      } catch (error) {
+        console.error('Failed to load payment methods', error);
       }
     }
   };
@@ -254,12 +270,38 @@ export function UpgradePlanModal({
                 onClick={handleConfirm}
                 disabled={!selectedPlanId || plans.length === 0}
               >
-                {t("Upgrade Plan")}
+                {(() => {
+                  const selected = plans.find(p => p.id === selectedPlanId);
+                  if (selected?.is_trial === 'on' && selected?.trial_day && selected.trial_day > 0) {
+                    return (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        {t('Connect Bank Account ({{days}} Day Free Trial)', { days: selected.trial_day })}
+                      </>
+                    );
+                  }
+                  return t('Upgrade Plan');
+                })()}
               </Button>
             </div>
+            {/* Trial disclaimer */}
+            {(() => {
+              const selected = plans.find(p => p.id === selectedPlanId);
+              if (selected?.is_trial === 'on' && selected?.trial_day && selected.trial_day > 0) {
+                return (
+                  <div className="flex items-start gap-2 mt-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                    <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-amber-700">
+                      {t('A temporary hold of 1.00 may be applied to verify your account. You will not be charged the full amount until your trial ends.')}
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog >
       {
         selectedPlanDetails && (
           <PlanSubscriptionModal

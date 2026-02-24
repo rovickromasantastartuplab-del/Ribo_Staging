@@ -10,6 +10,7 @@ use Lab404\Impersonate\Models\Impersonate;
 use App\Models\Plan;
 use App\Models\Referral;
 use App\Models\PayoutRequest;
+use App\Models\UserPaymentMethod;
 use App\Services\MailConfigService;
 use Illuminate\Support\Facades\Log;
 
@@ -265,6 +266,14 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
     public function planOrders()
     {
         return $this->hasMany(PlanOrder::class);
+    }
+
+    /**
+     * Get the saved payment methods (HitPay tokens) for this user.
+     */
+    public function paymentMethods()
+    {
+        return $this->hasMany(UserPaymentMethod::class);
     }
 
     /**

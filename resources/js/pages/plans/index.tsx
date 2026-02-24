@@ -31,7 +31,8 @@ import {
   IndianRupee,
   Wallet,
   Coins,
-  Edit
+  Edit,
+  Info
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -159,30 +160,30 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
     });
   };
 
-  const handleStartTrial = (planId: number) => {
+  const handleStartTrial = async (planId: number) => {
     toast.loading(t('Starting trial...'));
 
-    router.post(route('plans.trial'), {
-      plan_id: planId
-    }, {
-      onSuccess: (page) => {
-        toast.dismiss();
-        const flash = page.props.flash as any;
-        if (flash?.success) {
-          toast.success(t(flash.success));
-        } else if (flash?.error) {
-          toast.error(t(flash.error));
-        }
-      },
-      onError: (errors) => {
-        toast.dismiss();
-        if (typeof errors === 'string') {
-          toast.error(errors);
-        } else {
-          toast.error(`Failed to start trial: ${Object.values(errors).join(', ')}`);
-        }
+    try {
+      const response = await fetch('/payments/hitpay/trial', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ plan_id: planId }),
+      });
+      const data = await response.json();
+      toast.dismiss();
+
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast.error(data.error || t('Failed to start trial'));
       }
-    });
+    } catch (error) {
+      toast.dismiss();
+      toast.error(t('Failed to start trial'));
+    }
   };
 
   const handleSubscribe = async (planId: number) => {
@@ -231,8 +232,14 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
             className="w-full"
           >
             <Zap className="h-4 w-4 mr-2" />
-            {t('Start {{days}} Day Trial', { days: plan.trial_days })}
+            {t('Connect Bank Account ({{days}} Day Free Trial)', { days: plan.trial_days })}
           </Button>
+          <div className="flex items-start gap-1.5 px-1">
+            <Info className="h-3.5 w-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <p className="text-[10px] text-amber-700">
+              {t('A temporary hold of 1.00 may be applied to verify your account. You will not be charged until your trial ends.')}
+            </p>
+          </div>
           <Button
             onClick={() => handleSubscribe(plan.id)}
             disabled={processing}

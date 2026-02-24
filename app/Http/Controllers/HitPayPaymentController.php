@@ -7,6 +7,7 @@ use App\Models\PlanOrder;
 use App\Models\HitpayWebhookLog;
 use App\Models\User;
 use App\Models\Setting;
+use App\Models\UserPaymentMethod;
 use Illuminate\Http\Request;
 
 class HitPayPaymentController extends Controller
@@ -123,6 +124,119 @@ class HitPayPaymentController extends Controller
     }
 
     /**
+     * Create a HitPay recurring billing session for trial plans.
+     * Uses /v1/recurring-billing with save_payment_method to tokenize the user's card
+     * with a minimal authorization hold (1.00) instead of charging the full price.
+     */
+    public function processTrialPayment(Request $request)
+    {
+        $validated = $request->validate([
+            'plan_id' => 'required|exists:plans,id',
+        ]);
+
+        try {
+            $plan = Plan::findOrFail($validated['plan_id']);
+
+            // Guard: only trial-enabled plans can use this endpoint
+            if ($plan->is_trial !== 'on' || $plan->trial_day <= 0) {
+                return response()->json(['success' => false, 'error' => __('This plan does not support free trial.')]);
+            }
+
+            $superAdminId = User::where('type', 'superadmin')->first()?->id;
+            $settings = getPaymentMethodConfig('hitpay', $superAdminId);
+
+            if (empty($settings['api_key']) || empty($settings['salt'])) {
+                return response()->json(['success' => false, 'error' => __('HitPay not configured')]);
+            }
+
+            $paymentId = 'hp_trial_' . $plan->id . '_' . time() . '_' . uniqid();
+
+            // Create a pending plan order tagged as hitpay_trial
+            createPlanOrder([
+                'user_id' => auth()->id(),
+                'plan_id' => $plan->id,
+                'billing_cycle' => 'monthly', // Trial starts as monthly
+                'payment_method' => 'hitpay_trial',
+                'coupon_code' => null,
+                'payment_id' => $paymentId,
+                'status' => 'pending',
+            ]);
+
+            // Determine base URL based on mode
+            $isLive = ($settings['mode'] ?? 'sandbox') === 'live';
+            $baseUrl = $isLive
+                ? 'https://api.hit-pay.com'
+                : 'https://api.sandbox.hit-pay.com';
+
+            // Get currency
+            $generalSettings = \App\Models\Setting::getUserSettings($superAdminId);
+            $currency = $generalSettings['defaultCurrency'] ?? 'PHP';
+
+            // Build recurring billing payload
+            $payload = [
+                'name' => 'Subscription to ' . $plan->name . ' - Free Trial',
+                'description' => 'Free Trial Authorization Hold',
+                'customer_email' => auth()->user()->email,
+                'customer_name' => auth()->user()->name,
+                'amount' => number_format(1.00, 2, '.', ''),
+                'currency' => strtoupper($currency),
+                'save_payment_method' => true,
+                'reference' => $paymentId,
+                'redirect_url' => secure_url('payments/hitpay/success') . '?payment_id=' . $paymentId,
+                'webhook' => secure_url('payments/hitpay/webhook'),
+            ];
+
+            // Call HitPay Recurring Billing API
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $baseUrl . '/v1/recurring-billing',
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => http_build_query($payload),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/x-www-form-urlencoded',
+                    'X-BUSINESS-API-KEY: ' . $settings['api_key'],
+                ],
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            $data = $response ? json_decode($response, true) : null;
+
+            if ($httpCode !== 200 && $httpCode !== 201) {
+                \Log::error('HitPay trial recurring billing creation failed', [
+                    'httpCode' => $httpCode,
+                    'curlError' => $curlError,
+                    'response' => $data,
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'error' => $data['message'] ?? $data['error'] ?? __('Failed to create HitPay trial session.'),
+                ]);
+            }
+
+            $checkoutUrl = $data['url'] ?? $data['payment_url'] ?? $data['checkout_url'] ?? null;
+
+            if (!$checkoutUrl) {
+                \Log::error('HitPay trial checkout URL missing', ['response' => $data]);
+                return response()->json(['success' => false, 'error' => __('Checkout URL missing from HitPay response')]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'checkoutUrl' => $checkoutUrl,
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('HitPay processTrialPayment error', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'error' => __('Trial setup failed with internal error')]);
+        }
+    }
+
+    /**
      * Webhook callback from HitPay after payment completion.
      * Verifies HMAC signature and activates the plan.
      */
@@ -212,18 +326,23 @@ class HitPayPaymentController extends Controller
 
             if ($status === 'COMPLETED' || $status === 'SUCCEEDED') {
                 if ($planOrder->status === 'pending') {
-                    // Use the standard processPaymentSuccess helper
-                    processPaymentSuccess([
-                        'user_id' => $planOrder->user_id,
-                        'plan_id' => $planOrder->plan_id,
-                        'billing_cycle' => $planOrder->billing_cycle,
-                        'payment_method' => 'hitpay',
-                        'coupon_code' => $planOrder->coupon_code,
-                        'payment_id' => $paymentId,
-                    ]);
+                    // Check if this is a trial order (recurring billing / save payment method)
+                    if ($planOrder->payment_method === 'hitpay_trial') {
+                        $this->handleTrialWebhook($planOrder, $eventData, $payload, $webhookLog, $paymentId);
+                    } else {
+                        // Use the standard processPaymentSuccess helper
+                        processPaymentSuccess([
+                            'user_id' => $planOrder->user_id,
+                            'plan_id' => $planOrder->plan_id,
+                            'billing_cycle' => $planOrder->billing_cycle,
+                            'payment_method' => 'hitpay',
+                            'coupon_code' => $planOrder->coupon_code,
+                            'payment_id' => $paymentId,
+                        ]);
 
-                    $webhookLog->update(['status' => 'processed_success']);
-                    \Log::info('HitPay payment succeeded', ['payment_id' => $paymentId]);
+                        $webhookLog->update(['status' => 'processed_success']);
+                        \Log::info('HitPay payment succeeded', ['payment_id' => $paymentId]);
+                    }
                 } else {
                     $webhookLog->update(['status' => 'ignored_already_processed']);
                 }
@@ -356,6 +475,62 @@ class HitPayPaymentController extends Controller
         }
 
         return redirect()->route('plans.index')->with('error', __('Payment verification failed. Please contact support.'));
+    }
+
+    /**
+     * Handle webhook specifically for trial orders (recurring billing / save payment method).
+     * Saves the tokenized payment method and activates the user's free trial.
+     */
+    private function handleTrialWebhook(PlanOrder $planOrder, array $eventData, array $payload, HitpayWebhookLog $webhookLog, string $paymentId): void
+    {
+        $user = User::findOrFail($planOrder->user_id);
+        $plan = Plan::findOrFail($planOrder->plan_id);
+
+        // Extract payment method token from HitPay response
+        // HitPay may nest this in different locations depending on API version
+        $recurringBillingId = $eventData['id'] ?? $payload['id'] ?? null;
+        $chargeDetails = $eventData['payment_provider']['charge']['details'] ?? $payload['payment_provider']['charge']['details'] ?? null;
+
+        $cardBrand = $chargeDetails['brand'] ?? null;
+        $last4 = $chargeDetails['last4'] ?? null;
+
+        // Save the payment method token (idempotent — skip if already saved)
+        if ($recurringBillingId) {
+            $existing = UserPaymentMethod::where('user_id', $user->id)
+                ->where('payment_method_id', $recurringBillingId)
+                ->first();
+
+            if (!$existing) {
+                UserPaymentMethod::create([
+                    'user_id' => $user->id,
+                    'payment_method_id' => $recurringBillingId,
+                    'card_brand' => $cardBrand,
+                    'last_4' => $last4,
+                    'status' => 'active',
+                ]);
+            }
+        }
+
+        // Activate the trial subscription on the user
+        $user->update([
+            'plan_id' => $plan->id,
+            'is_trial' => 'on',
+            'trial_day' => $plan->trial_day,
+            'trial_expire_date' => now()->addDays($plan->trial_day),
+            'plan_is_active' => 1,
+        ]);
+
+        // Mark the plan order as approved
+        $planOrder->update(['status' => 'approved']);
+
+        $webhookLog->update(['status' => 'processed_trial_success']);
+        \Log::info('HitPay trial activated', [
+            'payment_id' => $paymentId,
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'trial_days' => $plan->trial_day,
+            'recurring_billing_id' => $recurringBillingId,
+        ]);
     }
 
     /**
