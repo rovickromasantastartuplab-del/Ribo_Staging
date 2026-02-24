@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { hasPermission } from '@/utils/authorization';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency as formatCurrencyUtils } from '@/utils/currency';
 // import { ProductBarcode } from '@/components/Barcode';
 
 export default function ProductShow() {
@@ -25,17 +25,16 @@ export default function ProductShow() {
 
   const getStatusBadge = (status: string) => {
     return (
-      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-        status === 'active'
+      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${status === 'active'
           ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
           : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
-      }`}>
+        }`}>
         {status === 'active' ? t('Active') : t('Inactive')}
       </span>
     );
   };
 
-  const formatCurrency = (amount: number) => formatCurrency(Number(amount || 0));
+  const formatCurrency = (amount: number) => formatCurrencyUtils(Number(amount || 0));
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-';
@@ -140,9 +139,8 @@ export default function ProductShow() {
                         {mainImage && (
                           <button
                             onClick={() => setSelectedImage(mainImage)}
-                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                              selectedImage === mainImage ? 'border-blue-500 shadow-lg scale-105' : 'border-gray-200 hover:border-gray-300'
-                            }`}
+                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${selectedImage === mainImage ? 'border-blue-500 shadow-lg scale-105' : 'border-gray-200 hover:border-gray-300'
+                              }`}
                           >
                             <img src={mainImage} alt="Main" className="w-full h-full object-contain p-1" />
                           </button>
@@ -151,9 +149,8 @@ export default function ProductShow() {
                           <button
                             key={img.id}
                             onClick={() => setSelectedImage(img.url)}
-                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                              selectedImage === img.url ? 'border-blue-500 shadow-lg scale-105' : 'border-gray-200 hover:border-gray-300'
-                            }`}
+                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${selectedImage === img.url ? 'border-blue-500 shadow-lg scale-105' : 'border-gray-200 hover:border-gray-300'
+                              }`}
                           >
                             <img src={img.thumb_url || img.url} alt={`Additional ${index + 1}`} className="w-full h-full object-contain p-1" />
                           </button>

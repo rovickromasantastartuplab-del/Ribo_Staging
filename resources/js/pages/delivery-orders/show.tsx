@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency as formatCurrencyUtils } from '@/utils/currency';
 
 export default function DeliveryOrderShow() {
   const { t } = useTranslation();
@@ -19,19 +19,18 @@ export default function DeliveryOrderShow() {
 
   const getStatusBadge = (status: string) => {
     return (
-      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-        status === 'delivered' ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' :
-        status === 'in_transit' ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' :
-        status === 'cancelled' ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' :
-        'bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20'
-      }`}>
+      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${status === 'delivered' ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' :
+          status === 'in_transit' ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' :
+            status === 'cancelled' ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' :
+              'bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20'
+        }`}>
         {status?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || t('Pending')}
       </span>
     );
   };
 
   const formatCurrency = (amount: number) => {
-    return formatCurrency(Number(amount || 0));
+    return formatCurrencyUtils(Number(amount || 0));
   };
 
 
@@ -44,7 +43,7 @@ export default function DeliveryOrderShow() {
       deliveryOrder.delivery_postal_code,
       deliveryOrder.delivery_country
     ].filter(Boolean);
-    
+
     return parts.length > 0 ? parts.join(', ') : t('-');
   };
 
@@ -195,32 +194,32 @@ export default function DeliveryOrderShow() {
               {deliveryOrder.sales_order && (
                 <div className="p-6 bg-blue-50 rounded-xl border border-blue-200 hover:shadow-md transition-shadow">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Sales Order')}</p>
-                  <Link 
-                    href={route('sales-orders.show', deliveryOrder.sales_order.id)} 
+                  <Link
+                    href={route('sales-orders.show', deliveryOrder.sales_order.id)}
                     className="text-base font-medium text-blue-600 hover:text-blue-800 hover:underline"
                   >
                     {deliveryOrder.sales_order.order_number} - {deliveryOrder.sales_order.name}
                   </Link>
                 </div>
               )}
-              
+
               {deliveryOrder.account && (
                 <div className="p-6 bg-green-50 rounded-xl border border-green-200 hover:shadow-md transition-shadow">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Account')}</p>
-                  <Link 
-                    href={route('accounts.show', deliveryOrder.account.id)} 
+                  <Link
+                    href={route('accounts.show', deliveryOrder.account.id)}
                     className="text-base font-medium text-green-600 hover:text-green-800 hover:underline"
                   >
                     {deliveryOrder.account.name}
                   </Link>
                 </div>
               )}
-              
+
               {deliveryOrder.contact && (
                 <div className="p-6 bg-purple-50 rounded-xl border border-purple-200 hover:shadow-md transition-shadow">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Contact')}</p>
-                  <Link 
-                    href={route('contacts.show', deliveryOrder.contact.id)} 
+                  <Link
+                    href={route('contacts.show', deliveryOrder.contact.id)}
                     className="text-base font-medium text-purple-600 hover:text-purple-800 hover:underline"
                   >
                     {deliveryOrder.contact.name}
