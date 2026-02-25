@@ -164,6 +164,7 @@ class CompanyController extends Controller
         ]);
 
         $company->name = $validated['name'];
+        $company->company_name = $validated['name'];
         $company->email = $validated['email'];
         // $company->status = $validated['status'];
         // // Only set password if provided

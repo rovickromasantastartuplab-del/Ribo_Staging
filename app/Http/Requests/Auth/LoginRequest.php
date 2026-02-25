@@ -56,6 +56,17 @@ class LoginRequest extends FormRequest
                     'email' => __('Your account is inactive. Please contact administrator.'),
                 ]);
             }
+
+            // For staff users: block login if company is disabled by super admin
+            if ($user->type !== 'company' && $user->type !== 'superadmin') {
+                $company = \App\Models\User::find($user->created_by);
+                if ($company && $company->type === 'company' && $company->status === 'inactive') {
+                    Auth::logout();
+                    throw ValidationException::withMessages([
+                        'email' => __('Your company account has been disabled. Please contact administrator.'),
+                    ]);
+                }
+            }
         RateLimiter::clear($this->throttleKey());
     }
 
