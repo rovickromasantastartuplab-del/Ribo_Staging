@@ -169,7 +169,8 @@ export function UpgradePlanModal({
             <Crown className="h-4 w-4 mr-2" />
             {t('Current Plan')}
           </Button>
-          {isUserOnTrial && (
+          {/* Cancel Trial only makes sense for the company user, not for superadmin */}
+          {isUserOnTrial && !directUpgrade && (
             <Button
               onClick={handleCancelTrial}
               disabled={processing}
@@ -183,9 +184,9 @@ export function UpgradePlanModal({
       );
     }
 
-    // Checking `is_trial_available` or manually verifying `is_trial` / `trial_day` based on the provided object attributes
+    // Trial buttons are only shown for company users (not superadmin directUpgrade)
     const trialDaysAvailable = plan.trial_day || 0;
-    const isTrialAvailable = (plan.is_trial_available ?? (plan.is_trial === 'on' && trialDaysAvailable > 0)) && !userTrialUsed;
+    const isTrialAvailable = !directUpgrade && (plan.is_trial_available ?? (plan.is_trial === 'on' && trialDaysAvailable > 0)) && !userTrialUsed;
 
     if (isTrialAvailable) {
       return (
@@ -225,7 +226,7 @@ export function UpgradePlanModal({
           disabled={processing}
           className="w-full"
         >
-          {t('Subscribe Now')}
+          {directUpgrade ? t('Upgrade Plan') : t('Subscribe Now')}
         </Button>
       </div>
     );
