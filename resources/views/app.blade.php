@@ -1,4 +1,3 @@
-text/x-generic app.blade.php ( HTML document, ASCII text, with CRLF line terminators )
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
 
