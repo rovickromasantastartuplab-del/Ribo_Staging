@@ -59,7 +59,26 @@ class EmailTemplateController extends Controller
                 '{lead_company}' => 'Lead Company',
                 '{company_name}' => 'Company Name'
             ];
+        } elseif ($template->name === 'Lead Welcome') {
+            $variables = [
+                '{lead_name}' => 'Lead Name',
+                '{lead_email}' => 'Lead Email',
+                '{lead_phone}' => 'Lead Phone',
+                '{lead_company}' => 'Lead Company',
+                '{company_name}' => 'Company Name'
+            ];
         } elseif ($template->name === 'Lead Moved') {
+            $variables = [
+                '{lead_name}' => 'Lead Name',
+                '{assigned_user_name}' => 'Assign User',
+                '{old_lead_stage}' => 'Old Status',
+                '{new_lead_stage}' => 'New Status',
+                '{lead_email}' => 'Lead Email',
+                '{lead_phone}' => 'Lead Phone',
+                '{lead_company}' => 'Lead Company',
+                '{company_name}' => 'Company Name'
+            ];
+        } elseif ($template->name === 'Lead Status Updated') {
             $variables = [
                 '{lead_name}' => 'Lead Name',
                 '{assigned_user_name}' => 'Assign User',
@@ -81,7 +100,8 @@ class EmailTemplateController extends Controller
                 '{quote_status}' => 'Quote Status',
                 '{assigned_user_name}' => 'Assigned User Name',
                 '{assigned_user_email}' => 'Assigned User Email',
-                '{company_name}' => 'Company Name'
+                '{company_name}' => 'Company Name',
+                '{view_link}' => 'View Link (Public URL)'
             ];
         } elseif ($template->name === 'Quote Status Changed') {
             $variables = [
@@ -95,7 +115,8 @@ class EmailTemplateController extends Controller
                 '{new_quote_status}' => 'New Quote Status',
                 '{assigned_user_name}' => 'Assigned User Name',
                 '{assigned_user_email}' => 'Assigned User Email',
-                '{company_name}' => 'Company Name'
+                '{company_name}' => 'Company Name',
+                '{view_link}' => 'View Link (Public URL)'
             ];
         } elseif ($template->name === 'Task Assigned') {
             $variables = [
@@ -157,6 +178,68 @@ class EmailTemplateController extends Controller
                 '{opportunity_close_date}' => 'Opportunity Close Date',
                 '{opportunity_description}' => 'Opportunity Description',
                 '{company_name}' => 'Company Name'
+            ];
+        } elseif ($template->name === 'Sales Order Created') {
+            $variables = [
+                '{order_number}' => 'Order Number',
+                '{order_name}' => 'Order Name',
+                '{billing_contact_name}' => 'Billing Contact Name',
+                '{account_name}' => 'Account Name',
+                '{order_total}' => 'Order Total Amount',
+                '{order_date}' => 'Order Date',
+                '{delivery_date}' => 'Delivery Date',
+                '{order_status}' => 'Order Status',
+                '{assigned_user_name}' => 'Assigned User Name',
+                '{assigned_user_email}' => 'Assigned User Email',
+                '{company_name}' => 'Company Name',
+                '{view_link}' => 'View Link (Public URL)'
+            ];
+        } elseif ($template->name === 'Sales Order Status Changed') {
+            $variables = [
+                '{order_number}' => 'Order Number',
+                '{order_name}' => 'Order Name',
+                '{billing_contact_name}' => 'Billing Contact Name',
+                '{account_name}' => 'Account Name',
+                '{order_total}' => 'Order Total Amount',
+                '{order_date}' => 'Order Date',
+                '{delivery_date}' => 'Delivery Date',
+                '{old_order_status}' => 'Old Order Status',
+                '{new_order_status}' => 'New Order Status',
+                '{assigned_user_name}' => 'Assigned User Name',
+                '{assigned_user_email}' => 'Assigned User Email',
+                '{company_name}' => 'Company Name',
+                '{view_link}' => 'View Link (Public URL)'
+            ];
+        } elseif ($template->name === 'Invoice Created') {
+            $variables = [
+                '{invoice_number}' => 'Invoice Number',
+                '{invoice_name}' => 'Invoice Name',
+                '{contact_name}' => 'Contact Name',
+                '{account_name}' => 'Account Name',
+                '{invoice_total}' => 'Invoice Total Amount',
+                '{invoice_date}' => 'Invoice Date',
+                '{due_date}' => 'Due Date',
+                '{invoice_status}' => 'Invoice Status',
+                '{assigned_user_name}' => 'Assigned User Name',
+                '{assigned_user_email}' => 'Assigned User Email',
+                '{company_name}' => 'Company Name',
+                '{view_link}' => 'View Link (Public URL)'
+            ];
+        } elseif ($template->name === 'Invoice Status Changed') {
+            $variables = [
+                '{invoice_number}' => 'Invoice Number',
+                '{invoice_name}' => 'Invoice Name',
+                '{contact_name}' => 'Contact Name',
+                '{account_name}' => 'Account Name',
+                '{invoice_total}' => 'Invoice Total Amount',
+                '{invoice_date}' => 'Invoice Date',
+                '{due_date}' => 'Due Date',
+                '{old_invoice_status}' => 'Old Invoice Status',
+                '{new_invoice_status}' => 'New Invoice Status',
+                '{assigned_user_name}' => 'Assigned User Name',
+                '{assigned_user_email}' => 'Assigned User Email',
+                '{company_name}' => 'Company Name',
+                '{view_link}' => 'View Link (Public URL)'
             ];
         }
 

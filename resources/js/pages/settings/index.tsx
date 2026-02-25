@@ -173,10 +173,14 @@ export default function Settings() {
         // Hard block for non-superadmin users
         if (!isSuperAdmin) {
             if (item.href === '#currency-settings') return false;
-            if (item.href === '#email-settings') return false;
+            // Removed: if (item.href === '#email-settings') return false;
+            // Removed email-notification-settings
+            // Removed twilio-notification-settings
+            // Removed: if (item.href === '#payment-settings') return false;
+        } else {
+            // Superadmin explicitly does not see company-level notification settings
             if (item.href === '#email-notification-settings') return false;
             if (item.href === '#twilio-notification-settings') return false;
-            if (item.href === '#payment-settings') return false;
         }
 
         // Check for both role and permission if both exist
@@ -193,8 +197,8 @@ export default function Settings() {
         }
         // For company users, only show specific settings
         if (auth.roles?.includes('company')) {
-            // Only allow system settings, email settings, brand settings, currency settings, webhook settings, email notifications, and settings
-            return ['manage-system-settings', 'manage-email-settings', 'manage-brand-settings', 'manage-currency-settings', 'manage-webhook-settings', 'manage-email-notifications', 'manage-twilio-notifications', 'manage-quotes-settings', 'manage-sales-orders-settings', 'manage-invoices-settings', 'settings'].includes(item.permission);
+            // Only allow system settings, email settings, brand settings, currency settings, webhook settings, email notifications, and settings + payment settings
+            return ['manage-system-settings', 'manage-email-settings', 'manage-brand-settings', 'manage-currency-settings', 'manage-webhook-settings', 'manage-email-notifications', 'manage-twilio-notifications', 'manage-quotes-settings', 'manage-sales-orders-settings', 'manage-invoices-settings', 'manage-payment-settings', 'settings'].includes(item.permission);
         }
         return false;
     });
@@ -414,28 +418,31 @@ export default function Settings() {
                     )}
 
                     {/* Email Settings Section */}
-                    {isSuperAdmin && (
+                    {(isSuperAdmin || auth.roles?.includes('company')) && (
                         <section id="email-settings" ref={emailSettingsRef} className="mb-8">
                             <EmailSettings />
                         </section>
                     )}
                     {/* Email Notification Settings Section */}
-                    {isSuperAdmin && (
+                    {auth.roles?.includes('company') && (
                         <section id="email-notification-settings" ref={emailNotificationSettingsRef} className="mb-8">
                             <EmailNotificationSettings />
                         </section>
                     )}
                     {/* Twilio Notification Settings Section */}
-                    {isSuperAdmin && (
+                    {auth.roles?.includes('company') && (
                         <section id="twilio-notification-settings" ref={twilioNotificationSettingsRef} className="mb-8">
                             <TwilioNotificationSettings />
                         </section>
                     )}
 
                     {/* Payment Settings Section */}
-                    {isSuperAdmin && (
+                    {(isSuperAdmin || auth.roles?.includes('company')) && (
                         <section id="payment-settings" ref={paymentSettingsRef} className="mb-8">
-                            <PaymentSettings settings={paymentSettings} />
+                            <PaymentSettings
+                                settings={paymentSettings}
+                                submitRouteName={isSuperAdmin ? 'payment.settings' : 'company.payment.settings'}
+                            />
                         </section>
                     )}
 

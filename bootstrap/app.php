@@ -58,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'payments/iyzipay/success',
                 'payments/iyzipay/callback',
                 'payments/hitpay/webhook',
+                'invoices/payment/hitpay/webhook',
                 'invoices/payment/iyzipay/callback',
                 'invoices/payment/aamarpay/success',
                 'invoices/payment/aamarpay/callback',

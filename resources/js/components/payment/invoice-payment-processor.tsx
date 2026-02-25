@@ -39,6 +39,7 @@ import { InvoiceKhaltiPaymentForm } from './invoice-khalti-payment-form';
 import { InvoiceEasebuzzPaymentForm } from './invoice-easebuzz-payment-form';
 import { InvoiceOzowPaymentForm } from './invoice-ozow-payment-form';
 import { InvoiceCashfreePaymentForm } from './invoice-cashfree-payment-form';
+import { InvoiceHitpayPaymentForm } from './invoice-hitpay-payment-form';
 import { formatCurrency } from '@/utils/currency';
 
 interface PaymentMethod {
@@ -370,11 +371,23 @@ export function InvoicePaymentProcessor({
             });
         }
 
+        if (paymentSettings?.is_hitpay_enabled === true || paymentSettings?.is_hitpay_enabled === '1') {
+            methods.push({
+                id: 'hitpay',
+                name: 'HitPay',
+                icon: <CreditCard className="h-5 w-5" />,
+                enabled: true
+            });
+        }
+
         setPaymentMethods(methods);
     }, [invoice.paymentMethods]);
 
     const formatCurrency = (amount: number) => {
-        return formatCurrency(Number(amount || 0));
+        if (typeof window !== 'undefined' && window.appSettings?.formatCurrency) {
+            return window.appSettings.formatCurrency(amount, { showSymbol: true });
+        }
+        return `${Number(amount || 0).toFixed(2)}`;
     };
 
     // Calculate due amount (total - already paid)
@@ -792,6 +805,17 @@ export function InvoicePaymentProcessor({
                         onCancel={handlePaymentCancel}
                     />
                 );
+            case 'hitpay':
+                return (
+                    <InvoiceHitpayPaymentForm
+                        invoiceId={invoice.id}
+                        amount={amount}
+                        paymentType={paymentType}
+                        currency={invoice.paymentMethods?.currency || 'PHP'}
+                        onSuccess={onSuccess}
+                        onCancel={handlePaymentCancel}
+                    />
+                );
             default:
                 return null;
         }
@@ -866,11 +890,10 @@ export function InvoicePaymentProcessor({
                         {paymentMethods.map((method) => (
                             <Card
                                 key={method.id}
-                                className={`cursor-pointer transition-colors ${
-                                    selectedPaymentMethod === method.id
-                                        ? 'border-primary bg-primary/5'
-                                        : 'hover:border-gray-300'
-                                }`}
+                                className={`cursor-pointer transition-colors ${selectedPaymentMethod === method.id
+                                    ? 'border-primary bg-primary/5'
+                                    : 'hover:border-gray-300'
+                                    }`}
                                 onClick={() => setSelectedPaymentMethod(method.id)}
                             >
                                 <CardContent className="p-3">

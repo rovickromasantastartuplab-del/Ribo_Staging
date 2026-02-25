@@ -61,12 +61,12 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     // Email settings page
     Route::get('settings/email', function () {
         return Inertia::render('settings/components/email-settings');
-    })->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.email');
+    })->name('settings.email');
 
     // Email settings routes
-    Route::get('settings/email/get', [EmailSettingController::class, 'getEmailSettings'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.email.get');
-    Route::post('settings/email/update', [EmailSettingController::class, 'updateEmailSettings'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.email.update');
-    Route::post('settings/email/test', [EmailSettingController::class, 'sendTestEmail'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.email.test');
+    Route::get('settings/email/get', [EmailSettingController::class, 'getEmailSettings'])->name('settings.email.get');
+    Route::post('settings/email/update', [EmailSettingController::class, 'updateEmailSettings'])->name('settings.email.update');
+    Route::post('settings/email/test', [EmailSettingController::class, 'sendTestEmail'])->name('settings.email.test');
 
     // General settings page with system and company settings
     Route::get('settings', [SettingsController::class, 'index'])->name('settings');
@@ -83,13 +83,13 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('settings/cookie', [SystemSettingsController::class, 'updateCookie'])->name('settings.cookie.update');
     Route::post('settings/seo', [SystemSettingsController::class, 'updateSeo'])->name('settings.seo.update');
     Route::post('settings/storage', [SystemSettingsController::class, 'updateStorage'])->name('settings.storage.update');
-    Route::get('settings/email-notifications', [SystemSettingsController::class, 'getEmailNotifications'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.email-notifications.get');
-    Route::get('settings/email-notifications/available', [SystemSettingsController::class, 'getAvailableEmailNotifications'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.email-notifications.available');
-    Route::post('settings/email-notifications', [SystemSettingsController::class, 'updateEmailNotifications'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.email-notifications.update');
-    Route::get('settings/twilio-notifications', [SystemSettingsController::class, 'getTwilioNotifications'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.twilio-notifications.get');
-    Route::get('settings/twilio-notifications/available', [SystemSettingsController::class, 'getAvailableTwilioNotifications'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.twilio-notifications.available');
-    Route::get('settings/twilio-config', [SystemSettingsController::class, 'getTwilioConfig'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.twilio-config.get');
-    Route::post('settings/twilio-notifications', [SystemSettingsController::class, 'updateTwilioNotifications'])->middleware('App\\Http\\Middleware\\SuperAdminMiddleware')->name('settings.twilio-notifications.update');
+    Route::get('settings/email-notifications', [SystemSettingsController::class, 'getEmailNotifications'])->name('settings.email-notifications.get');
+    Route::get('settings/email-notifications/available', [SystemSettingsController::class, 'getAvailableEmailNotifications'])->name('settings.email-notifications.available');
+    Route::post('settings/email-notifications', [SystemSettingsController::class, 'updateEmailNotifications'])->name('settings.email-notifications.update');
+    Route::get('settings/twilio-notifications', [SystemSettingsController::class, 'getTwilioNotifications'])->name('settings.twilio-notifications.get');
+    Route::get('settings/twilio-notifications/available', [SystemSettingsController::class, 'getAvailableTwilioNotifications'])->name('settings.twilio-notifications.available');
+    Route::get('settings/twilio-config', [SystemSettingsController::class, 'getTwilioConfig'])->name('settings.twilio-config.get');
+    Route::post('settings/twilio-notifications', [SystemSettingsController::class, 'updateTwilioNotifications'])->name('settings.twilio-notifications.update');
     Route::post('settings/sms/test', [SystemSettingsController::class, 'sendTestSMS'])->name('settings.sms.test');
     Route::post('settings/cache/clear', [SystemSettingsController::class, 'clearCache'])->name('settings.cache.clear');
 

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency as formatCurrencyUtils } from '@/utils/currency';
 
 export default function CampaignShow() {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ export default function CampaignShow() {
       active: 'bg-green-50 text-green-700 ring-green-600/20',
       inactive: 'bg-red-50 text-red-700 ring-red-600/10'
     };
-    
+
     return (
       <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${statusColors[status as keyof typeof statusColors] || statusColors.active}`}>
         {status?.charAt(0).toUpperCase() + status?.slice(1) || t('Active')}
@@ -30,7 +30,7 @@ export default function CampaignShow() {
     );
   };
 
-  const formatCurrency = (amount: number) => formatCurrency(Number(amount || 0));
+  const formatCurrency = (amount: number) => formatCurrencyUtils(Number(amount || 0));
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-';
@@ -228,7 +228,7 @@ export default function CampaignShow() {
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-sm font-medium text-gray-700">{lead.name}</p>
                         {lead.lead_status && (
-                          <span 
+                          <span
                             className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-white"
                             style={{ backgroundColor: lead.lead_status.color || '#6B7280' }}
                           >

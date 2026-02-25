@@ -159,14 +159,10 @@ export default function InvoicePayment({ invoice, paymentMethod, amount, payment
         }
     }, [paymentMethod, paymentSettings]);
 
-    const formatCurrency = (amount: number) => {
-        return formatCurrency(Number(amount || 0));
-    };
-
     return (
         <>
             <Head title={t('Pay Invoice {{invoiceNumber}}', { invoiceNumber: invoice.invoice_number })} />
-            
+
             <div className="min-h-screen bg-gray-50 py-8">
                 <div className="max-w-2xl mx-auto px-4">
                     <div className="mb-6">
@@ -193,7 +189,7 @@ export default function InvoicePayment({ invoice, paymentMethod, amount, payment
                                     <p className="text-gray-600">{invoice.name}</p>
                                 </div>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">{t('Payment Type')}</p>

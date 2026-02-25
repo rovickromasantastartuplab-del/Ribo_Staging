@@ -583,8 +583,9 @@ class LeadController extends Controller
 
         $name = 'lead_' . date('Y-m-d i:h:s');
         ob_start();
-        
-        $data = Excel::download(new LeadExport(), $name . '.xlsx');  ob_end_clean();
+
+        $data = Excel::download(new LeadExport(), $name . '.xlsx');
+        ob_end_clean();
 
         return $data;
     }
@@ -615,8 +616,7 @@ class LeadController extends Controller
 
         $validator = \Validator::make($request->all(), $rules);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->with('error', $messages->first());
         }
@@ -645,7 +645,7 @@ class LeadController extends Controller
                 $colIndex = 0;
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
                     if ($colIndex < count($headers)) {
-                        $rowData[$headers[$colIndex]] = (string)$worksheet->getCell($col . $row)->getValue();
+                        $rowData[$headers[$colIndex]] = (string) $worksheet->getCell($col . $row)->getValue();
                     }
                     $colIndex++;
                 }
@@ -673,8 +673,7 @@ class LeadController extends Controller
 
         $validator = \Validator::make($request->all(), $rules);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->with('error', $messages->first());
         }

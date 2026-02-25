@@ -157,6 +157,17 @@ class EmailTemplateSeeder extends Seeder
                     ]
                 ]
             ],
+            // Lead Welcome (sent to the Lead's email)
+            [
+                'name' => 'Lead Welcome',
+                'from' => 'Sales Team',
+                'translations' => [
+                    'en' => [
+                        'subject' => 'Thank You for Your Inquiry - {company_name}',
+                        'content' => '<p>Hello {lead_name},</p><p>Thank you for reaching out to us! We have received your inquiry and one of our team members will be in touch with you shortly.</p><p><strong>Here\'s what we have on file:</strong></p><ul><li>Name: {lead_name}</li><li>Email: {lead_email}</li><li>Phone: {lead_phone}</li><li>Company: {lead_company}</li></ul><p>In the meantime, if you have any questions, feel free to reply to this email. We look forward to working with you!</p><p style="text-align: right;">Best Regards,<br>{company_name}</p>'
+                    ],
+                ]
+            ],
             // Lead Moved
             [
                 'name' => 'Lead Moved',
@@ -226,6 +237,17 @@ class EmailTemplateSeeder extends Seeder
                         'subject' => '潜在客户已移动 - {lead_name}',
                         'content' => '<p>你好 {assigned_user_name}，</p><p>潜在客户 <strong>{lead_name}</strong> 已从 <strong>{old_lead_stage}</strong> 移动到 <strong>{new_lead_stage}</strong>。请查看以下详细信息并相应进行跟进。</p><p><strong>潜在客户详情：</strong></p><ul><li>姓名：{lead_name}</li><li>邮箱：{lead_email}</li><li>电话：{lead_phone}</li><li>公司：{lead_company}</li></ul><p>感谢您的持续努力和奉献。</p><p style="text-align: right;">此致敬礼，<br>{company_name}</p>'
                     ]
+                ]
+            ],
+            // Lead Status Updated (sent to the Lead's email)
+            [
+                'name' => 'Lead Status Updated',
+                'from' => 'Sales Team',
+                'translations' => [
+                    'en' => [
+                        'subject' => 'Update on Your Inquiry - {company_name}',
+                        'content' => '<p>Hello {lead_name},</p><p>We wanted to let you know that the status of your inquiry has been updated to <strong>{new_lead_stage}</strong>.</p><p>Our team is actively reviewing your information and we will follow up with you regarding the next steps.</p><p>If you have any questions in the meantime, please feel free to reply to this email.</p><p style="text-align: right;">Best Regards,<br>{company_name}</p>'
+                    ],
                 ]
             ],
             // Quote Created
@@ -724,7 +746,55 @@ class EmailTemplateSeeder extends Seeder
                         'content' => '<p>你好 {assigned_user_name}，</p><p>您的机会阶段已从<strong>{old_opportunity_stage}</strong>更新为<strong>{new_opportunity_stage}</strong>。</p><p><strong>机会详情：</strong></p><ul><li>机会名称：{opportunity_name}</li><li>客户：{account_name}</li><li>联系人：{contact_name}</li><li>当前阶段：{new_opportunity_stage}</li><li>金额：{opportunity_amount}</li><li>关闭日期：{opportunity_close_date}</li></ul><p><strong>描述：</strong></p><p>{opportunity_description}</p><p>请继续处理这个机会并根据需要更新进度。</p><p style="text-align: right;">此致敬礼，<br>{company_name}</p>'
                     ],
                 ]
-                ],
+            ],
+
+            // Sales Order Created
+            [
+                'name' => 'Sales Order Created',
+                'from' => 'Sales Team',
+                'translations' => [
+                    'en' => [
+                        'subject' => 'New Sales Order Created - {order_name}',
+                        'content' => '<p>Hello {billing_contact_name},</p><p>A new sales order has been created for you. Please review the details below.</p><p><strong>Order Details:</strong></p><ul><li>Order Number: {order_number}</li><li>Order Name: {order_name}</li><li>Account: {account_name}</li><li>Total Amount: {order_total}</li><li>Order Date: {order_date}</li><li>Expected Delivery: {delivery_date}</li><li>Status: {order_status}</li></ul><p style="text-align: center; margin: 25px 0;"><a href="{view_link}" style="background-color: #4F46E5; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Sales Order</a></p><p>If you have any questions, please don\'t hesitate to contact us.</p><p style="text-align: right;">Best Regards,<br>{company_name}</p>'
+                    ],
+                ]
+            ],
+
+            // Sales Order Status Changed
+            [
+                'name' => 'Sales Order Status Changed',
+                'from' => 'Sales Team',
+                'translations' => [
+                    'en' => [
+                        'subject' => 'Sales Order Status Updated - {order_name}',
+                        'content' => '<p>Hello {billing_contact_name},</p><p>The status of your sales order has been updated from <strong>{old_order_status}</strong> to <strong>{new_order_status}</strong>.</p><p><strong>Order Details:</strong></p><ul><li>Order Number: {order_number}</li><li>Order Name: {order_name}</li><li>Account: {account_name}</li><li>Total Amount: {order_total}</li><li>Order Date: {order_date}</li><li>Expected Delivery: {delivery_date}</li><li>Current Status: {new_order_status}</li></ul><p style="text-align: center; margin: 25px 0;"><a href="{view_link}" style="background-color: #4F46E5; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Sales Order</a></p><p>If you have any questions about this update, please contact your assigned representative.</p><p style="text-align: right;">Best Regards,<br>{company_name}</p>'
+                    ],
+                ]
+            ],
+
+            // Invoice Created
+            [
+                'name' => 'Invoice Created',
+                'from' => 'Billing Team',
+                'translations' => [
+                    'en' => [
+                        'subject' => 'New Invoice Created - {invoice_name}',
+                        'content' => '<p>Hello {contact_name},</p><p>A new invoice has been created for you. Please review the details below.</p><p><strong>Invoice Details:</strong></p><ul><li>Invoice Number: {invoice_number}</li><li>Invoice Name: {invoice_name}</li><li>Account: {account_name}</li><li>Total Amount: {invoice_total}</li><li>Invoice Date: {invoice_date}</li><li>Due Date: {due_date}</li><li>Status: {invoice_status}</li></ul><p style="text-align: center; margin: 25px 0;"><a href="{view_link}" style="background-color: #059669; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Invoice & Pay</a></p><p>Please ensure payment is made by the due date. If you have any questions, please don\'t hesitate to contact us.</p><p style="text-align: right;">Best Regards,<br>{company_name}</p>'
+                    ],
+                ]
+            ],
+
+            // Invoice Status Changed
+            [
+                'name' => 'Invoice Status Changed',
+                'from' => 'Billing Team',
+                'translations' => [
+                    'en' => [
+                        'subject' => 'Invoice Status Updated - {invoice_name}',
+                        'content' => '<p>Hello {contact_name},</p><p>The status of your invoice has been updated from <strong>{old_invoice_status}</strong> to <strong>{new_invoice_status}</strong>.</p><p><strong>Invoice Details:</strong></p><ul><li>Invoice Number: {invoice_number}</li><li>Invoice Name: {invoice_name}</li><li>Account: {account_name}</li><li>Total Amount: {invoice_total}</li><li>Invoice Date: {invoice_date}</li><li>Due Date: {due_date}</li><li>Current Status: {new_invoice_status}</li></ul><p style="text-align: center; margin: 25px 0;"><a href="{view_link}" style="background-color: #059669; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Invoice & Pay</a></p><p>If you have any questions about this update, please contact your assigned representative.</p><p style="text-align: right;">Best Regards,<br>{company_name}</p>'
+                    ],
+                ]
+            ],
         ];
 
         foreach ($templates as $templateData) {

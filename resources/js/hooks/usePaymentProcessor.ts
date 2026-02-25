@@ -27,6 +27,7 @@ export function usePaymentProcessor(options: UsePaymentProcessorOptions = {}) {
     setProcessing(true);
 
     const routes = {
+      hitpay: data.invoiceId ? 'invoice.hitpay.payment' : 'hitpay.payment',
       stripe: data.invoiceId ? 'invoice.stripe.payment' : 'stripe.payment',
       paypal: data.invoiceId ? 'invoice.paypal.payment' : 'paypal.payment',
       bank: data.invoiceId ? 'invoice.bank.payment' : 'bank.payment',
@@ -40,7 +41,7 @@ export function usePaymentProcessor(options: UsePaymentProcessorOptions = {}) {
     };
 
     const routeName = routes[paymentMethod as keyof typeof routes];
-    
+
     if (!routeName) {
       toast.error(t('Invalid payment method'));
       setProcessing(false);
@@ -48,7 +49,7 @@ export function usePaymentProcessor(options: UsePaymentProcessorOptions = {}) {
     }
 
     const formattedData = formatPaymentData(paymentMethod, data);
-    
+
     router.post(route(routeName), formattedData, {
       onSuccess: (page) => {
         // Check if there's a success message in the response
@@ -85,7 +86,7 @@ export function usePaymentProcessor(options: UsePaymentProcessorOptions = {}) {
     };
 
     const required = requiredFields[paymentMethod as keyof typeof requiredFields] || [];
-    
+
     for (const field of required) {
       if (!data[field]) {
         toast.error(t(`${field} is required`));

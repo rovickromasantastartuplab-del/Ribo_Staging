@@ -46,43 +46,44 @@ class SendQuoteStatusChangedEmail
                 '{assigned_user_name}' => $assignedUser->name ?? '-',
                 '{assigned_user_email}' => $assignedUser->email ?? '-',
                 '{company_name}' => getCompanyName(),
+                '{view_link}' => route('quotes.public', ['quote' => encrypt($quote->id)]),
             ];
 
             try {
-            // Send email to billing contact if exists
-            if ($billingContact && $billingContact->email) {
-                $createdByUser = User::find(createdBy());
-                $userLanguage = $createdByUser->lang ?? 'en';
-                $this->emailService->sendTemplateEmailWithLanguage(
-                    templateName: 'Quote Status Changed',
-                    variables: $variables,
-                    toEmail: $billingContact->email,
-                    toName: $billingContact->name,
-                    language: $userLanguage
-                );
-            }
+                // Send email to billing contact if exists
+                if ($billingContact && $billingContact->email) {
+                    $createdByUser = User::find(createdBy());
+                    $userLanguage = $createdByUser->lang ?? 'en';
+                    $this->emailService->sendTemplateEmailWithLanguage(
+                        templateName: 'Quote Status Changed',
+                        variables: $variables,
+                        toEmail: $billingContact->email,
+                        toName: $billingContact->name,
+                        language: $userLanguage
+                    );
+                }
 
-            // Send email to assigned user if exists and different from billing contact
-            if (
-                $assignedUser && $assignedUser->email &&
-                (!$billingContact || $assignedUser->email !== $billingContact->email)
-            ) {
-                $createdByUser = User::find(createdBy());
-                $userLanguage = $createdByUser->lang ?? 'en';
-                $this->emailService->sendTemplateEmailWithLanguage(
-                    templateName: 'Quote Status Changed',
-                    variables: $variables,
-                    toEmail: $assignedUser->email,
-                    toName: $assignedUser->name,
-                    language: $userLanguage
-                );
-            }
+                // Send email to assigned user if exists and different from billing contact
+                if (
+                    $assignedUser && $assignedUser->email &&
+                    (!$billingContact || $assignedUser->email !== $billingContact->email)
+                ) {
+                    $createdByUser = User::find(createdBy());
+                    $userLanguage = $createdByUser->lang ?? 'en';
+                    $this->emailService->sendTemplateEmailWithLanguage(
+                        templateName: 'Quote Status Changed',
+                        variables: $variables,
+                        toEmail: $assignedUser->email,
+                        toName: $assignedUser->name,
+                        language: $userLanguage
+                    );
+                }
 
-            // Trigger webhooks for Quote Status Changed
-            if ($assignedUser && $assignedUser->id) {
-                $this->webhookService->triggerWebhooks('Quote Status Changed', $quote->toArray(), $quote->created_by ?? $quote->id);
-            }
-        } catch (Exception $e) {
+                // Trigger webhooks for Quote Status Changed
+                if ($assignedUser && $assignedUser->id) {
+                    $this->webhookService->triggerWebhooks('Quote Status Changed', $quote->toArray(), $quote->created_by ?? $quote->id);
+                }
+            } catch (Exception $e) {
                 // Store error in session for frontend notification
                 session()->flash('email_error', 'Failed to send quote status changed email: ' . $e->getMessage());
             }

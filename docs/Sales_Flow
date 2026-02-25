@@ -1,0 +1,290 @@
+FULL SALES LIFECYCLE
+From New Lead → Active Paying Client
+
+PHASE 1 — Lead Capture & Entry
+🎯 Trigger
+A new prospect shows interest (form, call, referral, campaign, manual entry).
+
+Track A — Sales Rep Journey
+Step 1: Create New Lead
+Navigate to CRM → Leads
+Click “Create Lead”
+Input:
+Lead Name
+Company
+Email
+Phone
+Source (campaign, referral, website, etc.)
+Assigned Sales Rep
+Save
+System Behavior:
+Lead appears in Lead List
+Status = New
+Timestamp recorded
+Assigned rep receives notification (if enabled)
+
+Track B — Customer Experience
+Prospect submits inquiry or speaks to rep.
+May receive:
+Auto confirmation email
+Thank you message
+Enters company database.
+Emotional state:
+Curious. Evaluating options.
+
+PHASE 2 — Lead Qualification
+🎯 Goal
+Determine if lead is worth pursuing.
+
+Track A — Sales Rep Journey
+Step 2: Review Lead Details
+Open lead profile
+Check:
+Source
+Budget indicators
+Notes
+Communication history
+Step 3: First Contact
+Log a call
+Send email
+Schedule meeting
+Add notes
+System records:
+Call logs
+Email interactions
+Meeting schedule
+Activity timeline
+Step 4: Update Lead Status
+Change status to:
+Contacted
+Qualified
+Not Qualified
+Follow-up Required
+Decision Gate:
+If not qualified → mark as lost.
+If qualified → proceed to conversion.
+
+Track B — Customer Experience
+Receives outreach (call/email).
+Books demo or meeting.
+Explains needs and expectations.
+Emotional state:
+Testing credibility. Comparing alternatives.
+
+PHASE 3 — Lead Conversion
+🎯 Goal
+Convert qualified lead into structured CRM entities.
+
+Track A — Sales Rep Journey
+Step 5: Convert Lead
+Click “Convert Lead”
+System auto-creates:
+Account (Company)
+Contact (Person)
+Opportunity (Revenue potential)
+Lead record becomes:
+Converted
+Linked to new entities
+Now managed inside Opportunity Pipeline.
+
+Track B — Customer Experience
+After demo/meeting, prospect signals interest.
+Discussion moves toward proposal stage.
+Emotional state:
+Interested but cautious.
+
+PHASE 4 — Opportunity & Pipeline Management
+🎯 Goal
+Move deal through sales stages.
+
+Track A — Sales Rep Journey
+Step 6: Manage Opportunity
+Inside Opportunity:
+Set:
+Expected Revenue
+Close Date
+Stage (e.g., Proposal, Negotiation)
+Probability %
+Step 7: Move Through Pipeline Stages
+Stages typically:
+Qualification
+Proposal
+Negotiation
+Decision
+Closed Won / Closed Lost
+System tracks:
+Stage changes
+Value forecasting
+Pipeline analytics
+Step 8: Add Activities
+Schedule follow-up calls
+Attach proposal files
+Log meetings
+Add internal notes
+
+Track B — Customer Experience
+Receives:
+Proposal document
+Pricing breakdown
+Product demo follow-ups
+Negotiates scope or pricing.
+Emotional state:
+Evaluating risk vs reward.
+
+PHASE 5 — Quotation
+🎯 Goal
+Formalize offer.
+
+Track A — Sales Rep Journey
+Step 9: Create Quote
+Navigate to Quotes → Create
+Select:
+Account
+Contact
+Products/services
+Quantity
+Tax
+Discounts
+System:
+Calculates totals
+Generates quote document
+Sets status = Draft
+Step 10: Send Quote
+Change status to Sent
+Email directly from system
+Quote statuses:
+Draft
+Sent
+Accepted
+Declined
+
+Track B — Customer Experience
+Receives official quote.
+Reviews pricing and scope.
+Approves or requests revisions.
+Emotional state:
+Decision-making moment.
+
+PHASE 6 — Order Creation
+🎯 Trigger
+Quote is accepted.
+
+Track A — Sales Rep Journey
+Step 11: Convert Quote to Sales Order
+Click “Convert to Order”
+System:
+Creates Sales Order
+Pulls data from quote
+Links to Account & Opportunity
+Order status:
+Pending
+Confirmed
+Processing
+Completed
+
+Track B — Customer Experience
+Receives order confirmation.
+Expects service or product delivery timeline.
+Emotional state:
+Expectation of fulfillment.
+
+PHASE 7 — Invoice & Payment
+🎯 Goal
+Monetize the deal.
+
+Track A — Sales Rep Journey
+Step 12: Generate Invoice
+From Sales Order → Create Invoice
+Invoice includes:
+Line items
+Taxes
+Payment terms
+Due date
+Status:
+Draft
+Sent
+Paid
+Partially Paid
+Overdue
+Step 13: Record Payment
+Log payment method
+Update invoice status
+System updates:
+Revenue tracking
+Financial reports
+Account history
+
+Track B — Customer Experience
+Receives invoice.
+Pays via supported payment method.
+Gets payment confirmation.
+Emotional state:
+Commitment achieved.
+
+PHASE 8 — Become Active Client
+🎯 Trigger
+Invoice paid.
+
+Track A — Sales Rep Journey
+Step 14: Opportunity Status = Closed Won
+System:
+Updates revenue reports
+Reflects win rate
+Updates pipeline metrics
+Step 15: Account Lifecycle Status = Active Client
+Now the account:
+Can have projects
+Can receive campaigns
+Can generate recurring invoices
+Can enter customer success workflows
+
+Track B — Customer Experience
+Onboarding begins.
+May receive:
+Welcome email
+Project kickoff
+Support access
+Dedicated account manager
+Emotional state:
+Transition from buyer → partner.
+
+END STATE
+In CRM:
+Lead → Converted
+Account → Active
+Opportunity → Closed Won
+Sales Order → Completed
+Invoice → Paid
+
+SYSTEM TOUCHPOINT SUMMARY
+Stage
+Primary Module Used
+Lead Entry
+Leads
+Qualification
+Leads + Activities
+Conversion
+Lead → Account/Contact/Opportunity
+Negotiation
+Opportunities
+Proposal
+Quotes
+Deal Closure
+Sales Orders
+Billing
+Invoices
+Reporting
+Analytics & Reports
+
+
+Critical Transition Points (Where Bugs Usually Hide)
+Lead → Opportunity conversion mapping
+Quote → Order data consistency
+Order → Invoice line item accuracy
+Payment → Invoice status automation
+Opportunity close sync with revenue reporting
+
+If you'd like, I can next:
+Turn this into a visual lifecycle map
+Stress-test it for operational bottlenecks
+Or convert it into acceptance test scenarios for DevOps

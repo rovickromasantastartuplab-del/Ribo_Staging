@@ -11,6 +11,8 @@ use App\Models\Contact;
 use App\Models\Product;
 use App\Models\PlanOrder;
 use App\Exports\InvoiceExport;
+use App\Events\InvoiceCreated;
+use App\Events\InvoiceStatusChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -367,6 +369,9 @@ class InvoiceController extends Controller
 
         $invoice->calculateTotals();
 
+        // Dispatch event for automatic email notification
+        event(new InvoiceCreated($invoice));
+
         return redirect()->back()->with('success', __('Invoice created successfully.'));
     }
 
@@ -446,7 +451,13 @@ class InvoiceController extends Controller
         $products = $validated['products'] ?? [];
         unset($validated['products']);
 
+        $oldStatus = $invoice->status;
         $invoice->update($validated);
+
+        // Dispatch status changed event if status was updated
+        if ($invoice->wasChanged('status') && $oldStatus !== $invoice->status) {
+            event(new InvoiceStatusChanged($invoice, $oldStatus, $invoice->status));
+        }
 
         if (!empty($products)) {
             $syncData = [];
@@ -500,8 +511,12 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', __('Invoice not found.'));
         }
 
+        $oldStatus = $invoice->status;
         $newStatus = $invoice->status === 'draft' ? 'sent' : 'draft';
         $invoice->update(['status' => $newStatus]);
+
+        // Dispatch status changed event
+        event(new InvoiceStatusChanged($invoice, $oldStatus, $newStatus));
 
         return redirect()->back()->with('success', __('Invoice status updated successfully.'));
     }

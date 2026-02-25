@@ -267,7 +267,7 @@ export default function Leads() {
     toast.loading(t(`Converting lead to ${convertType}...`));
 
     router.put(route(route_name, currentItem.id), formData, {
-    // router.post(route(route_name, currentItem.id), formData, {
+      // router.post(route(route_name, currentItem.id), formData, {
       onSuccess: (page) => {
         setIsConvertModalOpen(false);
         toast.dismiss();
@@ -889,8 +889,8 @@ export default function Leads() {
                                             </span>
                                           )}
                                           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${lead.status === 'active'
-                                              ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                              : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                            ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                                            : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
                                             }`}>
                                             {lead.status === 'active' ? t('Active') : t('Inactive')}
                                           </span>

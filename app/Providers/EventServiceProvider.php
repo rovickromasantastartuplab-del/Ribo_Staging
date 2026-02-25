@@ -14,15 +14,25 @@ use App\Events\TaskAssigned;
 use App\Events\MeetingInvitation;
 use App\Events\OpportunityCreated;
 use App\Events\OpportunityStageChanged;
+use App\Events\SalesOrderCreated;
+use App\Events\SalesOrderStatusChanged;
+use App\Events\InvoiceCreated;
+use App\Events\InvoiceStatusChanged;
 use App\Listeners\SendAssignLeadEmail;
+use App\Listeners\SendLeadWelcomeEmail;
 use App\Listeners\SendCaseCreatedEmail;
 use App\Listeners\SendLeadStatusChangedEmail;
+use App\Listeners\SendLeadStatusChangedToLeadEmail;
 use App\Listeners\SendQuoteCreatedEmail;
 use App\Listeners\SendQuoteStatusChangedEmail;
 use App\Listeners\SendTaskAssignedEmail;
 use App\Listeners\SendMeetingInvitationEmail;
 use App\Listeners\SendOpportunityCreatedEmail;
 use App\Listeners\SendOpportunityStageChangedEmail;
+use App\Listeners\SendSalesOrderCreatedEmail;
+use App\Listeners\SendSalesOrderStatusChangedEmail;
+use App\Listeners\SendInvoiceCreatedEmail;
+use App\Listeners\SendInvoiceStatusChangedEmail;
 use App\Listeners\TwilioAccountCreateListener;
 use App\Listeners\TwilioCaseCreateListener;
 use App\Listeners\TwilioLeadCreateListener;
@@ -52,11 +62,13 @@ class EventServiceProvider extends ServiceProvider
         ],
         LeadAssigned::class => [
             SendAssignLeadEmail::class,
+            SendLeadWelcomeEmail::class,
             TwilioLeadCreateListener::class,
             WebhookAssignLeadListener::class,
         ],
         LeadStatusChanged::class => [
             SendLeadStatusChangedEmail::class,
+            SendLeadStatusChangedToLeadEmail::class,
         ],
         QuoteCreated::class => [
             SendQuoteCreatedEmail::class,
@@ -91,6 +103,18 @@ class EventServiceProvider extends ServiceProvider
         AccountCreate::class => [
             TwilioAccountCreateListener::class,
         ],
+        SalesOrderCreated::class => [
+            SendSalesOrderCreatedEmail::class,
+        ],
+        SalesOrderStatusChanged::class => [
+            SendSalesOrderStatusChangedEmail::class,
+        ],
+        InvoiceCreated::class => [
+            SendInvoiceCreatedEmail::class,
+        ],
+        InvoiceStatusChanged::class => [
+            SendInvoiceStatusChangedEmail::class,
+        ],
     ];
 
     /**
@@ -106,13 +130,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->booting(function () {
-            foreach ($this->listen as $event => $listeners) {
-                foreach (array_unique(array_filter($listeners)) as $listener) {
-                    \Illuminate\Support\Facades\Event::listen($event, $listener);
-                }
-            }
-        });
+        //
     }
 
     /**

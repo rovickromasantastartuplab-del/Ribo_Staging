@@ -41,6 +41,7 @@ class SendQuoteCreatedEmail
                 '{assigned_user_name}' => $assignedUser->name ?? '-',
                 '{assigned_user_email}' => $assignedUser->email ?? '-',
                 '{company_name}' => getCompanyName(),
+                '{view_link}' => route('quotes.public', ['quote' => encrypt($quote->id)]),
             ];
 
             try {

@@ -146,7 +146,7 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
 
     const [paymentAmount, setPaymentAmount] = useState(dueAmount);
 
-    const formatCurrency = (amount: number) => {
+    const formatAmount = (amount: number) => {
         return formatCurrency(Number(amount || 0));
     };
 
@@ -315,11 +315,11 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
                                 </div>
                                 <div className="text-right ml-6">
                                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${invoice.status === 'paid' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-                                            invoice.status === 'partially_paid' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
-                                                invoice.status === 'sent' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                                                    invoice.status === 'overdue' ? 'bg-red-50 text-red-700 ring-red-600/20' :
-                                                        invoice.status === 'cancelled' ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' :
-                                                            'bg-gray-50 text-gray-700 ring-gray-600/20'
+                                        invoice.status === 'partially_paid' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
+                                            invoice.status === 'sent' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                                invoice.status === 'overdue' ? 'bg-red-50 text-red-700 ring-red-600/20' :
+                                                    invoice.status === 'cancelled' ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' :
+                                                        'bg-gray-50 text-gray-700 ring-gray-600/20'
                                         }`}>
                                         {invoice.status === 'partially_paid' ? t('Partially Paid') :
                                             (invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1))}
@@ -633,8 +633,8 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
                                                     <td className="text-right py-4 px-4 font-semibold">{formatCurrency(payment.amount)}</td>
                                                     <td className="py-4 px-4">
                                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${payment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                                payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                                    'bg-red-100 text-red-800'
+                                                            payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-red-100 text-red-800'
                                                             }`}>
                                                             {payment.status}
                                                         </span>

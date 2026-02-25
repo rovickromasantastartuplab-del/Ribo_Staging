@@ -10,6 +10,8 @@ use App\Models\Product;
 use App\Models\ShippingProviderType;
 use App\Models\Tax;
 use App\Exports\SalesOrderExport;
+use App\Events\SalesOrderCreated;
+use App\Events\SalesOrderStatusChanged;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -22,7 +24,7 @@ class SalesOrderController extends Controller
     {
         $query = SalesOrder::query()
             ->with(['quote', 'account', 'billingContact', 'shippingContact', 'shippingProviderType', 'creator', 'assignedUser', 'products.tax'])
-            ->where(function($q) {
+            ->where(function ($q) {
                 if (auth()->user()->type === 'company') {
                     $q->where('created_by', createdBy());
                 } else {
@@ -31,10 +33,10 @@ class SalesOrderController extends Controller
             });
 
         if ($request->has('search') && !empty($request->search)) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('order_number', 'like', '%' . $request->search . '%')
-                  ->orWhere('name', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('account', fn($q) => $q->where('name', 'like', '%' . $request->search . '%'));
+                    ->orWhere('name', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('account', fn($q) => $q->where('name', 'like', '%' . $request->search . '%'));
             });
         }
 
@@ -74,18 +76,18 @@ class SalesOrderController extends Controller
             'salesOrders' => $salesOrders,
             'accounts' => Account::where('created_by', createdBy())
                 ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company', function($q) {
+                ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name')->get(),
             'contacts' => Contact::where('created_by', createdBy())
                 ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company', function($q) {
+                ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name')->get(),
             'quotes' => Quote::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company', function($q) {
+                ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
                 ->select('id', 'name', 'quote_number')->get(),
@@ -133,18 +135,18 @@ class SalesOrderController extends Controller
     {
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $quotes = Quote::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name', 'quote_number')->get();
@@ -185,23 +187,23 @@ class SalesOrderController extends Controller
             'assignedUser',
             'products.tax'
         ])
-        ->where('created_by', createdBy())
-        ->findOrFail($id);
+            ->where('created_by', createdBy())
+            ->findOrFail($id);
 
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
         $quotes = Quote::where('created_by', createdBy())
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name', 'quote_number')->get();
@@ -338,6 +340,9 @@ class SalesOrderController extends Controller
 
         $salesOrder->calculateTotals();
 
+        // Dispatch event for automatic email notification
+        event(new SalesOrderCreated($salesOrder));
+
         return redirect()->back()->with('success', __('Sales order created successfully.'));
     }
 
@@ -431,7 +436,13 @@ class SalesOrderController extends Controller
         $products = $validated['products'] ?? [];
         unset($validated['products']);
 
+        $oldStatus = $salesOrder->status;
         $salesOrder->update($validated);
+
+        // Dispatch status changed event if status was updated
+        if ($salesOrder->wasChanged('status') && $oldStatus !== $salesOrder->status) {
+            event(new SalesOrderStatusChanged($salesOrder, $oldStatus, $salesOrder->status));
+        }
 
         if (!empty($products)) {
             $syncData = [];
@@ -485,8 +496,12 @@ class SalesOrderController extends Controller
             return redirect()->back()->with('error', __('Sales order not found.'));
         }
 
+        $oldStatus = $salesOrder->status;
         $newStatus = $salesOrder->status === 'draft' ? 'confirmed' : 'draft';
         $salesOrder->update(['status' => $newStatus]);
+
+        // Dispatch status changed event
+        event(new SalesOrderStatusChanged($salesOrder, $oldStatus, $newStatus));
 
         return redirect()->back()->with('success', __('Sales order status updated successfully.'));
     }
