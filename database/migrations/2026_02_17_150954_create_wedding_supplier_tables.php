@@ -44,7 +44,7 @@ return new class extends Migration {
             $table->string('email')->nullable();
             $table->timestamps();
         });
-
+        
         Schema::create('company_feature_flags', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')
