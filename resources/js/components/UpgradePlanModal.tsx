@@ -33,6 +33,7 @@ interface Plan {
   module?: string[];
   is_trial?: string;
   trial_day?: number;
+  trial_days?: number;
   is_active?: boolean;
   is_current?: boolean;
   is_default?: boolean;
@@ -185,7 +186,7 @@ export function UpgradePlanModal({
     }
 
     // Trial buttons are only shown for company users (not superadmin directUpgrade)
-    const trialDaysAvailable = plan.trial_day || 0;
+    const trialDaysAvailable = plan.trial_days || plan.trial_day || 0;
     const isTrialAvailable = !directUpgrade && (plan.is_trial_available ?? (plan.is_trial === 'on' && trialDaysAvailable > 0)) && !userTrialUsed;
 
     if (isTrialAvailable) {
