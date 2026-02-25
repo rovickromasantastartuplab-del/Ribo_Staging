@@ -58,7 +58,7 @@ class LoginRequest extends FormRequest
             if ($candidate->type !== 'company' && $candidate->type !== 'superadmin') {
                 $company = \App\Models\User::find($candidate->created_by);
                 if ($company && $company->type === 'company') {
-                    // Block login if company is disabled by super admin
+                    // Block login if the company account is disabled by super admin
                     if ($company->status === 'inactive') {
                         RateLimiter::hit($this->throttleKey());
                         throw ValidationException::withMessages([
