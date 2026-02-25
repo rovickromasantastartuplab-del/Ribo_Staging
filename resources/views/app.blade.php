@@ -1,3 +1,4 @@
+text/x-generic app.blade.php ( HTML document, ASCII text, with CRLF line terminators )
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
 
@@ -58,14 +59,14 @@
     ])
     <script>
         // Ensure base URL is correctly set for assets
-window.baseUrl = '{{ url('/') }}';
-        
+        window.baseUrl = '{{ url('/') }}';
+
         // BeDesk Live Chat Configuration
         window.BeChatSettings = {
-            widgetDomain: "{{ url('/help') }}"
+            widgetDomain: "https://help.ribo.com.ph"
         };
     </script>
-    <script src="{{ url('/help/public/livechat-loader.js') }}"></script>
+    <script src="https://help.ribo.com.ph/livechat-loader.js"></script>
     @inertiaHead
 </head>
 
