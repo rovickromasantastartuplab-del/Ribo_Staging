@@ -25,9 +25,18 @@ class CheckPlanAccess
         // Only company users need plan checks
         if ($user->type !== 'company') {
             $company = User::find($user->created_by);
-            if ($company && $company->type === 'company' && $company->isPlanExpired()) {
-                auth()->logout();
-                return redirect()->route('login')->with('error', __('Access denied. Only company users can access this area.'));
+            if ($company && $company->type === 'company') {
+                // Log out staff if company is disabled by super admin
+                if ($company->status === 'inactive') {
+                    auth()->logout();
+                    return redirect()->route('login')
+                        ->with('error', __('Your company account has been disabled. Please contact administrator.'));
+                }
+
+                if ($company->isPlanExpired()) {
+                    auth()->logout();
+                    return redirect()->route('login')->with('error', __('Access denied. Only company users can access this area.'));
+                }
             }
         }
 
