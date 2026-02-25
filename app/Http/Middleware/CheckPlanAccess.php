@@ -12,7 +12,7 @@ class CheckPlanAccess
     public function handle(Request $request, Closure $next)
     {
         $user = auth()->user();
-        
+
         if (!$user) {
             return $next($request);
         }
@@ -29,12 +29,16 @@ class CheckPlanAccess
                 // Log out staff if company is disabled by super admin
                 if ($company->status === 'inactive') {
                     auth()->logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
                     return redirect()->route('login')
                         ->with('error', __('Your company account has been disabled. Please contact administrator.'));
                 }
 
                 if ($company->isPlanExpired()) {
                     auth()->logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
                     return redirect()->route('login')->with('error', __('Access denied. Only company users can access this area.'));
                 }
             }
@@ -43,7 +47,7 @@ class CheckPlanAccess
         // Check if user needs plan subscription
         if ($user->needsPlanSubscription()) {
             $message = __('Please subscribe to a plan to continue.');
-            
+
             if ($user->isTrialExpired()) {
                 $message = __('Your trial period has expired. Please subscribe to a plan to continue.');
                 // Reset trial status
@@ -60,7 +64,7 @@ class CheckPlanAccess
                     'plan_expire_date' => null
                 ]);
             }
-            
+
             return redirect()->route('plans.index')->with('error', $message);
         }
 

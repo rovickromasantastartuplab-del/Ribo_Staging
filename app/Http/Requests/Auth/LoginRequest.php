@@ -41,17 +41,13 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        // Check account status BEFORE Auth::attempt() to avoid destroying the session/CSRF token
+        $user = \App\Models\User::where('email', $this->input('email'))->first();
 
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
-        }
-        // Check if user account is inactive
-        $user = Auth::user();
+        if ($user) {
+            // Check if user account is inactive
             if ($user->status === 'inactive') {
-                Auth::logout();
+                RateLimiter::hit($this->throttleKey());
                 throw ValidationException::withMessages([
                     'email' => __('Your account is inactive. Please contact administrator.'),
                 ]);
@@ -61,12 +57,23 @@ class LoginRequest extends FormRequest
             if ($user->type !== 'company' && $user->type !== 'superadmin') {
                 $company = \App\Models\User::find($user->created_by);
                 if ($company && $company->type === 'company' && $company->status === 'inactive') {
-                    Auth::logout();
+                    RateLimiter::hit($this->throttleKey());
                     throw ValidationException::withMessages([
                         'email' => __('Your company account has been disabled. Please contact administrator.'),
                     ]);
                 }
             }
+        }
+
+        // Now attempt login — session and CSRF token are untouched if we reach here
+        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
@@ -77,7 +84,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -98,6 +105,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }
