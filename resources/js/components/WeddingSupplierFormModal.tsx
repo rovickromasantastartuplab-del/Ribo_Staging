@@ -154,16 +154,19 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
                         <div className="space-y-2">
                             <Label htmlFor="phone">{t('Mobile')}</Label>
                             <Input id="phone" value={data.phone} onChange={e => setData('phone', e.target.value)} />
+                            {errors.phone && <span className="text-red-500 text-xs">{errors.phone}</span>}
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="telephone">{t('Telephone')}</Label>
                             <Input id="telephone" value={data.telephone} onChange={e => setData('telephone', e.target.value)} />
+                            {errors.telephone && <span className="text-red-500 text-xs">{errors.telephone}</span>}
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="website">{t('Website')}</Label>
                             <Input id="website" value={data.website} onChange={e => setData('website', e.target.value)} placeholder="https://" />
+                            {errors.website && <span className="text-red-500 text-xs">{errors.website}</span>}
                         </div>
 
                         <div className="space-y-2">
@@ -174,22 +177,26 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
                                 onChange={(e) => setData('available_contact_time', e.target.value)}
                                 placeholder="e.g. 9:00 AM - 5:00 PM"
                             />
+                            {errors.available_contact_time && <span className="text-red-500 text-xs">{errors.available_contact_time}</span>}
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="address">{t('Address')}</Label>
                         <Textarea id="address" value={data.address} onChange={e => setData('address', e.target.value)} />
+                        {errors.address && <span className="text-red-500 text-xs">{errors.address}</span>}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="facebook">{t('Facebook')}</Label>
                             <Input id="facebook" value={data.facebook} onChange={e => setData('facebook', e.target.value)} />
+                            {errors.facebook && <span className="text-red-500 text-xs">{errors.facebook}</span>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="tiktok">{t('TikTok')}</Label>
                             <Input id="tiktok" value={data.tiktok} onChange={e => setData('tiktok', e.target.value)} />
+                            {errors.tiktok && <span className="text-red-500 text-xs">{errors.tiktok}</span>}
                         </div>
                     </div>
 
