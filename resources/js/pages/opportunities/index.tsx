@@ -330,10 +330,10 @@ export default function Opportunities() {
       render: (value: any, row: any) => {
         return (
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
+            <div className="flex shrink-0 h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
               {getInitials(row.name)}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="font-medium">{row.name}</div>
               <div className="text-sm text-muted-foreground">{row.account?.name || t('No account')}</div>
             </div>
