@@ -240,12 +240,12 @@ export default function Contacts() {
       render: (value: any, row: any) => {
         return (
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
+            <div className="flex shrink-0 h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
               {getInitials(row.name)}
             </div>
-            <div>
-              <div className="font-medium">{row.name}</div>
-              <div className="text-sm text-muted-foreground">{row.email || t('No email')}</div>
+            <div className="min-w-0">
+              <div className="font-medium truncate">{row.name}</div>
+              <div className="text-sm text-muted-foreground truncate">{row.email || t('No email')}</div>
             </div>
           </div>
         );
@@ -440,16 +440,15 @@ export default function Contacts() {
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start space-x-4">
-                      <div className="h-16 w-16 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">
+                      <div className="h-16 w-16 shrink-0 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">
                         {getInitials(contact.name)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{contact.name}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{contact.email || t('No email')}</p>
                         <div className="flex items-center">
-                          <div className={`h-2 w-2 rounded-full mr-2 ${
-                            contact.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
-                          }`}></div>
+                          <div className={`h-2 w-2 rounded-full mr-2 ${contact.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
+                            }`}></div>
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {contact.status === 'active' ? t('Active') : t('Inactive')}
                           </span>
