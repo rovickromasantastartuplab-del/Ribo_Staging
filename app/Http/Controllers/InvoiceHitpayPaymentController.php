@@ -56,7 +56,7 @@ class InvoiceHitpayPaymentController extends Controller
                 'amount' => number_format($validated['amount'], 2, '.', ''),
                 'currency' => strtoupper($currency),
                 'reference_number' => $referenceNumber,
-                'redirect_url' => route('invoices.public', $invoice->id) . '?payment=success',
+                'redirect_url' => route('invoice.hitpay.success') . '?invoice_id=' . $invoice->id . '&ref=' . urlencode($referenceNumber),
                 'webhook' => route('invoice.hitpay.callback'),
                 'purpose' => 'Invoice Payment - ' . $invoice->invoice_number . ' - ' . ucfirst($validated['payment_type']),
                 'email' => auth()->check() ? auth()->user()->email : ($invoice->customer_email ?? 'customer@example.com'),
@@ -110,6 +110,112 @@ class InvoiceHitpayPaymentController extends Controller
             \Log::error('HitPay processPayment error', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'error' => __('Payment failed with internal error')]);
         }
+    }
+
+    /**
+     * Success redirect — user lands here after completing payment on HitPay.
+     * Verifies payment status via HitPay API and records the payment.
+     */
+    public function success(Request $request)
+    {
+        $invoiceId = $request->get('invoice_id');
+        $referenceNumber = $request->get('ref');
+        $hitpayReference = $request->get('reference'); // HitPay appends this
+        $hitpayStatus = $request->get('status');
+
+        if (!$invoiceId) {
+            return redirect('/')->with('error', __('Invalid payment reference'));
+        }
+
+        $invoice = Invoice::find($invoiceId);
+        if (!$invoice) {
+            return redirect('/')->with('error', __('Invoice not found'));
+        }
+
+        $encryptedId = encrypt($invoice->id);
+
+        // If HitPay sent a cancel/fail status, redirect back
+        if ($hitpayStatus) {
+            $normalizedStatus = strtolower($hitpayStatus);
+            if (in_array($normalizedStatus, ['canceled', 'cancelled', 'failed', 'expired'])) {
+                return redirect()->route('invoices.public', $encryptedId)->with('error', __('Payment was canceled. No charges were made.'));
+            }
+        }
+
+        // Check if payment was already recorded by webhook
+        if ($referenceNumber) {
+            $existing = InvoicePayment::where('payment_id', $referenceNumber)->first();
+            if ($existing) {
+                return redirect()->route('invoices.public', $encryptedId)->with('success', __('Payment completed successfully!'));
+            }
+        }
+
+        // Try to verify via HitPay API (fallback when webhook hasn't fired)
+        if ($hitpayReference) {
+            try {
+                $creatorUser = User::find($invoice->created_by);
+                $companyId = in_array($creatorUser->type, ['company', 'superadmin']) ? $creatorUser->id : $creatorUser->created_by;
+                $settings = getPaymentMethodConfig('hitpay', $companyId);
+
+                if (!empty($settings['api_key'])) {
+                    $isLive = ($settings['mode'] ?? 'sandbox') === 'live';
+                    $baseUrl = $isLive ? 'https://api.hit-pay.com' : 'https://api.sandbox.hit-pay.com';
+
+                    $ch = curl_init();
+                    curl_setopt_array($ch, [
+                        CURLOPT_URL => $baseUrl . '/v1/payment-requests/' . $hitpayReference,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_HTTPHEADER => [
+                            'X-BUSINESS-API-KEY: ' . $settings['api_key'],
+                        ],
+                    ]);
+
+                    $response = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+
+                    if ($httpCode === 200 && $response) {
+                        $data = json_decode($response, true);
+                        $apiStatus = strtoupper($data['status'] ?? '');
+
+                        if (in_array($apiStatus, ['COMPLETED', 'SUCCEEDED'])) {
+                            // Parse reference number to get amount and payment type
+                            $refNumber = $data['reference_number'] ?? $referenceNumber;
+                            $parts = explode('_', $refNumber);
+                            $amount = $parts[2] ?? $invoice->getRemainingAmount();
+                            $paymentType = $parts[3] ?? 'full';
+
+                            // Record payment if not already recorded
+                            $existing = InvoicePayment::where('payment_id', $refNumber)->first();
+                            if (!$existing) {
+                                InvoicePayment::storePayment([
+                                    'invoice_id' => $invoice->id,
+                                    'amount' => $amount,
+                                    'payment_type' => $paymentType,
+                                    'payment_method' => 'hitpay',
+                                    'payment_id' => $refNumber,
+                                ]);
+                                \Log::info('HitPay invoice payment recorded via redirect', ['payment_id' => $refNumber]);
+                            }
+
+                            return redirect()->route('invoices.public', $encryptedId)->with('success', __('Payment completed successfully!'));
+                        }
+
+                        if (in_array($apiStatus, ['FAILED', 'CANCELLED', 'EXPIRED'])) {
+                            return redirect()->route('invoices.public', $encryptedId)->with('error', __('Payment was canceled or failed.'));
+                        }
+
+                        // Still pending
+                        return redirect()->route('invoices.public', $encryptedId)->with('info', __('Payment is being processed. Your invoice will be updated once confirmed.'));
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::error('HitPay invoice status check failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Fallback: redirect back with pending message
+        return redirect()->route('invoices.public', $encryptedId)->with('info', __('Payment is being verified. Your invoice will be updated once confirmed.'));
     }
 
     public function callback(Request $request)

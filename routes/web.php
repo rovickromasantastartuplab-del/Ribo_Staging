@@ -998,6 +998,7 @@ Route::get('quotes/public/{quote}', [QuoteController::class, 'publicView'])->whe
 Route::get('sales-orders/public/{salesOrder}', [SalesOrderController::class, 'publicView'])->where('salesOrder', '.*')->name('sales-orders.public');
 
 Route::post('invoices/payment/hitpay', [\App\Http\Controllers\InvoiceHitpayPaymentController::class, 'processPayment'])->name('invoice.hitpay.payment');
+Route::get('invoices/payment/hitpay/success', [\App\Http\Controllers\InvoiceHitpayPaymentController::class, 'success'])->name('invoice.hitpay.success');
 Route::match(['GET', 'POST'], 'invoices/payment/hitpay/webhook', [\App\Http\Controllers\InvoiceHitpayPaymentController::class, 'callback'])->name('invoice.hitpay.callback');
 Route::post('invoices/payment/stripe', [InvoiceStripePaymentController::class, 'processPayment'])->name('invoice.stripe.payment');
 Route::post('invoices/payment/stripe/confirm', [InvoiceStripePaymentController::class, 'confirmPayment'])->name('invoice.stripe.confirm');
