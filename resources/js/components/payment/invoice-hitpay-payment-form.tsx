@@ -34,6 +34,7 @@ export function InvoiceHitpayPaymentForm({
                 invoice_id: invoiceId,
                 amount: amount,
                 payment_type: paymentType,
+                currency: currency,
             });
 
             if (response.data.success && response.data.checkoutUrl) {

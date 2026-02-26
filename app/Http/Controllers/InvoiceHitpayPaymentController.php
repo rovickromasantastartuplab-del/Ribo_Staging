@@ -38,7 +38,7 @@ class InvoiceHitpayPaymentController extends Controller
 
             $settings = getPaymentMethodConfig('hitpay', $companyId);
             $generalSettings = \App\Models\Setting::getUserSettings($companyId);
-            $currency = $generalSettings['defaultCurrency'] ?? 'PHP';
+            $currency = $validated['currency'] ?? $generalSettings['defaultCurrency'] ?? 'PHP';
 
             if (empty($settings['api_key']) || empty($settings['salt'])) {
                 return response()->json(['success' => false, 'error' => __('HitPay not configured')]);
@@ -218,6 +218,7 @@ class InvoiceHitpayPaymentController extends Controller
             'invoice_id' => 'required|exists:invoices,id',
             'amount' => 'required|numeric|min:0.01',
             'payment_type' => 'required|in:full,partial',
+            'currency' => 'nullable|string|max:10',
         ];
 
         return $request->validate(array_merge($baseRules, $additionalRules));
