@@ -33,6 +33,7 @@ export default function Quotes() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedFormAccountId, setSelectedFormAccountId] = useState<string | null>(null);
 
 
 
@@ -87,6 +88,7 @@ export default function Quotes() {
         break;
       case 'edit':
         setFormMode('edit');
+        setSelectedFormAccountId(item.account_id?.toString() || null);
         setIsFormModalOpen(true);
         break;
       case 'delete':
@@ -105,6 +107,7 @@ export default function Quotes() {
   const handleAddNew = () => {
     setCurrentItem(null);
     setFormMode('create');
+    setSelectedFormAccountId(null);
     setIsFormModalOpen(true);
   };
 
@@ -157,9 +160,9 @@ export default function Quotes() {
           toast.dismiss();
           if (page.props.flash.success) {
             toast.success(t(page.props.flash.success));
-          } else if(page.props.flash.error) {
+          } else if (page.props.flash.error) {
             toast.error(t(page.props.flash.error));
-          } else if(page.props.flash.warning) {
+          } else if (page.props.flash.warning) {
             toast.warning(t(page.props.flash.warning));
           }
         },
@@ -232,10 +235,10 @@ export default function Quotes() {
         toast.dismiss();
         if (page.props.flash.success) {
           toast.success(t(page.props.flash.success));
-        } else if(page.props.flash.error) {
-            toast.error(t(page.props.flash.errors));
-        } else if(page.props.flash.warning) {
-            toast.warning(t(page.props.flash.warning));
+        } else if (page.props.flash.error) {
+          toast.error(t(page.props.flash.errors));
+        } else if (page.props.flash.warning) {
+          toast.warning(t(page.props.flash.warning));
         }
       },
       onError: (errors) => {
@@ -295,7 +298,7 @@ export default function Quotes() {
       render: (value: string, item: any) => (
         <Link
           href={route('quotes.show', item.id)}
-          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200 border border-blue-200 hover:border-blue-300"
+          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200 border border-blue-200 hover:border-blue-300 whitespace-nowrap"
         >
           {value}
         </Link>
@@ -513,293 +516,99 @@ export default function Quotes() {
             layout: 'grid',
             columns: 2,
             fields: [
-            { name: 'name', label: t('Name'), type: 'text', required: true, colSpan: 2 },
-            { name: 'description', label: t('Description'), type: 'textarea', colSpan: 2 },
-            {
-              name: formMode === 'view' ? 'opportunity_name' : 'opportunity_id',
-              label: t('Opportunity'),
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : opportunities?.map((opp: any) => ({ value: opp.id, label: opp.name })) || []
-            },
-            {
-              name: formMode === 'view' ? 'account_name' : 'account_id',
-              label: t('Account'),
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : accounts?.map((acc: any) => ({ value: acc.id, label: acc.name })) || []
-            },
-
-            {
-              name: formMode === 'view' ? 'billing_contact_name' : 'billing_contact_id',
-              label: t('Billing Contact'),
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : contacts?.map((contact: any) => ({ value: contact.id, label: contact.name })) || []
-            },
-            {
-              name: formMode === 'view' ? 'shipping_contact_name' : 'shipping_contact_id',
-              label: t('Shipping Contact'),
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : contacts?.map((contact: any) => ({ value: contact.id, label: contact.name })) || []
-            },
-            {
-              name: formMode === 'view' ? 'shipping_provider_name' : 'shipping_provider_type_id',
-              label: t('Shipping Provider'),
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : shippingProviderTypes?.map((spt: any) => ({ value: spt.id, label: spt.name })) || []
-            },
-
-
-            {
-              name: 'status',
-              label: t('Status'),
-              type: 'select',
-              options: [
-                { value: 'draft', label: t('Draft') },
-                { value: 'sent', label: t('Sent') },
-                { value: 'accepted', label: t('Accepted') },
-                { value: 'rejected', label: t('Rejected') },
-                { value: 'expired', label: t('Expired') }
-              ],
-              defaultValue: 'draft'
-            },
-            { name: 'valid_until', label: t('Valid Until'), type: 'date' },
-            ...(isCompany ? [{
-              name: formMode === 'view' ? 'assigned_user_name' : 'assigned_to',
-              label: t('Assign To'),
-              type: formMode === 'view' ? 'text' : 'select',
-              options: formMode === 'view' ? [] : [
-                ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
-              ],
-              readOnly: formMode === 'view'
-            }] : []),
-            {
-              name: 'products_header',
-              type: 'custom',
-              colSpan: 2,
-              render: () => (
-                <div className="col-span-2 border-t pt-4 mt-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('Products & Services')}</h3>
-                </div>
-              )
-            },
-            {
-              name: 'products',
-              label: '',
-              type: 'array',
-              colSpan: 2,
-              productOptions: products,
-              renderFooter: (arrayValue: any[], formData: any) => {
-                let subtotal = 0;
-                let totalTax = 0;
-                let totalDiscount = 0;
-
-                try {
-                  arrayValue.forEach((item: any) => {
-                    const quantity = parseFloat(item.quantity) || 0;
-                    const unitPrice = parseFloat(item.unit_price) || 0;
-                    const lineTotal = quantity * unitPrice;
-
-                    // Calculate discount
-                    const discountType = item.discount_type;
-                    const discountValue = parseFloat(item.discount_value) || 0;
-                    let discountAmount = 0;
-                    if (discountType && discountType !== 'none') {
-                      if (discountType === 'percentage') {
-                        discountAmount = (lineTotal * discountValue) / 100;
-                      } else if (discountType === 'fixed') {
-                        discountAmount = Math.min(discountValue, lineTotal);
-                      }
-                    }
-
-                    const discountedTotal = lineTotal - discountAmount;
-                    subtotal += discountedTotal;
-                    totalDiscount += discountAmount;
-
-                    const product = products?.find((p: any) => p.id == item.product_id);
-                    if (product?.tax) {
-                      totalTax += (discountedTotal * product.tax.rate) / 100;
-                    }
-                  });
-                } catch (error) {
-                  console.error('Error calculating totals:', error);
-                }
-
-                return (
-                  <>
-                    <tr className="bg-gray-50">
-                      <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {t('Total Discount')}:
-                      </td>
-                      <td className="border border-gray-200 px-3 py-2 text-sm text-right text-red-600">
-                        -{formatCurrency(totalDiscount)}
-                      </td>
-                    </tr>
-                    <tr className="bg-gray-50">
-                      <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {t('Subtotal')}:
-                      </td>
-                      <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {formatCurrency(subtotal)}
-                      </td>
-                    </tr>
-                    <tr className="bg-gray-50">
-                      <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {t('Total Tax')}:
-                      </td>
-                      <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {formatCurrency(totalTax)}
-                      </td>
-                    </tr>
-                    <tr className="bg-gray-100 font-bold">
-                      <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {t('Grand Total')}:
-                      </td>
-                      <td className="border border-gray-200 px-3 py-2 text-sm text-right">
-                        {formatCurrency(subtotal + totalTax)}
-                      </td>
-                    </tr>
-                  </>
-                );
+              { name: 'name', label: t('Name'), type: 'text', required: true, colSpan: 2 },
+              { name: 'description', label: t('Description'), type: 'textarea', colSpan: 2 },
+              {
+                name: formMode === 'view' ? 'account_name' : 'account_id',
+                label: t('Account'),
+                type: formMode === 'view' ? 'text' : 'select',
+                readOnly: formMode === 'view',
+                options: formMode === 'view' ? [] : accounts?.map((acc: any) => ({ value: acc.id.toString(), label: acc.name })) || [],
+                onChange: (value: string) => setSelectedFormAccountId(value)
               },
-              renderSummary: (arrayValue: any[], formData: any) => {
-                let subtotal = 0;
-                let totalTax = 0;
-                let totalDiscount = 0;
+              {
+                name: formMode === 'view' ? 'opportunity_name' : 'opportunity_id',
+                label: t('Opportunity'),
+                type: formMode === 'view' ? 'text' : 'select',
+                readOnly: formMode === 'view',
+                disabled: !selectedFormAccountId && formMode !== 'view',
+                options: formMode === 'view' ? [] : opportunities?.filter((opp: any) => opp.account_id === Number(selectedFormAccountId))
+                  .map((opp: any) => ({ value: opp.id.toString(), label: opp.name })) || []
+              },
 
-                try {
-                  arrayValue.forEach((item: any) => {
-                    const quantity = parseFloat(item.quantity) || 0;
-                    const unitPrice = parseFloat(item.unit_price) || 0;
-                    const lineTotal = quantity * unitPrice;
+              {
+                name: formMode === 'view' ? 'billing_contact_name' : 'billing_contact_id',
+                label: t('Billing Contact'),
+                type: formMode === 'view' ? 'text' : 'select',
+                readOnly: formMode === 'view',
+                disabled: !selectedFormAccountId && formMode !== 'view',
+                options: formMode === 'view' ? [] : contacts?.filter((contact: any) => contact.account_id === Number(selectedFormAccountId))
+                  .map((contact: any) => ({ value: contact.id.toString(), label: contact.name })) || []
+              },
+              {
+                name: formMode === 'view' ? 'shipping_contact_name' : 'shipping_contact_id',
+                label: t('Shipping Contact'),
+                type: formMode === 'view' ? 'text' : 'select',
+                readOnly: formMode === 'view',
+                disabled: !selectedFormAccountId && formMode !== 'view',
+                options: formMode === 'view' ? [] : contacts?.filter((contact: any) => contact.account_id === Number(selectedFormAccountId))
+                  .map((contact: any) => ({ value: contact.id.toString(), label: contact.name })) || []
+              },
+              {
+                name: formMode === 'view' ? 'shipping_provider_name' : 'shipping_provider_type_id',
+                label: t('Shipping Provider'),
+                type: formMode === 'view' ? 'text' : 'select',
+                readOnly: formMode === 'view',
+                options: formMode === 'view' ? [] : shippingProviderTypes?.map((spt: any) => ({ value: spt.id.toString(), label: spt.name })) || []
+              },
 
-                    // Calculate discount
-                    const discountType = item.discount_type;
-                    const discountValue = parseFloat(item.discount_value) || 0;
-                    let discountAmount = 0;
-                    if (discountType && discountType !== 'none') {
-                      if (discountType === 'percentage') {
-                        discountAmount = (lineTotal * discountValue) / 100;
-                      } else if (discountType === 'fixed') {
-                        discountAmount = Math.min(discountValue, lineTotal);
-                      }
-                    }
 
-                    const discountedTotal = lineTotal - discountAmount;
-                    subtotal += discountedTotal;
-                    totalDiscount += discountAmount;
-
-                    const product = products?.find((p: any) => p.id == item.product_id);
-                    if (product?.tax) {
-                      totalTax += (discountedTotal * product.tax.rate) / 100;
-                    }
-                  });
-                } catch (error) {
-                  console.error('Error calculating summary:', error);
-                }
-
-                return (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">{t('Total Discount')}:</span>
-                      <span className="font-medium text-red-600">-{formatCurrency(totalDiscount)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">{t('Subtotal')}:</span>
-                      <span className="font-medium">{formatCurrency(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">{t('Total Tax')}:</span>
-                      <span className="font-medium">{formatCurrency(totalTax)}</span>
-                    </div>
-                    <div className="flex justify-between items-center border-t pt-2">
-                      <span className="font-bold text-gray-900">{t('Grand Total')}:</span>
-                      <span className="font-bold text-lg text-primary">{formatCurrency(subtotal + totalTax)}</span>
-                    </div>
+              {
+                name: 'status',
+                label: t('Status'),
+                type: 'select',
+                options: [
+                  { value: 'draft', label: t('Draft') },
+                  { value: 'sent', label: t('Sent') },
+                  { value: 'accepted', label: t('Accepted') },
+                  { value: 'rejected', label: t('Rejected') },
+                  { value: 'expired', label: t('Expired') }
+                ],
+                defaultValue: 'draft'
+              },
+              { name: 'valid_until', label: t('Valid Until'), type: 'date' },
+              ...(isCompany ? [{
+                name: formMode === 'view' ? 'assigned_user_name' : 'assigned_to',
+                label: t('Assign To'),
+                type: formMode === 'view' ? 'text' : 'select',
+                options: formMode === 'view' ? [] : [
+                  ...users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` }))
+                ],
+                readOnly: formMode === 'view'
+              }] : []),
+              {
+                name: 'products_header',
+                type: 'custom',
+                colSpan: 2,
+                render: () => (
+                  <div className="col-span-2 border-t pt-4 mt-4">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('Products & Services')}</h3>
                   </div>
-                );
+                )
               },
-              fields: [
-                {
-                  name: 'product_id',
-                  label: t('Product'),
-                  type: 'select',
-                  required: true,
-                  options: products?.map((product: any) => ({
-                    value: product.id,
-                    label: `${product.name} - ${formatCurrency(parseFloat(product.price || 0))}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
-                  })) || []
-                },
-                {
-                  name: 'quantity',
-                  label: t('Quantity'),
-                  type: 'number',
-                  required: true,
-                  min: '1',
-                  defaultValue: 1
-                },
-                {
-                  name: 'unit_price',
-                  label: t('Unit Price'),
-                  type: 'number',
-                  required: true,
-                  step: '0.01',
-                  min: '0'
-                },
-                {
-                  name: 'discount_type',
-                  label: t('Discount Type'),
-                  type: 'select',
-                  options: [
+              {
+                name: 'products',
+                label: '',
+                type: 'array',
+                colSpan: 2,
+                productOptions: products,
+                renderFooter: (arrayValue: any[], formData: any) => {
+                  let subtotal = 0;
+                  let totalTax = 0;
+                  let totalDiscount = 0;
 
-                    { value: 'percentage', label: t('Percentage (%)') },
-                    { value: 'fixed', label: t('Fixed Amount') }
-                  ]
-                },
-                {
-                  name: 'discount_value',
-                  label: t('Discount Value'),
-                  type: 'number',
-                  step: '0.01',
-                  min: '0'
-                },
-                {
-                  name: 'discount_amount',
-                  label: t('Discount Amount'),
-                  type: 'calculated',
-                  calculate: (item: any) => {
-                    try {
-                      const quantity = parseFloat(item.quantity) || 0;
-                      const unitPrice = parseFloat(item.unit_price) || 0;
-                      const lineTotal = quantity * unitPrice;
-                      const discountType = item.discount_type;
-                      const discountValue = parseFloat(item.discount_value) || 0;
-
-                      if (!discountType || discountType === 'none' || !discountValue) return formatCurrency(0);
-
-                      let discountAmount = 0;
-                      if (discountType === 'percentage') {
-                        discountAmount = (lineTotal * discountValue) / 100;
-                      } else if (discountType === 'fixed') {
-                        discountAmount = Math.min(discountValue, lineTotal);
-                      }
-
-                      return formatCurrency(discountAmount);
-                    } catch (error) {
-                      return formatCurrency(0);
-                    }
-                  }
-                },
-                {
-                  name: 'tax_amount',
-                  label: t('Tax Amount'),
-                  type: 'calculated',
-                  calculate: (item: any) => {
-                    try {
-                      const product = products?.find((p: any) => p.id == item.product_id);
+                  try {
+                    arrayValue.forEach((item: any) => {
                       const quantity = parseFloat(item.quantity) || 0;
                       const unitPrice = parseFloat(item.unit_price) || 0;
                       const lineTotal = quantity * unitPrice;
@@ -808,26 +617,71 @@ export default function Quotes() {
                       const discountType = item.discount_type;
                       const discountValue = parseFloat(item.discount_value) || 0;
                       let discountAmount = 0;
-                      if (discountType === 'percentage') {
-                        discountAmount = (lineTotal * discountValue) / 100;
-                      } else if (discountType === 'fixed') {
-                        discountAmount = Math.min(discountValue, lineTotal);
+                      if (discountType && discountType !== 'none') {
+                        if (discountType === 'percentage') {
+                          discountAmount = (lineTotal * discountValue) / 100;
+                        } else if (discountType === 'fixed') {
+                          discountAmount = Math.min(discountValue, lineTotal);
+                        }
                       }
 
                       const discountedTotal = lineTotal - discountAmount;
-                      const taxAmount = product?.tax ? (discountedTotal * product.tax.rate) / 100 : 0;
-                      return formatCurrency(taxAmount);
-                    } catch (error) {
-                      return formatCurrency(0);
-                    }
+                      subtotal += discountedTotal;
+                      totalDiscount += discountAmount;
+
+                      const product = products?.find((p: any) => p.id == item.product_id);
+                      if (product?.tax) {
+                        totalTax += (discountedTotal * product.tax.rate) / 100;
+                      }
+                    });
+                  } catch (error) {
+                    console.error('Error calculating totals:', error);
                   }
+
+                  return (
+                    <>
+                      <tr className="bg-gray-50">
+                        <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
+                          {t('Total Discount')}:
+                        </td>
+                        <td className="border border-gray-200 px-3 py-2 text-sm text-right text-red-600">
+                          -{formatCurrency(totalDiscount)}
+                        </td>
+                      </tr>
+                      <tr className="bg-gray-50">
+                        <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
+                          {t('Subtotal')}:
+                        </td>
+                        <td className="border border-gray-200 px-3 py-2 text-sm text-right">
+                          {formatCurrency(subtotal)}
+                        </td>
+                      </tr>
+                      <tr className="bg-gray-50">
+                        <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
+                          {t('Total Tax')}:
+                        </td>
+                        <td className="border border-gray-200 px-3 py-2 text-sm text-right">
+                          {formatCurrency(totalTax)}
+                        </td>
+                      </tr>
+                      <tr className="bg-gray-100 font-bold">
+                        <td colSpan={6} className="border border-gray-200 px-3 py-2 text-sm text-right">
+                          {t('Grand Total')}:
+                        </td>
+                        <td className="border border-gray-200 px-3 py-2 text-sm text-right">
+                          {formatCurrency(subtotal + totalTax)}
+                        </td>
+                      </tr>
+                    </>
+                  );
                 },
-                {
-                  name: 'line_total',
-                  label: t('Final Total'),
-                  type: 'calculated',
-                  calculate: (item: any) => {
-                    try {
+                renderSummary: (arrayValue: any[], formData: any) => {
+                  let subtotal = 0;
+                  let totalTax = 0;
+                  let totalDiscount = 0;
+
+                  try {
+                    arrayValue.forEach((item: any) => {
                       const quantity = parseFloat(item.quantity) || 0;
                       const unitPrice = parseFloat(item.unit_price) || 0;
                       const lineTotal = quantity * unitPrice;
@@ -836,214 +690,370 @@ export default function Quotes() {
                       const discountType = item.discount_type;
                       const discountValue = parseFloat(item.discount_value) || 0;
                       let discountAmount = 0;
-                      if (discountType === 'percentage') {
-                        discountAmount = (lineTotal * discountValue) / 100;
-                      } else if (discountType === 'fixed') {
-                        discountAmount = Math.min(discountValue, lineTotal);
+                      if (discountType && discountType !== 'none') {
+                        if (discountType === 'percentage') {
+                          discountAmount = (lineTotal * discountValue) / 100;
+                        } else if (discountType === 'fixed') {
+                          discountAmount = Math.min(discountValue, lineTotal);
+                        }
                       }
 
-                      const finalTotal = lineTotal - discountAmount;
-                      return formatCurrency(finalTotal);
-                    } catch (error) {
-                      return formatCurrency(0);
-                    }
+                      const discountedTotal = lineTotal - discountAmount;
+                      subtotal += discountedTotal;
+                      totalDiscount += discountAmount;
+
+                      const product = products?.find((p: any) => p.id == item.product_id);
+                      if (product?.tax) {
+                        totalTax += (discountedTotal * product.tax.rate) / 100;
+                      }
+                    });
+                  } catch (error) {
+                    console.error('Error calculating summary:', error);
                   }
-                }
-              ]
-            },
-            {
-              name: 'billing_shipping_section',
-              type: 'custom',
-              colSpan: 2,
-              render: (field: any, formData: any, handleChange: any) => (
-                <div className="col-span-2 border-t pt-4 mt-4">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-lg font-semibold text-gray-800">{t('Billing Information')}</h3>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            // Set shipping address first
-                            setTimeout(() => {
-                              const textareas = document.querySelectorAll('textarea');
-                              const shippingTextarea = textareas[textareas.length - 1];
-                              if (shippingTextarea && formData.billing_address) {
-                                const nativeTextareaSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-                                nativeTextareaSetter.call(shippingTextarea, formData.billing_address);
-                                shippingTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-                                shippingTextarea.dispatchEvent(new Event('change', { bubbles: true }));
-                              }
-                            }, 10);
 
-                            // Set shipping text inputs with delays
-                            setTimeout(() => {
-                              const inputs = document.querySelectorAll('input[type="text"]');
-                              const textInputs = Array.from(inputs).filter(input => input.getAttribute('type') === 'text');
-                              const shippingTextInputs = textInputs.slice(-4);
-                              const billingValues = [formData.billing_city, formData.billing_state, formData.billing_country, formData.billing_postal_code];
-
-                              shippingTextInputs.forEach((input, index) => {
-                                setTimeout(() => {
-                                  if (billingValues[index]) {
-                                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                                    nativeInputValueSetter.call(input, billingValues[index]);
-                                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                                    input.dispatchEvent(new Event('change', { bubbles: true }));
-                                  }
-                                }, index * 20);
-                              });
-                            }, 50);
-
-
-                          }}
-                          className="text-xs"
-                        >
-                          {t('Copy →')}
-                        </Button>
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-700">{t('Total Discount')}:</span>
+                        <span className="font-medium text-red-600">-{formatCurrency(totalDiscount)}</span>
                       </div>
-                      <div className="space-y-3">
-                        <div>
-                          <Label className="text-sm font-medium">{t('Billing Address')}</Label>
-                          <Textarea
-                            value={formData.billing_address || ''}
-                            onChange={(e) => handleChange('billing_address', e.target.value)}
-                            className="mt-1"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-sm font-medium">{t('Billing City')}</Label>
-                            <input
-                              type="text"
-                              value={formData.billing_city || ''}
-                              onChange={(e) => handleChange('billing_city', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">{t('Billing State')}</Label>
-                            <input
-                              type="text"
-                              value={formData.billing_state || ''}
-                              onChange={(e) => handleChange('billing_state', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-sm font-medium">{t('Billing Country')}</Label>
-                            <input
-                              type="text"
-                              value={formData.billing_country || ''}
-                              onChange={(e) => handleChange('billing_country', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">{t('Billing Postal Code')}</Label>
-                            <input
-                              type="text"
-                              value={formData.billing_postal_code || ''}
-                              onChange={(e) => handleChange('billing_postal_code', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                          </div>
-                        </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-700">{t('Subtotal')}:</span>
+                        <span className="font-medium">{formatCurrency(subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-700">{t('Total Tax')}:</span>
+                        <span className="font-medium">{formatCurrency(totalTax)}</span>
+                      </div>
+                      <div className="flex justify-between items-center border-t pt-2">
+                        <span className="font-bold text-gray-900">{t('Grand Total')}:</span>
+                        <span className="font-bold text-lg text-primary">{formatCurrency(subtotal + totalTax)}</span>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('Shipping Information')}</h3>
-                      <div className="space-y-3">
-                        <div>
-                          <Label className="text-sm font-medium">{t('Shipping Address')}</Label>
-                          <Textarea
-                            value={formData.shipping_address || ''}
-                            onChange={(e) => handleChange('shipping_address', e.target.value)}
-                            className="mt-1"
-                          />
+                  );
+                },
+                fields: [
+                  {
+                    name: 'product_id',
+                    label: t('Product'),
+                    type: 'select',
+                    required: true,
+                    options: products?.map((product: any) => ({
+                      value: product.id,
+                      label: `${product.name} - ${formatCurrency(parseFloat(product.price || 0))}${product.tax ? ` (Tax: ${product.tax.name} - ${product.tax.rate}%)` : ''}`
+                    })) || []
+                  },
+                  {
+                    name: 'quantity',
+                    label: t('Quantity'),
+                    type: 'number',
+                    required: true,
+                    min: '1',
+                    defaultValue: 1
+                  },
+                  {
+                    name: 'unit_price',
+                    label: t('Unit Price'),
+                    type: 'number',
+                    required: true,
+                    step: '0.01',
+                    min: '0'
+                  },
+                  {
+                    name: 'discount_type',
+                    label: t('Discount Type'),
+                    type: 'select',
+                    options: [
+
+                      { value: 'percentage', label: t('Percentage (%)') },
+                      { value: 'fixed', label: t('Fixed Amount') }
+                    ]
+                  },
+                  {
+                    name: 'discount_value',
+                    label: t('Discount Value'),
+                    type: 'number',
+                    step: '0.01',
+                    min: '0'
+                  },
+                  {
+                    name: 'discount_amount',
+                    label: t('Discount Amount'),
+                    type: 'calculated',
+                    calculate: (item: any) => {
+                      try {
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const unitPrice = parseFloat(item.unit_price) || 0;
+                        const lineTotal = quantity * unitPrice;
+                        const discountType = item.discount_type;
+                        const discountValue = parseFloat(item.discount_value) || 0;
+
+                        if (!discountType || discountType === 'none' || !discountValue) return formatCurrency(0);
+
+                        let discountAmount = 0;
+                        if (discountType === 'percentage') {
+                          discountAmount = (lineTotal * discountValue) / 100;
+                        } else if (discountType === 'fixed') {
+                          discountAmount = Math.min(discountValue, lineTotal);
+                        }
+
+                        return formatCurrency(discountAmount);
+                      } catch (error) {
+                        return formatCurrency(0);
+                      }
+                    }
+                  },
+                  {
+                    name: 'tax_amount',
+                    label: t('Tax Amount'),
+                    type: 'calculated',
+                    calculate: (item: any) => {
+                      try {
+                        const product = products?.find((p: any) => p.id == item.product_id);
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const unitPrice = parseFloat(item.unit_price) || 0;
+                        const lineTotal = quantity * unitPrice;
+
+                        // Calculate discount
+                        const discountType = item.discount_type;
+                        const discountValue = parseFloat(item.discount_value) || 0;
+                        let discountAmount = 0;
+                        if (discountType === 'percentage') {
+                          discountAmount = (lineTotal * discountValue) / 100;
+                        } else if (discountType === 'fixed') {
+                          discountAmount = Math.min(discountValue, lineTotal);
+                        }
+
+                        const discountedTotal = lineTotal - discountAmount;
+                        const taxAmount = product?.tax ? (discountedTotal * product.tax.rate) / 100 : 0;
+                        return formatCurrency(taxAmount);
+                      } catch (error) {
+                        return formatCurrency(0);
+                      }
+                    }
+                  },
+                  {
+                    name: 'line_total',
+                    label: t('Final Total'),
+                    type: 'calculated',
+                    calculate: (item: any) => {
+                      try {
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const unitPrice = parseFloat(item.unit_price) || 0;
+                        const lineTotal = quantity * unitPrice;
+
+                        // Calculate discount
+                        const discountType = item.discount_type;
+                        const discountValue = parseFloat(item.discount_value) || 0;
+                        let discountAmount = 0;
+                        if (discountType === 'percentage') {
+                          discountAmount = (lineTotal * discountValue) / 100;
+                        } else if (discountType === 'fixed') {
+                          discountAmount = Math.min(discountValue, lineTotal);
+                        }
+
+                        const finalTotal = lineTotal - discountAmount;
+                        return formatCurrency(finalTotal);
+                      } catch (error) {
+                        return formatCurrency(0);
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                name: 'billing_shipping_section',
+                type: 'custom',
+                colSpan: 2,
+                render: (field: any, formData: any, handleChange: any) => (
+                  <div className="col-span-2 border-t pt-4 mt-4">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-lg font-semibold text-gray-800">{t('Billing Information')}</h3>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Set shipping address first
+                              setTimeout(() => {
+                                const textareas = document.querySelectorAll('textarea');
+                                const shippingTextarea = textareas[textareas.length - 1];
+                                if (shippingTextarea && formData.billing_address) {
+                                  const nativeTextareaSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+                                  nativeTextareaSetter.call(shippingTextarea, formData.billing_address);
+                                  shippingTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                  shippingTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+                                }
+                              }, 10);
+
+                              // Set shipping text inputs with delays
+                              setTimeout(() => {
+                                const inputs = document.querySelectorAll('input[type="text"]');
+                                const textInputs = Array.from(inputs).filter(input => input.getAttribute('type') === 'text');
+                                const shippingTextInputs = textInputs.slice(-4);
+                                const billingValues = [formData.billing_city, formData.billing_state, formData.billing_country, formData.billing_postal_code];
+
+                                shippingTextInputs.forEach((input, index) => {
+                                  setTimeout(() => {
+                                    if (billingValues[index]) {
+                                      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                                      nativeInputValueSetter.call(input, billingValues[index]);
+                                      input.dispatchEvent(new Event('input', { bubbles: true }));
+                                      input.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                  }, index * 20);
+                                });
+                              }, 50);
+
+
+                            }}
+                            className="text-xs"
+                          >
+                            {t('Copy →')}
+                          </Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-3">
                           <div>
-                            <Label className="text-sm font-medium">{t('Shipping City')}</Label>
-                            <input
-                              type="text"
-                              value={formData.shipping_city || ''}
-                              onChange={(e) => handleChange('shipping_city', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            <Label className="text-sm font-medium">{t('Billing Address')}</Label>
+                            <Textarea
+                              value={formData.billing_address || ''}
+                              onChange={(e) => handleChange('billing_address', e.target.value)}
+                              className="mt-1"
                             />
                           </div>
-                          <div>
-                            <Label className="text-sm font-medium">{t('Shipping State')}</Label>
-                            <input
-                              type="text"
-                              value={formData.shipping_state || ''}
-                              onChange={(e) => handleChange('shipping_state', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-sm font-medium">{t('Billing City')}</Label>
+                              <input
+                                type="text"
+                                value={formData.billing_city || ''}
+                                onChange={(e) => handleChange('billing_city', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium">{t('Billing State')}</Label>
+                              <input
+                                type="text"
+                                value={formData.billing_state || ''}
+                                onChange={(e) => handleChange('billing_state', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-sm font-medium">{t('Billing Country')}</Label>
+                              <input
+                                type="text"
+                                value={formData.billing_country || ''}
+                                onChange={(e) => handleChange('billing_country', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium">{t('Billing Postal Code')}</Label>
+                              <input
+                                type="text"
+                                value={formData.billing_postal_code || ''}
+                                onChange={(e) => handleChange('billing_postal_code', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('Shipping Information')}</h3>
+                        <div className="space-y-3">
                           <div>
-                            <Label className="text-sm font-medium">{t('Shipping Country')}</Label>
-                            <input
-                              type="text"
-                              value={formData.shipping_country || ''}
-                              onChange={(e) => handleChange('shipping_country', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            <Label className="text-sm font-medium">{t('Shipping Address')}</Label>
+                            <Textarea
+                              value={formData.shipping_address || ''}
+                              onChange={(e) => handleChange('shipping_address', e.target.value)}
+                              className="mt-1"
                             />
                           </div>
-                          <div>
-                            <Label className="text-sm font-medium">{t('Shipping Postal Code')}</Label>
-                            <input
-                              type="text"
-                              value={formData.shipping_postal_code || ''}
-                              onChange={(e) => handleChange('shipping_postal_code', e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-sm font-medium">{t('Shipping City')}</Label>
+                              <input
+                                type="text"
+                                value={formData.shipping_city || ''}
+                                onChange={(e) => handleChange('shipping_city', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium">{t('Shipping State')}</Label>
+                              <input
+                                type="text"
+                                value={formData.shipping_state || ''}
+                                onChange={(e) => handleChange('shipping_state', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-sm font-medium">{t('Shipping Country')}</Label>
+                              <input
+                                type="text"
+                                value={formData.shipping_country || ''}
+                                onChange={(e) => handleChange('shipping_country', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium">{t('Shipping Postal Code')}</Label>
+                              <input
+                                type="text"
+                                value={formData.shipping_postal_code || ''}
+                                onChange={(e) => handleChange('shipping_postal_code', e.target.value)}
+                                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )
-            },
-          ],
-        }}
-        initialData={currentItem ? {
-          ...currentItem,
-          assigned_user_name: currentItem.assigned_user?.name || t('Unassigned'),
-          opportunity_name: currentItem.opportunity?.name || t('-'),
-          account_name: currentItem.account?.name || t('-'),
-          billing_contact_name: currentItem.billing_contact?.name || t('-'),
-          shipping_contact_name: currentItem.shipping_contact?.name || t('-'),
-          shipping_provider_name: currentItem.shipping_provider_type?.name || t('-'),
-          valid_until: formMode === 'view' && currentItem.valid_until ?
-            new Date(currentItem.valid_until).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
-            }) : currentItem.valid_until,
-          products: currentItem.products?.map((product: any) => ({
-            product_id: product.id,
-            quantity: parseInt(product.pivot?.quantity || 1),
-            unit_price: parseFloat(product.pivot?.unit_price || product.price || 0),
-            discount_type: product.pivot?.discount_type || 'none',
-            discount_value: parseFloat(product.pivot?.discount_value || 0)
-          })) || []
-        } : null}
-        title={
-          formMode === 'create'
-            ? t('Add New Quote')
-            : formMode === 'edit'
-              ? t('Edit Quote')
-              : t('View Quote')
-        }
-        mode={formMode}
+                )
+              },
+            ],
+          }}
+          initialData={currentItem ? {
+            ...currentItem,
+            assigned_user_name: currentItem.assigned_user?.name || t('Unassigned'),
+            opportunity_name: currentItem.opportunity?.name || t('-'),
+            account_name: currentItem.account?.name || t('-'),
+            billing_contact_name: currentItem.billing_contact?.name || t('-'),
+            shipping_contact_name: currentItem.shipping_contact?.name || t('-'),
+            shipping_provider_name: currentItem.shipping_provider_type?.name || t('-'),
+            valid_until: formMode === 'view' && currentItem.valid_until ?
+              new Date(currentItem.valid_until).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              }) : currentItem.valid_until,
+            products: currentItem.products?.map((product: any) => ({
+              product_id: product.id,
+              quantity: parseInt(product.pivot?.quantity || 1),
+              unit_price: parseFloat(product.pivot?.unit_price || product.price || 0),
+              discount_type: product.pivot?.discount_type || 'none',
+              discount_value: parseFloat(product.pivot?.discount_value || 0)
+            })) || []
+          } : null}
+          title={
+            formMode === 'create'
+              ? t('Add New Quote')
+              : formMode === 'edit'
+                ? t('Edit Quote')
+                : t('View Quote')
+          }
+          mode={formMode}
         />
       </div>
 

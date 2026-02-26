@@ -85,12 +85,12 @@ class SalesOrderController extends Controller
                 ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name')->get(),
+                ->select('id', 'name', 'account_id')->get(),
             'quotes' => Quote::where('created_by', createdBy())
                 ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name', 'quote_number')->get(),
+                ->select('id', 'name', 'quote_number', 'account_id')->get(),
             'products' => $this->getFilteredProducts(),
             'shippingProviderTypes' => ShippingProviderType::where('created_by', createdBy())->where('status', 'active')->select('id', 'name')->get(),
             'taxes' => Tax::where('created_by', createdBy())->select('id', 'name', 'rate')->get(),
@@ -144,12 +144,12 @@ class SalesOrderController extends Controller
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name', 'quote_number')->get();
+            ->select('id', 'name', 'quote_number', 'account_id')->get();
         $products = $this->getFilteredProducts();
         $shippingProviderTypes = ShippingProviderType::where('created_by', createdBy())
             ->where('status', 'active')
@@ -201,12 +201,12 @@ class SalesOrderController extends Controller
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name', 'quote_number')->get();
+            ->select('id', 'name', 'quote_number', 'account_id')->get();
         $products = $this->getFilteredProducts();
         $shippingProviderTypes = ShippingProviderType::where('created_by', createdBy())
             ->where('status', 'active')

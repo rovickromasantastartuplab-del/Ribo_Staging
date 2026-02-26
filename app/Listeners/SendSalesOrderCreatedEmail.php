@@ -35,7 +35,7 @@ class SendSalesOrderCreatedEmail
                 '{order_name}' => $salesOrder->name ?? '-',
                 '{billing_contact_name}' => $billingContact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{order_total}' => $salesOrder->total_amount ? '$' . number_format($salesOrder->total_amount, 2) : '$0.00',
+                '{order_total}' => $salesOrder->total_amount ? '$' . number_format((float) $salesOrder->total_amount, 2) : '$0.00',
                 '{order_date}' => $salesOrder->order_date ? date('Y-m-d', strtotime($salesOrder->order_date)) : '-',
                 '{delivery_date}' => $salesOrder->delivery_date ? date('Y-m-d', strtotime($salesOrder->delivery_date)) : '-',
                 '{order_status}' => ucfirst($salesOrder->status ?? 'draft'),
@@ -49,6 +49,14 @@ class SendSalesOrderCreatedEmail
                 // Clear any existing email error
                 session()->forget('email_error');
 
+                // Generate Sales Order PDF Attachment
+                $pdfPath = storage_path('app/temp_salesorder_' . $salesOrder->id . '_' . time() . '.pdf');
+
+                // Pre-load relationships that the PDF requires
+                $salesOrder->loadMissing(['products.tax', 'account', 'billingContact', 'shippingContact']);
+
+                \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales_order', compact('salesOrder'))->save($pdfPath);
+
                 // Send email to billing contact if exists
                 if ($billingContact && $billingContact->email) {
                     $createdByUser = User::find(createdBy());
@@ -58,8 +66,15 @@ class SendSalesOrderCreatedEmail
                         variables: $variables,
                         toEmail: $billingContact->email,
                         toName: $billingContact->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath,
+                        attachmentName: 'SalesOrder_' . ($salesOrder->order_number ?: $salesOrder->id) . '.pdf'
                     );
+                }
+
+                // Clean up the temporary PDF file
+                if (file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();

@@ -1498,3 +1498,30 @@ if (!function_exists('getDemoCalendarData')) {
         return $events;
     }
 }
+
+if (!function_exists('getBrandColor')) {
+    function getBrandColor($userId = null)
+    {
+        $themeColor = getSetting('themeColor', 'green', $userId);
+        $customColor = getSetting('customColor', '#10b77f', $userId);
+
+        $themeColors = [
+            'green' => '#10b77f',
+            'purple' => '#9333ea',
+            'blue' => '#3b82f6',
+            'indigo' => '#4f46e5',
+            'pink' => '#d946ef',
+            'orange' => '#f97316',
+            'yellow' => '#eab308',
+            'red' => '#ef4444',
+            'teal' => '#14b8a6',
+            'cyan' => '#06b6d4'
+        ];
+
+        if ($themeColor === 'custom') {
+            return $customColor;
+        }
+
+        return $themeColors[$themeColor] ?? '#10b77f';
+    }
+}

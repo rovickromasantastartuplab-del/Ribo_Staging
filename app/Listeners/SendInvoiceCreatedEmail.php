@@ -69,7 +69,8 @@ class SendInvoiceCreatedEmail
                         toEmail: $contact->email,
                         toName: $contact->name,
                         language: $userLanguage,
-                        attachmentPath: $pdfPath
+                        attachmentPath: $pdfPath,
+                        attachmentName: 'Invoice_' . ($invoice->invoice_number ?: $invoice->id) . '.pdf'
                     );
                 }
 

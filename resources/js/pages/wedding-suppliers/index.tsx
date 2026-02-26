@@ -179,7 +179,7 @@ export default function WeddingSuppliers() {
             render: (value: any, row: any) => {
                 return (
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <div className="flex shrink-0 h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                             {getInitials(row.name)}
                         </div>
                         <div>

@@ -43,6 +43,7 @@ export default function Opportunities() {
   const [kanbanDataRef, setKanbanDataRef] = useState<any>(null);
   const [isLoadingKanban, setIsLoadingKanban] = useState(false);
   const [prefilledOpportunityStage, setPrefilledOpportunityStage] = useState<string>('');
+  const [selectedFormAccountId, setSelectedFormAccountId] = useState<string | null>(null);
 
   // Check if any filters are active
   const hasActiveFilters = () => {
@@ -98,6 +99,7 @@ export default function Opportunities() {
         break;
       case 'edit':
         setFormMode('edit');
+        setSelectedFormAccountId(item.account_id?.toString() || null);
         setIsFormModalOpen(true);
         break;
       case 'delete':
@@ -112,6 +114,7 @@ export default function Opportunities() {
   const handleAddNew = () => {
     setCurrentItem(null);
     setFormMode('create');
+    setSelectedFormAccountId(null);
     setIsFormModalOpen(true);
   };
 
@@ -119,6 +122,7 @@ export default function Opportunities() {
     setCurrentItem(null);
     setFormMode('create');
     setPrefilledOpportunityStage(stageId);
+    setSelectedFormAccountId(null);
     setIsFormModalOpen(true);
   };
 
@@ -1009,9 +1013,10 @@ export default function Opportunities() {
               required: formMode !== 'view',
               readOnly: formMode === 'view',
               options: formMode === 'view' ? [] : accounts.map((account: any) => ({
-                value: account.id,
+                value: account.id.toString(),
                 label: account.name
-              }))
+              })),
+              onChange: (val: string) => setSelectedFormAccountId(val)
             },
             {
               name: formMode === 'view' ? 'contact_name' : 'contact_id',
@@ -1019,10 +1024,12 @@ export default function Opportunities() {
               type: formMode === 'view' ? 'text' : 'select',
               readOnly: formMode === 'view',
               options: formMode === 'view' ? [] : [
-                ...contacts.map((contact: any) => ({
-                  value: contact.id,
-                  label: contact.name
-                }))
+                ...contacts
+                  .filter((contact: any) => !selectedFormAccountId || contact.account_id?.toString() === selectedFormAccountId)
+                  .map((contact: any) => ({
+                    value: contact.id.toString(),
+                    label: contact.name
+                  }))
               ]
             },
             {

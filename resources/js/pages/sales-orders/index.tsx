@@ -31,6 +31,7 @@ export default function SalesOrders() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedFormAccountId, setSelectedFormAccountId] = useState<string | null>(null);
 
 
   const hasActiveFilters = () => {
@@ -81,6 +82,7 @@ export default function SalesOrders() {
         break;
       case 'edit':
         setFormMode('edit');
+        setSelectedFormAccountId(item.account_id?.toString() || null);
         setIsFormModalOpen(true);
         break;
       case 'delete':
@@ -99,6 +101,7 @@ export default function SalesOrders() {
   const handleAddNew = () => {
     setCurrentItem(null);
     setFormMode('create');
+    setSelectedFormAccountId(null);
     setIsFormModalOpen(true);
   };
 
@@ -276,7 +279,7 @@ export default function SalesOrders() {
       render: (value: string, item: any) => (
         <Link
           href={route('sales-orders.show', item.id)}
-          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200 border border-blue-200 hover:border-blue-300"
+          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200 border border-blue-200 hover:border-blue-300 whitespace-nowrap"
         >
           {value}
         </Link>
@@ -504,32 +507,38 @@ export default function SalesOrders() {
             { name: 'name', label: t('Name'), type: 'text', required: true, colSpan: 2 },
             { name: 'description', label: t('Description'), type: 'textarea', colSpan: 2 },
             {
-              name: formMode === 'view' ? 'quote_name' : 'quote_id',
-              label: t('Quote'),
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : [
-                ...quotes?.map((quote: any) => ({ value: quote.id, label: `${quote.quote_number} - ${quote.name}` })) || []
-              ],
-              placeholder: t('Select Quote')
-            },
-            {
               name: formMode === 'view' ? 'account_name' : 'account_id',
               label: t('Account'),
               type: formMode === 'view' ? 'text' : 'select',
               readOnly: formMode === 'view',
               options: formMode === 'view' ? [] : [
-                ...accounts?.map((account: any) => ({ value: account.id, label: account.name })) || []
+                ...accounts?.map((account: any) => ({ value: account.id.toString(), label: account.name })) || []
               ],
-              placeholder: t('Select Account')
+              placeholder: t('Select Account'),
+              onChange: (value: string) => setSelectedFormAccountId(value)
             },
+            {
+              name: formMode === 'view' ? 'quote_name' : 'quote_id',
+              label: t('Quote'),
+              type: formMode === 'view' ? 'text' : 'select',
+              readOnly: formMode === 'view',
+              disabled: !selectedFormAccountId && formMode !== 'view',
+              options: formMode === 'view' ? [] : [
+                ...quotes?.filter((quote: any) => quote.account_id === Number(selectedFormAccountId))
+                  .map((quote: any) => ({ value: quote.id.toString(), label: `${quote.quote_number} - ${quote.name}` })) || []
+              ],
+              placeholder: t('Select Quote')
+            },
+
             {
               name: formMode === 'view' ? 'billing_contact_name' : 'billing_contact_id',
               label: t('Billing Contact'),
               type: formMode === 'view' ? 'text' : 'select',
               readOnly: formMode === 'view',
+              disabled: !selectedFormAccountId && formMode !== 'view',
               options: formMode === 'view' ? [] : [
-                ...contacts?.map((contact: any) => ({ value: contact.id, label: contact.name })) || []
+                ...contacts?.filter((contact: any) => contact.account_id === Number(selectedFormAccountId))
+                  .map((contact: any) => ({ value: contact.id.toString(), label: contact.name })) || []
               ],
               placeholder: t('Select Contact')
             },
@@ -538,8 +547,10 @@ export default function SalesOrders() {
               label: t('Shipping Contact'),
               type: formMode === 'view' ? 'text' : 'select',
               readOnly: formMode === 'view',
+              disabled: !selectedFormAccountId && formMode !== 'view',
               options: formMode === 'view' ? [] : [
-                ...contacts?.map((contact: any) => ({ value: contact.id, label: contact.name })) || []
+                ...contacts?.filter((contact: any) => contact.account_id === Number(selectedFormAccountId))
+                  .map((contact: any) => ({ value: contact.id.toString(), label: contact.name })) || []
               ],
               placeholder: t('Select Contact')
             },
@@ -549,7 +560,7 @@ export default function SalesOrders() {
               type: formMode === 'view' ? 'text' : 'select',
               readOnly: formMode === 'view',
               options: formMode === 'view' ? [] : [
-                ...shippingProviderTypes?.map((spt: any) => ({ value: spt.id, label: spt.name })) || []
+                ...shippingProviderTypes?.map((spt: any) => ({ value: spt.id.toString(), label: spt.name })) || []
               ],
               placeholder: t('Select Provider')
             },

@@ -75,10 +75,11 @@ class SendQuoteCreatedEmail
 
                 // Clean up the temporary PDF file
                 if (file_exists($pdfPath)) {
-                    unlink($pdfPath);
+                    @unlink($pdfPath);
                 }
 
             } catch (Exception $e) {
+                \Log::error('SendQuoteCreatedEmail error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
                 // Only store error if it's not a rate limiting issue (email was likely sent successfully)
                 $errorMessage = $e->getMessage();
                 if (

@@ -35,7 +35,7 @@ class SendSalesOrderStatusChangedEmail
                 '{order_name}' => $salesOrder->name ?? '-',
                 '{billing_contact_name}' => $billingContact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{order_total}' => $salesOrder->total_amount ? '$' . number_format($salesOrder->total_amount, 2) : '$0.00',
+                '{order_total}' => $salesOrder->total_amount ? '$' . number_format((float) $salesOrder->total_amount, 2) : '$0.00',
                 '{order_date}' => $salesOrder->order_date ? date('Y-m-d', strtotime($salesOrder->order_date)) : '-',
                 '{delivery_date}' => $salesOrder->delivery_date ? date('Y-m-d', strtotime($salesOrder->delivery_date)) : '-',
                 '{old_order_status}' => ucfirst($event->oldStatus),
@@ -48,6 +48,15 @@ class SendSalesOrderStatusChangedEmail
 
             try {
                 session()->forget('email_error');
+
+                // Generate Sales Order PDF Attachment
+                $pdfPath = storage_path('app/temp_salesorder_status_' . $salesOrder->id . '_' . time() . '.pdf');
+
+                // Pre-load relationships that the PDF requires
+                $salesOrder->loadMissing(['products.tax', 'account', 'billingContact', 'shippingContact']);
+
+                \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales_order', compact('salesOrder'))->save($pdfPath);
+
                 $createdByUser = User::find(createdBy());
                 $userLanguage = $createdByUser->lang ?? 'en';
 
@@ -58,7 +67,9 @@ class SendSalesOrderStatusChangedEmail
                         variables: $variables,
                         toEmail: $billingContact->email,
                         toName: $billingContact->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath,
+                        attachmentName: 'SalesOrder_' . ($salesOrder->order_number ?: $salesOrder->id) . '.pdf'
                     );
                 }
 
@@ -69,8 +80,15 @@ class SendSalesOrderStatusChangedEmail
                         variables: $variables,
                         toEmail: $assignedUser->email,
                         toName: $assignedUser->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath,
+                        attachmentName: 'SalesOrder_' . ($salesOrder->order_number ?: $salesOrder->id) . '.pdf'
                     );
+                }
+
+                // Clean up the temporary PDF file
+                if (file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
@@ -80,6 +98,10 @@ class SendSalesOrderStatusChangedEmail
                     !str_contains($errorMessage, 'rate limit')
                 ) {
                     session()->flash('email_error', 'Failed to send sales order status changed email: ' . $errorMessage);
+                }
+
+                if (isset($pdfPath) && file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             }
         }

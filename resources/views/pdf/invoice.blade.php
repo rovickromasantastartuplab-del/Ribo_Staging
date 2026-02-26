@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+@php
+    $brandColor = getBrandColor($invoice->creator ? $invoice->creator->id : createdBy());
+@endphp
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -54,8 +57,9 @@
         .company-name {
             margin: 0;
             font-size: 24px;
-            color: #10b77f;
-            /* Matching the teal from frontend styles usually */
+            color:
+                {{ $brandColor }}
+            ;
         }
 
         .invoice-body {
@@ -190,7 +194,8 @@
             <table class="header-table" style="margin-bottom: 30px;">
                 <tr>
                     <td class="header-cell">
-                        <h2 class="company-name">{{ getCompanyName() }}</h2>
+                        <img src="{{ public_path(getCompanyLogo()) }}" alt="{{ getCompanyName() }}"
+                            style="max-width: 200px; max-height: 80px;">
                     </td>
                     <td class="header-cell text-right">
                         <h3 class="invoice-title">INVOICE</h3>
@@ -214,7 +219,8 @@
                             <tr>
                                 <td class="text-right"></td>
                                 <td class="text-right" style="padding-left: 10px; color: #333;">Number:
-                                    {{ $invoice->invoice_number }}</td>
+                                    {{ $invoice->invoice_number }}
+                                </td>
                             </tr>
                             <tr>
                                 <td></td>
@@ -335,18 +341,21 @@
                             <tr>
                                 <td><strong>Grand Total:</strong></td>
                                 <td class="amount-cell">
-                                    <strong>{{ $currencySymbol }}{{ number_format($grandTotal, 2) }}</strong></td>
+                                    <strong>{{ $currencySymbol }}{{ number_format($grandTotal, 2) }}</strong>
+                                </td>
                             </tr>
                             @if($paidAmount > 0)
                                 <tr>
                                     <td style="color:#059669;"><strong>Paid Amount:</strong></td>
                                     <td class="amount-cell" style="color:#059669;">
-                                        <strong>-{{ $currencySymbol }}{{ number_format($paidAmount, 2) }}</strong></td>
+                                        <strong>-{{ $currencySymbol }}{{ number_format($paidAmount, 2) }}</strong>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td style="color:#111;"><strong>Amount Due:</strong></td>
                                     <td class="amount-cell" style="color:#111;">
-                                        <strong>{{ $currencySymbol }}{{ number_format($dueAmount, 2) }}</strong></td>
+                                        <strong>{{ $currencySymbol }}{{ number_format($dueAmount, 2) }}</strong>
+                                    </td>
                                 </tr>
                             @endif
                         </table>

@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+@php
+    $brandColor = getBrandColor($quote->creator ? $quote->creator->id : createdBy());
+@endphp
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -54,8 +57,9 @@
         .company-name {
             margin: 0;
             font-size: 24px;
-            color: #10b77f;
-            /* Matching the teal from frontend styles usually */
+            color:
+                {{ $brandColor }}
+            ;
         }
 
         .invoice-body {
@@ -179,7 +183,8 @@
             <table class="header-table" style="margin-bottom: 30px;">
                 <tr>
                     <td class="header-cell">
-                        <h2 class="company-name">{{ getCompanyName() }}</h2>
+                        <img src="{{ public_path(getCompanyLogo()) }}" alt="{{ getCompanyName() }}"
+                            style="max-width: 200px; max-height: 80px;">
                     </td>
                     <td class="header-cell text-right">
                         <h3 class="quote-title">QUOTE</h3>
@@ -203,7 +208,8 @@
                             <tr>
                                 <td class="text-right"></td>
                                 <td class="text-right" style="padding-left: 10px; color: #333;">Number:
-                                    {{ $quote->quote_number }}</td>
+                                    {{ $quote->quote_number }}
+                                </td>
                             </tr>
                             <tr>
                                 <td></td>
@@ -320,7 +326,8 @@
                             <tr>
                                 <td><strong>Grand Total:</strong></td>
                                 <td class="amount-cell">
-                                    <strong>{{ $currencySymbol }}{{ number_format($grandTotal, 2) }}</strong></td>
+                                    <strong>{{ $currencySymbol }}{{ number_format($grandTotal, 2) }}</strong>
+                                </td>
                             </tr>
                         </table>
                     </td>

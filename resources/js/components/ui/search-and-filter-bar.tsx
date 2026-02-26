@@ -80,10 +80,10 @@ export function SearchAndFilterBar({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <form onSubmit={onSearch} className="flex gap-2">
-            <div className="relative w-64">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <form onSubmit={onSearch} className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64 min-w-[200px]">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("Search...")}
@@ -92,14 +92,14 @@ export function SearchAndFilterBar({
                 className="w-full pl-9"
               />
             </div>
-            <Button type="submit" size="sm">
+            <Button type="submit" size="sm" className="shrink-0">
               <Search className="h-4 w-4 mr-1.5" />
               {t("Search")}
             </Button>
           </form>
 
           {filters.length > 0 && (
-            <div className="ml-2">
+            <div className="ml-0 sm:ml-2 mt-2 sm:mt-0">
               <Button
                 variant="default"
                 // variant={hasActiveFilters() ? "default" : "outline"}
@@ -124,8 +124,8 @@ export function SearchAndFilterBar({
             <div className="border rounded-md p-0.5 mr-2">
               {viewOptions.map((option) => {
                 const IconComponent = option.icon === 'List' ? List :
-                                    option.icon === 'Grid3X3' ? Grid3X3 :
-                                    option.icon === 'Columns' ? Columns : LayoutGrid;
+                  option.icon === 'Grid3X3' ? Grid3X3 :
+                    option.icon === 'Columns' ? Columns : LayoutGrid;
                 return (
                   <Button
                     key={option.value}

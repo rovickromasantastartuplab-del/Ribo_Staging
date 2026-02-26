@@ -39,7 +39,7 @@ class SendQuoteStatusChangedEmail
                 '{quote_name}' => $quote->name ?? '-',
                 '{billing_contact_name}' => $billingContact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{quote_total}' => $quote->total_amount ? '$' . number_format($quote->total_amount, 2) : '$0.00',
+                '{quote_total}' => $quote->total_amount ? '$' . number_format((float) $quote->total_amount, 2) : '$0.00',
                 '{quote_valid_until}' => $quote->valid_until ? date('Y-m-d', strtotime($quote->valid_until)) : '-',
                 '{old_quote_status}' => ucfirst($oldStatus),
                 '{new_quote_status}' => ucfirst($newStatus),
@@ -50,6 +50,14 @@ class SendQuoteStatusChangedEmail
             ];
 
             try {
+                // Generate Quote PDF Attachment
+                $pdfPath = storage_path('app/temp_quote_status_' . $quote->id . '_' . time() . '.pdf');
+
+                // Pre-load relationships that the PDF requires to avoid N+1 and null issues in the view
+                $quote->loadMissing(['products.tax', 'account', 'billingContact']);
+
+                \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.quote', compact('quote'))->save($pdfPath);
+
                 // Send email to billing contact if exists
                 if ($billingContact && $billingContact->email) {
                     $createdByUser = User::find(createdBy());
@@ -59,7 +67,8 @@ class SendQuoteStatusChangedEmail
                         variables: $variables,
                         toEmail: $billingContact->email,
                         toName: $billingContact->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath
                     );
                 }
 
@@ -75,13 +84,19 @@ class SendQuoteStatusChangedEmail
                         variables: $variables,
                         toEmail: $assignedUser->email,
                         toName: $assignedUser->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath
                     );
                 }
 
                 // Trigger webhooks for Quote Status Changed
                 if ($assignedUser && $assignedUser->id) {
                     $this->webhookService->triggerWebhooks('Quote Status Changed', $quote->toArray(), $quote->created_by ?? $quote->id);
+                }
+
+                // Clean up the temporary PDF file
+                if (file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             } catch (Exception $e) {
                 // Store error in session for frontend notification

@@ -10,7 +10,7 @@ use Exception;
 
 class EmailTemplateService
 {
-    public function sendTemplateEmail(string $templateName, array $variables, string $toEmail, Business $business = null, string $toName = null, string $attachmentPath = null)
+    public function sendTemplateEmail(string $templateName, array $variables, string $toEmail, Business $business = null, string $toName = null, string $attachmentPath = null, string $attachmentName = null)
     {
         try {
             // Get email template
@@ -42,6 +42,9 @@ class EmailTemplateService
                 throw new Exception("No content found for template '{$templateName}'");
             }
 
+            // Inject the dynamic primary brand color
+            $variables['{primary_color}'] = getBrandColor($business ? $business->user_id : createdBy());
+
             // Replace variables in subject and content
             $subject = $this->replaceVariables($templateLang->subject, $variables);
             $content = $this->replaceVariables($templateLang->content, $variables);
@@ -55,7 +58,7 @@ class EmailTemplateService
             $finalFromName = getSetting('email_from_name') ? $this->replaceVariables(getSetting('email_from_name'), $variables) : $fromName;
 
             // Send email using NotificationMail class
-            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath));
+            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath, $attachmentName));
 
             return true;
         } catch (Exception $e) {
@@ -69,7 +72,7 @@ class EmailTemplateService
         return str_replace(array_keys($variables), array_values($variables), $content);
     }
 
-    public function sendTemplateEmailWithLanguage(string $templateName, array $variables, string $toEmail, string $toName = null, string $language = 'en', string $attachmentPath = null)
+    public function sendTemplateEmailWithLanguage(string $templateName, array $variables, string $toEmail, string $toName = null, string $language = 'en', string $attachmentPath = null, string $attachmentName = null)
     {
         try {
             \Log::info('=== EMAIL TEMPLATE LANGUAGE DEBUG ===', [
@@ -113,6 +116,9 @@ class EmailTemplateService
                 throw new Exception("No content found for template '{$templateName}'");
             }
 
+            // Inject the dynamic primary brand color
+            $variables['{primary_color}'] = getBrandColor(createdBy());
+
             // Replace variables in subject and content
             $subject = $this->replaceVariables($templateLang->subject, $variables);
             $content = $this->replaceVariables($templateLang->content, $variables);
@@ -126,7 +132,7 @@ class EmailTemplateService
             $finalFromName = getSetting('email_from_name') ? $this->replaceVariables(getSetting('email_from_name'), $variables) : $fromName;
 
             // Send email using NotificationMail class
-            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath));
+            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath, $attachmentName));
 
             return true;
         } catch (Exception $e) {

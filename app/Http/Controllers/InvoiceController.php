@@ -92,12 +92,12 @@ class InvoiceController extends Controller
                 ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name')->get(),
+                ->select('id', 'name', 'account_id')->get(),
             'salesOrders' => SalesOrder::where('created_by', createdBy())
                 ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name', 'order_number')->get(),
+                ->select('id', 'name', 'order_number', 'account_id')->get(),
             'availableSalesOrders' => SalesOrder::where('created_by', createdBy())
                 ->when(auth()->user()->type !== 'company', function ($q) {
                     $q->where('assigned_to', auth()->id());
@@ -107,12 +107,12 @@ class InvoiceController extends Controller
                 ->when(auth()->user()->type !== 'company' && !$canViewQuotes, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name', 'quote_number')->get(),
+                ->select('id', 'name', 'quote_number', 'account_id')->get(),
             'opportunities' => Opportunity::where('created_by', createdBy())
                 ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name')->get(),
+                ->select('id', 'name', 'account_id')->get(),
             'products' => $this->getFilteredProducts(),
             'users' => $users,
             'filters' => $request->all(['search', 'status', 'account_id', 'assigned_to', 'sort_field', 'sort_direction', 'per_page']),
@@ -173,22 +173,22 @@ class InvoiceController extends Controller
             ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $salesOrders = SalesOrder::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name', 'order_number')->get();
+            ->select('id', 'name', 'order_number', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name', 'quote_number')->get();
+            ->select('id', 'name', 'quote_number', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $products = $this->getFilteredProducts();
 
         $users = [];
@@ -238,22 +238,22 @@ class InvoiceController extends Controller
             ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $salesOrders = SalesOrder::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name', 'order_number')->get();
+            ->select('id', 'name', 'order_number', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name', 'quote_number')->get();
+            ->select('id', 'name', 'quote_number', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $products = $this->getFilteredProducts();
 
         $users = [];

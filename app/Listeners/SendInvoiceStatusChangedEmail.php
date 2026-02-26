@@ -35,7 +35,7 @@ class SendInvoiceStatusChangedEmail
                 '{invoice_name}' => $invoice->name ?? '-',
                 '{contact_name}' => $contact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{invoice_total}' => $invoice->total_amount ? '$' . number_format($invoice->total_amount, 2) : '$0.00',
+                '{invoice_total}' => $invoice->total_amount ? '$' . number_format((float) $invoice->total_amount, 2) : '$0.00',
                 '{invoice_date}' => $invoice->invoice_date ? date('Y-m-d', strtotime($invoice->invoice_date)) : '-',
                 '{due_date}' => $invoice->due_date ? date('Y-m-d', strtotime($invoice->due_date)) : '-',
                 '{old_invoice_status}' => ucfirst($event->oldStatus),
@@ -48,6 +48,15 @@ class SendInvoiceStatusChangedEmail
 
             try {
                 session()->forget('email_error');
+
+                // Generate Invoice PDF Attachment
+                $pdfPath = storage_path('app/temp_invoice_status_' . $invoice->id . '_' . time() . '.pdf');
+
+                // Pre-load relationships
+                $invoice->loadMissing(['products.tax', 'account', 'contact', 'payments']);
+
+                \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', compact('invoice'))->save($pdfPath);
+
                 $createdByUser = User::find(createdBy());
                 $userLanguage = $createdByUser->lang ?? 'en';
 
@@ -58,7 +67,9 @@ class SendInvoiceStatusChangedEmail
                         variables: $variables,
                         toEmail: $contact->email,
                         toName: $contact->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath,
+                        attachmentName: 'Invoice_' . ($invoice->invoice_number ?: $invoice->id) . '.pdf'
                     );
                 }
 
@@ -69,8 +80,14 @@ class SendInvoiceStatusChangedEmail
                         variables: $variables,
                         toEmail: $assignedUser->email,
                         toName: $assignedUser->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath,
+                        attachmentName: 'Invoice_' . ($invoice->invoice_number ?: $invoice->id) . '.pdf'
                     );
+                }
+
+                if (file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
@@ -80,6 +97,10 @@ class SendInvoiceStatusChangedEmail
                     !str_contains($errorMessage, 'rate limit')
                 ) {
                     session()->flash('email_error', 'Failed to send invoice status changed email: ' . $errorMessage);
+                }
+
+                if (isset($pdfPath) && file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             }
         }

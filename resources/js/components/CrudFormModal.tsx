@@ -148,7 +148,8 @@ export function CrudFormModal({
         });
       }
     }
-  }, [isOpen, initialData, formConfig.fields, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialData, mode]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -164,6 +165,16 @@ export function CrudFormModal({
 
   const handleChange = (name: string, value: any) => {
     const newFormData = { ...formData, [name]: value };
+
+    // Clear dependent relations when account_id changes
+    if (name === 'account_id') {
+      newFormData.opportunity_id = '';
+      newFormData.quote_id = '';
+      newFormData.sales_order_id = '';
+      newFormData.billing_contact_id = '';
+      newFormData.shipping_contact_id = '';
+      newFormData.contact_id = '';
+    }
 
     // Auto-calculate amount when products change
     if (name === 'products' && Array.isArray(value)) {
@@ -711,10 +722,13 @@ export function CrudFormModal({
 
         return (
           <Select
-            key={`${field.name}-${currentValue}`}
+            key={field.name}
             value={currentValue}
-            onValueChange={(value) => handleChange(field.name, value)}
-            disabled={false}
+            onValueChange={(value) => {
+              handleChange(field.name, value);
+              if (field.onChange) field.onChange(value);
+            }}
+            disabled={field.disabled || false}
           >
             <SelectTrigger className={errors[field.name] ? 'border-red-500' : ''}>
               <SelectValue placeholder={field.placeholder || `Select ${field.label}`}>

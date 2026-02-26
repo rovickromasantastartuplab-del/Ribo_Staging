@@ -36,6 +36,7 @@ export default function Invoices() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<any>(null);
   const [rejectNotes, setRejectNotes] = useState('');
+  const [selectedFormAccountId, setSelectedFormAccountId] = useState<string | null>(null);
 
 
 
@@ -87,6 +88,7 @@ export default function Invoices() {
         break;
       case 'edit':
         setFormMode('edit');
+        setSelectedFormAccountId(item.account_id?.toString() || null);
         setIsFormModalOpen(true);
         break;
       case 'delete':
@@ -105,6 +107,7 @@ export default function Invoices() {
   const handleAddNew = () => {
     setCurrentItem(null);
     setFormMode('create');
+    setSelectedFormAccountId(null);
     setIsFormModalOpen(true);
   };
 
@@ -116,17 +119,17 @@ export default function Invoices() {
         formData[field] = null;
       }
     });
-    
+
     // Calculate totals from products if products are selected
     if (formData.products && formData.products.length > 0) {
       let subtotal = 0;
       let totalTax = 0;
-      
+
       formData.products.forEach((product: any) => {
         const quantity = parseFloat(product.quantity) || 0;
         const unitPrice = parseFloat(product.unit_price) || 0;
         const lineTotal = quantity * unitPrice;
-        
+
         // Calculate discount
         const discountType = product.discount_type;
         const discountValue = parseFloat(product.discount_value) || 0;
@@ -138,21 +141,21 @@ export default function Invoices() {
             discountAmount = Math.min(discountValue, lineTotal);
           }
         }
-        
+
         const discountedTotal = lineTotal - discountAmount;
         subtotal += discountedTotal;
-        
+
         const productData = products?.find((p: any) => p.id == product.product_id);
         if (productData?.tax) {
           totalTax += (discountedTotal * productData.tax.rate) / 100;
         }
       });
-      
+
       formData.subtotal = subtotal;
       formData.tax_amount = totalTax;
       formData.total_amount = subtotal + totalTax;
     }
-    
+
     if (formMode === 'create') {
       toast.loading(t('Creating invoice...'));
 
@@ -380,9 +383,9 @@ export default function Invoices() {
       label: t('Invoice Number'),
       sortable: true,
       render: (value: string, item: any) => (
-        <Link 
+        <Link
           href={route('invoices.show', item.id)}
-          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200 border border-blue-200 hover:border-blue-300"
+          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200 border border-blue-200 hover:border-blue-300 whitespace-nowrap"
         >
           {value}
         </Link>
@@ -423,7 +426,7 @@ export default function Invoices() {
           overdue: 'bg-red-50 text-red-700 ring-red-600/20',
           cancelled: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
         };
-        
+
         const getStatusLabel = (status: string) => {
           switch (status) {
             case 'draft': return t('Draft');
@@ -435,7 +438,7 @@ export default function Invoices() {
             default: return t('Draft');
           }
         };
-        
+
         return (
           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${statusColors[value as keyof typeof statusColors] || statusColors.draft}`}>
             {getStatusLabel(value)}
@@ -585,7 +588,7 @@ export default function Invoices() {
                         Invoice #{payment.invoice.invoice_number}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {payment.payment_method === 'bank' ? t('Bank Transfer') : payment.payment_method} - 
+                        {payment.payment_method === 'bank' ? t('Bank Transfer') : payment.payment_method} -
                         {formatCurrency(Number(payment.amount))} ({payment.payment_type})
                       </p>
                     </div>
@@ -662,49 +665,59 @@ export default function Invoices() {
           fields: [
             { name: 'name', label: t('Name'), type: 'text', required: true, colSpan: 2 },
             { name: 'description', label: t('Description'), type: 'textarea', colSpan: 2 },
-            { 
-              name: formMode === 'view' ? 'sales_order_name' : 'sales_order_id', 
-              label: t('Sales Order'), 
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : [
-                ...salesOrders?.map((so: any) => ({ value: so.id.toString(), label: `${so.order_number} - ${so.name}` })) || []
-              ]
-            },
-            { 
-              name: formMode === 'view' ? 'quote_name' : 'quote_id', 
-              label: t('Quote'), 
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : [
-                ...quotes?.map((quote: any) => ({ value: quote.id.toString(), label: `${quote.quote_number} - ${quote.name}` })) || []
-              ]
-            },
-            { 
-              name: formMode === 'view' ? 'opportunity_name' : 'opportunity_id', 
-              label: t('Opportunity'), 
-              type: formMode === 'view' ? 'text' : 'select',
-              readOnly: formMode === 'view',
-              options: formMode === 'view' ? [] : [
-                ...opportunities?.map((opp: any) => ({ value: opp.id.toString(), label: opp.name })) || []
-              ]
-            },
-            { 
-              name: formMode === 'view' ? 'account_name' : 'account_id', 
-              label: t('Account'), 
+            {
+              name: formMode === 'view' ? 'account_name' : 'account_id',
+              label: t('Account'),
               type: formMode === 'view' ? 'text' : 'select',
               readOnly: formMode === 'view',
               options: formMode === 'view' ? [] : [
                 ...accounts?.map((account: any) => ({ value: account.id.toString(), label: account.name })) || []
-              ]
+              ],
+              onChange: (value: string) => setSelectedFormAccountId(value)
             },
-            { 
-              name: formMode === 'view' ? 'contact_name' : 'contact_id', 
-              label: t('Contact'), 
+            {
+              name: formMode === 'view' ? 'sales_order_name' : 'sales_order_id',
+              label: t('Sales Order'),
               type: formMode === 'view' ? 'text' : 'select',
               readOnly: formMode === 'view',
+              disabled: !selectedFormAccountId && formMode !== 'view',
               options: formMode === 'view' ? [] : [
-                ...contacts?.map((contact: any) => ({ value: contact.id.toString(), label: contact.name })) || []
+                ...salesOrders?.filter((so: any) => so.account_id === Number(selectedFormAccountId))
+                  .map((so: any) => ({ value: so.id.toString(), label: `${so.order_number} - ${so.name}` })) || []
+              ]
+            },
+            {
+              name: formMode === 'view' ? 'quote_name' : 'quote_id',
+              label: t('Quote'),
+              type: formMode === 'view' ? 'text' : 'select',
+              readOnly: formMode === 'view',
+              disabled: !selectedFormAccountId && formMode !== 'view',
+              options: formMode === 'view' ? [] : [
+                ...quotes?.filter((quote: any) => quote.account_id === Number(selectedFormAccountId))
+                  .map((quote: any) => ({ value: quote.id.toString(), label: `${quote.quote_number} - ${quote.name}` })) || []
+              ]
+            },
+            {
+              name: formMode === 'view' ? 'opportunity_name' : 'opportunity_id',
+              label: t('Opportunity'),
+              type: formMode === 'view' ? 'text' : 'select',
+              readOnly: formMode === 'view',
+              disabled: !selectedFormAccountId && formMode !== 'view',
+              options: formMode === 'view' ? [] : [
+                ...opportunities?.filter((opp: any) => opp.account_id === Number(selectedFormAccountId))
+                  .map((opp: any) => ({ value: opp.id.toString(), label: opp.name })) || []
+              ]
+            },
+
+            {
+              name: formMode === 'view' ? 'contact_name' : 'contact_id',
+              label: t('Contact'),
+              type: formMode === 'view' ? 'text' : 'select',
+              readOnly: formMode === 'view',
+              disabled: !selectedFormAccountId && formMode !== 'view',
+              options: formMode === 'view' ? [] : [
+                ...contacts?.filter((contact: any) => contact.account_id === Number(selectedFormAccountId))
+                  .map((contact: any) => ({ value: contact.id.toString(), label: contact.name })) || []
               ]
             },
             { name: 'invoice_date', label: t('Invoice Date'), type: 'date', required: true, defaultValue: new Date().toISOString().split('T')[0] },
@@ -743,13 +756,13 @@ export default function Invoices() {
                 let subtotal = 0;
                 let totalTax = 0;
                 let totalDiscount = 0;
-                
+
                 try {
                   arrayValue.forEach((item: any) => {
                     const quantity = parseFloat(item.quantity) || 0;
                     const unitPrice = parseFloat(item.unit_price) || 0;
                     const lineTotal = quantity * unitPrice;
-                    
+
                     // Calculate discount
                     const discountType = item.discount_type;
                     const discountValue = parseFloat(item.discount_value) || 0;
@@ -761,11 +774,11 @@ export default function Invoices() {
                         discountAmount = Math.min(discountValue, lineTotal);
                       }
                     }
-                    
+
                     const discountedTotal = lineTotal - discountAmount;
                     subtotal += discountedTotal;
                     totalDiscount += discountAmount;
-                    
+
                     const product = products?.find((p: any) => p.id == item.product_id);
                     if (product?.tax) {
                       totalTax += (discountedTotal * product.tax.rate) / 100;
@@ -774,7 +787,7 @@ export default function Invoices() {
                 } catch (error) {
                   console.error('Error calculating totals:', error);
                 }
-                
+
                 return (
                   <>
                     <tr className="bg-gray-50">
@@ -816,13 +829,13 @@ export default function Invoices() {
                 let subtotal = 0;
                 let totalTax = 0;
                 let totalDiscount = 0;
-                
+
                 try {
                   arrayValue.forEach((item: any) => {
                     const quantity = parseFloat(item.quantity) || 0;
                     const unitPrice = parseFloat(item.unit_price) || 0;
                     const lineTotal = quantity * unitPrice;
-                    
+
                     // Calculate discount
                     const discountType = item.discount_type;
                     const discountValue = parseFloat(item.discount_value) || 0;
@@ -834,11 +847,11 @@ export default function Invoices() {
                         discountAmount = Math.min(discountValue, lineTotal);
                       }
                     }
-                    
+
                     const discountedTotal = lineTotal - discountAmount;
                     subtotal += discountedTotal;
                     totalDiscount += discountAmount;
-                    
+
                     const product = products?.find((p: any) => p.id == item.product_id);
                     if (product?.tax) {
                       totalTax += (discountedTotal * product.tax.rate) / 100;
@@ -847,7 +860,7 @@ export default function Invoices() {
                 } catch (error) {
                   console.error('Error calculating summary:', error);
                 }
-                
+
                 return (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
@@ -914,8 +927,8 @@ export default function Invoices() {
                 }
               ]
             },
-            { 
-              name: 'billing_section', 
+            {
+              name: 'billing_section',
               type: 'custom',
               colSpan: 2,
               render: (field: any, formData: any, handleChange: any) => (
@@ -1002,13 +1015,13 @@ export default function Invoices() {
           account_id: currentItem.account_id ? currentItem.account_id.toString() : 'none',
           contact_id: currentItem.contact_id ? currentItem.contact_id.toString() : 'none',
           assigned_to: currentItem.assigned_to ? currentItem.assigned_to.toString() : 'none',
-          invoice_date: formMode === 'view' && currentItem.invoice_date ? 
+          invoice_date: formMode === 'view' && currentItem.invoice_date ?
             new Date(currentItem.invoice_date).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
               day: 'numeric'
             }) : currentItem.invoice_date,
-          due_date: formMode === 'view' && currentItem.due_date ? 
+          due_date: formMode === 'view' && currentItem.due_date ?
             new Date(currentItem.due_date).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',

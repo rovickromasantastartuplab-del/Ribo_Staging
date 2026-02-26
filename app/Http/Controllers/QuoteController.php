@@ -87,12 +87,12 @@ class QuoteController extends Controller
                 ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name')->get(),
+                ->select('id', 'name', 'account_id')->get(),
             'opportunities' => Opportunity::where('created_by', createdBy())
                 ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function ($q) {
                     $q->where('assigned_to', auth()->id());
                 })
-                ->select('id', 'name')->get(),
+                ->select('id', 'name', 'account_id')->get(),
             'products' => $this->getFilteredProducts(),
             'shippingProviderTypes' => ShippingProviderType::where('created_by', createdBy())->where('status', 'active')->select('id', 'name')->get(),
             'taxes' => Tax::where('created_by', createdBy())->select('id', 'name', 'rate')->get(),
@@ -149,12 +149,12 @@ class QuoteController extends Controller
             ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $products = $this->getFilteredProducts();
         $shippingProviderTypes = ShippingProviderType::where('created_by', createdBy())
             ->where('status', 'active')
@@ -209,12 +209,12 @@ class QuoteController extends Controller
             ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
-            ->select('id', 'name')->get();
+            ->select('id', 'name', 'account_id')->get();
         $products = $this->getFilteredProducts();
         $shippingProviderTypes = ShippingProviderType::where('created_by', createdBy())
             ->where('status', 'active')
