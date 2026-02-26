@@ -10,7 +10,7 @@ use Exception;
 
 class EmailTemplateService
 {
-    public function sendTemplateEmail(string $templateName, array $variables, string $toEmail, Business $business = null, string $toName = null)
+    public function sendTemplateEmail(string $templateName, array $variables, string $toEmail, Business $business = null, string $toName = null, string $attachmentPath = null)
     {
         try {
             // Get email template
@@ -55,7 +55,7 @@ class EmailTemplateService
             $finalFromName = getSetting('email_from_name') ? $this->replaceVariables(getSetting('email_from_name'), $variables) : $fromName;
 
             // Send email using NotificationMail class
-            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName));
+            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath));
 
             return true;
         } catch (Exception $e) {
@@ -69,7 +69,7 @@ class EmailTemplateService
         return str_replace(array_keys($variables), array_values($variables), $content);
     }
 
-    public function sendTemplateEmailWithLanguage(string $templateName, array $variables, string $toEmail, string $toName = null, string $language = 'en')
+    public function sendTemplateEmailWithLanguage(string $templateName, array $variables, string $toEmail, string $toName = null, string $language = 'en', string $attachmentPath = null)
     {
         try {
             \Log::info('=== EMAIL TEMPLATE LANGUAGE DEBUG ===', [
@@ -126,7 +126,7 @@ class EmailTemplateService
             $finalFromName = getSetting('email_from_name') ? $this->replaceVariables(getSetting('email_from_name'), $variables) : $fromName;
 
             // Send email using NotificationMail class
-            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName));
+            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath));
 
             return true;
         } catch (Exception $e) {

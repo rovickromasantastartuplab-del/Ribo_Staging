@@ -5,6 +5,8 @@ namespace App\Listeners;
 use App\Events\QuoteCreated;
 use App\Models\User;
 use App\Services\EmailTemplateService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class SendQuoteCreatedEmail
@@ -35,7 +37,7 @@ class SendQuoteCreatedEmail
                 '{quote_name}' => $quote->name ?? '-',
                 '{billing_contact_name}' => $billingContact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{quote_total}' => $quote->total_amount ? '$' . number_format($quote->total_amount, 2) : '$0.00',
+                '{quote_total}' => $quote->total_amount ? '$' . number_format((float) $quote->total_amount, 2) : '$0.00',
                 '{quote_valid_until}' => $quote->valid_until ? date('Y-m-d', strtotime($quote->valid_until)) : '-',
                 '{quote_status}' => ucfirst($quote->status ?? 'draft'),
                 '{assigned_user_name}' => $assignedUser->name ?? '-',
@@ -48,18 +50,34 @@ class SendQuoteCreatedEmail
                 // Clear any existing email error
                 session()->forget('email_error');
 
+                // Generate Quote PDF Attachment
+                $pdfPath = storage_path('app/temp_quote_' . $quote->id . '_' . time() . '.pdf');
+
+                // Pre-load relationships that the PDF requires to avoid N+1 and null issues in the view
+                $quote->loadMissing(['products.tax', 'account', 'billingContact']);
+
+                Pdf::loadView('pdf.quote', compact('quote'))->save($pdfPath);
+
                 // Send email to billing contact if exists
                 if ($billingContact && $billingContact->email) {
                     $createdByUser = User::find(createdBy());
                     $userLanguage = $createdByUser->lang ?? 'en';
+
                     $this->emailService->sendTemplateEmailWithLanguage(
                         templateName: 'Quote Created',
                         variables: $variables,
                         toEmail: $billingContact->email,
                         toName: $billingContact->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath
                     );
                 }
+
+                // Clean up the temporary PDF file
+                if (file_exists($pdfPath)) {
+                    unlink($pdfPath);
+                }
+
             } catch (Exception $e) {
                 // Only store error if it's not a rate limiting issue (email was likely sent successfully)
                 $errorMessage = $e->getMessage();
@@ -69,6 +87,11 @@ class SendQuoteCreatedEmail
                     !str_contains($errorMessage, 'rate limit')
                 ) {
                     session()->flash('email_error', 'Failed to send quote create email: ' . $errorMessage);
+                }
+
+                // Ensure garbage collection of temporary files even on error
+                if (isset($pdfPath) && file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             }
         }

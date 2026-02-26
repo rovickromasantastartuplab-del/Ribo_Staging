@@ -5,6 +5,8 @@ namespace App\Listeners;
 use App\Events\InvoiceCreated;
 use App\Models\User;
 use App\Services\EmailTemplateService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class SendInvoiceCreatedEmail
@@ -35,7 +37,7 @@ class SendInvoiceCreatedEmail
                 '{invoice_name}' => $invoice->name ?? '-',
                 '{contact_name}' => $contact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{invoice_total}' => $invoice->total_amount ? '$' . number_format($invoice->total_amount, 2) : '$0.00',
+                '{invoice_total}' => $invoice->total_amount ? '$' . number_format((float) $invoice->total_amount, 2) : '$0.00',
                 '{invoice_date}' => $invoice->invoice_date ? date('Y-m-d', strtotime($invoice->invoice_date)) : '-',
                 '{due_date}' => $invoice->due_date ? date('Y-m-d', strtotime($invoice->due_date)) : '-',
                 '{invoice_status}' => ucfirst($invoice->status ?? 'draft'),
@@ -48,18 +50,33 @@ class SendInvoiceCreatedEmail
             try {
                 session()->forget('email_error');
 
+                // Generate Invoice PDF Attachment
+                $pdfPath = storage_path('app/temp_invoice_' . $invoice->id . '_' . time() . '.pdf');
+
+                // Pre-load relationships
+                $invoice->loadMissing(['products.tax', 'account', 'contact', 'payments']);
+
+                Pdf::loadView('pdf.invoice', compact('invoice'))->save($pdfPath);
+
                 // Send email to contact if exists
                 if ($contact && $contact->email) {
                     $createdByUser = User::find(createdBy());
                     $userLanguage = $createdByUser->lang ?? 'en';
+
                     $this->emailService->sendTemplateEmailWithLanguage(
                         templateName: 'Invoice Created',
                         variables: $variables,
                         toEmail: $contact->email,
                         toName: $contact->name,
-                        language: $userLanguage
+                        language: $userLanguage,
+                        attachmentPath: $pdfPath
                     );
                 }
+
+                if (file_exists($pdfPath)) {
+                    unlink($pdfPath);
+                }
+
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
                 if (
@@ -68,6 +85,10 @@ class SendInvoiceCreatedEmail
                     !str_contains($errorMessage, 'rate limit')
                 ) {
                     session()->flash('email_error', 'Failed to send invoice created email: ' . $errorMessage);
+                }
+
+                if (isset($pdfPath) && file_exists($pdfPath)) {
+                    unlink($pdfPath);
                 }
             }
         }

@@ -14,16 +14,18 @@ class EmailTemplate extends Mailable
     public $content;
     public $fromEmail;
     public $fromName;
+    public $attachmentPath;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($subject, $content, $fromEmail, $fromName)
+    public function __construct($subject, $content, $fromEmail, $fromName, $attachmentPath = null)
     {
         $this->subject = $subject;
         $this->content = $content;
         $this->fromEmail = $fromEmail;
         $this->fromName = $fromName;
+        $this->attachmentPath = $attachmentPath;
     }
 
     /**
@@ -31,12 +33,18 @@ class EmailTemplate extends Mailable
      */
     public function build()
     {
-        return $this->subject($this->subject)
-                    ->from($this->fromEmail, $this->fromName)
-                    ->view('emails.notification')
-                    ->with([
-                        'subject' => $this->subject,
-                        'content' => $this->content,
-                    ]);
+        $mail = $this->subject($this->subject)
+            ->from($this->fromEmail, $this->fromName)
+            ->view('emails.notification')
+            ->with([
+                'subject' => $this->subject,
+                'content' => $this->content,
+            ]);
+
+        if ($this->attachmentPath && file_exists($this->attachmentPath)) {
+            $mail->attach($this->attachmentPath);
+        }
+
+        return $mail;
     }
 }
