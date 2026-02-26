@@ -58,6 +58,7 @@ export function CrudFormModal({
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [relationOptions, setRelationOptions] = useState<Record<string, any[]>>({});
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
 
   // Conditionally declare handleExport only if exportRoute exists
   const handleExportAction = formConfig.exportRoute ? () => {
@@ -98,6 +99,7 @@ export function CrudFormModal({
 
       setFormData(cleanData || {});
       setErrors({});
+      setIsLocalSubmitting(false);
 
       // Load relation data for select fields
       formConfig.fields.forEach(field => {
@@ -157,6 +159,7 @@ export function CrudFormModal({
       ...prev,
       ...externalErrors,
     }));
+    setIsLocalSubmitting(false);
   }, [externalErrors, isOpen]);
 
   const handleChange = (name: string, value: any) => {
@@ -464,6 +467,8 @@ export function CrudFormModal({
       setErrors(newErrors);
       return;
     }
+
+    setIsLocalSubmitting(true);
 
     // Create a clean copy without any unexpected properties
     const cleanData = { ...formData };
@@ -1214,8 +1219,8 @@ export function CrudFormModal({
             {t("Cancel")}
           </Button>
           {mode !== 'view' && (
-            <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
-              {t("Save")}
+            <Button type="button" onClick={handleSubmit} disabled={isSubmitting || isLocalSubmitting}>
+              {isLocalSubmitting ? t("Saving...") : t("Save")}
             </Button>
           )}
         </DialogFooter>

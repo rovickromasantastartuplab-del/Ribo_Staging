@@ -43,7 +43,6 @@ export default function OpportunityShow() {
   };
 
   const formatCurrency = (amount: number) => formatCurrencyUtils(Number(amount || 0));
-
   const formatDate = (dateString: string) => {
     if (!dateString) return t('-');
     return window.appSettings?.formatDateTime(dateString, false) || new Date(dateString).toLocaleDateString();

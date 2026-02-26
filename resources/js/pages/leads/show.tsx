@@ -32,8 +32,8 @@ export default function LeadShow() {
   const getStatusBadge = (status: string) => {
     return (
       <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${status === 'active'
-          ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-          : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+        ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+        : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
         }`}>
         {status === 'active' ? t('Active') : t('Inactive')}
       </span>
@@ -647,8 +647,8 @@ export default function LeadShow() {
                                 <div className="mb-2">
                                   {activity.field_changed === 'status' && (activity.description === 'Active' || activity.description === 'Inactive') ? (
                                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${activity.description === 'Active'
-                                        ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                        : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                      ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                                      : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
                                       }`}>
                                       {activity.description}
                                     </span>

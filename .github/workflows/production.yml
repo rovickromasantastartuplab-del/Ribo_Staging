@@ -105,7 +105,6 @@ jobs:
         --exclude='.env' \
         --exclude='storage/' \
         --exclude='staging/' \
-        --exclude='help/' \
         --exclude='public/storage' \
         --exclude='.phpunit.cache' \
         --exclude='/bootstrap/ssr' \

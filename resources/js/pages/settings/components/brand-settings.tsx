@@ -58,7 +58,7 @@ const getDisplayUrl = (path: string): string => {
     const basePath = window.appSettings.baseUrl;
 
     // If it's just a filename or other relative path, assume it's in storage
-    const imagePath=`${basePath}/${path}`;
+    const imagePath = `${basePath}/${path}`;
     return imagePath.replace(/([^:]\/)\/+/g, '$1');
 };
 // Get brand settings from props or cookies as fallback
@@ -79,9 +79,9 @@ export const getBrandSettings = (userSettings?: Record<string, string>): BrandSe
             const parsedBrand = brandSettings ? JSON.parse(brandSettings) : {};
 
             return {
-                logoDark: parsedBrand?.logoDark ? getDisplayUrl(parsedBrand?.logoDark): getDisplayUrl(DEFAULT_BRAND_SETTINGS.logoDark),
-                logoLight: parsedBrand?.logoLight ? getDisplayUrl(parsedBrand?.logoLight): getDisplayUrl(DEFAULT_BRAND_SETTINGS.logoLight),
-                favicon: parsedBrand?.favicon ? getDisplayUrl(parsedBrand?.favicon): getDisplayUrl(DEFAULT_BRAND_SETTINGS.favicon),
+                logoDark: parsedBrand?.logoDark ? getDisplayUrl(parsedBrand?.logoDark) : getDisplayUrl(DEFAULT_BRAND_SETTINGS.logoDark),
+                logoLight: parsedBrand?.logoLight ? getDisplayUrl(parsedBrand?.logoLight) : getDisplayUrl(DEFAULT_BRAND_SETTINGS.logoLight),
+                favicon: parsedBrand?.favicon ? getDisplayUrl(parsedBrand?.favicon) : getDisplayUrl(DEFAULT_BRAND_SETTINGS.favicon),
                 titleText: parsedBrand.titleText || userSettings?.titleText || DEFAULT_BRAND_SETTINGS.titleText,
                 footerText: parsedBrand.footerText || userSettings?.footerText || DEFAULT_BRAND_SETTINGS.footerText,
                 themeColor: parsedTheme.themeColor || DEFAULT_BRAND_SETTINGS.themeColor,
@@ -240,10 +240,10 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
 
         // Update brand context with corrected URL for immediate preview
         updateBrandSettings({ [name]: getDisplayUrl(relativePath) });
-  };
+    };
 
-  // Import useBrand hook
-  const { updateBrandSettings } = useBrand();
+    // Import useBrand hook
+    const { updateBrandSettings } = useBrand();
 
     // State to track logo errors
     const [logoErrors, setLogoErrors] = useState({
@@ -332,7 +332,7 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
         // Only save to database in normal mode
 
         // Save to database using Inertia
-        console.log("Setting : ",settings);
+        console.log("Setting : ", settings);
 
         router.post(route('settings.brand.update'), {
             settings: settings

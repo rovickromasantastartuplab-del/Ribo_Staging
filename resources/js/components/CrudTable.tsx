@@ -1,19 +1,19 @@
 // components/CrudTable.tsx
 import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
@@ -58,13 +58,13 @@ export function CrudTable({
   const { t } = useTranslation();
   const renderSortIcon = (column: TableColumn) => {
     if (!column.sortable) return null;
-    
+
     if (sortField === column.key) {
-      return sortDirection === 'asc' ? 
-        <ChevronUp className="ml-1 h-4 w-4" /> : 
+      return sortDirection === 'asc' ?
+        <ChevronUp className="ml-1 h-4 w-4" /> :
         <ChevronDown className="ml-1 h-4 w-4" />;
     }
-    
+
     return <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />;
   };
 
@@ -74,20 +74,20 @@ export function CrudTable({
   };
 
   // Check if any actions have permissions
-    const hasAnyActionPermission = actions.some((action) => {
-        const permissionKey =
-            action.requiredPermission ||
-            (entityPermissions &&
-                (action.action === 'view'
-                    ? entityPermissions.view
-                    : action.action === 'edit'
-                      ? entityPermissions.edit
-                      : action.action === 'delete'
-                        ? entityPermissions.delete
-                        : action.permission));
+  const hasAnyActionPermission = actions.some((action) => {
+    const permissionKey =
+      action.requiredPermission ||
+      (entityPermissions &&
+        (action.action === 'view'
+          ? entityPermissions.view
+          : action.action === 'edit'
+            ? entityPermissions.edit
+            : action.action === 'delete'
+              ? entityPermissions.delete
+              : action.permission));
 
-        return !permissionKey || hasPermission(permissions, permissionKey);
-    });
+    return !permissionKey || hasPermission(permissions, permissionKey);
+  });
 
   const renderActionButtons = (row: any) => {
     return (
@@ -96,20 +96,20 @@ export function CrudTable({
           // Skip if user doesn't have permission
           const permissionKey = action.requiredPermission || (
             entityPermissions && (
-              action.action === 'view' 
-                ? entityPermissions.view 
-                : action.action === 'edit' 
-                  ? entityPermissions.edit 
-                  : action.action === 'delete' 
-                    ? entityPermissions.delete 
+              action.action === 'view'
+                ? entityPermissions.view
+                : action.action === 'edit'
+                  ? entityPermissions.edit
+                  : action.action === 'delete'
+                    ? entityPermissions.delete
                     : action.permission
             )
           );
-                
+
           if (permissionKey && !hasPermission(permissions, permissionKey)) {
             return null;
           }
-          
+
           // Skip if condition function returns false
           if (action.condition && !action.condition(row)) {
             return null;
@@ -119,18 +119,18 @@ export function CrudTable({
 
           // Handle link actions
           if (action.href) {
-            const href = typeof action.href === 'function' 
-              ? action.href(row) 
+            const href = typeof action.href === 'function'
+              ? action.href(row)
               : action.href.replace(':id', row.id);
-              
+
             return (
               <TooltipProvider key={index}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link href={href} target={action.openInNewTab ? '_blank' : undefined}>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className={cn("h-8 w-8", action.className)}
                       >
                         <IconComponent size={16} />
@@ -150,10 +150,10 @@ export function CrudTable({
             <TooltipProvider key={index}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={cn("h-8 w-8", action.className)} 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn("h-8 w-8", action.className)}
                     onClick={() => onAction(action.action, row)}
                   >
                     <IconComponent size={16} />
@@ -173,7 +173,7 @@ export function CrudTable({
   // Helper function to get nested property value using dot notation
   const getNestedValue = (obj: any, path: string) => {
     if (!obj || !path) return null;
-    
+
     const keys = path.split('.');
     return keys.reduce((acc, key) => {
       return acc && acc[key] !== undefined ? acc[key] : null;
@@ -183,12 +183,12 @@ export function CrudTable({
   const renderCellContent = (row: any, col: TableColumn) => {
     // Get value using dot notation for nested properties
     const value = getNestedValue(row, col.key);
-    
+
     // If column has custom render function, use it
     if (col.render) {
       return col.render(value, row);
     }
-    
+
     // Handle different column types
     switch (col.type) {
       case 'badge':
@@ -197,101 +197,108 @@ export function CrudTable({
             {value}
           </Badge>
         );
-        
+
       case 'image':
         if (!value) {
           return <div className="text-center text-gray-400">{t("No image")}</div>;
         }
         return (
           <div className="flex justify-center">
-            <img 
-              src={value.startsWith && value.startsWith('http') 
-                ? value 
-                : `/storage/${value}`} 
-              alt={row.name || 'Image'} 
-              className={col.className || "h-16 w-20 rounded-md object-cover shadow-sm"} 
+            <img
+              src={value.startsWith && value.startsWith('http')
+                ? value
+                : `/storage/${value}`}
+              alt={row.name || 'Image'}
+              className={col.className || "h-16 w-20 rounded-md object-cover shadow-sm"}
               onError={(e) => {
                 e.currentTarget.src = 'https://placehold.co/200x150?text=Image+Not+Found';
               }}
             />
           </div>
         );
-        
+
       case 'date':
         return value ? <span className="text-sm">{new Date(value).toLocaleDateString()}</span> : <span>-</span>;
-        
+
       case 'currency':
-        return <span className="text-sm">{typeof value === 'number' ? 
-          value.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : 
+        return <span className="text-sm">{typeof value === 'number' ?
+          value.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) :
           value}</span>;
-          
+
       case 'boolean':
         return <span className="text-sm">{value ? 'Yes' : 'No'}</span>;
-        
+
       case 'link':
         if (!value) return <span>-</span>;
-        
-        const href = col.href 
+
+        const href = col.href
           ? (typeof col.href === 'function' ? col.href(row) : col.href.replace(':id', row.id))
           : '#';
-          
+
         return (
-          <Link 
-            href={href} 
+          <Link
+            href={href}
             className={col.linkClassName || "text-blue-600 hover:underline"}
             target={col.openInNewTab ? '_blank' : undefined}
           >
             {value}
           </Link>
         );
-        
+
       default:
         return <span className="text-sm font-medium">{value || '-'}</span>;
     }
   };
 
   return (
-    <div className="border-collapse dark:bg-gray-900">
-      <Table>
+    <div className="border-collapse dark:bg-gray-900 overflow-x-auto w-full">
+      <Table className="w-full table-fixed min-w-[900px]">
         <TableHeader>
           <TableRow className="bg-gray-50 dark:bg-gray-800 border-b">
-            <TableHead className="w-12 py-2.5 font-semibold">#</TableHead>
+            <TableHead className="w-10 py-2.5 font-semibold">#</TableHead>
             {columns.map((column) => (
-              <TableHead 
+              <TableHead
                 key={column.key}
                 className={cn(
-                  "py-2.5 font-semibold",
+                  "py-2.5 font-semibold overflow-hidden",
                   column.sortable && "cursor-pointer select-none",
                   column.className
                 )}
                 onClick={() => handleSort(column)}
               >
-                <div className="flex items-center">
+                <div className="flex items-center truncate">
                   {column.label}
                   {renderSortIcon(column)}
                 </div>
               </TableHead>
             ))}
-            {hasAnyActionPermission && <TableHead className="w-24 py-2.5 text-right font-semibold">{t('Actions')}</TableHead>}
+            {hasAnyActionPermission && <TableHead className="w-48 py-2.5 text-right font-semibold">{t('Actions')}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.length > 0 ? (
             data.map((row, index) => (
               <TableRow key={row.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 border-b">
-                <TableCell className="font-medium py-2.5">{from + index}</TableCell>
-                {columns.map((col) => (
-                  <TableCell 
-                    key={col.key}
-                    className={cn(
-                      "py-2.5",
-                      col.className
-                    )}
-                  >
-                    {renderCellContent(row, col)}
-                  </TableCell>
-                ))}
-                {hasAnyActionPermission && <TableCell className="py-2.5 text-right">{renderActionButtons(row)}</TableCell>}
+                <TableCell className="font-medium py-2.5 w-10">{from + index}</TableCell>
+                {columns.map((col) => {
+                  const cellContent = renderCellContent(row, col);
+                  const rawValue = typeof cellContent === 'string' ? cellContent : undefined;
+                  return (
+                    <TableCell
+                      key={col.key}
+                      className={cn(
+                        "py-2.5 overflow-hidden max-w-[200px]",
+                        col.className
+                      )}
+                      title={rawValue}
+                    >
+                      <div className="truncate">
+                        {cellContent}
+                      </div>
+                    </TableCell>
+                  );
+                })}
+                {hasAnyActionPermission && <TableCell className="py-2.5 text-right w-48">{renderActionButtons(row)}</TableCell>}
               </TableRow>
             ))
           ) : (
