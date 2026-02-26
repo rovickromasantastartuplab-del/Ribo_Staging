@@ -26,8 +26,8 @@ export default function ProductShow() {
   const getStatusBadge = (status: string) => {
     return (
       <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${status === 'active'
-          ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-          : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+        ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+        : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
         }`}>
         {status === 'active' ? t('Active') : t('Inactive')}
       </span>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
 import { Plus, Eye, Edit, Trash2, MoreHorizontal, Building2, User, Users, Download, Upload } from 'lucide-react';
@@ -308,7 +308,7 @@ export default function Leads() {
     }, { preserveState: true, preserveScroll: true });
   };
 
-  const loadKanbanData = () => {
+  const loadKanbanData = useCallback(() => {
     if (activeView !== 'kanban' || leadStatuses.length === 0) return;
 
     setIsLoadingKanban(true);
@@ -341,13 +341,13 @@ export default function Leads() {
     setKanbanData(structuredData);
     setKanbanDataRef(structuredData);
     setIsLoadingKanban(false);
-  };
+  }, [activeView, leads?.data, searchTerm, selectedLeadSource, selectedStatus, selectedConverted, leadStatuses.length]);
 
   useEffect(() => {
     if (activeView === 'kanban' && leadStatuses.length > 0) {
       loadKanbanData();
     }
-  }, [activeView, leads, searchTerm, selectedLeadSource, selectedStatus, selectedConverted, leadStatuses]);
+  }, [loadKanbanData]);
 
   // Define page actions
   const pageActions = [];

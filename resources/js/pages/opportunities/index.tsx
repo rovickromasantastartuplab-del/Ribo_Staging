@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
 import { Plus, Eye, Edit, Trash2, MoreHorizontal, Building2, User } from 'lucide-react';
@@ -265,7 +265,7 @@ export default function Opportunities() {
     }, { preserveState: true, preserveScroll: true });
   };
 
-  const loadKanbanData = () => {
+  const loadKanbanData = useCallback(() => {
     if (activeView !== 'kanban') return;
 
     setIsLoadingKanban(true);
@@ -294,13 +294,13 @@ export default function Opportunities() {
     setKanbanData(structuredData);
     setKanbanDataRef(structuredData);
     setIsLoadingKanban(false);
-  };
+  }, [activeView, opportunities?.data, searchTerm, selectedAccount, selectedSource, selectedStatus, opportunityStages.length]);
 
   useEffect(() => {
     if (activeView === 'kanban') {
       loadKanbanData();
     }
-  }, [activeView, opportunities, searchTerm, selectedAccount, selectedSource, selectedStatus]);
+  }, [loadKanbanData]);
 
   // Define page actions
   const pageActions = [];
@@ -793,8 +793,8 @@ export default function Opportunities() {
                                       <div className="flex justify-between items-center text-xs text-gray-500">
                                         <div className="flex items-center gap-2">
                                           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${opportunity.status === 'active'
-                                              ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                              : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                            ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                                            : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
                                             }`}>
                                             {opportunity.status === 'active' ? t('Active') : t('Inactive')}
                                           </span>

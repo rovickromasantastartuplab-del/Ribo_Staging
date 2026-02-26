@@ -165,8 +165,10 @@ class OnboardingController extends Controller
             ->with('permissions:id,name,label,module')
             ->get(['id', 'name', 'label', 'description', 'created_by']);
 
-        // Get all available permissions grouped by module
+        // Get only company-level permissions (exclude superadmin-only modules)
+        $companyModules = config('role-permissions.company', []);
         $permissions = Permission::query()
+            ->whereIn('module', $companyModules)
             ->get(['id', 'name', 'label', 'module'])
             ->groupBy('module');
 
@@ -213,7 +215,11 @@ class OnboardingController extends Controller
                 ]);
 
                 if (!empty($roleData['permissions'])) {
-                    $permissions = Permission::whereIn('id', $roleData['permissions'])->get();
+                    // Only allow company-level permissions (prevent superadmin permissions)
+                    $companyModules = config('role-permissions.company', []);
+                    $permissions = Permission::whereIn('id', $roleData['permissions'])
+                        ->whereIn('module', $companyModules)
+                        ->get();
                     $role->syncPermissions($permissions);
                 }
             }
@@ -401,7 +407,9 @@ class OnboardingController extends Controller
             return;
         }
 
-        $allPermissions = Permission::all();
+        // Only assign company-level permissions (not superadmin-only ones)
+        $companyModules = config('role-permissions.company', []);
+        $allPermissions = Permission::whereIn('module', $companyModules)->get();
 
         // Role names must be globally unique in Spatie, so append company ID
         // Labels stay human-readable
