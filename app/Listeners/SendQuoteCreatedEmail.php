@@ -37,7 +37,7 @@ class SendQuoteCreatedEmail
                 '{quote_name}' => $quote->name ?? '-',
                 '{billing_contact_name}' => $billingContact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{quote_total}' => $quote->total_amount ? '$' . number_format((float) $quote->total_amount, 2) : '$0.00',
+                '{quote_total}' => $quote->total_amount ? formatCurrency((float) $quote->total_amount, createdBy()) : formatCurrency(0, createdBy()),
                 '{quote_valid_until}' => $quote->valid_until ? date('Y-m-d', strtotime($quote->valid_until)) : '-',
                 '{quote_status}' => ucfirst($quote->status ?? 'draft'),
                 '{assigned_user_name}' => $assignedUser->name ?? '-',

@@ -1045,6 +1045,45 @@ if (!function_exists('handlePaymentError')) {
     }
 }
 
+if (!function_exists('formatCurrency')) {
+    /**
+     * Format an amount as currency using the user's or system defaults.
+     *
+     * @param float|int|string $amount
+     * @param int|null $userId
+     * @return string
+     */
+    function formatCurrency($amount, $userId = null)
+    {
+        $amount = (float) $amount;
+        $settings = settings($userId);
+
+        $decimalFormat = (int) ($settings['decimalFormat'] ?? 2);
+
+        $decimalSeparator = $settings['decimalSeparator'] ?? '.';
+        $decimalSeparator = $decimalSeparator !== '' ? $decimalSeparator : '.';
+
+        $thousandsSeparator = $settings['thousandsSeparator'] ?? ',';
+
+        $currencyCode = $settings['defaultCurrency'] ?? 'USD';
+
+        // Find currency symbol
+        $currency = \App\Models\Currency::where('code', $currencyCode)->first();
+        $currencySymbol = (string) ($currency ? $currency->symbol : '$');
+
+        $symbolPosition = $settings['currencySymbolPosition'] ?? 'before';
+        $symbolSpace = (($settings['currencySymbolSpace'] ?? '0') == '1' || ($settings['currencySymbolSpace'] ?? false) === true) ? ' ' : '';
+
+        $formattedAmount = number_format($amount, $decimalFormat, $decimalSeparator, $thousandsSeparator);
+
+        if ($symbolPosition === 'before') {
+            return $currencySymbol . $symbolSpace . $formattedAmount;
+        } else {
+            return $formattedAmount . $symbolSpace . $currencySymbol;
+        }
+    }
+}
+
 if (!function_exists('defaultSettings')) {
     /**
      * Get default settings for System, Brand, Storage, and Currency configurations

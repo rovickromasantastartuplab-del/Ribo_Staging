@@ -35,7 +35,7 @@ class SendInvoiceStatusChangedEmail
                 '{invoice_name}' => $invoice->name ?? '-',
                 '{contact_name}' => $contact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{invoice_total}' => $invoice->total_amount ? '$' . number_format((float) $invoice->total_amount, 2) : '$0.00',
+                '{invoice_total}' => $invoice->total_amount ? formatCurrency((float) $invoice->total_amount, createdBy()) : formatCurrency(0, createdBy()),
                 '{invoice_date}' => $invoice->invoice_date ? date('Y-m-d', strtotime($invoice->invoice_date)) : '-',
                 '{due_date}' => $invoice->due_date ? date('Y-m-d', strtotime($invoice->due_date)) : '-',
                 '{old_invoice_status}' => ucfirst($event->oldStatus),

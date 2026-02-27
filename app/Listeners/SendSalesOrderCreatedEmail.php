@@ -35,7 +35,7 @@ class SendSalesOrderCreatedEmail
                 '{order_name}' => $salesOrder->name ?? '-',
                 '{billing_contact_name}' => $billingContact->name ?? '-',
                 '{account_name}' => $account->name ?? '-',
-                '{order_total}' => $salesOrder->total_amount ? '$' . number_format((float) $salesOrder->total_amount, 2) : '$0.00',
+                '{order_total}' => $salesOrder->total_amount ? formatCurrency((float) $salesOrder->total_amount, createdBy()) : formatCurrency(0, createdBy()),
                 '{order_date}' => $salesOrder->order_date ? date('Y-m-d', strtotime($salesOrder->order_date)) : '-',
                 '{delivery_date}' => $salesOrder->delivery_date ? date('Y-m-d', strtotime($salesOrder->delivery_date)) : '-',
                 '{order_status}' => ucfirst($salesOrder->status ?? 'draft'),
