@@ -72,5 +72,28 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            // First pass: convert specific Spatie exception to standard 403 HttpException
+            // so we can handle it uniformly below.
+            if ($e instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
+                $e = new \Symfony\Component\HttpKernel\Exception\HttpException(
+                    403,
+                    'USER DOES NOT HAVE THE RIGHT PERMISSIONS.',
+                    $e
+                );
+            }
+
+            // Handle HTTP routing via Inertia
+            if ($request->is('api/*') || $request->wantsJson()) {
+                return null; // Let Laravel handle JSON API errors via Default
+            }
+
+            $response = inertia()->render('errors/Error', [
+                'status' => $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface ? $e->getStatusCode() : 500,
+                'message' => $e->getMessage() ?: 'Internal Server Error',
+            ]);
+
+            return $response->toResponse($request)
+                ->setStatusCode($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface ? $e->getStatusCode() : 500);
+        });
     })->create();
