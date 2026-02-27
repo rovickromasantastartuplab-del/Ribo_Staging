@@ -1,5 +1,6 @@
 // components/CrudFormModal.tsx
 import { useEffect, useState } from 'react';
+import { router } from '@inertiajs/react';
 import { formatCurrency } from '@/utils/currency';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -162,6 +163,19 @@ export function CrudFormModal({
     }));
     setIsLocalSubmitting(false);
   }, [externalErrors, isOpen]);
+
+  // Listen to Inertia's global finish event to reset UI loading states
+  // This catches instances where a router.post() or router.put() completes
+  // even if the parent component forgets to provide an onFinish callback.
+  useEffect(() => {
+    const removeListener = router.on('finish', () => {
+      setIsLocalSubmitting(false);
+    });
+
+    return () => {
+      removeListener();
+    };
+  }, []);
 
   const handleChange = (name: string, value: any) => {
     const newFormData = { ...formData, [name]: value };

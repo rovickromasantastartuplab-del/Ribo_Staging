@@ -46,7 +46,7 @@ export default function AcceptInvitation({
     return (
         <AuthLayout
             title={t("Set up your account")}
-            description={t("You've been invited to join :company. Set your password to get started.", { company: companyName })}
+            description={t("You've been invited to join {{company}}. Set your password to get started.", { company: companyName })}
         >
             <form className="space-y-5" onSubmit={submit}>
                 {/* Invitation info card */}

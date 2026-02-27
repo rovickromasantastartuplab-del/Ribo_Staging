@@ -28,7 +28,17 @@ class InvitationController extends Controller
             'token' => $token,
             'userName' => $user->name,
             'userEmail' => $user->email,
-            'companyName' => User::find($user->created_by)?->company_name ?? '',
+            'companyName' => (function () use ($user) {
+                $creator = User::find($user->created_by);
+                if (!$creator)
+                    return '';
+                // If the creator is a staff member, walk up to the owner
+                if ($creator->type !== 'company' && $creator->type !== 'admin') {
+                    $owner = User::find($creator->created_by);
+                    return $owner?->company_name ?? $creator->company_name ?? $creator->name ?? '';
+                }
+                return $creator->company_name ?? $creator->name ?? '';
+            })(),
         ]);
     }
 
