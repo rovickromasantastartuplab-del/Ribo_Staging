@@ -34,13 +34,17 @@ class PlanPricingService
      * Fetch all active plans mapped consistently for frontend components.
      * Contains both monthly and yearly logic so modals can toggle dynamically.
      */
-    public static function getFormattedPlans($company = null, $specificCycle = null)
+    public static function getFormattedPlans($company = null, $specificCycle = null, $includeInactive = false)
     {
         $currencyConfig = self::getGlobalCurrency();
         $currencyCode = $currencyConfig['code'];
         $currencySymbol = $currencyConfig['symbol'];
 
-        $dbPlans = Plan::with('currencyPrices')->where('is_plan_enable', 'on')->get();
+        $query = Plan::with('currencyPrices');
+        if (!$includeInactive) {
+            $query->where('is_plan_enable', 'on');
+        }
+        $dbPlans = $query->get();
 
         return $dbPlans->map(function ($plan) use ($currencyCode, $currencySymbol, $company, $specificCycle) {
             $monthlyPrice = $plan->getPriceForCurrency($currencyCode, 'monthly');

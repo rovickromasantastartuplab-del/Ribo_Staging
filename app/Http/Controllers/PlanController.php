@@ -28,7 +28,7 @@ class PlanController extends Controller
 
         $currencyConfig = \App\Services\PlanPricingService::getGlobalCurrency();
 
-        $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans(null, $billingCycle);
+        $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans(null, $billingCycle, true);
         $plans = \App\Services\PlanPricingService::applyRecommendation($formattedPlans)->toArray();
 
         return Inertia::render('plans/index', [

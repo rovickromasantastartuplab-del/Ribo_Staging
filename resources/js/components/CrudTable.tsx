@@ -252,7 +252,7 @@ export function CrudTable({
 
   return (
     <div className="border-collapse dark:bg-gray-900 overflow-x-auto w-full">
-      <Table className="w-full table-fixed min-w-[900px]">
+      <Table className="w-full max-w-full min-w-[900px]">
         <TableHeader>
           <TableRow className="bg-gray-50 dark:bg-gray-800 border-b">
             <TableHead className="w-10 py-2.5 font-semibold">#</TableHead>
@@ -260,13 +260,13 @@ export function CrudTable({
               <TableHead
                 key={column.key}
                 className={cn(
-                  "py-2.5 font-semibold overflow-hidden",
+                  "py-2.5 font-semibold",
                   column.sortable && "cursor-pointer select-none",
                   column.className
                 )}
                 onClick={() => handleSort(column)}
               >
-                <div className="flex items-center truncate">
+                <div className="flex items-center whitespace-nowrap">
                   {column.label}
                   {renderSortIcon(column)}
                 </div>
@@ -287,12 +287,12 @@ export function CrudTable({
                     <TableCell
                       key={col.key}
                       className={cn(
-                        "py-2.5 overflow-hidden max-w-[200px]",
+                        "py-2.5",
                         col.className
                       )}
                       title={rawValue}
                     >
-                      <div className="truncate">
+                      <div className="break-words whitespace-normal">
                         {cellContent}
                       </div>
                     </TableCell>
