@@ -828,7 +828,7 @@ export function CrudFormModal({
       case 'media-picker':
         const currentImageUrl = formData[field.name] ||
           (mode === 'edit' && initialData[field.name] ?
-            (initialData[field.name].startsWith('http') ? initialData[field.name] : `/storage/${initialData[field.name]}`) :
+            (typeof initialData[field.name] === 'string' && initialData[field.name].startsWith('http') ? initialData[field.name] : (field.returnType === 'id' ? initialData[field.name] : `/storage/${initialData[field.name]}`)) :
             '');
 
         return (
@@ -837,6 +837,8 @@ export function CrudFormModal({
             onChange={(value) => handleChange(field.name, value)}
             placeholder={field.placeholder || `Select ${field.label}`}
             showPreview={true}
+            multiple={field.multiple}
+            returnType={field.returnType || 'url'}
           />
         );
 

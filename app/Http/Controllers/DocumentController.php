@@ -67,9 +67,9 @@ class DocumentController extends Controller
         } elseif (auth()->user()->type === 'company') {
             $query->where('created_by', createdBy());
         } else {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('assigned_to', auth()->id())
-                  ->orWhere('created_by', auth()->id());
+                    ->orWhere('created_by', auth()->id());
             });
         }
 
@@ -83,25 +83,25 @@ class DocumentController extends Controller
                 ->select('id', 'name', 'email')
                 ->get();
         }
-        
+
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
-            
+
         $folders = DocumentFolder::where('created_by', createdBy())
             ->where('status', 'active')
             ->select('id', 'name')->get();
-            
+
         $types = DocumentType::where('created_by', createdBy())
             ->where('status', 'active')
             ->select('id', 'type_name')->get();
-            
+
         $opportunities = Opportunity::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
@@ -129,25 +129,25 @@ class DocumentController extends Controller
                 ->select('id', 'name', 'email')
                 ->get();
         }
-        
+
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
-            
+
         $folders = DocumentFolder::where('created_by', createdBy())
             ->where('status', 'active')
             ->select('id', 'name')->get();
-            
+
         $types = DocumentType::where('created_by', createdBy())
             ->where('status', 'active')
             ->select('id', 'type_name')->get();
-            
+
         $opportunities = Opportunity::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
@@ -173,25 +173,25 @@ class DocumentController extends Controller
                 ->select('id', 'name', 'email')
                 ->get();
         }
-        
+
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
-            
+
         $folders = DocumentFolder::where('created_by', createdBy())
             ->where('status', 'active')
             ->select('id', 'name')->get();
-            
+
         $types = DocumentType::where('created_by', createdBy())
             ->where('status', 'active')
             ->select('id', 'type_name')->get();
-            
+
         $opportunities = Opportunity::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company', function($q) {
+            ->when(auth()->user()->type !== 'company', function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->select('id', 'name')->get();
@@ -248,7 +248,7 @@ class DocumentController extends Controller
             'status' => 'nullable|in:active,inactive',
             'publish_date' => 'nullable|date',
             'expiration_date' => 'nullable|date',
-            'attachment' => 'nullable|string',
+            'attachment' => 'nullable',
             'description' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id',
         ]);
@@ -267,11 +267,17 @@ class DocumentController extends Controller
             'assigned_to' => auth()->user()->type === 'company' ? $request->assigned_to : auth()->id(),
         ]);
 
-        // Handle attachment from media library
+        // Handle attachment from media library (by media ID)
         if ($request->filled('attachment')) {
             try {
-                $document->addMediaFromUrl($request->attachment)
-                    ->toMediaCollection('attachments');
+                $mediaId = $request->attachment;
+                $sourceMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+
+                if ($sourceMedia && file_exists($sourceMedia->getPath())) {
+                    $document->addMedia($sourceMedia->getPath())
+                        ->preservingOriginal()
+                        ->toMediaCollection('attachments');
+                }
             } catch (\Exception $e) {
                 \Log::error('Document attachment upload failed: ' . $e->getMessage());
             }
@@ -335,7 +341,7 @@ class DocumentController extends Controller
             'status' => 'nullable|in:active,inactive',
             'publish_date' => 'nullable|date',
             'expiration_date' => 'nullable|date',
-            'attachment' => 'nullable|string',
+            'attachment' => 'nullable',
             'description' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id',
         ]);
@@ -356,15 +362,21 @@ class DocumentController extends Controller
         // Handle attachment update only if changed
         if ($request->has('attachment')) {
             $currentMedia = $document->getFirstMedia('attachments');
-            $currentUrl = $currentMedia ? $currentMedia->getUrl() : null;
-            
-            // Only update if attachment URL has changed
-            if ($request->attachment !== $currentUrl) {
+            $currentMediaId = $currentMedia ? $currentMedia->id : null;
+
+            // Only update if attachment has changed
+            if ($request->attachment != $currentMediaId) {
                 try {
                     $document->clearMediaCollection('attachments');
                     if ($request->filled('attachment')) {
-                        $document->addMediaFromUrl($request->attachment)
-                            ->toMediaCollection('attachments');
+                        $mediaId = $request->attachment;
+                        $sourceMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+
+                        if ($sourceMedia && file_exists($sourceMedia->getPath())) {
+                            $document->addMedia($sourceMedia->getPath())
+                                ->preservingOriginal()
+                                ->toMediaCollection('attachments');
+                        }
                     }
                 } catch (\Exception $e) {
                     \Log::error('Document attachment upload failed: ' . $e->getMessage());

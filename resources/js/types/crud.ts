@@ -75,6 +75,7 @@ export interface FormField {
   placeholder?: string;
   required?: boolean;
   multiple?: boolean; // For media-picker and multi-select fields
+  returnType?: 'url' | 'id'; // For media-picker fields
   options?: FilterOption[];
   fields?: FormField[]; // For array type fields
   productOptions?: any[]; // For array fields that need product data

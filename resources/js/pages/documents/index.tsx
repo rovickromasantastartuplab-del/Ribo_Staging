@@ -772,7 +772,8 @@ export default function Documents() {
               name: 'attachment',
               label: t('Attachment'),
               type: 'media-picker',
-              placeholder: t('Select file...')
+              placeholder: t('Select file...'),
+              returnType: 'id'
             },
             ...(isCompany ? [{
               name: formMode === 'view' ? 'assigned_user_name' : 'assigned_to',
