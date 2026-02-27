@@ -37,33 +37,20 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
   const { t } = useTranslation();
 
   const footerLinks = sectionData.links || {
-    product: [
-      { name: t('Features'), href: '#features' },
-      { name: t('Pricing'), href: '#pricing' },
-      { name: t('Integrations'), href: '#integrations' }
-    ],
-    company: [
-      { name: t('About Us'), href: '#about' },
-      { name: t('Careers'), href: '#careers' },
-      { name: t('Contact'), href: '#contact' }
-    ],
-    support: [
-      { name: t('Help Center'), href: '#help-center' },
-      { name: t('FAQs'), href: '#faqs' }
-    ],
-    legal: [
-      // If we want to keep static ones we can, but let's append custom pages to this list dynamically below
-      { name: t('Privacy Policy'), href: '#privacy-policy' },
-      { name: t('Terms of Service'), href: '#terms-of-service' }
-    ]
+    product: [],
+    company: [],
+    support: [],
+    legal: []
   };
 
-  // Replace default legal links with actual custom pages if they exist
-  if (customPages && customPages.length > 0) {
-    footerLinks.legal = customPages.map(page => ({
-      name: page.title,
-      href: route('custom-page.show', page.slug)
-    }));
+  // Replace default legal links with actual custom pages if they exist and no links were set in settings
+  if ((!footerLinks.legal || footerLinks.legal.length === 0) && customPages && customPages.length > 0) {
+    footerLinks.legal = customPages
+      .filter(page => !['About Us', 'Contact Us', 'Submit a Ticket'].includes(page.title))
+      .map(page => ({
+        name: page.title,
+        href: route('custom-page.show', page.slug)
+      }));
   }
 
   const iconMap: Record<string, any> = {
