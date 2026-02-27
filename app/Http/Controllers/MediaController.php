@@ -149,7 +149,7 @@ class MediaController extends Controller
 
             $config = [
                 'allowed_file_types' => $settings['storage_file_types'] ?? 'jpg,jpeg,png,webp,gif',
-                'max_file_size_kb' => (int)($settings['storage_max_upload_size'] ?? 2048)
+                'max_file_size_kb' => (int) ($settings['storage_max_upload_size'] ?? 2048)
             ];
 
             \Log::info('Superadmin storage config loaded', $config);
@@ -161,12 +161,14 @@ class MediaController extends Controller
         $maxSizeKB = $config['max_file_size_kb'];
         $maxSizeMB = round($maxSizeKB / 1024, 2);
 
+        // Build validation rules - only use 'file' + 'mimes' (no 'image' rule which restricts to image-only types)
+        $validationRules = ['required', 'file', 'mimes:' . $normalizedTypes, 'max:' . $maxSizeKB];
+
         // Custom validation with user-friendly messages
         $validator = \Validator::make($request->all(), [
             'files' => 'required|array',
-            'files.*' => ['required', 'file', 'image', 'mimes:' . $normalizedTypes, 'max:' . $maxSizeKB],
+            'files.*' => $validationRules,
         ], [
-            'files.*.image' => __('Only image files are allowed.'),
             'files.*.mimes' => __('Only these file types are allowed: :type', [
                 'type' => strtoupper(str_replace(',', ', ', $allowedTypes))
             ]),
@@ -321,10 +323,12 @@ class MediaController extends Controller
     private function checkStorageLimit($files)
     {
         $user = auth()->user();
-        if ($user->type === 'superadmin') return null;
+        if ($user->type === 'superadmin')
+            return null;
 
         $limit = $this->getUserStorageLimit($user);
-        if (!$limit) return null;
+        if (!$limit)
+            return null;
 
         $uploadSize = collect($files)->sum('size');
         $currentUsage = $this->getUserStorageUsage($user);

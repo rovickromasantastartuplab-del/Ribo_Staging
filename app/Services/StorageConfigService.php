@@ -21,7 +21,7 @@ class StorageConfigService
         }
 
         $cacheKey = 'active_storage_config_' . $userId;
-        $config = Cache::remember($cacheKey, 60, function() use ($userId) {
+        $config = Cache::remember($cacheKey, 60, function () use ($userId) {
             return self::loadStorageConfigFromDB($userId);
         });
 
@@ -36,7 +36,7 @@ class StorageConfigService
         $config = self::getStorageConfig();
 
         $allowedTypes = $config['allowed_file_types'] ?? '';
-        $maxSize = ($config['max_file_size_mb'] ?? 2) * 1024; // Convert MB to KB
+        $maxSize = ($config['max_file_size_kb'] ?? 2048); // Already in KB
 
         return [
             'mimes:' . $allowedTypes,
@@ -55,7 +55,7 @@ class StorageConfigService
         }
 
         $cacheKey = 'active_storage_config_' . $userId;
-        return Cache::remember($cacheKey, 300, function() use ($userId) {
+        return Cache::remember($cacheKey, 300, function () use ($userId) {
             return self::loadStorageConfigFromDB($userId);
         });
     }
@@ -114,7 +114,7 @@ class StorageConfigService
             }
             // Map storage_type to correct disk name
             $storageType = $settings['storage_type'] ?? 'local';
-            $diskName = match($storageType) {
+            $diskName = match ($storageType) {
                 'local' => 'public',
                 's3' => 's3',
                 'wasabi' => 'wasabi',
@@ -124,7 +124,7 @@ class StorageConfigService
             return [
                 'disk' => $diskName,
                 'allowed_file_types' => $settings['storage_file_types'] ?? 'jpg,png,webp,gif',
-                'max_file_size_mb' => (int)($settings['storage_max_upload_size'] ?? 2),
+                'max_file_size_kb' => (int) ($settings['storage_max_upload_size'] ?? 2048),
                 's3' => [
                     'key' => $settings['aws_access_key_id'] ?? '',
                     'secret' => $settings['aws_secret_access_key'] ?? '',
@@ -156,7 +156,7 @@ class StorageConfigService
         return [
             'disk' => 'public',
             'allowed_file_types' => 'jpg,png,webp,gif',
-            'max_file_size_mb' => 2,
+            'max_file_size_kb' => 2048,
             's3' => [],
             'wasabi' => []
         ];
