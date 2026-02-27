@@ -13,7 +13,7 @@ interface HeroSectionProps {
     primary_button_text?: string;
     secondary_button_text?: string;
     image?: string;
-    stats?: Array<{value: string; label: string}>;
+    stats?: Array<{ value: string; label: string }>;
     card?: {
       name: string;
       title: string;
@@ -35,7 +35,7 @@ export default function HeroSection({ settings, sectionData, brandColor = '#3b82
   const heroImage = getImageUrl(sectionData.image);
 
   return (
-    <section id="hero" className="pt-16 bg-gray-50 min-h-screen flex items-center">
+    <section id="hero" className="pt-16 pb-20 sm:pb-28 lg:pb-32 bg-gray-50 flex items-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Content */}
@@ -45,15 +45,15 @@ export default function HeroSection({ settings, sectionData, brandColor = '#3b82
                 {sectionData.announcement_text}
               </div>
             )}
-            
+
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight" role="banner" aria-label={t('Main heading')}>
               {sectionData.title || t('All-in-One Sales SaaS to Power Your Business Growth')}
             </h1>
-            
+
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl font-medium">
               {sectionData.subtitle || t('Manage leads, opportunities, quotes, orders, invoices, projects, and reports — all from one platform.')}
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <Link
                 href={route('register')}
@@ -92,9 +92,9 @@ export default function HeroSection({ settings, sectionData, brandColor = '#3b82
           {/* Right Content - Hero Image */}
           <div className="relative">
             <div className="relative">
-              <img 
-                src={heroImage || getImageUrl('/screenshots/hero-default.png')} 
-                alt={t('Hero')} 
+              <img
+                src={heroImage || getImageUrl('/screenshots/hero-default.png')}
+                alt={t('Hero')}
                 className="w-full h-auto rounded-2xl shadow-xl"
               />
               {/* Simple Decorative Elements */}
