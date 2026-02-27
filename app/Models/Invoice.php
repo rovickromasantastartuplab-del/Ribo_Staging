@@ -37,6 +37,7 @@ class Invoice extends BaseModel
         'payment_method',
         'created_by',
         'assigned_to',
+        'stock_deducted',
     ];
 
     protected $casts = [
@@ -46,12 +47,13 @@ class Invoice extends BaseModel
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'stock_deducted' => 'boolean',
     ];
 
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($invoice) {
             if (empty($invoice->invoice_number)) {
                 $invoice->invoice_number = static::generateUniqueInvoiceNumber();
@@ -63,19 +65,19 @@ class Invoice extends BaseModel
     {
         $year = date('Y');
         $prefix = 'INV-' . $year . '-';
-        
+
         // Get the highest existing number for this year
         $lastInvoice = static::where('invoice_number', 'like', $prefix . '%')
             ->orderBy('invoice_number', 'desc')
             ->first();
-        
+
         if ($lastInvoice) {
             $lastNumber = (int) substr($lastInvoice->invoice_number, -6);
             $nextNumber = $lastNumber + 1;
         } else {
             $nextNumber = 1;
         }
-        
+
         return $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
@@ -146,29 +148,29 @@ class Invoice extends BaseModel
         $subtotal = 0;
         $taxAmount = 0;
         $totalDiscountAmount = 0;
-        
+
         foreach ($this->products as $product) {
             $lineTotal = $product->pivot->total_price;
             $discountAmount = $product->pivot->discount_amount ?? 0;
             $finalLineTotal = $lineTotal - $discountAmount;
-            
+
             $subtotal += $finalLineTotal;
             $totalDiscountAmount += $discountAmount;
-            
+
             if ($product->tax) {
                 $taxAmount += ($finalLineTotal * $product->tax->rate) / 100;
             }
         }
-        
+
         $totalAmount = $subtotal + $taxAmount;
-        
+
         $this->update([
             'subtotal' => $subtotal,
             'discount_amount' => $totalDiscountAmount,
             'tax_amount' => $taxAmount,
             'total_amount' => $totalAmount
         ]);
-        
+
         return $totalAmount;
     }
 
@@ -196,23 +198,23 @@ class Invoice extends BaseModel
     public function validatePaymentAmount($amount, $paymentType)
     {
         $remainingAmount = $this->getRemainingAmount();
-        
+
         if ($amount <= 0) {
             return ['valid' => false, 'message' => 'Payment amount must be greater than zero'];
         }
-        
+
         if ($amount > $remainingAmount) {
             return ['valid' => false, 'message' => 'Payment amount cannot exceed remaining balance'];
         }
-        
+
         if ($paymentType === 'full' && $amount != $remainingAmount) {
             return ['valid' => false, 'message' => 'Full payment must equal the remaining balance'];
         }
-        
+
         if ($paymentType === 'partial' && $amount > $remainingAmount) {
             return ['valid' => false, 'message' => 'Partial payment cannot exceed remaining balance'];
         }
-        
+
         return ['valid' => true, 'message' => 'Payment amount is valid'];
     }
 
@@ -220,6 +222,17 @@ class Invoice extends BaseModel
     {
         if ($this->isFullyPaid()) {
             $this->update(['status' => 'paid']);
+
+            // Deduct stock if not already deducted
+            if (!$this->stock_deducted) {
+                foreach ($this->products as $product) {
+                    $quantityToDeduct = $product->pivot->quantity ?? 0;
+                    if ($quantityToDeduct > 0) {
+                        $product->decrement('stock_quantity', $quantityToDeduct);
+                    }
+                }
+                $this->update(['stock_deducted' => true]);
+            }
         } elseif ($this->isPartiallyPaid()) {
             $this->update(['status' => 'partially_paid']);
         }
