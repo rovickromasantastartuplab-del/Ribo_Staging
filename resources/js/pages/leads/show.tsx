@@ -14,7 +14,7 @@ export default function LeadShow() {
   const { t } = useTranslation();
   const { lead, streamItems, auth, relatedAccounts, relatedContacts, meetings } = usePage().props as any;
   const comments = lead.comments || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const [showStream, setShowStream] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);

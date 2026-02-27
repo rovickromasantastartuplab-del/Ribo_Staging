@@ -196,6 +196,7 @@ class LeadController extends Controller
         $users = [];
         if ($isCompany) {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }

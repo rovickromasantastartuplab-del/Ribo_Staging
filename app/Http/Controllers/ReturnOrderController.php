@@ -55,8 +55,9 @@ class ReturnOrderController extends Controller
         $returnOrders = $query->paginate($request->per_page ?? 10);
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -128,8 +129,9 @@ class ReturnOrderController extends Controller
             ->select('id', 'name')->get();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -181,8 +183,9 @@ class ReturnOrderController extends Controller
             ->select('id', 'name')->get();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -256,7 +259,7 @@ class ReturnOrderController extends Controller
         $validated['created_by'] = createdBy();
         $validated['status'] = $validated['status'] ?? 'pending';
         
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 
@@ -348,7 +351,7 @@ class ReturnOrderController extends Controller
             'products.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 

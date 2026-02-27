@@ -70,6 +70,7 @@ class InvoiceController extends Controller
         $users = [];
         if (auth()->user()->type === 'company' || auth()->user()->can('view-invoices')) {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -192,8 +193,9 @@ class InvoiceController extends Controller
         $products = $this->getFilteredProducts();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -257,8 +259,9 @@ class InvoiceController extends Controller
         $products = $this->getFilteredProducts();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }

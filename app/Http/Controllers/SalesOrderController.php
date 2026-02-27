@@ -66,8 +66,9 @@ class SalesOrderController extends Controller
 
         // Get users for assignment dropdown (only for company users)
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -157,8 +158,9 @@ class SalesOrderController extends Controller
         $taxes = Tax::where('created_by', createdBy())->select('id', 'name', 'rate')->get();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -214,8 +216,9 @@ class SalesOrderController extends Controller
         $taxes = Tax::where('created_by', createdBy())->select('id', 'name', 'rate')->get();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -310,7 +313,7 @@ class SalesOrderController extends Controller
         $validated['status'] = $validated['status'] ?? 'draft';
 
         // Auto-assign to current user if staff user
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 
@@ -429,7 +432,7 @@ class SalesOrderController extends Controller
         ]);
 
         // Auto-assign to current user if staff user
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 

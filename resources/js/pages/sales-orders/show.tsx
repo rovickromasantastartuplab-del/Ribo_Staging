@@ -14,7 +14,7 @@ import { formatCurrency } from '@/utils/currency';
 export default function SalesOrderShow() {
     const { t } = useTranslation();
     const { salesOrder, streamItems, auth } = usePage().props as any;
-    const isCompany = auth?.user?.type === 'company';
+    const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
     const [showStream, setShowStream] = useState(true);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);

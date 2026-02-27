@@ -60,8 +60,9 @@ class ReceiptOrderController extends Controller
         $receiptOrders = $query->paginate($request->per_page ?? 10);
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -149,8 +150,9 @@ class ReceiptOrderController extends Controller
         $taxes = Tax::where('created_by', createdBy())->select('id', 'name', 'rate')->get();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -206,8 +208,9 @@ class ReceiptOrderController extends Controller
         $taxes = Tax::where('created_by', createdBy())->select('id', 'name', 'rate')->get();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -276,7 +279,7 @@ class ReceiptOrderController extends Controller
         $validated['created_by'] = createdBy();
         $validated['status'] = $validated['status'] ?? 'pending';
         
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 
@@ -366,7 +369,7 @@ class ReceiptOrderController extends Controller
             'products.*.discount_value' => 'nullable|numeric|min:0',
         ]);
 
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 

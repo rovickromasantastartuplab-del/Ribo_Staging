@@ -76,7 +76,7 @@ class OpportunityController extends Controller
         $canViewOpportunities = auth()->user()->can('manage-opportunities') || auth()->user()->can('view-opportunities');
         $canViewAccounts = auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts');
         $canViewContacts = auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts');
-        
+
         $accounts = Account::where('created_by', createdBy())->where('status', 'active')
             ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
                 $q->where('assigned_to', auth()->id());
@@ -97,6 +97,7 @@ class OpportunityController extends Controller
         $users = [];
         if (auth()->user()->type === 'company' || auth()->user()->can('manage-opportunities') || auth()->user()->can('view-opportunities')) {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }

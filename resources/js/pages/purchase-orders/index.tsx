@@ -16,7 +16,7 @@ export default function PurchaseOrders() {
   const { t } = useTranslation();
   const { auth, purchaseOrders, accounts, contacts, salesOrders, products, users = [], filters: pageFilters = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
 
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');

@@ -23,7 +23,7 @@ export default function Leads() {
   const { t } = useTranslation();
   const { auth, leads, leadStatuses = [], leadSources = [], accounts = [], campaigns = [], accountIndustries = [], accountTypes = [], users = [], samplePath, filters: pageFilters = {}, kanbanData: initialKanbanData } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const getInitials = useInitials();
 
   // State

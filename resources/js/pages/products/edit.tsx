@@ -14,7 +14,7 @@ import { toast } from '@/components/custom-toast';
 export default function ProductEdit() {
   const { t } = useTranslation();
   const { product, categories, brands, taxes, users, auth, mainImage, additionalImages } = usePage().props as any;
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
 
   const [formData, setFormData] = useState({
     name: product.name || '',

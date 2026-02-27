@@ -19,7 +19,7 @@ export default function DeliveryOrders() {
     const { t } = useTranslation();
     const { auth, deliveryOrders, accounts, contacts, salesOrders, products, shippingProviderTypes, users = [], filters: pageFilters = {} } = usePage().props as any;
     const permissions = auth?.permissions || [];
-    const isCompany = auth?.user?.type === 'company';
+    const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
 
     const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
     const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');

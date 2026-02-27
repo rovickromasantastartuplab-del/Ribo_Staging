@@ -22,7 +22,7 @@ export default function Opportunities() {
   const { t } = useTranslation();
   const { auth, opportunities, accounts = [], contacts = [], products = [], opportunityStages = [], opportunitySources = [], users = [], filters: pageFilters = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const canManageOpportunities = hasPermission(permissions, 'manage-opportunities');
   const getInitials = useInitials();
 

@@ -67,6 +67,7 @@ class AccountController extends Controller
         $users = [];
         if (auth()->user()->type === 'company' || auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts')) {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -177,9 +178,9 @@ class AccountController extends Controller
         $validated['status'] = $validated['status'] ?? 'active';
 
         // Auto-assign to current user if staff user
-        if (auth()->user()->type != 'company' && !auth()->user()->can('manage-accounts')) {
-    $validated['assigned_to'] = auth()->id();
-}
+        if (auth()->user()->type != 'company' && auth()->user()->type != 'staff' && !auth()->user()->can('manage-accounts')) {
+            $validated['assigned_to'] = auth()->id();
+        }
 
         $account = Account::create($validated);
         if ($account && !IsDemo()) {
@@ -243,7 +244,7 @@ class AccountController extends Controller
                 ]);
 
                 // Auto-assign to current user if staff user
-                if (auth()->user()->type != 'company') {
+                if (auth()->user()->type != 'company' && auth()->user()->type != 'staff') {
                     $validated['assigned_to'] = auth()->id();
                 }
 

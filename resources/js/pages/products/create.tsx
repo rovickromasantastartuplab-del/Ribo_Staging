@@ -14,7 +14,7 @@ import { toast } from '@/components/custom-toast';
 export default function ProductCreate() {
   const { t } = useTranslation();
   const { categories, brands, taxes, users, auth } = usePage().props as any;
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
 
   const [formData, setFormData] = useState({
     name: '',

@@ -16,7 +16,7 @@ import { formatCurrency } from '@/utils/currency';
 export default function InvoiceShow() {
   const { t } = useTranslation();
   const { invoice, streamItems, pendingPayments, availableSalesOrders, auth } = usePage().props as any;
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const [isAssignSalesOrderModalOpen, setIsAssignSalesOrderModalOpen] = useState(false);
   const [selectedSalesOrderId, setSelectedSalesOrderId] = useState('empty');
   const [showStream, setShowStream] = useState(true);

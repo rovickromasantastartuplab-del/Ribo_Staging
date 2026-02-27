@@ -45,8 +45,9 @@ class MeetingController extends Controller
         $meetings = $query->paginate($request->per_page ?? 10);
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -144,7 +145,7 @@ class MeetingController extends Controller
             $this->validateParentRecord($validated['parent_module'], $validated['parent_id']);
         }
 
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 
@@ -297,7 +298,7 @@ class MeetingController extends Controller
             $this->validateParentRecord($validated['parent_module'], $validated['parent_id']);
         }
 
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 
@@ -353,15 +354,16 @@ class MeetingController extends Controller
     public function create()
     {
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
 
         return Inertia::render('meetings/create', [
             'users' => $users,
-            'isCompany' => auth()->user()->type === 'company',
+            'isCompany' => auth()->user()->type === 'company' || auth()->user()->type === 'staff',
         ]);
     }
 
@@ -373,8 +375,9 @@ class MeetingController extends Controller
             ->firstOrFail();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -382,7 +385,7 @@ class MeetingController extends Controller
         return Inertia::render('meetings/edit', [
             'meeting' => $meeting,
             'users' => $users,
-            'isCompany' => auth()->user()->type === 'company',
+            'isCompany' => auth()->user()->type === 'company' || auth()->user()->type === 'staff',
         ]);
     }
 

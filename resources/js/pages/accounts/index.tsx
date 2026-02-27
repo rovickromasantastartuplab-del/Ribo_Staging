@@ -20,7 +20,7 @@ export default function Accounts() {
   const { t } = useTranslation();
   const { auth, accounts, users = [], accountTypes = [], accountIndustries = [], planLimits, filters: pageFilters = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const canManageAccounts = hasPermission(permissions, 'manage-accounts');
 
   // State

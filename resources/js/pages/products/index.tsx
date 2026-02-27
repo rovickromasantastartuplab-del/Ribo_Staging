@@ -22,7 +22,7 @@ export default function Products() {
   const { t } = useTranslation();
   const { auth, products, categories, brands, taxes, users, samplePath, filters: pageFilters = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
 
   // State
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');

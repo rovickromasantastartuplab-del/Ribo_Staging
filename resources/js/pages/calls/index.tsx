@@ -16,7 +16,7 @@ export default function Calls() {
   const { t } = useTranslation();
   const { auth, calls, users = [], filters: pageFilters = {}, settings = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const isGoogleCalendarSynced = settings?.googleCalendarEnabled === '1';
 
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');

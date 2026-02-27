@@ -19,7 +19,7 @@ export default function Contacts() {
   const { t } = useTranslation();
   const { auth, contacts, accounts = [], users = [], planLimits, filters: pageFilters = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const canManageContacts = hasPermission(permissions, 'manage-contacts');
 
   // State

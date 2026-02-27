@@ -12,7 +12,7 @@ import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 export default function AccountShow() {
   const { t } = useTranslation();
   const { account, streamItems, auth, meetings } = usePage().props as any;
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const [showStream, setShowStream] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);

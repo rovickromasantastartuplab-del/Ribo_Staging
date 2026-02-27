@@ -63,8 +63,9 @@ class ProjectTaskController extends Controller
             })->get(['id', 'name']);
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -122,7 +123,7 @@ class ProjectTaskController extends Controller
 
         $validated['created_by'] = createdBy();
 
-        if (auth()->user()->type != 'company') {
+        if (auth()->user()->type != 'company' && auth()->user()->type != 'staff') {
             $validated['assigned_to'] = auth()->id();
         } else {
             // Convert empty string or 'unassigned' to null
@@ -172,7 +173,7 @@ class ProjectTaskController extends Controller
                     'progress' => 'nullable|integer|min:0|max:100',
                 ]);
 
-                if (auth()->user()->type != 'company') {
+                if (auth()->user()->type != 'company' && auth()->user()->type != 'staff') {
                     $validated['assigned_to'] = auth()->id();
                 } else {
                     // Convert empty string or 'unassigned' to null
@@ -307,8 +308,9 @@ class ProjectTaskController extends Controller
         }
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -343,8 +345,9 @@ class ProjectTaskController extends Controller
             ->get();
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }

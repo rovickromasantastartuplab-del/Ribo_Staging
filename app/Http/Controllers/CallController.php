@@ -44,8 +44,9 @@ class CallController extends Controller
         $calls = $query->paginate($request->per_page ?? 10);
 
         $users = [];
-        if (auth()->user()->type === 'company') {
+        if (auth()->user()->type === 'company' || auth()->user()->type === 'staff') {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -142,7 +143,7 @@ class CallController extends Controller
             $this->validateParentRecord($validated['parent_module'], $validated['parent_id']);
         }
 
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
         $call = Call::create($validated);
@@ -271,7 +272,7 @@ class CallController extends Controller
             $this->validateParentRecord($validated['parent_module'], $validated['parent_id']);
         }
 
-        if (auth()->user()->type !== 'company') {
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff') {
             $validated['assigned_to'] = auth()->id();
         }
 

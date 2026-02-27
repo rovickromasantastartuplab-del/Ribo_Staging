@@ -16,7 +16,7 @@ export default function Meetings() {
   const { t } = useTranslation();
   const { auth, meetings, users = [], filters: pageFilters = {}, settings = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const isGoogleCalendarSynced = settings?.googleCalendarEnabled === '1';
 
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');

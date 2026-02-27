@@ -13,7 +13,7 @@ class ContactController extends Controller
     {
         $query = Contact::query()
             ->with(['account', 'assignedUser'])
-            ->where(function($q) {
+            ->where(function ($q) {
                 if (auth()->user()->type === 'company' || auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')) {
                     $q->where('created_by', createdBy());
                 } else {
@@ -62,15 +62,16 @@ class ContactController extends Controller
         // Get accounts for filter dropdown
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
-            ->when(auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')), function($q) {
+            ->when(auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')), function ($q) {
                 $q->where('assigned_to', auth()->id());
             })
             ->get(['id', 'name']);
 
         // Get users for assignment dropdown (only for company users)
-       $users = [];
+        $users = [];
         if (auth()->user()->type === 'company' || auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')) {
             $users = \App\Models\User::where('created_by', createdBy())
+                ->where('type', '!=', 'company')
                 ->select('id', 'name', 'email')
                 ->get();
         }
@@ -80,7 +81,7 @@ class ContactController extends Controller
         if (auth()->user()->type === 'company') {
             $user = auth()->user();
             $plan = $user->getCurrentPlan();
-            
+
             if ($plan && $plan->max_contacts > 0) {
                 $currentContactCount = Contact::where('created_by', $user->id)->count();
                 $planLimits = [
@@ -117,10 +118,10 @@ class ContactController extends Controller
         if (auth()->user()->type === 'company') {
             $user = auth()->user();
             $plan = $user->getCurrentPlan();
-            
+
             if ($plan && $plan->max_contacts > 0) {
                 $currentContactCount = Contact::where('created_by', $user->id)->count();
-                
+
                 if ($currentContactCount >= $plan->max_contacts) {
                     return redirect()->back()->with('error', __('Contact limit exceeded. Your plan allows maximum :limit contacts.', ['limit' => $plan->max_contacts]));
                 }
@@ -129,11 +130,11 @@ class ContactController extends Controller
 
         $validated['created_by'] = createdBy();
         $validated['status'] = $validated['status'] ?? 'active';
-        
+
         // Auto-assign to current user if staff user
-        if (auth()->user()->type !== 'company' && !auth()->user()->can('manage-contacts')) {
-    $validated['assigned_to'] = auth()->id();
-}
+        if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff' && !auth()->user()->can('manage-contacts')) {
+            $validated['assigned_to'] = auth()->id();
+        }
 
         Contact::create($validated);
 
@@ -167,10 +168,10 @@ class ContactController extends Controller
                 ]);
 
                 // Auto-assign to current user if staff user
-                if (auth()->user()->type !== 'company' && !auth()->user()->can('manage-contacts')) {
-    $validated['assigned_to'] = auth()->id();
-}
-                
+                if (auth()->user()->type !== 'company' && auth()->user()->type !== 'staff' && !auth()->user()->can('manage-contacts')) {
+                    $validated['assigned_to'] = auth()->id();
+                }
+
                 $contact->update($validated);
 
                 return redirect()->back()->with('success', __('Contact updated successfully.'));
@@ -233,9 +234,9 @@ class ContactController extends Controller
             ->get();
 
         $attendeeMeetings = \App\Models\Meeting::where('created_by', createdBy())
-            ->whereHas('attendees', function($q) use ($contactId) {
+            ->whereHas('attendees', function ($q) use ($contactId) {
                 $q->where('attendee_type', 'contact')
-                  ->where('attendee_id', $contactId);
+                    ->where('attendee_id', $contactId);
             })
             ->with(['creator', 'assignedUser'])
             ->get();
@@ -246,19 +247,19 @@ class ContactController extends Controller
             ->where('parent_id', $contactId)
             ->with(['creator', 'assignedUser'])
             ->get()
-            ->map(function($call) {
+            ->map(function ($call) {
                 $call->type = 'call';
                 return $call;
             });
 
         $attendeeCalls = \App\Models\Call::where('created_by', createdBy())
-            ->whereHas('attendees', function($q) use ($contactId) {
+            ->whereHas('attendees', function ($q) use ($contactId) {
                 $q->where('attendee_type', 'contact')
-                  ->where('attendee_id', $contactId);
+                    ->where('attendee_id', $contactId);
             })
             ->with(['creator', 'assignedUser'])
             ->get()
-            ->map(function($call) {
+            ->map(function ($call) {
                 $call->type = 'call';
                 return $call;
             });
