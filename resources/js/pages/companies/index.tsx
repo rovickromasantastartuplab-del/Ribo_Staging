@@ -161,7 +161,7 @@ export default function Companies() {
 
     switch (action) {
       case 'login-as':
-        router.get(route("impersonate.start", company.id));
+        window.location.href = route("impersonate.start", company.id);
         break;
       case 'company-info':
         setFormMode('view');

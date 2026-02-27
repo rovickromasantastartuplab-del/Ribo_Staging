@@ -14,26 +14,42 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     return (
         <>
             <header className="border-sidebar-border/50 flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-3">
-            <div className="flex w-full items-center justify-between">
-                <div className="flex items-center gap-2">
-                    {position === 'left' && <SidebarTrigger className="-ml-1" />}
-                    <Breadcrumbs items={breadcrumbs.map(b => ({ label: b.title, href: b.href }))} />
+                <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {position === 'left' && <SidebarTrigger className="-ml-1" />}
+                        <Breadcrumbs items={breadcrumbs.map(b => ({ label: b.title, href: b.href }))} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {(usePage().props as any).isImpersonating && (
+                            <button
+                                onClick={() => {
+                                    const form = document.createElement('form');
+                                    form.method = 'POST';
+                                    form.action = route('impersonate.leave');
+
+                                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                                    if (csrfToken) {
+                                        const tokenInput = document.createElement('input');
+                                        tokenInput.type = 'hidden';
+                                        tokenInput.name = '_token';
+                                        tokenInput.value = csrfToken;
+                                        form.appendChild(tokenInput);
+                                    }
+
+                                    document.body.appendChild(form);
+                                    form.submit();
+                                }}
+                                className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 cursor-pointer"
+                            >
+                                {t("Return Back")}
+                            </button>
+                        )}
+                        <LanguageSwitcher />
+                        <ProfileMenu />
+                        {position === 'right' && <SidebarTrigger className="-mr-1" />}
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    {(usePage().props as any).isImpersonating && (
-                        <button
-                            onClick={() => router.post(route('impersonate.leave'))}
-                            className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 cursor-pointer"
-                        >
-                            {t("Return Back")}
-                        </button>
-                    )}
-                    <LanguageSwitcher />
-                    <ProfileMenu />
-                    {position === 'right' && <SidebarTrigger className="-mr-1" />}
-                </div>
-            </div>
-        </header>
+            </header>
         </>
     );
 }
