@@ -20,7 +20,7 @@ export default function SalesOrders() {
   const { t } = useTranslation();
   const { auth, salesOrders, accounts, contacts, quotes, products, shippingProviderTypes, taxes, users = [], filters: pageFilters = {}, publicUrlBase, encryptedSalesOrderIds } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
 
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');

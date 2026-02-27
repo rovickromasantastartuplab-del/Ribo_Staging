@@ -269,18 +269,14 @@ export default function Products() {
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden p-1">
               <img
-                src={imageUrl}
+                src={imageUrl || ''}
                 alt={row.name}
                 className="max-h-full max-w-full object-contain rounded-lg"
                 onError={(e) => {
                   const target = e.currentTarget as HTMLImageElement;
-                  if (!target.src.startsWith('data:image/svg+xml')) {
-                    target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNjBMMTQwIDgwVjE0MEwxMDAgMTYwTDYwIDE0MFY4MEwxMDAgNjBaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0iI0U1RTdFQiIvPgo8Y2lyY2xlIGN4PSI4NSIgY3k9Ijk1IiByPSI4IiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik03MCAxMzBMODUgMTE1TDEwMCAxMzBMMTMwIDEwMEwxMzAgMTMwSDcwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
-                  } else {
-                    target.style.display = 'none';
-                    const icon = target.nextElementSibling as HTMLElement;
-                    if (icon) icon.style.display = 'flex';
-                  }
+                  target.style.display = 'none';
+                  const icon = target.nextElementSibling as HTMLElement;
+                  if (icon) icon.style.display = 'flex';
                 }}
               />
               <Package className="h-6 w-6 text-gray-400 hidden" />
@@ -308,11 +304,10 @@ export default function Products() {
       label: t('Stock'),
       sortable: true,
       render: (value: any) => (
-        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-          value > 10 ? 'bg-green-100 text-green-800' :
-          value > 0 ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'
-        }`}>
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${value > 10 ? 'bg-green-100 text-green-800' :
+            value > 0 ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+          }`}>
           {value} {value === 1 ? t('unit') : t('units')}
         </span>
       )
@@ -542,18 +537,14 @@ export default function Products() {
                     return (
                       <>
                         <img
-                          src={imageUrl}
+                          src={imageUrl || ''}
                           alt={product.name}
                           className="w-full h-full object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
                             const target = e.currentTarget as HTMLImageElement;
-                            if (!target.src.startsWith('data:image/svg+xml')) {
-                              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNjBMMTQwIDgwVjE0MEwxMDAgMTYwTDYwIDE0MFY4MEwxMDAgNjBaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0iI0U1RTdFQiIvPgo8Y2lyY2xlIGN4PSI4NSIgY3k9Ijk1IiByPSI4IiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik03MCAxMzBMODUgMTE1TDEwMCAxMzBMMTMwIDEwMEwxMzAgMTMwSDcwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
-                            } else {
-                              target.style.display = 'none';
-                              const icon = target.nextElementSibling as HTMLElement;
-                              if (icon) icon.style.display = 'flex';
-                            }
+                            target.style.display = 'none';
+                            const icon = target.nextElementSibling as HTMLElement;
+                            if (icon) icon.style.display = 'flex';
                           }}
                         />
                         <div className="absolute inset-0 flex items-center justify-center hidden">
@@ -565,11 +556,10 @@ export default function Products() {
 
                   {/* Status Badge */}
                   <div className="absolute top-3 left-3">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      product.status === 'active'
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.status === 'active'
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                         : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
+                      }`}>
                       <div className={`w-1.5 h-1.5 rounded-full mr-1 ${product.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                       {product.status === 'active' ? t('Active') : t('Inactive')}
                     </span>
@@ -626,11 +616,10 @@ export default function Products() {
                     <div className="text-lg font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(parseFloat(product.price || 0))}
                     </div>
-                    <div className={`text-xs font-medium px-2 py-1 rounded-full ${
-                      product.stock_quantity > 10 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-                      product.stock_quantity > 0 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                    }`}>
+                    <div className={`text-xs font-medium px-2 py-1 rounded-full ${product.stock_quantity > 10 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                        product.stock_quantity > 0 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      }`}>
                       {product.stock_quantity} {t('in stock')}
                     </div>
                   </div>

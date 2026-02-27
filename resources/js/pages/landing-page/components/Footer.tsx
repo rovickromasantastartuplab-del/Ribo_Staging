@@ -186,29 +186,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
           </div>
         </div>
 
-        {/* Newsletter Section */}
-        {(sectionData.newsletter_title || sectionData.newsletter_subtitle) && (
-          <div className="border-t border-gray-800 py-8 sm:py-12">
-            <div className="text-center max-w-2xl mx-auto">
-              <h3 className="text-xl font-bold text-white mb-4">
-                {sectionData.newsletter_title || t('Stay Updated with Our Latest Features')}
-              </h3>
-              <p className="text-gray-400 mb-6">
-                {sectionData.newsletter_subtitle || t('Join our newsletter for product updates and networking tips')}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder={t('Enter your email')}
-                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gray-600 focus:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <button className="text-white px-6 py-3 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[120px]" style={{ backgroundColor: brandColor }}>
-                  {t('Subscribe')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Bottom Footer */}
         <div className="border-t border-gray-800 py-4 sm:py-6">

@@ -26,15 +26,17 @@ class RoleRequest extends FormRequest
         $roleId = $this->route('role') ? $this->route('role')->id : null;
 
         return [
-            'label' => ['required', 'string', function ($attribute, $value, $fail) use ($roleId) {
-                $this->validateSystemRole($value, $fail);
-                $this->validateUniqueRoleName($value, $roleId, $fail);
-            }],
+            'label' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($roleId) {
+                    $this->validateSystemRole($value, $fail);
+                    $this->validateUniqueRoleName($value, $roleId, $fail);
+                }
+            ],
             'description' => 'nullable|string',
-            'permissions' => 'required|array',
-            'permissions.*' => ['string', 'exists:permissions,name', function ($attribute, $value, $fail) {
-                $this->validatePermissionAccess($value, $fail);
-            }]
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'nullable|string'
         ];
     }
 
@@ -78,8 +80,10 @@ class RoleRequest extends FormRequest
         $systemRoles = ['superadmin', 'super admin', 'company'];
         $slug = \Illuminate\Support\Str::slug($label);
 
-        if (in_array(strtolower($label), array_map('strtolower', $systemRoles)) ||
-            in_array($slug, $systemRoles)) {
+        if (
+            in_array(strtolower($label), array_map('strtolower', $systemRoles)) ||
+            in_array($slug, $systemRoles)
+        ) {
             $fail('This role name is reserved for system use. Please choose a different name.');
         }
     }
@@ -100,7 +104,7 @@ class RoleRequest extends FormRequest
             }
         }
 
-        $query = \App\Models\Role::where('name', $slug)->where('created_by',createdBy());
+        $query = \App\Models\Role::where('name', $slug)->where('created_by', createdBy());
 
         // If updating, exclude current role from check
         if ($roleId) {

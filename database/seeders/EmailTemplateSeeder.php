@@ -798,34 +798,38 @@ class EmailTemplateSeeder extends Seeder
         ];
 
         foreach ($templates as $templateData) {
-            $existingTemplate = EmailTemplate::where('name', $templateData['name'])->first();
-
-            if ($existingTemplate) {
-                continue;
-            }
-
-            $template = EmailTemplate::create([
-                'name' => $templateData['name'],
-                'from' => $templateData['from'],
-                'user_id' => 1
-            ]);
+            $template = EmailTemplate::updateOrCreate(
+                ['name' => $templateData['name']],
+                [
+                    'from' => $templateData['from'],
+                    'user_id' => 1
+                ]
+            );
 
             foreach ($langCodes as $langCode) {
                 $translation = $templateData['translations'][$langCode] ?? $templateData['translations']['en'];
 
-                EmailTemplateLang::create([
-                    'parent_id' => $template->id,
-                    'lang' => $langCode,
-                    'subject' => $translation['subject'],
-                    'content' => $translation['content']
-                ]);
+                EmailTemplateLang::updateOrCreate(
+                    [
+                        'parent_id' => $template->id,
+                        'lang' => $langCode,
+                    ],
+                    [
+                        'subject' => $translation['subject'],
+                        'content' => $translation['content']
+                    ]
+                );
             }
 
-            UserEmailTemplate::create([
-                'template_id' => $template->id,
-                'user_id' => 1,
-                'is_active' => true
-            ]);
+            UserEmailTemplate::updateOrCreate(
+                [
+                    'template_id' => $template->id,
+                    'user_id' => 1,
+                ],
+                [
+                    'is_active' => true
+                ]
+            );
         }
     }
 }

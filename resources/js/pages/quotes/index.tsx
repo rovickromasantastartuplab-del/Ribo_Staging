@@ -21,7 +21,7 @@ export default function Quotes() {
   const { t } = useTranslation();
   const { auth, quotes, accounts, contacts, opportunities, products, shippingProviderTypes, taxes, users = [], filters: pageFilters = {}, publicUrlBase, encryptedQuoteIds } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  const isCompany = auth?.user?.type === 'company';
+  const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
 
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');

@@ -25,7 +25,7 @@ class RoleController extends BaseController
         $permissions = $this->getFilteredPermissions();
 
         return Inertia::render('roles/index', [
-            'roles'       => $roles,
+            'roles' => $roles,
             'permissions' => $permissions,
         ]);
     }
@@ -51,14 +51,14 @@ class RoleController extends BaseController
 
         // For company users, exclude notification template permissions from role management
         if ($userType === 'company') {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('module', '!=', 'settings')
-                  ->where('module', '!=', 'notification_templates')
-                  ->orWhereIn('name', [
-                      'manage-email-settings',
-                      'manage-system-settings',
-                      'manage-brand-settings'
-                  ]);
+                    ->where('module', '!=', 'notification_templates')
+                    ->orWhereIn('name', [
+                        'manage-email-settings',
+                        'manage-system-settings',
+                        'manage-brand-settings'
+                    ]);
             });
         }
 
@@ -68,41 +68,50 @@ class RoleController extends BaseController
     }
 
     /**
-     * Validate permissions against user's allowed modules
+     * Validate permissions against user's allowed modules.
+     * Accepts permission names or numeric IDs (resolves IDs first).
      */
-    private function validatePermissions(array $permissionNames)
+    private function validatePermissions(array $permissionInput)
     {
         $user = Auth::user();
         $userType = $user->type ?? 'company';
 
+        // Separate numeric IDs from string names
+        $ids = array_filter($permissionInput, fn($v) => is_numeric($v));
+        $names = array_filter($permissionInput, fn($v) => !is_numeric($v));
+
+        // Resolve IDs → names
+        if (!empty($ids)) {
+            $resolvedNames = Permission::whereIn('id', $ids)->pluck('name')->toArray();
+            $names = array_merge(array_values($names), $resolvedNames);
+        }
+
         // Superadmin can assign any permission
         if ($userType === 'superadmin' || $userType === 'super admin') {
-            return $permissionNames;
+            return $names;
         }
 
         // Get allowed modules for current user role
         $allowedModules = config('role-permissions.' . $userType, config('role-permissions.company'));
 
-        // Build query to get valid permissions
+        // Build query to get valid permissions within allowed modules
         $query = Permission::whereIn('module', $allowedModules)
-            ->whereIn('name', $permissionNames);
+            ->whereIn('name', $names);
 
         // For company users, restrict settings and notification template permissions
         if ($userType === 'company') {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('module', '!=', 'settings')
-                  ->where('module', '!=', 'notification_templates')
-                  ->orWhereIn('name', [
-                      'manage-email-settings',
-                      'manage-system-settings',
-                      'manage-brand-settings'
-                  ]);
+                    ->where('module', '!=', 'notification_templates')
+                    ->orWhereIn('name', [
+                        'manage-email-settings',
+                        'manage-system-settings',
+                        'manage-brand-settings'
+                    ]);
             });
         }
 
-        $validPermissions = $query->pluck('name')->toArray();
-
-        return $validPermissions;
+        return $query->pluck('name')->toArray();
     }
 
     /**
@@ -170,7 +179,7 @@ class RoleController extends BaseController
                 $role->name = $newSlug;
             }
 
-            $role->label       = $request->label;
+            $role->label = $request->label;
             $role->description = $request->description;
 
             $role->save();
