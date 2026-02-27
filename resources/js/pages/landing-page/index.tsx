@@ -406,6 +406,7 @@ export default function LandingPage() {
                 settings={settings}
                 sectionData={getSectionData('footer')}
                 brandColor={primaryColor}
+                customPages={customPages}
             />
         )
     };

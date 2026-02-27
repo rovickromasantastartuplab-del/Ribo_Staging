@@ -29,9 +29,10 @@ interface FooterProps {
       legal: string;
     };
   };
+  customPages?: Array<{ title: string; slug: string }>;
 }
 
-export default function Footer({ settings, sectionData = {}, brandColor = '#3b82f6' }: FooterProps) {
+export default function Footer({ settings, sectionData = {}, brandColor = '#3b82f6', customPages = [] }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const { t } = useTranslation();
 
@@ -51,10 +52,19 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
       { name: t('FAQs'), href: '#faqs' }
     ],
     legal: [
+      // If we want to keep static ones we can, but let's append custom pages to this list dynamically below
       { name: t('Privacy Policy'), href: '#privacy-policy' },
       { name: t('Terms of Service'), href: '#terms-of-service' }
     ]
   };
+
+  // Replace default legal links with actual custom pages if they exist
+  if (customPages && customPages.length > 0) {
+    footerLinks.legal = customPages.map(page => ({
+      name: page.title,
+      href: route('custom-page.show', page.slug)
+    }));
+  }
 
   const iconMap: Record<string, any> = {
     Facebook,
@@ -110,7 +120,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
             <div>
               <h3 className="text-white font-semibold mb-4">{sectionData.section_titles?.product || t('Product')}</h3>
               <ul className="space-y-3">
-                {(footerLinks.product || []).map((link) => (
+                {(footerLinks.product || []).map((link: { name: string, href: string }) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
@@ -127,7 +137,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
             <div>
               <h3 className="text-white font-semibold mb-4">{sectionData.section_titles?.company || t('Company')}</h3>
               <ul className="space-y-3">
-                {(footerLinks.company || []).map((link) => (
+                {(footerLinks.company || []).map((link: { name: string, href: string }) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
@@ -144,7 +154,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
             <div>
               <h3 className="text-white font-semibold mb-4">{sectionData.section_titles?.support || t('Support')}</h3>
               <ul className="space-y-3">
-                {(footerLinks.support || []).map((link) => (
+                {(footerLinks.support || []).map((link: { name: string, href: string }) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
@@ -161,7 +171,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
             <div>
               <h3 className="text-white font-semibold mb-4">{sectionData.section_titles?.legal || t('Legal')}</h3>
               <ul className="space-y-3">
-                {(footerLinks.legal || []).map((link) => (
+                {(footerLinks.legal || []).map((link: { name: string, href: string }) => (
                   <li key={link.name}>
                     <a
                       href={link.href}

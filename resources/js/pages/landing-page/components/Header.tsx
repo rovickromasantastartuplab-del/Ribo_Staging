@@ -80,6 +80,12 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                     <nav className="hidden md:flex items-center space-x-8" role="navigation" aria-label="Main navigation">
                         <Link
                             href={route('home')}
+                            onClick={(e) => {
+                                if (window.location.pathname === '/' || window.location.pathname === '') {
+                                    e.preventDefault();
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            }}
                             className="text-gray-600 text-sm font-medium transition-colors relative group"
                             style={{ '--hover-color': brandColor } as React.CSSProperties}
                             onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
@@ -92,23 +98,48 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                                 aria-hidden="true"
                             ></span>
                         </Link>
-                        {menuItems.map((item) => (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                className="text-gray-600 text-sm font-medium transition-colors relative group"
-                                style={{ '--hover-color': brandColor } as React.CSSProperties}
-                                onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
-                                onMouseLeave={(e) => e.currentTarget.style.color = ''}
-                            >
-                                {item.name}
-                                <span
-                                    className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all group-hover:w-full"
-                                    style={{ backgroundColor: brandColor }}
-                                    aria-hidden="true"
-                                ></span>
-                            </Link>
-                        ))}
+                        <a
+                            href="/#about"
+                            className="text-gray-600 text-sm font-medium transition-colors relative group"
+                            style={{ '--hover-color': brandColor } as React.CSSProperties}
+                            onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
+                            onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                        >
+                            {t("About Us")}
+                            <span
+                                className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all group-hover:w-full"
+                                style={{ backgroundColor: brandColor }}
+                                aria-hidden="true"
+                            ></span>
+                        </a>
+                        <a
+                            href="/#contact"
+                            className="text-gray-600 text-sm font-medium transition-colors relative group"
+                            style={{ '--hover-color': brandColor } as React.CSSProperties}
+                            onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
+                            onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                        >
+                            {t("Contact Us")}
+                            <span
+                                className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all group-hover:w-full"
+                                style={{ backgroundColor: brandColor }}
+                                aria-hidden="true"
+                            ></span>
+                        </a>
+                        <a
+                            href="/#contact"
+                            className="text-gray-600 text-sm font-medium transition-colors relative group"
+                            style={{ '--hover-color': brandColor } as React.CSSProperties}
+                            onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
+                            onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                        >
+                            {t("Submit a Ticket")}
+                            <span
+                                className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all group-hover:w-full"
+                                style={{ backgroundColor: brandColor }}
+                                aria-hidden="true"
+                            ></span>
+                        </a>
                     </nav>
 
                     {/* Auth Buttons */}
@@ -166,20 +197,37 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                             <Link
                                 href={route('home')}
                                 className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
-                                onClick={() => setIsMenuOpen(false)}
+                                onClick={(e) => {
+                                    if (window.location.pathname === '/' || window.location.pathname === '') {
+                                        e.preventDefault();
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }
+                                    setIsMenuOpen(false);
+                                }}
                             >
                                 {t("Home")}
                             </Link>
-                            {menuItems.map((item) => (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    {item.name}
-                                </Link>
-                            ))}
+                            <a
+                                href="/#about"
+                                className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                {t("About Us")}
+                            </a>
+                            <a
+                                href="/#contact"
+                                className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                {t("Contact Us")}
+                            </a>
+                            <a
+                                href="/#contact"
+                                className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                {t("Submit a Ticket")}
+                            </a>
                             <div className="pt-4 space-y-3 border-t border-gray-200">
                                 <Link
                                     href={route('login')}
