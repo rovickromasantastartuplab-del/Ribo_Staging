@@ -98,8 +98,8 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                                 aria-hidden="true"
                             ></span>
                         </Link>
-                        <a
-                            href="/#about"
+                        <Link
+                            href="/page/about-us"
                             className="text-gray-600 text-sm font-medium transition-colors relative group"
                             style={{ '--hover-color': brandColor } as React.CSSProperties}
                             onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
@@ -111,9 +111,9 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                                 style={{ backgroundColor: brandColor }}
                                 aria-hidden="true"
                             ></span>
-                        </a>
-                        <a
-                            href="/#contact"
+                        </Link>
+                        <Link
+                            href="/page/contact-us"
                             className="text-gray-600 text-sm font-medium transition-colors relative group"
                             style={{ '--hover-color': brandColor } as React.CSSProperties}
                             onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
@@ -125,9 +125,9 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                                 style={{ backgroundColor: brandColor }}
                                 aria-hidden="true"
                             ></span>
-                        </a>
-                        <a
-                            href="/#contact"
+                        </Link>
+                        <Link
+                            href="/page/submit-a-ticket"
                             className="text-gray-600 text-sm font-medium transition-colors relative group"
                             style={{ '--hover-color': brandColor } as React.CSSProperties}
                             onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
@@ -139,7 +139,7 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                                 style={{ backgroundColor: brandColor }}
                                 aria-hidden="true"
                             ></span>
-                        </a>
+                        </Link>
                     </nav>
 
                     {/* Auth Buttons */}
@@ -207,27 +207,27 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                             >
                                 {t("Home")}
                             </Link>
-                            <a
-                                href="/#about"
+                            <Link
+                                href="/page/about-us"
                                 className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 {t("About Us")}
-                            </a>
-                            <a
-                                href="/#contact"
+                            </Link>
+                            <Link
+                                href="/page/contact-us"
                                 className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 {t("Contact Us")}
-                            </a>
-                            <a
-                                href="/#contact"
+                            </Link>
+                            <Link
+                                href="/page/submit-a-ticket"
                                 className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 {t("Submit a Ticket")}
-                            </a>
+                            </Link>
                             <div className="pt-4 space-y-3 border-t border-gray-200">
                                 <Link
                                     href={route('login')}
