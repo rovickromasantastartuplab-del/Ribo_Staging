@@ -73,6 +73,17 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            // Exceptions to let Laravel handle natively (redirects, specific responses, etc.)
+            if (
+                $e instanceof \Illuminate\Validation\ValidationException ||
+                $e instanceof \Illuminate\Auth\AuthenticationException ||
+                $e instanceof \Illuminate\Auth\Access\AuthorizationException ||
+                $e instanceof \Illuminate\Session\TokenMismatchException ||
+                $e instanceof \Illuminate\Http\Exceptions\HttpResponseException
+            ) {
+                return null;
+            }
+
             // First pass: convert specific Spatie exception to standard 403 HttpException
             // so we can handle it uniformly below.
             if ($e instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
@@ -86,6 +97,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // Handle HTTP routing via Inertia
             if ($request->is('api/*') || $request->wantsJson()) {
                 return null; // Let Laravel handle JSON API errors via Default
+            }
+
+            // If we are in debug mode, let Laravel show its nice Ignition error page for non-HTTP exceptions (500s)
+            if (config('app.debug') && !($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface)) {
+                return null;
             }
 
             $response = inertia()->render('errors/Error', [
