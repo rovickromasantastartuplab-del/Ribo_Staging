@@ -72,6 +72,43 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Allow these exception types to reach our reportable() callback
+        $exceptions->stopIgnoring(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $exceptions->stopIgnoring(\Illuminate\Auth\Access\AuthorizationException::class);
+        $exceptions->stopIgnoring(\Illuminate\Http\Exceptions\HttpResponseException::class);
+
+        $exceptions->reportable(function (\Throwable $e) {
+            if (!env('SEND_ERROR_EMAILS', true)) {
+                return;
+            }
+
+            if (
+                $e instanceof \Illuminate\Validation\ValidationException ||
+                $e instanceof \Illuminate\Auth\AuthenticationException ||
+                $e instanceof \Illuminate\Session\TokenMismatchException ||
+                $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+            ) {
+                return;
+            }
+
+            try {
+                \App\Services\MailConfigService::setDynamicConfig();
+
+                $url = request()->fullUrl() ?? 'Unknown URL';
+                $message = $e->getMessage() ?: 'No exception message provided.';
+                $trace = substr($e->getTraceAsString(), 0, 1500) . (strlen($e->getTraceAsString()) > 1500 ? "\n...[truncated]" : '');
+
+                $user = auth()->user();
+                $userName = $user ? ($user->name . ' (' . $user->email . ')') : 'Guest (not logged in)';
+
+                \Illuminate\Support\Facades\Mail::to(['rvckmlnrmsnt@gmail.com', 'hello@ribo.com.ph'])
+                    ->send(new \App\Mail\ErrorOccurred($message, $trace, $url, $userName));
+            } catch (\Throwable $mailEx) {
+                // Return gracefully if error email fails
+                \Illuminate\Support\Facades\Log::error('Error sending exception notification email: ' . $mailEx->getMessage());
+            }
+        });
+
         $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
             // Exceptions to let Laravel handle natively (redirects, specific responses, etc.)
             if (
