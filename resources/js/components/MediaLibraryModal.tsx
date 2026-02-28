@@ -28,10 +28,10 @@ interface MediaLibraryModalProps {
   preSelected?: (string | number)[];
 }
 
-export default function MediaLibraryModal({ 
-  isOpen, 
-  onClose, 
-  onSelect, 
+export default function MediaLibraryModal({
+  isOpen,
+  onClose,
+  onSelect,
   multiple = false,
   returnType = 'url',
   preSelected = []
@@ -40,7 +40,7 @@ export default function MediaLibraryModal({
   const permissions = auth?.permissions || [];
   const canCreateMedia = hasPermission(permissions, 'create-media');
   const canManageMedia = hasPermission(permissions, 'manage-media');
-  
+
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [filteredMedia, setFilteredMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,11 +61,11 @@ export default function MediaLibraryModal({
           'X-Requested-With': 'XMLHttpRequest',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setMedia(data);
       setFilteredMedia(data);
@@ -105,25 +105,19 @@ export default function MediaLibraryModal({
 
   const handleFileUpload = async (files: FileList) => {
     setUploading(true);
-    
-    const validFiles = Array.from(files).filter(file => {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not an image file`);
-        return false;
-      }
-      return true;
-    });
-    
+
+    const validFiles = Array.from(files);
+
     if (validFiles.length === 0) {
       setUploading(false);
       return;
     }
-    
+
     const formData = new FormData();
     validFiles.forEach(file => {
       formData.append('files[]', file);
     });
-    
+
     try {
       const response = await fetch(route('api.media.batch'), {
         method: 'POST',
@@ -134,14 +128,14 @@ export default function MediaLibraryModal({
           'X-Requested-With': 'XMLHttpRequest',
         },
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok) {
         if (result.data && result.data.length > 0) {
           setMedia(prev => [...result.data, ...prev]);
         }
-        
+
         // Show appropriate success/warning messages
         if (result.errors && result.errors.length > 0) {
           toast.warning(result.message || `${result.data?.length || 0} uploaded, ${result.errors.length} failed`);
@@ -162,7 +156,7 @@ export default function MediaLibraryModal({
     } catch (error) {
       toast.error('Error uploading files');
     }
-    
+
     setUploading(false);
   };
 
@@ -180,7 +174,7 @@ export default function MediaLibraryModal({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileUpload(e.dataTransfer.files);
     }
@@ -188,10 +182,10 @@ export default function MediaLibraryModal({
 
   const handleSelect = (item: MediaItem) => {
     const value = returnType === 'id' ? item.id : item.url;
-    
+
     if (multiple) {
-      setSelectedItems(prev => 
-        prev.includes(value) 
+      setSelectedItems(prev =>
+        prev.includes(value)
           ? prev.filter(selectedValue => selectedValue !== value)
           : [...prev, value]
       );
@@ -228,7 +222,7 @@ export default function MediaLibraryModal({
             )}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Header with Search and Upload */}
           <div className="flex flex-col sm:flex-row gap-3">
@@ -241,13 +235,13 @@ export default function MediaLibraryModal({
                 className="pl-10"
               />
             </div>
-            
+
             {canCreateMedia && (
               <div className="flex gap-2">
                 <Input
                   type="file"
                   multiple
-                  accept="image/*"
+
                   onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
                   className="hidden"
                   id="file-upload"
@@ -265,7 +259,7 @@ export default function MediaLibraryModal({
               </div>
             )}
           </div>
-          
+
           {/* Stats and Selection Info */}
           <div className="flex items-center justify-between text-sm text-muted-foreground bg-muted/30 px-3 py-2 rounded-md">
             <span>
@@ -291,9 +285,8 @@ export default function MediaLibraryModal({
               <div className="flex-1 flex items-center justify-center py-16">
                 <div className="text-center max-w-sm">
                   <div
-                    className={`mx-auto w-24 h-24 border-2 border-dashed rounded-xl flex items-center justify-center mb-6 transition-colors ${
-                      dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
-                    }`}
+                    className={`mx-auto w-24 h-24 border-2 border-dashed rounded-xl flex items-center justify-center mb-6 transition-colors ${dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+                      }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
@@ -301,7 +294,7 @@ export default function MediaLibraryModal({
                   >
                     <Upload className="h-10 w-10 text-muted-foreground" />
                   </div>
-                  
+
                   <div className="space-y-3 mb-6">
                     <h3 className="text-lg font-semibold">No media files found</h3>
                     {searchTerm && (
@@ -310,10 +303,10 @@ export default function MediaLibraryModal({
                       </p>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      {searchTerm ? 'Try a different search term or upload new images' : 'Upload images to get started'}
+                      {searchTerm ? 'Try a different search term or upload new files' : 'Upload files to get started'}
                     </p>
                   </div>
-                  
+
                   {canCreateMedia && (
                     <Button
                       type="button"
@@ -321,7 +314,7 @@ export default function MediaLibraryModal({
                       disabled={uploading}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Upload Images
+                      Upload Files
                     </Button>
                   )}
                 </div>
@@ -332,11 +325,10 @@ export default function MediaLibraryModal({
                   {currentMedia.map((item) => (
                     <div
                       key={item.id}
-                      className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all hover:scale-105 ${
-                        selectedItems.includes(returnType === 'id' ? item.id : item.url) 
-                          ? 'ring-2 ring-primary shadow-lg' 
+                      className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all hover:scale-105 ${selectedItems.includes(returnType === 'id' ? item.id : item.url)
+                          ? 'ring-2 ring-primary shadow-lg'
                           : 'hover:shadow-md border border-border hover:border-primary/50'
-                      }`}
+                        }`}
                       onClick={() => handleSelect(item)}
                     >
                       <div className="relative aspect-square bg-muted">
@@ -348,7 +340,7 @@ export default function MediaLibraryModal({
                             e.currentTarget.src = item.url;
                           }}
                         />
-                        
+
                         {/* Selection Indicator */}
                         {selectedItems.includes(returnType === 'id' ? item.id : item.url) && (
                           <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
@@ -357,10 +349,10 @@ export default function MediaLibraryModal({
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Hover Overlay */}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                        
+
                         {/* File Name Tooltip */}
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <p className="text-xs text-white truncate" title={item.name}>
@@ -374,7 +366,7 @@ export default function MediaLibraryModal({
               </div>
             )}
           </div>
-          
+
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-3 border-t">
@@ -401,7 +393,7 @@ export default function MediaLibraryModal({
                   } else {
                     page = currentPage - 2 + i;
                   }
-                  
+
                   return (
                     <Button
                       key={page}
