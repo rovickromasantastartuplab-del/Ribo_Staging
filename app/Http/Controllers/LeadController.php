@@ -628,12 +628,20 @@ class LeadController extends Controller
     public function parseFile(Request $request)
     {
         if (!auth()->user()->can('import-leads')) {
-            return redirect()->back()->with('error', __('Permission denied.'));
+            return response()->json(['message' => __('Permission denied.')], 403);
         }
 
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'file' => 'required|mimes:csv,txt,xls,xlsx|max:10240',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->getMessageBag()->first()], 422);
+        }
+
+        // Increase memory limit and execution time for large files
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
 
         try {
             $file = $request->file('file');
