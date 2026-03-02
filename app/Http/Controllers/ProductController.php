@@ -341,18 +341,12 @@ class ProductController extends Controller
     public function parseFile(Request $request)
     {
         if (!auth()->user()->can('import-products')) {
-            return response()->json(['message' => __('Permission denied.')], 403);
+            return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        $rules = [
-            'file' => 'required|mimes:csv,txt,xlsx',
-        ];
-
-        $validator = \Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return response()->json(['message' => $validator->getMessageBag()->first()], 422);
-        }
+        $request->validate([
+            'file' => 'required|mimes:csv,txt,xls,xlsx|max:10240',
+        ]);
 
         try {
             $file = $request->file('file');
@@ -361,11 +355,10 @@ class ProductController extends Controller
             $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
             $worksheet = $spreadsheet->getActiveSheet();
             $highestColumn = $worksheet->getHighestColumn();
-            $highestColumn++; // Avoid PHP string comparison bug beyond Z
             $highestRow = $worksheet->getHighestRow();
             $headers = [];
 
-            for ($col = 'A'; $col != $highestColumn; $col++) {
+            for ($col = 'A'; $col <= $highestColumn; $col++) {
                 $value = $worksheet->getCell($col . '1')->getValue();
                 if ($value) {
                     $headers[] = (string) $value;
@@ -377,9 +370,10 @@ class ProductController extends Controller
             for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 $colIndex = 0;
-                for ($col = 'A'; $col != $highestColumn; $col++) {
+                for ($col = 'A'; $col <= $highestColumn; $col++) {
                     if ($colIndex < count($headers)) {
-                        $rowData[$headers[$colIndex]] = (string) $worksheet->getCell($col . $row)->getValue();
+                        $colValue = $worksheet->getCell($col . $row)->getValue();
+                        $rowData[$headers[$colIndex]] = $colValue !== null ? (string) $colValue : '';
                     }
                     $colIndex++;
                 }
@@ -394,8 +388,8 @@ class ProductController extends Controller
                 'excelColumns' => $headers,
                 'previewData' => $fullData // Return full data so frontend can map and import all rows
             ]);
-        } catch (\Throwable $e) {
-            return response()->json(['message' => __('Failed to parse file: :error', ['error' => $e->getMessage()])], 500);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', __('Failed to parse file: :error', ['error' => $e->getMessage()]));
         }
     }
 
