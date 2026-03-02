@@ -93,7 +93,7 @@ class ProductController extends Controller
             'brands' => $brands,
             'taxes' => $taxes,
             'users' => $users,
-            'samplePath' => file_exists(storage_path('uploads/sample/sample-product.xlsx')) ? route('product.download.template') : null,
+            'samplePath' => route('product.download.template'),
             'filters' => $request->all(['search', 'category', 'brand', 'status', 'assigned_to', 'sort_field', 'sort_direction', 'per_page']),
         ]);
     }
@@ -301,12 +301,8 @@ class ProductController extends Controller
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        $name = 'product_' . date('Y-m-d i:h:s');
-        ob_start();
-        $data = Excel::download(new ProductExport(), $name . '.xlsx');
-        ob_end_clean();
-
-        return $data;
+        $name = 'product_' . date('Y-m-d_H-i-s');
+        return Excel::download(new ProductExport(), $name . '.xlsx');
     }
 
     public function downloadTemplate()
@@ -315,13 +311,31 @@ class ProductController extends Controller
             return response()->json(['error' => __('Permission denied.')], 403);
         }
 
-        $filePath = storage_path('uploads/sample/sample-product.xlsx');
+        $headers = [
+            'name',
+            'sku',
+            'description',
+            'price',
+            'stock',
+            'category',
+            'brand',
+            'tax',
+            'status'
+        ];
 
-        if (!file_exists($filePath)) {
-            return response()->json(['error' => __('Template file not available')], 404);
-        }
+        $callback = function () use ($headers) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers);
+            fclose($file);
+        };
 
-        return response()->download($filePath, 'sample-product.xlsx');
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=sample-product.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ]);
     }
 
     public function parseFile(Request $request)

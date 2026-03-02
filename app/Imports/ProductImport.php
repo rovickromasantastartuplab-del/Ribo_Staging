@@ -34,38 +34,43 @@ class ProductImport implements ToModel, WithHeadingRow
             'name' => $row['name'] ?? '',
             'sku' => $row['sku'] ?? '',
             'description' => $row['description'] ?? '',
-            'price' => is_numeric($row['price'] ?? null) ? (float)$row['price'] : 0,
-            'stock_quantity' => is_numeric($row['stock'] ?? null) ? (int)$row['stock'] : 0,
+            'price' => is_numeric($row['price'] ?? null) ? (float) $row['price'] : 0,
+            'stock_quantity' => is_numeric($row['stock'] ?? null) ? (int) $row['stock'] : 0,
             'status' => in_array($row['status'] ?? 'active', ['active', 'inactive']) ? $row['status'] : 'active',
             'created_by' => createdBy(),
         ];
-
+    
         // Category
-        if (!empty($row['category'])) {
-            $category = \App\Models\Category::where('name', $row['category'])
-                ->where('created_by', createdBy())
-                ->first();
-            if ($category) {
-                $productData['category_id'] = $category->id;
-            }
+        $categoryValue = trim($row['category'] ?? '');
+        if (!empty($categoryValue)) {
+            $category = \App\Models\Category::firstOrCreate(
+                ['name' => $categoryValue, 'created_by' => createdBy()],
+                ['status' => 'active']
+            );
+            $productData['category_id'] = $category->id;
         }
 
         // Brand
-        if (!empty($row['brand'])) {
-            $brand = \App\Models\Brand::where('name', $row['brand'])
-                ->where('created_by', createdBy())
-                ->first();
-            if ($brand) {
-                $productData['brand_id'] = $brand->id;
-            }
+        $brandValue = trim($row['brand'] ?? '');
+        if (!empty($brandValue)) {
+            $brand = \App\Models\Brand::firstOrCreate(
+                ['name' => $brandValue, 'created_by' => createdBy()],
+                ['status' => 'active']
+            );
+            $productData['brand_id'] = $brand->id;
         }
 
         // Tax
         $taxValue = trim($row['tax'] ?? '');
-        $tax = !empty($taxValue)
-            ? \App\Models\Tax::where('name', $taxValue)->where('created_by', createdBy())->first()
-            : null;
-        $productData['tax_id'] = $tax?->id ?? \App\Models\Tax::where('created_by', createdBy())->value('id');
+        if (!empty($taxValue)) {
+            $tax = \App\Models\Tax::firstOrCreate(
+                ['name' => $taxValue, 'created_by' => createdBy()],
+                ['rate' => 0, 'status' => 'active']
+            );
+            $productData['tax_id'] = $tax->id;
+        } else {
+            $productData['tax_id'] = \App\Models\Tax::where('created_by', createdBy())->value('id');
+        }
 
         if (!auth()->user()->hasRole('company')) {
             $productData['assigned_to'] = auth()->id();

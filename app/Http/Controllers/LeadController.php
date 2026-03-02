@@ -210,7 +210,7 @@ class LeadController extends Controller
             'accountIndustries' => $accountIndustries,
             'accountTypes' => $accountTypes,
             'users' => $users,
-            'samplePath' => file_exists(storage_path('uploads/sample/sample-lead.xlsx')) ? route('lead.download.template') : null,
+            'samplePath' => route('lead.download.template'),
             'filters' => $request->all(['view', 'search', 'lead_status_id', 'lead_source_id', 'status', 'is_converted', 'assigned_to', 'sort_field', 'sort_direction', 'per_page']),
         ]);
     }
@@ -582,27 +582,47 @@ class LeadController extends Controller
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        $name = 'lead_' . date('Y-m-d i:h:s');
-        ob_start();
-
-        $data = Excel::download(new LeadExport(), $name . '.xlsx');
-        ob_end_clean();
-
-        return $data;
+        $name = 'lead_' . date('Y-m-d_H-i-s');
+        return Excel::download(new LeadExport(), $name . '.xlsx');
     }
+
     public function downloadTemplate()
     {
         if (!auth()->user()->can('import-leads')) {
             return response()->json(['error' => __('Permission denied.')], 403);
         }
 
-        $filePath = storage_path('uploads/sample/sample-lead.xlsx');
+        $headers = [
+            'name',
+            'email',
+            'phone',
+            'company',
+            'account_name',
+            'website',
+            'position',
+            'address',
+            'notes',
+            'value',
+            'status',
+            'lead_status',
+            'lead_source',
+            'account_industry',
+            'campaign'
+        ];
 
-        if (!file_exists($filePath)) {
-            return response()->json(['error' => __('Template file not available')], 404);
-        }
+        $callback = function () use ($headers) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers);
+            fclose($file);
+        };
 
-        return response()->download($filePath, 'sample-lead.xlsx');
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=sample-lead.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ]);
     }
 
     public function parseFile(Request $request)
