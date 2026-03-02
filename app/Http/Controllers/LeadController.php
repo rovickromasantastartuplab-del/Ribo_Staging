@@ -639,9 +639,9 @@ class LeadController extends Controller
                 }
             }
 
-            // Get preview data (first 2 rows after header)
-            $previewData = [];
-            for ($row = 2; $row <= min(3, $highestRow); $row++) {
+            // Get full data
+            $fullData = [];
+            for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 $colIndex = 0;
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
@@ -650,12 +650,15 @@ class LeadController extends Controller
                     }
                     $colIndex++;
                 }
-                $previewData[] = $rowData;
+                // Only add row if it has some data
+                if (!empty(array_filter($rowData, fn($value) => $value !== ''))) {
+                    $fullData[] = $rowData;
+                }
             }
 
             return response()->json([
                 'excelColumns' => $headers,
-                'previewData' => $previewData
+                'previewData' => $fullData // Return full data so frontend can map and import all rows
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to parse file: :error', ['error' => $e->getMessage()]));

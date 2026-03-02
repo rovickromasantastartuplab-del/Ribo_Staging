@@ -19,7 +19,7 @@ class ProductController extends Controller
     {
         $query = Product::query()
             ->with(['category', 'brand', 'tax', 'assignedUser', 'media'])
-            ->where(function($q) {
+            ->where(function ($q) {
                 if (auth()->user()->type === 'company') {
                     $q->where('created_by', createdBy());
                 } else {
@@ -303,7 +303,7 @@ class ProductController extends Controller
 
         $name = 'product_' . date('Y-m-d i:h:s');
         ob_start();
-        $data = Excel::download(new ProductExport(), $name . '.xlsx'); 
+        $data = Excel::download(new ProductExport(), $name . '.xlsx');
         ob_end_clean();
 
         return $data;
@@ -336,8 +336,7 @@ class ProductController extends Controller
 
         $validator = \Validator::make($request->all(), $rules);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->with('error', $messages->first());
         }
@@ -355,28 +354,31 @@ class ProductController extends Controller
             for ($col = 'A'; $col <= $highestColumn; $col++) {
                 $value = $worksheet->getCell($col . '1')->getValue();
                 if ($value) {
-                    $headers[] = (string)$value;
+                    $headers[] = (string) $value;
                 }
             }
 
-            // Get preview data (first 2 rows after header)
-            $previewData = [];
-            for ($row = 2; $row <= min(3, $highestRow); $row++) {
+            // Get full data
+            $fullData = [];
+            for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 $colIndex = 0;
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
                     if ($colIndex < count($headers)) {
-                        $rowData[$headers[$colIndex]] = (string)$worksheet->getCell($col . $row)->getValue();
+                        $rowData[$headers[$colIndex]] = (string) $worksheet->getCell($col . $row)->getValue();
                     }
                     $colIndex++;
                 }
-                $previewData[] = $rowData;
+                // Only add row if it has some data
+                if (!empty(array_filter($rowData, fn($value) => $value !== ''))) {
+                    $fullData[] = $rowData;
+                }
             }
 
 
             return response()->json([
                 'excelColumns' => $headers,
-                'previewData' => $previewData
+                'previewData' => $fullData // Return full data so frontend can map and import all rows
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to parse file: :error', ['error' => $e->getMessage()]));
@@ -395,8 +397,7 @@ class ProductController extends Controller
 
         $validator = \Validator::make($request->all(), $rules);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->with('error', $messages->first());
         }

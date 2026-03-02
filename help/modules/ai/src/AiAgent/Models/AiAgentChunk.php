@@ -68,12 +68,7 @@ class AiAgentChunk extends BaseModel
         int|null $aiAgentId = null,
     ) {
         if (config('scout.driver') === 'meilisearch') {
-            $rawResults = static::search(null, function ($index) use (
-                $aiAgentId,
-                $vector,
-                $limit,
-                $knowledgeScopeTag,
-            ) {
+            $rawResults = static::search(null, function ($index) use ($aiAgentId, $vector, $limit, $knowledgeScopeTag, ) {
                 $filters = [];
                 if ($knowledgeScopeTag) {
                     $filters[] = "tags = $knowledgeScopeTag";
@@ -142,7 +137,7 @@ class AiAgentChunk extends BaseModel
                     return false;
                 })
                 ->sortByDesc('score')
-                ->where('score', '>', 0.5)
+                ->where('score', '>', 0.3)
                 ->values();
         }
 
@@ -159,7 +154,7 @@ class AiAgentChunk extends BaseModel
                 try {
                     $score = $rawResults->first(
                         fn($c) => $c['id'] === $chunk->id ||
-                            $c['parent_chunk_id'] === $chunk->id,
+                        $c['parent_chunk_id'] === $chunk->id,
                     )['score'];
                 } catch (\Exception $e) {
                     $score = 0;
@@ -174,8 +169,8 @@ class AiAgentChunk extends BaseModel
                     'chunkable' =>
                         $chunk->chunkable &&
                         method_exists($chunk->chunkable, 'toChunkableArray')
-                            ? $chunk->chunkable->toChunkableArray()
-                            : null,
+                        ? $chunk->chunkable->toChunkableArray()
+                        : null,
                 ];
             })
             ->sortByDesc('score')

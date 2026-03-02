@@ -1,23 +1,23 @@
-import {getArticleLink} from '@app/help-center/articles/article-link';
-import {HomeScreenCardLayout} from '@livechat/widget/home/home-screen-card-layout';
-import {widgetQueries} from '@livechat/widget/widget-queries';
-import {useQuery} from '@tanstack/react-query';
-import {opacityAnimation} from '@ui/animation/opacity-animation';
-import {Button} from '@ui/buttons/button';
-import {ButtonBase} from '@ui/buttons/button-base';
-import {Trans} from '@ui/i18n/trans';
-import {KeyboardArrowRightIcon} from '@ui/icons/material/KeyboardArrowRight';
-import {SearchIcon} from '@ui/icons/material/Search';
-import {useSettings} from '@ui/settings/use-settings';
-import {Skeleton} from '@ui/skeleton/skeleton';
-import {useIsDarkMode} from '@ui/themes/use-is-dark-mode';
+import { getArticleLink } from '@app/help-center/articles/article-link';
+import { HomeScreenCardLayout } from '@livechat/widget/home/home-screen-card-layout';
+import { widgetQueries } from '@livechat/widget/widget-queries';
+import { useQuery } from '@tanstack/react-query';
+import { opacityAnimation } from '@ui/animation/opacity-animation';
+import { Button } from '@ui/buttons/button';
+import { ButtonBase } from '@ui/buttons/button-base';
+import { Trans } from '@ui/i18n/trans';
+import { KeyboardArrowRightIcon } from '@ui/icons/material/KeyboardArrowRight';
+import { SearchIcon } from '@ui/icons/material/Search';
+import { useSettings } from '@ui/settings/use-settings';
+import { Skeleton } from '@ui/skeleton/skeleton';
+import { useIsDarkMode } from '@ui/themes/use-is-dark-mode';
 import clsx from 'clsx';
-import {AnimatePresence, m} from 'framer-motion';
-import {Link} from 'react-router';
+import { AnimatePresence, m } from 'framer-motion';
+import { Link } from 'react-router';
 
 export function HomeScreenHcHard() {
   const isDakMode = useIsDarkMode();
-  const {chatWidget} = useSettings();
+  const { chatWidget } = useSettings();
   const showArticles = !chatWidget?.hideHomeArticles;
   const query = useQuery(widgetQueries.articles.homeArticleList());
 
