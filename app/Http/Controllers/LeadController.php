@@ -628,7 +628,7 @@ class LeadController extends Controller
     public function parseFile(Request $request)
     {
         if (!auth()->user()->can('import-leads')) {
-            return redirect()->back()->with('error', __('Permission denied.'));
+            return response()->json(['message' => __('Permission denied.')], 403);
         }
 
         $rules = [
@@ -638,8 +638,7 @@ class LeadController extends Controller
         $validator = \Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            $messages = $validator->getMessageBag();
-            return redirect()->back()->with('error', $messages->first());
+            return response()->json(['message' => $validator->getMessageBag()->first()], 422);
         }
 
         try {
@@ -649,10 +648,11 @@ class LeadController extends Controller
             $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
             $worksheet = $spreadsheet->getActiveSheet();
             $highestColumn = $worksheet->getHighestColumn();
+            $highestColumn++; // Avoid PHP string comparison bug beyond Z
             $highestRow = $worksheet->getHighestRow();
             $headers = [];
 
-            for ($col = 'A'; $col <= $highestColumn; $col++) {
+            for ($col = 'A'; $col != $highestColumn; $col++) {
                 $value = $worksheet->getCell($col . '1')->getValue();
                 if ($value) {
                     $headers[] = $value;
@@ -664,7 +664,7 @@ class LeadController extends Controller
             for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 $colIndex = 0;
-                for ($col = 'A'; $col <= $highestColumn; $col++) {
+                for ($col = 'A'; $col != $highestColumn; $col++) {
                     if ($colIndex < count($headers)) {
                         $rowData[$headers[$colIndex]] = (string) $worksheet->getCell($col . $row)->getValue();
                     }
@@ -680,8 +680,8 @@ class LeadController extends Controller
                 'excelColumns' => $headers,
                 'previewData' => $fullData // Return full data so frontend can map and import all rows
             ]);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', __('Failed to parse file: :error', ['error' => $e->getMessage()]));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => __('Failed to parse file: :error', ['error' => $e->getMessage()])], 500);
         }
     }
 
