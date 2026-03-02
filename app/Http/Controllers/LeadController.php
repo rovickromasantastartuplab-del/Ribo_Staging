@@ -628,7 +628,7 @@ class LeadController extends Controller
     public function parseFile(Request $request)
     {
         if (!auth()->user()->can('import-leads')) {
-            return redirect()->back()->with('error', __('Permission denied.'));
+            return response()->json(['error' => __('Permission denied.')], 403);
         }
 
         $request->validate([
@@ -643,12 +643,20 @@ class LeadController extends Controller
             $worksheet = $spreadsheet->getActiveSheet();
             $highestColumn = $worksheet->getHighestColumn();
             $highestRow = $worksheet->getHighestRow();
-            $headers = [];
 
-            for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $value = $worksheet->getCell($col . '1')->getValue();
-                if ($value) {
-                    $headers[] = $value;
+            $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+
+            $headers = [];
+            $headerMap = [];
+
+            for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                $value = $worksheet->getCell($colLetter . '1')->getValue();
+
+                if ($value !== null && $value !== '') {
+                    $strValue = trim((string) $value);
+                    $headers[] = $strValue;
+                    $headerMap[$colLetter] = $strValue;
                 }
             }
 
@@ -656,13 +664,9 @@ class LeadController extends Controller
             $fullData = [];
             for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
-                $colIndex = 0;
-                for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    if ($colIndex < count($headers)) {
-                        $colValue = $worksheet->getCell($col . $row)->getValue();
-                        $rowData[$headers[$colIndex]] = $colValue !== null ? (string) $colValue : '';
-                    }
-                    $colIndex++;
+                foreach ($headerMap as $colLetter => $headerName) {
+                    $colValue = $worksheet->getCell($colLetter . $row)->getValue();
+                    $rowData[$headerName] = $colValue !== null ? trim((string) $colValue) : '';
                 }
                 // Only add row if it has some data
                 if (!empty(array_filter($rowData, fn($value) => $value !== ''))) {
@@ -671,14 +675,13 @@ class LeadController extends Controller
             }
 
             return response()->json([
-                'excelColumns' => $headers,
+                'excelColumns' => array_values($headers),
                 'previewData' => $fullData // Return full data so frontend can map and import all rows
             ]);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', __('Failed to parse file: :error', ['error' => $e->getMessage()]));
+        } catch (\Throwable $e) {
+            return response()->json(['error' => __('Failed to parse file: :error', ['error' => $e->getMessage()])], 500);
         }
     }
-
     public function fileImport(Request $request)
     {
         if (!auth()->user()->can('import-leads')) {
