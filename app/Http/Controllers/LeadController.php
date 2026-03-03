@@ -641,14 +641,23 @@ class LeadController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|mimes:csv,txt,xls,xlsx|max:10240',
+            'file' => 'required|mimes:csv,txt,xls,xlsx|max:51200',
         ]);
 
         try {
             $file = $request->file('file');
 
-            // Read headers and preview data
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            // Store file server-side so we don't need to round-trip data through the browser
+            $tempDir = storage_path('app/temp');
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+            $tempFileName = 'import_lead_' . auth()->id() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move($tempDir, $tempFileName);
+            $storedFilePath = $tempDir . DIRECTORY_SEPARATOR . $tempFileName;
+
+            // Read only headers and a small preview (3 rows) for the mapping UI
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($storedFilePath);
             $worksheet = $spreadsheet->getActiveSheet();
             $highestColumn = $worksheet->getHighestColumn();
             $highestRow = $worksheet->getHighestRow();
@@ -669,74 +678,128 @@ class LeadController extends Controller
                 }
             }
 
-            // Get full data
-            $fullData = [];
-            for ($row = 2; $row <= $highestRow; $row++) {
+            // Get only 3 preview rows (not all data)
+            $previewData = [];
+            $previewLimit = min($highestRow, 4); // rows 2-4 (3 rows max)
+            for ($row = 2; $row <= $previewLimit; $row++) {
                 $rowData = [];
                 foreach ($headerMap as $colLetter => $headerName) {
                     $colValue = $worksheet->getCell($colLetter . $row)->getValue();
                     $rowData[$headerName] = $colValue !== null ? trim((string) $colValue) : '';
                 }
-                // Only add row if it has some data
                 if (!empty(array_filter($rowData, fn($value) => $value !== ''))) {
-                    $fullData[] = $rowData;
+                    $previewData[] = $rowData;
                 }
             }
 
+            // Free memory
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
             return response()->json([
                 'excelColumns' => array_values($headers),
-                'previewData' => $fullData // Return full data so frontend can map and import all rows
+                'previewData' => $previewData,
+                'tempFile' => $tempFileName,
+                'totalRows' => max(0, $highestRow - 1),
             ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => __('Failed to parse file: :error', ['error' => $e->getMessage()])], 500);
         }
     }
+
     public function fileImport(Request $request)
     {
         if (!auth()->user()->can('import-leads')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        $rules = [
-            'data' => 'required|array',
-        ];
-
-        $validator = \Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            $messages = $validator->getMessageBag();
-            return redirect()->back()->with('error', $messages->first());
-        }
+        $request->validate([
+            'mapping' => 'required|array',
+            'tempFile' => 'required|string',
+        ]);
 
         try {
-            $data = $request->data;
+            // Increase limits for large imports
+            set_time_limit(600);
+            ini_set('memory_limit', '512M');
 
-            // Create temporary CSV file from data
-            $tempFile = storage_path('tmp/import_' . time() . '.csv');
+            $tempFileName = basename($request->tempFile); // Sanitize: only allow filename
+            $storedFilePath = storage_path('app/temp/' . $tempFileName);
 
-            // Ensure tmp directory exists
-            if (!file_exists(dirname($tempFile))) {
-                mkdir(dirname($tempFile), 0755, true);
+            if (!file_exists($storedFilePath)) {
+                return redirect()->back()->with('error', __('Import file not found. Please re-upload.'));
             }
 
-            $handle = fopen($tempFile, 'w');
+            $mapping = $request->mapping; // e.g. { "name" => "Name", "email" => "Email" }
 
-            // Write headers
-            if (!empty($data)) {
-                fputcsv($handle, array_keys($data[0]));
+            // Read the stored file and apply column mapping server-side
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($storedFilePath);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $highestColumn = $worksheet->getHighestColumn();
+            $highestRow = $worksheet->getHighestRow();
 
-                // Write data rows
-                foreach ($data as $row) {
-                    fputcsv($handle, $row);
+            $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+
+            // Build header map from file
+            $fileHeaders = [];
+            for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                $value = $worksheet->getCell($colLetter . '1')->getValue();
+                if ($value !== null && $value !== '') {
+                    $fileHeaders[$colLetter] = trim((string) $value);
+                }
+            }
+
+            // Create a mapped CSV temp file for the Import class
+            $mappedTempFile = storage_path('app/temp/mapped_' . time() . '_' . auth()->id() . '.csv');
+            $handle = fopen($mappedTempFile, 'w');
+
+            // Write mapped headers (database field names)
+            $dbFields = array_keys($mapping);
+            fputcsv($handle, $dbFields);
+
+            // Build reverse lookup: excelColumnName => colLetter
+            $excelColToLetter = array_flip($fileHeaders);
+
+            // Write mapped data rows
+            for ($row = 2; $row <= $highestRow; $row++) {
+                $mappedRow = [];
+                $hasData = false;
+
+                foreach ($mapping as $dbField => $excelColumn) {
+                    $colLetter = $excelColToLetter[$excelColumn] ?? null;
+                    $value = '';
+                    if ($colLetter) {
+                        $cellValue = $worksheet->getCell($colLetter . $row)->getValue();
+                        $value = $cellValue !== null ? trim((string) $cellValue) : '';
+                    }
+                    $mappedRow[] = $value;
+                    if ($value !== '') {
+                        $hasData = true;
+                    }
+                }
+
+                if ($hasData) {
+                    fputcsv($handle, $mappedRow);
                 }
             }
             fclose($handle);
 
-            $import = new LeadImport();
-            Excel::import($import, $tempFile);
+            // Free spreadsheet memory
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
 
-            // Clean up temp file
-            unlink($tempFile);
+            // Import using the existing LeadImport class
+            $import = new LeadImport();
+            Excel::import($import, $mappedTempFile);
+
+            // Clean up temp files
+            if (file_exists($mappedTempFile)) {
+                unlink($mappedTempFile);
+            }
+            if (file_exists($storedFilePath)) {
+                unlink($storedFilePath);
+            }
 
             $message = __('Import completed: :added leads added, :skipped leads skipped', [
                 'added' => $import->getAddedCount(),
@@ -749,3 +812,4 @@ class LeadController extends Controller
         }
     }
 }
+

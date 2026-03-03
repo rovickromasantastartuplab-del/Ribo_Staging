@@ -35,8 +35,9 @@ export function ImportModal({
   const [isImporting, setIsImporting] = useState(false);
   const [showMappingModal, setShowMappingModal] = useState(false);
   const [excelColumns, setExcelColumns] = useState<string[]>([]);
-  const [parsedData, setParsedData] = useState<Record<string, string>[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, string>[]>([]);
+  const [tempFile, setTempFile] = useState<string>('');
+  const [totalRows, setTotalRows] = useState<number>(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,18 +64,17 @@ export function ImportModal({
 
       const data = await response.json();
 
-      if (data.excelColumns && data.previewData) {
-        console.log("Import data",data.previewData);
-
+      if (data.excelColumns && data.previewData && data.tempFile) {
         setExcelColumns(data.excelColumns);
-        setParsedData(data.previewData);
-        setPreviewData(data.previewData.slice(0, 3) || []);
+        setPreviewData(data.previewData);
+        setTempFile(data.tempFile);
+        setTotalRows(data.totalRows || 0);
         toast.dismiss();
         onClose();
         setShowMappingModal(true);
       } else {
         toast.dismiss();
-        toast.error(data.message || t('Failed to parse file'));
+        toast.error(data.error || data.message || t('Failed to parse file'));
       }
     } catch (error) {
       toast.dismiss();
@@ -88,8 +88,9 @@ export function ImportModal({
     setShowMappingModal(false);
     setFile(null);
     setExcelColumns([]);
-    setParsedData([]);
     setPreviewData([]);
+    setTempFile('');
+    setTotalRows(0);
   };
 
   const handleClose = () => {
@@ -168,8 +169,9 @@ export function ImportModal({
       excelColumns={excelColumns}
       databaseFields={databaseFields}
       importRoute={importRoute}
-      data={parsedData}
       previewData={previewData}
+      tempFile={tempFile}
+      totalRows={totalRows}
     />
     </>
   );
