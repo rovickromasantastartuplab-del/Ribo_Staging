@@ -77,7 +77,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
             <div className="lg:col-span-2">
               <Link href="/" className="inline-block mb-6">
                 <img
-                  src="/images/logos/image.png"
+                  src="/images/logos/ribo-light.png"
                   alt={settings.company_name}
                   className="h-12 w-auto"
                 />

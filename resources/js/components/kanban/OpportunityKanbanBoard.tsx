@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Eye, Edit, Trash2, User } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Eye, Edit, Trash2, User, ArrowRight } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
@@ -75,9 +75,50 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
     setKanbanData(initialData);
   }, [initialData]);
 
+  const handleMoveToStage = async (opportunity: Opportunity, stageId: number) => {
+    const sourceStageId = opportunity.opportunity_stage_id.toString();
+    const destStage = opportunityStages.find(s => s.id === stageId);
+    if (!destStage || sourceStageId === stageId.toString()) return;
+
+    // Optimistic update
+    const newKanbanData = { ...kanbanData };
+    newKanbanData[sourceStageId] = {
+      ...newKanbanData[sourceStageId],
+      leads: newKanbanData[sourceStageId].leads.filter(o => o.id !== opportunity.id)
+    };
+    const updatedOpp = { ...opportunity, opportunity_stage_id: stageId, opportunity_stage: destStage };
+    newKanbanData[stageId.toString()] = {
+      ...newKanbanData[stageId.toString()],
+      leads: [...(newKanbanData[stageId.toString()]?.leads || []), updatedOpp]
+    };
+    setKanbanData(newKanbanData);
+
+    try {
+      setIsLoading(true);
+      const response = await fetch(route('opportunities.update-status', opportunity.id), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ opportunity_stage_id: stageId })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to move opportunity');
+      toast.success(data.message || t('Opportunity moved successfully'));
+      if (onDataUpdate) onDataUpdate(newKanbanData);
+    } catch (error) {
+      setKanbanData(initialData);
+      toast.error(error instanceof Error ? error.message : t('Failed to move opportunity'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredKanbanData = React.useMemo(() => {
     if (!searchTerm) return kanbanData;
-    
+
     const filtered: KanbanData = {};
     Object.keys(kanbanData).forEach(stageId => {
       const column = kanbanData[stageId];
@@ -85,13 +126,13 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
         opportunity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         opportunity.account?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      
+
       filtered[stageId] = {
         ...column,
         leads: filteredOpportunities
       };
     });
-    
+
     return filtered;
   }, [kanbanData, searchTerm]);
 
@@ -109,7 +150,7 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
     if (!draggedOpportunity) return;
 
     const newKanbanData = { ...kanbanData };
-    
+
     newKanbanData[source.droppableId] = {
       ...sourceColumn,
       leads: sourceColumn.leads.filter(opp => opp.id.toString() !== draggableId)
@@ -193,10 +234,10 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
 
                 <Droppable droppableId={stage.id.toString()}>
                   {(provided) => (
-                    <div 
+                    <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll" 
+                      className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll"
                       style={{ maxHeight: 'calc(100vh - 350px)' }}
                     >
                       {(filteredKanbanData[stage.id]?.leads || []).map((opportunity, index) => (
@@ -206,17 +247,16 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`p-3 cursor-grab active:cursor-grabbing transition-all duration-200 border border-gray-200 ${
-                                snapshot.isDragging
-                                  ? 'shadow-2xl rotate-2 bg-white scale-105 border-blue-300 z-50'
-                                  : 'hover:shadow-lg hover:border-blue-200 hover:scale-[1.02]'
-                              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              className={`p-3 cursor-grab active:cursor-grabbing transition-all duration-200 border border-gray-200 ${snapshot.isDragging
+                                ? 'shadow-2xl rotate-2 bg-white scale-105 border-blue-300 z-50'
+                                : 'hover:shadow-lg hover:border-blue-200 hover:scale-[1.02]'
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                               <div className="space-y-2">
                                 <div className="flex justify-center mb-1">
                                   <div className="w-8 h-1 bg-gray-300 rounded-full opacity-50 hover:opacity-100 transition-opacity" />
                                 </div>
-                                
+
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center text-xs font-medium shadow-sm">
@@ -231,7 +271,7 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                                       </p>
                                     </div>
                                   </div>
-                                  
+
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600">
@@ -251,11 +291,41 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                                           <span>{t('Edit')}</span>
                                         </DropdownMenuItem>
                                       )}
+                                      {hasPermission(permissions, 'edit-opportunities') && opportunityStages.filter(s => s.id !== opportunity.opportunity_stage_id).length > 0 && (
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuSub>
+                                            <DropdownMenuSubTrigger className="cursor-pointer">
+                                              <ArrowRight className="h-4 w-4 mr-2" />
+                                              <span>{t('Move to')}</span>
+                                            </DropdownMenuSubTrigger>
+                                            <DropdownMenuSubContent className="w-44">
+                                              {opportunityStages
+                                                .filter(s => s.id !== opportunity.opportunity_stage_id)
+                                                .map(stage => (
+                                                  <DropdownMenuItem
+                                                    key={stage.id}
+                                                    onClick={() => handleMoveToStage(opportunity, stage.id)}
+                                                  >
+                                                    <div
+                                                      className="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0"
+                                                      style={{ backgroundColor: stage.color }}
+                                                    />
+                                                    <span>{stage.name}</span>
+                                                  </DropdownMenuItem>
+                                                ))}
+                                            </DropdownMenuSubContent>
+                                          </DropdownMenuSub>
+                                        </>
+                                      )}
                                       {hasPermission(permissions, 'delete-opportunities') && (
-                                        <DropdownMenuItem onClick={() => onOpportunityAction('delete', opportunity)} className="text-red-600">
-                                          <Trash2 className="h-4 w-4 mr-2" />
-                                          <span>{t('Delete')}</span>
-                                        </DropdownMenuItem>
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem onClick={() => onOpportunityAction('delete', opportunity)} className="text-red-600">
+                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            <span>{t('Delete')}</span>
+                                          </DropdownMenuItem>
+                                        </>
                                       )}
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -297,7 +367,7 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                         </Draggable>
                       ))}
                       {provided.placeholder}
-                      
+
                       {(filteredKanbanData[stage.id]?.leads?.length || 0) === 0 && (
                         <div className="text-center py-12 text-gray-500">
                           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">

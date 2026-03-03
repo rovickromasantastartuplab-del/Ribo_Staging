@@ -59,11 +59,16 @@ class PlanRequestController extends BaseController
         ]);
         
         // Create plan order for history
+        $superAdmin = \App\Models\User::where('type', 'superadmin')->first();
+        $superAdminSettings = settings($superAdmin?->id);
+        $currencyCode = $superAdminSettings['defaultCurrency'] ?? 'USD';
+
         \App\Models\PlanOrder::create([
             'user_id' => $planRequest->user_id,
             'plan_id' => $planRequest->plan_id,
             'original_price' => 0,
             'final_price' => 0,
+            'currency_code' => $currencyCode,
             'status' => 'approved',
             'ordered_at' => now()
         ]);

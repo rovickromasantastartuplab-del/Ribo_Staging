@@ -41,6 +41,7 @@ interface KanbanColumnProps {
   onLeadAction: (action: string, lead: Lead) => void;
   permissions: string[];
   isLoading: boolean;
+  leadStatuses: LeadStatus[];
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -48,12 +49,13 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   leads,
   onLeadAction,
   permissions,
-  isLoading
+  isLoading,
+  leadStatuses
 }) => {
   const { t } = useTranslation();
 
   return (
-    <div 
+    <div
       className="flex-shrink-0"
       style={{ minWidth: 'calc(20% - 16px)', width: 'calc(20% - 16px)' }}
     >
@@ -77,10 +79,10 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         {/* Column Content */}
         <Droppable droppableId={status.id.toString()}>
           {(provided, snapshot) => (
-            <div 
+            <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll" 
+              className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll"
               style={{ maxHeight: 'calc(100vh - 350px)' }}
             >
               {leads.map((lead, index) => (
@@ -91,10 +93,11 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                   onLeadAction={onLeadAction}
                   permissions={permissions}
                   isLoading={isLoading}
+                  leadStatuses={leadStatuses}
                 />
               ))}
               {provided.placeholder}
-              
+
               {leads.length === 0 && (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">

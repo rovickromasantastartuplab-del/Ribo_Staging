@@ -74,7 +74,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
 
   const filteredKanbanData = React.useMemo(() => {
     if (!searchTerm) return kanbanData;
-    
+
     const filtered: KanbanData = {};
     Object.keys(kanbanData).forEach(statusId => {
       const column = kanbanData[statusId];
@@ -85,13 +85,13 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
         item.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.account?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      
+
       filtered[statusId] = {
         ...column,
         leads: filteredItems
       };
     });
-    
+
     return filtered;
   }, [kanbanData, searchTerm]);
 
@@ -109,7 +109,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
     if (!draggedItem) return;
 
     const newKanbanData = { ...kanbanData };
-    
+
     newKanbanData[source.droppableId] = {
       ...sourceColumn,
       leads: sourceColumn.leads.filter(item => item.id.toString() !== draggableId)
@@ -117,7 +117,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
 
     const statusField = type === 'lead' ? 'lead_status_id' : 'opportunity_stage_id';
     const statusObj = type === 'lead' ? 'lead_status' : 'opportunity_stage';
-    
+
     const updatedItem = {
       ...draggedItem,
       [statusField]: parseInt(destination.droppableId),
@@ -137,7 +137,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
     try {
       setIsLoading(true);
       const endpoint = type === 'lead' ? 'leads.update-status' : 'opportunities.update-status';
-      const payload = type === 'lead' 
+      const payload = type === 'lead'
         ? { lead_status_id: parseInt(destination.droppableId) }
         : { opportunity_stage_id: parseInt(destination.droppableId) };
 
@@ -227,10 +227,10 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
 
                 <Droppable droppableId={status.id.toString()}>
                   {(provided) => (
-                    <div 
+                    <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll" 
+                      className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll"
                       style={{ maxHeight: 'calc(100vh - 190px)' }}
                     >
                       {(filteredKanbanData[status.id]?.leads || []).map((item, index) => (
@@ -240,18 +240,17 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`cursor-grab active:cursor-grabbing transition-all duration-200 border-l-4 ${
-                                snapshot.isDragging
+                              className={`cursor-grab active:cursor-grabbing transition-all duration-200 border-l-4 ${snapshot.isDragging
                                   ? 'shadow-2xl rotate-2 bg-white scale-105 border-blue-300 z-50'
                                   : 'hover:shadow-lg hover:border-blue-200 hover:scale-[1.02] border-gray-200'
-                              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                               style={{ borderLeftColor: type === 'lead' ? (item.lead_status?.color || '#6b7280') : (item.opportunity_stage?.color || '#6b7280') }}
                             >
                               <div className="p-3 space-y-3">
                                 <div className="flex justify-center mb-1">
                                   <div className="w-8 h-1 bg-gray-300 rounded-full opacity-50 hover:opacity-100 transition-opacity" />
                                 </div>
-                                
+
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-3 flex-1 min-w-0">
                                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center text-sm font-semibold shadow-md ring-2 ring-white">
@@ -266,7 +265,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
                                       </p>
                                     </div>
                                   </div>
-                                  
+
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full">
@@ -284,7 +283,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
                                       <span className="text-xs text-gray-700 truncate font-medium">{item.company}</span>
                                     </div>
                                   )}
-                                  
+
                                   {(item.value || item.amount) && (
                                     <div className="flex items-center justify-between bg-green-50 px-2 py-1 rounded-md">
                                       <span className="text-xs text-green-700 font-medium">{type === 'lead' ? t('Value') : t('Amount')}:</span>
@@ -309,7 +308,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
                                     </span>
                                   )}
                                   <span className="text-xs text-gray-500 font-medium">
-                                    {type === 'opportunity' && item.close_date 
+                                    {type === 'opportunity' && item.close_date
                                       ? new Date(item.close_date).toLocaleDateString()
                                       : window.appSettings?.formatDateTime(item.created_at, false) || new Date(item.created_at).toLocaleDateString()
                                     }
@@ -321,7 +320,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
                         </Draggable>
                       ))}
                       {provided.placeholder}
-                      
+
                       {(filteredKanbanData[status.id]?.leads?.length || 0) === 0 && (
                         <div className="text-center py-8 text-gray-400">
                           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-sm">

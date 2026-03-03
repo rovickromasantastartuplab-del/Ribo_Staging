@@ -16,6 +16,7 @@ class PlanOrder extends Model
         'original_price',
         'discount_amount',
         'final_price',
+        'currency_code',
         'coupon_code',
         'payment_method',
         'payment_id',

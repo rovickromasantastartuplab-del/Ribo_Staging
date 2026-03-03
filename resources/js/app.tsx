@@ -12,6 +12,7 @@ import { ModalStackProvider } from './contexts/ModalStackContext';
 import { initializeTheme } from './hooks/use-appearance';
 import { CustomToast } from './components/custom-toast';
 import { initializeGlobalSettings } from './utils/globalSettings';
+import { HelpArticlePanelRoot, openHelpArticlePanel } from './components/HelpArticlePanel';
 import { initPerformanceMonitoring, lazyLoadImages } from './utils/performance';
 import { getCookie, isDemoMode } from './utils/cookie-utils';
 import i18n from './i18n'; // Import i18n configuration
@@ -69,7 +70,7 @@ createInertiaApp({
         const syncLanguage = (pageProps: any) => {
             const userLanguage = pageProps?.props?.userLanguage;
             const layoutDirection = pageProps?.props?.globalSettings?.layoutDirection;
-            
+
             if (userLanguage) {
                 // Always keep dir=ltr for proper sidebar functionality
                 // RTL content will be handled by CSS and layoutDirection setting
@@ -105,6 +106,7 @@ createInertiaApp({
                                     <App {...appProps} />
                                 </Suspense>
                                 <CustomToast />
+                                <HelpArticlePanelRoot />
                             </BrandProvider>
                         </SidebarProvider>
                     </LayoutProvider>
@@ -114,6 +116,27 @@ createInertiaApp({
 
         // Initial render
         root.render(renderApp(props));
+
+        // Intercept /hc/* Inertia navigations from BeDesk chat widget BEFORE they are processed.
+        // The 'inertia:before' CustomEvent fires at DOM level and is cancelable.
+        document.addEventListener('inertia:before', function (event) {
+            const e = event as unknown as CustomEvent;
+            const visit = e.detail?.visit;
+            const url: URL | undefined = visit?.url;
+            if (!url) return;
+
+            const pathname = typeof url === 'string' ? url : url.pathname;
+            if (pathname.startsWith('/hc')) {
+                event.preventDefault(); // Cancels the Inertia navigation
+
+                const articleMatch = pathname.match(/^\/hc(\/articles\/[^?#]*)/);
+                if (articleMatch) {
+                    openHelpArticlePanel(articleMatch[1]);
+                } else {
+                    window.open('https://help.ribo.com.ph/hc' + pathname.replace(/^\/hc/, ''), '_blank');
+                }
+            }
+        });
 
         // Update global page data on navigation and re-render with new settings
         router.on('navigate', (event) => {

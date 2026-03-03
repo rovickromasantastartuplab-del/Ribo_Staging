@@ -442,6 +442,15 @@ class OpportunityController extends Controller
             'opportunity_stage_id' => $validated['opportunity_stage_id']
         ]);
 
+        $opportunity->load(['opportunityStage', 'opportunitySource', 'assignedUser', 'account']);
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => __('Opportunity status updated successfully.'),
+                'opportunity' => $opportunity
+            ]);
+        }
+
         return redirect()->back()->with('success', __('Opportunity status updated successfully.'));
     }
 }

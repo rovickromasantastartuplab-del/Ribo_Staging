@@ -440,6 +440,15 @@ class LeadController extends Controller
             'lead_status_id' => $validated['lead_status_id']
         ]);
 
+        $lead->load(['leadStatus', 'leadSource', 'assignedUser']);
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => __('Lead status updated successfully.'),
+                'lead' => $lead
+            ]);
+        }
+
         return redirect()->back()->with('success', __('Lead status updated successfully.'));
     }
 

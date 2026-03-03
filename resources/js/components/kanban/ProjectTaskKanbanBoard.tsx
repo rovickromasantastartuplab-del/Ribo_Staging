@@ -81,7 +81,7 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
     if (!draggedItem) return;
 
     const newKanbanData = { ...kanbanData };
-    
+
     newKanbanData[source.droppableId] = {
       ...sourceColumn,
       tasks: sourceColumn.tasks.filter(item => item.id.toString() !== draggableId)
@@ -104,9 +104,9 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
 
     try {
       setIsLoading(true);
-      
-      router.put(route('project-tasks.update-status', draggedItem.id), 
-        { task_status_id: destination.droppableId }, 
+
+      router.put(route('project-tasks.update-status', draggedItem.id),
+        { task_status_id: destination.droppableId },
         {
           preserveState: true,
           preserveScroll: true,
@@ -196,10 +196,10 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
 
                 <Droppable droppableId={status.id}>
                   {(provided) => (
-                    <div 
+                    <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll" 
+                      className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll"
                       style={{ height: 'calc(100vh - 380px)' }}
                     >
                       {(kanbanData[status.id]?.tasks || []).map((task, index) => (
@@ -209,19 +209,17 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`p-3 transition-all duration-200 border border-gray-200 ${
-                                snapshot.isDragging
+                              className={`p-3 transition-all duration-200 border border-gray-200 ${snapshot.isDragging
                                   ? 'shadow-2xl rotate-2 bg-white scale-105 border-blue-300 z-50'
                                   : 'hover:shadow-lg hover:border-blue-200 hover:scale-[1.02]'
-                              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''} ${
-                                hasPermission(permissions, 'edit-project-tasks') ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
-                              }`}
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''} ${hasPermission(permissions, 'edit-project-tasks') ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
+                                }`}
                             >
                               <div className="space-y-2">
                                 <div className="flex justify-center mb-2">
                                   <div className="w-8 h-1 bg-gray-300 rounded-full opacity-50 hover:opacity-100 transition-opacity" />
                                 </div>
-                                
+
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center text-xs font-medium shadow-sm">
@@ -238,7 +236,7 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
                                       )}
                                     </div>
                                   </div>
-                                  
+
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600">
@@ -256,8 +254,8 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
                                       <span className="font-medium">{task.progress}%</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-1">
-                                      <div 
-                                        className="bg-blue-600 h-1 rounded-full transition-all duration-300" 
+                                      <div
+                                        className="bg-blue-600 h-1 rounded-full transition-all duration-300"
                                         style={{ width: `${task.progress}%` }}
                                       ></div>
                                     </div>
@@ -289,12 +287,11 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
                                   )}
 
                                   <div className="flex flex-wrap gap-1">
-                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                                      task.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' :
-                                      task.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20' :
-                                      task.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' :
-                                      'bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20'
-                                    }`}>
+                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${task.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' :
+                                        task.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20' :
+                                          task.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' :
+                                            'bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20'
+                                      }`}>
                                       {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                                     </span>
                                   </div>
@@ -309,7 +306,7 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
                         </Draggable>
                       ))}
                       {provided.placeholder}
-                      
+
                       {(kanbanData[status.id]?.tasks?.length || 0) === 0 && (
                         <div className="text-center py-12 text-gray-500">
                           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">

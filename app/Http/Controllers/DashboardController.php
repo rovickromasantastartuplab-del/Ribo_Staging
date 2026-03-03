@@ -160,7 +160,7 @@ class DashboardController extends Controller
                 ->with('user:id,name', 'plan:id,name')
                 ->latest()
                 ->take(2)
-                ->get(['id', 'user_id', 'plan_id', 'final_price', 'created_at']);
+                ->get(['id', 'user_id', 'plan_id', 'final_price', 'currency_code', 'created_at']);
 
             $recentPlanRequests = \App\Models\PlanRequest::with('user:id,name', 'plan:id,name')
                 ->latest()
@@ -182,10 +182,19 @@ class DashboardController extends Controller
             ];
         }
         foreach ($recentOrders as $order) {
+            // Use the currency that was active when the order was placed, not the current system currency
+            if (!empty($order->currency_code)) {
+                $orderCurrency = \App\Models\Currency::where('code', $order->currency_code)->first();
+                $orderCurrencySymbol = $orderCurrency ? $orderCurrency->symbol : '$';
+                $formattedPrice = $orderCurrencySymbol . number_format((float) $order->final_price, 2);
+            } else {
+                // Fallback for old orders with no stored currency
+                $formattedPrice = formatCurrency($order->final_price);
+            }
             $recentActivity[] = [
                 'id' => $order->id,
                 'type' => 'subscription',
-                'message' => ($order->user->name ?? 'Company') . ' subscribed to ' . ($order->plan->name ?? 'Plan') . ' (' . formatCurrency($order->final_price) . ')',
+                'message' => ($order->user->name ?? 'Company') . ' subscribed to ' . ($order->plan->name ?? 'Plan') . ' (' . $formattedPrice . ')',
                 'time' => $order->created_at->diffForHumans(),
                 'status' => 'success',
                 'created_at' => $order->created_at

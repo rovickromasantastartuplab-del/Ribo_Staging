@@ -377,11 +377,16 @@ class PlanController extends Controller
         $plan = Plan::findOrFail($request->plan_id);
         $price = $request->billing_cycle === 'yearly' ? $plan->yearly_price : $plan->price;
 
+        $superAdmin = User::where('type', 'superadmin')->first();
+        $superAdminSettings = settings($superAdmin?->id);
+        $currencyCode = $superAdminSettings['defaultCurrency'] ?? 'USD';
+
         \App\Models\PlanOrder::create([
             'user_id' => $user->id,
             'plan_id' => $plan->id,
             'original_price' => $price,
             'final_price' => $price,
+            'currency_code' => $currencyCode,
             'status' => 'pending'
         ]);
 

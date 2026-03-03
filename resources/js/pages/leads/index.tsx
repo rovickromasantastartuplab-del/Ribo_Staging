@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus, Eye, Edit, Trash2, MoreHorizontal, Building2, User, Users, Download, Upload } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, MoreHorizontal, Building2, User, Users, Download, Upload, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudFormModal } from '@/components/CrudFormModal';
@@ -96,6 +96,66 @@ export default function Leads() {
     }, { preserveState: true, preserveScroll: true });
   };
 
+  const handleMoveTo = async (lead: any, statusId: number) => {
+    if (!hasPermission(permissions, 'edit-leads')) {
+      toast.error(t('Permission denied.'));
+      return;
+    }
+
+    // Find destination status
+    const destStatus = leadStatuses.find((s: any) => s.id === statusId);
+    if (!destStatus) return;
+
+    // --- Optimistic update ---
+    const prevKanbanData = kanbanData;
+    const sourceStatusId = lead.lead_status_id?.toString() || lead.lead_status?.id?.toString();
+    const updatedLead = { ...lead, lead_status_id: statusId, lead_status: destStatus };
+
+    setKanbanData((prev: any) => {
+      if (!prev) return prev;
+      const next = { ...prev };
+      // Remove from source column
+      if (sourceStatusId && next[sourceStatusId]) {
+        next[sourceStatusId] = {
+          ...next[sourceStatusId],
+          items: next[sourceStatusId].items.filter((l: any) => l.id !== lead.id)
+        };
+      }
+      // Add to destination column
+      const destKey = statusId.toString();
+      if (next[destKey]) {
+        next[destKey] = {
+          ...next[destKey],
+          items: [...next[destKey].items, updatedLead]
+        };
+      }
+      return next;
+    });
+    // --- End optimistic update ---
+
+    toast.loading(t('Moving lead...'));
+    try {
+      const response = await fetch(route('leads.update-status', lead.id), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ lead_status_id: statusId })
+      });
+      const data = await response.json();
+      toast.dismiss();
+      if (!response.ok) throw new Error(data.message || t('Failed to move lead'));
+      toast.success(data.message || t('Lead moved successfully'));
+    } catch (error) {
+      // Rollback on failure
+      setKanbanData(prevKanbanData);
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : t('Failed to move lead'));
+    }
+  };
+
   const handleAction = (action: string, item: any) => {
     setCurrentItem(item);
 
@@ -120,6 +180,12 @@ export default function Leads() {
       case 'convert-to-contact':
         setConvertType('contact');
         setIsConvertModalOpen(true);
+        break;
+      default:
+        if (action.startsWith('move-to-')) {
+          const statusId = parseInt(action.replace('move-to-', ''));
+          handleMoveTo(item, statusId);
+        }
         break;
     }
   };
@@ -839,6 +905,27 @@ export default function Leads() {
                                                 {t('Edit')}
                                               </DropdownMenuItem>
                                             )}
+                                            {hasPermission(permissions, 'edit-leads') && leadStatuses.filter((s: any) => s.id !== lead.lead_status_id).length > 0 && (
+                                              <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuSub>
+                                                  <DropdownMenuSubTrigger className="cursor-pointer">
+                                                    <ArrowRight className="h-4 w-4 mr-2" />
+                                                    {t('Move to')}
+                                                  </DropdownMenuSubTrigger>
+                                                  <DropdownMenuSubContent className="w-44">
+                                                    {leadStatuses
+                                                      .filter((s: any) => s.id !== lead.lead_status_id)
+                                                      .map((s: any) => (
+                                                        <DropdownMenuItem key={s.id} onClick={() => handleMoveTo(lead, s.id)}>
+                                                          <div className="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: s.color }} />
+                                                          {s.name}
+                                                        </DropdownMenuItem>
+                                                      ))}
+                                                  </DropdownMenuSubContent>
+                                                </DropdownMenuSub>
+                                              </>
+                                            )}
                                             {hasPermission(permissions, 'convert-leads') && !lead.is_converted && (
                                               <>
                                                 <DropdownMenuSeparator />
@@ -962,8 +1049,30 @@ export default function Leads() {
                             <span>{lead.status === 'active' ? t("Deactivate") : t("Activate")}</span>
                           </DropdownMenuItem>
                         )}
+                        {hasPermission(permissions, 'edit-leads') && leadStatuses.filter((s: any) => s.id !== lead.lead_status_id).length > 0 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger className="cursor-pointer">
+                                <ArrowRight className="h-4 w-4 mr-2" />
+                                {t('Move to')}
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent className="w-44">
+                                {leadStatuses
+                                  .filter((s: any) => s.id !== lead.lead_status_id)
+                                  .map((s: any) => (
+                                    <DropdownMenuItem key={s.id} onClick={() => handleMoveTo(lead, s.id)}>
+                                      <div className="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: s.color }} />
+                                      {s.name}
+                                    </DropdownMenuItem>
+                                  ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                          </>
+                        )}
                         {hasPermission(permissions, 'convert-leads') && !lead.is_converted && (
                           <>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleAction('convert-to-account', lead)} className="text-green-600">
                               <span>{t("Convert to Account")}</span>
                             </DropdownMenuItem>

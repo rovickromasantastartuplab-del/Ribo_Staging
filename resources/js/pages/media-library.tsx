@@ -330,10 +330,10 @@ export default function MediaLibraryDemo() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                   {currentMedia.map((item) => (
 
-                      <div
+                    <div
                       key={item.id}
                       className="group relative bg-card border rounded-lg overflow-hidden hover:shadow-md transition-all duration-200"
-                      >
+                    >
                       {/* Image Container */}
                       <div className="relative aspect-square bg-muted flex items-center justify-center">
                         {item.mime_type && item.mime_type.startsWith('image/') ? (
@@ -498,23 +498,20 @@ export default function MediaLibraryDemo() {
 
             <div className="space-y-6">
               <div
-                className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 ${
-                  dragActive
+                className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 ${dragActive
                     ? 'border-blue-500 bg-blue-50 scale-[1.02]'
                     : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                }`}
+                  }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <div className={`transition-all duration-200 ${
-                  dragActive ? 'scale-110' : ''
-                }`}>
+                <div className={`transition-all duration-200 ${dragActive ? 'scale-110' : ''
+                  }`}>
                   <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Upload className={`h-8 w-8 transition-colors ${
-                      dragActive ? 'text-blue-500' : 'text-gray-400'
-                    }`} />
+                    <Upload className={`h-8 w-8 transition-colors ${dragActive ? 'text-blue-500' : 'text-gray-400'
+                      }`} />
                   </div>
                   <h3 className="text-lg font-medium mb-2">
                     {dragActive ? t('Drop files here') : t('Upload your images')}

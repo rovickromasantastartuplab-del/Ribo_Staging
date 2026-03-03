@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus, Eye, Edit, Trash2, MoreHorizontal, Building2, User } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, MoreHorizontal, Building2, User, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudFormModal } from '@/components/CrudFormModal';
@@ -88,6 +88,66 @@ export default function Opportunities() {
       assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
       ...(pageFilters.per_page && pageFilters.per_page !== 10 && { per_page: pageFilters.per_page })
     }, { preserveState: true, preserveScroll: true });
+  };
+
+  const handleMoveToStage = async (opportunity: any, stageId: number) => {
+    if (!hasPermission(permissions, 'edit-opportunities')) {
+      toast.error(t('Permission denied.'));
+      return;
+    }
+
+    // Find destination stage
+    const destStage = opportunityStages.find((s: any) => s.id === stageId);
+    if (!destStage) return;
+
+    // --- Optimistic update ---
+    const prevKanbanData = kanbanData;
+    const sourceStageId = opportunity.opportunity_stage_id?.toString() || opportunity.opportunity_stage?.id?.toString();
+    const updatedOpportunity = { ...opportunity, opportunity_stage_id: stageId, opportunity_stage: destStage };
+
+    setKanbanData((prev: any) => {
+      if (!prev) return prev;
+      const next = { ...prev };
+      // Remove from source column
+      if (sourceStageId && next[sourceStageId]) {
+        next[sourceStageId] = {
+          ...next[sourceStageId],
+          items: next[sourceStageId].items.filter((o: any) => o.id !== opportunity.id)
+        };
+      }
+      // Add to destination column
+      const destKey = stageId.toString();
+      if (next[destKey]) {
+        next[destKey] = {
+          ...next[destKey],
+          items: [...next[destKey].items, updatedOpportunity]
+        };
+      }
+      return next;
+    });
+    // --- End optimistic update ---
+
+    toast.loading(t('Moving opportunity...'));
+    try {
+      const response = await fetch(route('opportunities.update-status', opportunity.id), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ opportunity_stage_id: stageId })
+      });
+      const data = await response.json();
+      toast.dismiss();
+      if (!response.ok) throw new Error(data.message || t('Failed to move opportunity'));
+      toast.success(data.message || t('Opportunity moved successfully'));
+    } catch (error) {
+      // Rollback on failure
+      setKanbanData(prevKanbanData);
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : t('Failed to move opportunity'));
+    }
   };
 
   const handleAction = (action: string, item: any) => {
@@ -764,6 +824,27 @@ export default function Opportunities() {
                                                 <Edit className="h-4 w-4 mr-2" />
                                                 {t('Edit')}
                                               </DropdownMenuItem>
+                                            )}
+                                            {hasPermission(permissions, 'edit-opportunities') && opportunityStages.filter((s: any) => s.id !== opportunity.opportunity_stage_id).length > 0 && (
+                                              <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuSub>
+                                                  <DropdownMenuSubTrigger className="cursor-pointer">
+                                                    <ArrowRight className="h-4 w-4 mr-2" />
+                                                    {t('Move to')}
+                                                  </DropdownMenuSubTrigger>
+                                                  <DropdownMenuSubContent className="w-44">
+                                                    {opportunityStages
+                                                      .filter((s: any) => s.id !== opportunity.opportunity_stage_id)
+                                                      .map((s: any) => (
+                                                        <DropdownMenuItem key={s.id} onClick={() => handleMoveToStage(opportunity, s.id)}>
+                                                          <div className="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: s.color }} />
+                                                          {s.name}
+                                                        </DropdownMenuItem>
+                                                      ))}
+                                                  </DropdownMenuSubContent>
+                                                </DropdownMenuSub>
+                                              </>
                                             )}
                                             {hasPermission(permissions, 'delete-opportunities') && (
                                               <>

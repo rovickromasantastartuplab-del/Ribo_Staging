@@ -4,22 +4,22 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 function stripUseClientDirective(): import('vite').Plugin {
-  return {
-    name: 'strip-use-client-directive',
-    enforce: 'pre' as const,
-    transform(code, id) {
-      if (
-        id.endsWith('.js') ||
-        id.endsWith('.ts') ||
-        id.endsWith('.tsx') ||
-        id.endsWith('.mjs')
-      ) {
-        if (code.includes('"use client"') || code.includes("'use client'")) {
-          return code.replace(/['"]use client['"];?\s*/g, '');
-        }
-      }
-    },
-  };
+    return {
+        name: 'strip-use-client-directive',
+        enforce: 'pre' as const,
+        transform(code, id) {
+            if (
+                id.endsWith('.js') ||
+                id.endsWith('.ts') ||
+                id.endsWith('.tsx') ||
+                id.endsWith('.mjs')
+            ) {
+                if (code.includes('"use client"') || code.includes("'use client'")) {
+                    return code.replace(/['"]use client['"];?\s*/g, '');
+                }
+            }
+        },
+    };
 }
 
 export default defineConfig({

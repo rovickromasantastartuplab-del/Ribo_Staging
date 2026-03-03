@@ -135,6 +135,12 @@ use Inertia\Inertia;
 
 Route::match(['GET', 'HEAD'], '/', [LandingPageController::class, 'show'])->name('home');
 
+// Redirect BeDesk help center article links to the actual help center domain
+// The BeDesk chat widget generates relative links like /hc/articles/182/... which must be redirected
+Route::get('/hc/{path?}', function ($path = '') {
+    return redirect('https://help.ribo.com.ph/hc/' . $path, 301);
+})->where('path', '.*')->name('help-center.redirect');
+
 // Public form submission routes
 
 // Cashfree webhook (public route)

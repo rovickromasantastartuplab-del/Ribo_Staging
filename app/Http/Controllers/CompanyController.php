@@ -261,6 +261,11 @@ class CompanyController extends Controller
 
         $isYearly = $validated['duration'] === 'Yearly';
 
+        // Capture currency at time of upgrade
+        $superAdmin = User::where('type', 'superadmin')->first();
+        $superAdminSettings = settings($superAdmin?->id);
+        $currencyCode = $superAdminSettings['defaultCurrency'] ?? 'USD';
+
         // Create plan order entry for tracking
         $planOrder = new PlanOrder();
         $planOrder->user_id = $company->id;
@@ -269,6 +274,7 @@ class CompanyController extends Controller
         $planOrder->original_price = $request->duration === 'yearly' ? ($plan->yearly_price ?? 0) : $plan->price;
         $planOrder->discount_amount = 0.00;
         $planOrder->final_price = $planOrder->original_price;
+        $planOrder->currency_code = $currencyCode;
         $planOrder->payment_method = 'admin_upgrade';
         $planOrder->status = 'approved';
         $planOrder->ordered_at = now();

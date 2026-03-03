@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Plan;
 use App\Models\User;
 
@@ -42,9 +43,13 @@ class CheckPlanAccess
                     return redirect()->route('login')->with('error', __('Access denied. Only company users can access this area.'));
                 }
 
-                // Re-evaluate which staff are within the plan limit on every request.
-                // Ensures plan changes are enforced immediately for active sessions.
-                syncStaffUserLoginAccess($company);
+                // Re-evaluate which staff are within the plan limit periodically.
+                // Throttled to once every 5 minutes per company to avoid per-request DB overhead.
+                $syncKey = 'staff_sync_' . $company->id;
+                if (!Cache::has($syncKey)) {
+                    syncStaffUserLoginAccess($company);
+                    Cache::put($syncKey, true, now()->addMinutes(5));
+                }
 
                 // Reload to get the freshly updated is_enable_login value.
                 $user->refresh();

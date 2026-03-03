@@ -890,6 +890,14 @@ if (!function_exists('createPlanOrder')) {
         $plan = Plan::findOrFail($data['plan_id']);
         $pricing = calculatePlanPricing($plan, $data['coupon_code'] ?? null, $data['billing_cycle'] ?? 'monthly');
 
+        // Capture the currency code at time of order creation
+        $currencyCode = $data['currency_code'] ?? null;
+        if (!$currencyCode) {
+            $superAdminId = User::where('type', 'superadmin')->first()?->id;
+            $superAdminSettings = settings($superAdminId);
+            $currencyCode = $superAdminSettings['defaultCurrency'] ?? 'USD';
+        }
+
         return PlanOrder::create([
             'user_id' => $data['user_id'],
             'plan_id' => $plan->id,
@@ -900,6 +908,7 @@ if (!function_exists('createPlanOrder')) {
             'original_price' => $pricing['original_price'],
             'discount_amount' => $pricing['discount_amount'],
             'final_price' => $pricing['final_price'],
+            'currency_code' => $currencyCode,
             'payment_id' => $data['payment_id'],
             'status' => $data['status'] ?? 'pending',
             'ordered_at' => now(),

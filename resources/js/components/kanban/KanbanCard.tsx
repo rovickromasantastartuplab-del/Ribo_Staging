@@ -3,8 +3,8 @@ import { Draggable } from '@hello-pangea/dnd';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Eye, Edit, Trash2, User, Building2, Users } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Eye, Edit, Trash2, User, Building2, Users, ArrowRight } from 'lucide-react';
 import { useInitials } from '@/hooks/use-initials';
 import { hasPermission } from '@/utils/authorization';
 import { useTranslation } from 'react-i18next';
@@ -33,12 +33,19 @@ interface Lead {
   created_at: string;
 }
 
+interface LeadStatus {
+  id: number;
+  name: string;
+  color: string;
+}
+
 interface KanbanCardProps {
   lead: Lead;
   index: number;
   onLeadAction: (action: string, lead: Lead) => void;
   permissions: string[];
   isLoading: boolean;
+  leadStatuses: LeadStatus[];
 }
 
 export const KanbanCard: React.FC<KanbanCardProps> = ({
@@ -46,7 +53,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   index,
   onLeadAction,
   permissions,
-  isLoading
+  isLoading,
+  leadStatuses
 }) => {
   const { t } = useTranslation();
   const getInitials = useInitials();
@@ -67,18 +75,17 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`p-3 cursor-grab active:cursor-grabbing transition-all duration-200 border border-gray-200 dark:border-gray-700 ${
-            snapshot.isDragging
-              ? 'shadow-2xl rotate-2 bg-white dark:bg-gray-900 scale-105 border-blue-300 dark:border-blue-600 z-50'
-              : 'hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 hover:scale-[1.02]'
-          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`p-3 cursor-grab active:cursor-grabbing transition-all duration-200 border border-gray-200 dark:border-gray-700 ${snapshot.isDragging
+            ? 'shadow-2xl rotate-2 bg-white dark:bg-gray-900 scale-105 border-blue-300 dark:border-blue-600 z-50'
+            : 'hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 hover:scale-[1.02]'
+            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <div className="space-y-2">
             {/* Drag indicator */}
             <div className="flex justify-center mb-1">
               <div className="w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full opacity-50 hover:opacity-100 transition-opacity" />
             </div>
-            
+
             {/* Header with avatar and actions */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -94,7 +101,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                   </p>
                 </div>
               </div>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300">
@@ -113,6 +120,33 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                       <Edit className="h-4 w-4 mr-2" />
                       <span>{t('Edit')}</span>
                     </DropdownMenuItem>
+                  )}
+                  {hasPermission(permissions, 'edit-leads') && leadStatuses.filter(s => s.id !== lead.lead_status_id).length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="cursor-pointer">
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          <span>{t('Move to')}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-44">
+                          {leadStatuses
+                            .filter(s => s.id !== lead.lead_status_id)
+                            .map(status => (
+                              <DropdownMenuItem
+                                key={status.id}
+                                onClick={() => onLeadAction(`move-to-${status.id}`, lead)}
+                              >
+                                <div
+                                  className="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0"
+                                  style={{ backgroundColor: status.color }}
+                                />
+                                <span>{status.name}</span>
+                              </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    </>
                   )}
                   {hasPermission(permissions, 'convert-leads') && (
                     <>
@@ -148,7 +182,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                   </span>
                 </div>
               )}
-              
+
               {lead.value && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500 dark:text-gray-400">{t('Value')}:</span>
