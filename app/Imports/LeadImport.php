@@ -50,7 +50,7 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
         ];
 
         // Lead Status
-        $leadStatusValue = trim($row['lead_status'] ?? '');
+        $leadStatusValue = substr(trim($row['lead_status'] ?? ''), 0, 255);
         if (!empty($leadStatusValue)) {
             $leadStatus = \App\Models\LeadStatus::firstOrCreate(
                 ['name' => $leadStatusValue, 'created_by' => createdBy()],
@@ -63,7 +63,7 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
         $leadData['lead_status_id'] = $leadStatus->id;
 
         // Lead Source
-        $leadSourceValue = trim($row['lead_source'] ?? '');
+        $leadSourceValue = substr(trim($row['lead_source'] ?? ''), 0, 255);
         if (!empty($leadSourceValue)) {
             $leadSource = \App\Models\LeadSource::firstOrCreate(
                 ['name' => $leadSourceValue, 'created_by' => createdBy()],
@@ -76,7 +76,7 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
         $leadData['lead_source_id'] = $leadSource->id;
 
         // Account Industry
-        $accountIndustryValue = trim($row['account_industry'] ?? '');
+        $accountIndustryValue = substr(trim($row['account_industry'] ?? ''), 0, 255);
         if (!empty($accountIndustryValue)) {
             $accountIndustry = \App\Models\AccountIndustry::firstOrCreate(
                 ['name' => $accountIndustryValue, 'created_by' => createdBy()],
@@ -88,7 +88,7 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
         }
 
         // Campaign
-        $campaignValue = trim($row['campaign'] ?? '');
+        $campaignValue = substr(trim($row['campaign'] ?? ''), 0, 255);
         if (!empty($campaignValue)) {
             $campaignType = \App\Models\CampaignType::where('created_by', createdBy())->first()
                 ?? \App\Models\CampaignType::create(['name' => 'Imported', 'created_by' => createdBy()]);

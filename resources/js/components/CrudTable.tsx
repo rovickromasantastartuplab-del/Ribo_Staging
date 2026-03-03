@@ -22,6 +22,8 @@ import { hasPermission } from '@/utils/authorization';
 import { TableColumn, TableAction } from '@/types/crud';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useEffect } from 'react';
 
 interface CrudTableProps {
   columns: TableColumn[];
@@ -40,6 +42,8 @@ interface CrudTableProps {
     delete: string;
   };
   showActionsAsIcons?: boolean;
+  onBulkAction?: (action: string, selectedIds: any[]) => void;
+  bulkActions?: { label: string; action: string; icon?: string; variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" }[];
 }
 
 export function CrudTable({
@@ -53,9 +57,35 @@ export function CrudTable({
   onSort,
   statusColors = {},
   permissions,
-  entityPermissions
+  entityPermissions,
+  onBulkAction,
+  bulkActions = []
 }: CrudTableProps) {
   const { t } = useTranslation();
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+
+  // Clear selection when data changes (e.g., page change)
+  useEffect(() => {
+    setSelectedRows([]);
+  }, [data]);
+
+  const toggleAll = () => {
+    if (selectedRows.length === data.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(data.map(item => item.id));
+    }
+  };
+
+  const toggleRow = (id: any) => {
+    if (selectedRows.includes(id)) {
+      setSelectedRows(selectedRows.filter(rowId => rowId !== id));
+    } else {
+      setSelectedRows([...selectedRows, id]);
+    }
+  };
+
+  const hasBulkActions = bulkActions && bulkActions.length > 0 && onBulkAction;
   const renderSortIcon = (column: TableColumn) => {
     if (!column.sortable) return null;
 
@@ -251,68 +281,122 @@ export function CrudTable({
   };
 
   return (
-    <div className="border-collapse dark:bg-gray-900 overflow-x-auto w-full">
-      <Table className="w-full max-w-full min-w-[900px]">
-        <TableHeader>
-          <TableRow className="bg-gray-50 dark:bg-gray-800 border-b">
-            <TableHead className="w-10 py-2.5 font-semibold">#</TableHead>
-            {columns.map((column) => (
-              <TableHead
-                key={column.key}
-                className={cn(
-                  "py-2.5 font-semibold",
-                  column.sortable && "cursor-pointer select-none",
-                  column.className
-                )}
-                onClick={() => handleSort(column)}
-              >
-                <div className="flex items-center whitespace-nowrap">
-                  {column.label}
-                  {renderSortIcon(column)}
-                </div>
-              </TableHead>
-            ))}
-            {hasAnyActionPermission && <TableHead className="w-48 py-2.5 text-right font-semibold">{t('Actions')}</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.length > 0 ? (
-            data.map((row, index) => (
-              <TableRow key={row.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 border-b">
-                <TableCell className="font-medium py-2.5 w-10">{from + index}</TableCell>
-                {columns.map((col) => {
-                  const cellContent = renderCellContent(row, col);
-                  const rawValue = typeof cellContent === 'string' ? cellContent : undefined;
-                  return (
-                    <TableCell
-                      key={col.key}
-                      className={cn(
-                        "py-2.5",
-                        col.className
-                      )}
-                      title={rawValue}
-                    >
-                      <div className="break-words whitespace-normal">
-                        {cellContent}
-                      </div>
-                    </TableCell>
-                  );
-                })}
-                {hasAnyActionPermission && <TableCell className="py-2.5 text-right w-48">{renderActionButtons(row)}</TableCell>}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length + (hasAnyActionPermission ? 2 : 1)}
-                className="text-muted-foreground h-24 text-center dark:text-gray-400"
-              >
-                {t('No results found.')}
-              </TableCell>
+    <div className="flex flex-col gap-3 w-full">
+      {/* Bulk Actions Toolbar */}
+      {hasBulkActions && selectedRows.length > 0 && (
+        <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900 rounded-lg animate-in slide-in-from-top-2">
+          <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
+            {selectedRows.length} {t('items selected')}
+          </div>
+          <div className="flex items-center gap-2">
+            {bulkActions.map((action) => {
+              const IconComponent = action.icon ? (LucidIcons as any)[action.icon] : null;
+              return (
+                <Button
+                  key={action.action}
+                  variant={action.variant || 'outline'}
+                  size="sm"
+                  onClick={() => onBulkAction(action.action, selectedRows)}
+                >
+                  {IconComponent && <IconComponent className="mr-2 h-4 w-4" />}
+                  {t(action.label)}
+                </Button>
+              );
+            })}
+            <Button variant="ghost" size="sm" onClick={() => setSelectedRows([])}>
+              {t('Cancel')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="border-collapse dark:bg-gray-900 overflow-x-auto w-full rounded-md border">
+        <Table className="w-full max-w-full min-w-[900px]">
+          <TableHeader>
+            <TableRow className="bg-gray-50 dark:bg-gray-800 border-b">
+              {hasBulkActions && (
+                <TableHead className="w-12 text-center py-2.5">
+                  <Checkbox
+                    checked={data.length > 0 && selectedRows.length === data.length}
+                    onCheckedChange={toggleAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+              )}
+              <TableHead className="w-10 py-2.5 font-semibold">#</TableHead>
+              {columns.map((column) => (
+                <TableHead
+                  key={column.key}
+                  className={cn(
+                    "py-2.5 font-semibold",
+                    column.sortable && "cursor-pointer select-none",
+                    column.className
+                  )}
+                  onClick={() => handleSort(column)}
+                >
+                  <div className="flex items-center whitespace-nowrap">
+                    {column.label}
+                    {renderSortIcon(column)}
+                  </div>
+                </TableHead>
+              ))}
+              {hasAnyActionPermission && <TableHead className="w-48 py-2.5 text-right font-semibold">{t('Actions')}</TableHead>}
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data.length > 0 ? (
+              data.map((row, index) => (
+                <TableRow
+                  key={row.id || index}
+                  className={cn(
+                    "hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 border-b",
+                    selectedRows.includes(row.id) && "bg-blue-50/50 dark:bg-blue-900/10"
+                  )}
+                >
+                  {hasBulkActions && (
+                    <TableCell className="text-center py-2.5">
+                      <Checkbox
+                        checked={selectedRows.includes(row.id)}
+                        onCheckedChange={() => toggleRow(row.id)}
+                        aria-label={`Select row ${row.id}`}
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell className="font-medium py-2.5 w-10">{from + index}</TableCell>
+                  {columns.map((col) => {
+                    const cellContent = renderCellContent(row, col);
+                    const rawValue = typeof cellContent === 'string' ? cellContent : undefined;
+                    return (
+                      <TableCell
+                        key={col.key}
+                        className={cn(
+                          "py-2.5",
+                          col.className
+                        )}
+                        title={rawValue}
+                      >
+                        <div className="break-words whitespace-normal">
+                          {cellContent}
+                        </div>
+                      </TableCell>
+                    );
+                  })}
+                  {hasAnyActionPermission && <TableCell className="py-2.5 text-right w-48">{renderActionButtons(row)}</TableCell>}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + (hasAnyActionPermission ? 2 : 1) + (hasBulkActions ? 1 : 0)}
+                  className="text-muted-foreground h-24 text-center dark:text-gray-400"
+                >
+                  {t('No results found.')}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
