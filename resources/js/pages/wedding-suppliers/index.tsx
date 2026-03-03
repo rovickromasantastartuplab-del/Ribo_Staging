@@ -334,17 +334,18 @@ export default function WeddingSuppliers() {
                     onAction={handleAction}
                     permissions={permissions}
                     showActionsAsIcons={true}
-                
-            onBulkAction={handleBulkAction}
-            bulkActions={[
-              {
-                label: 'Delete Selected',
-                action: 'bulk_delete',
-                icon: 'Trash2',
-                variant: 'destructive'
-              }
-            ]}
-          />
+                    {...(auth?.user?.type !== 'company' && auth?.user?.type !== 'staff' ? {
+                        onBulkAction: handleBulkAction,
+                        bulkActions: [
+                            {
+                                label: 'Delete Selected',
+                                action: 'bulk_delete',
+                                icon: 'Trash2',
+                                variant: 'destructive'
+                            }
+                        ]
+                    } : {})}
+                />
 
                 {/* Pagination section */}
                 <Pagination
