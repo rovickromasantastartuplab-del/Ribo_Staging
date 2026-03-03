@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { X, Plus } from 'lucide-react';
 
 interface CurrencyPrice {
   code: string;
@@ -78,19 +79,39 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
     is_default: plan?.is_default || false,
   });
 
-  // Build initial currency prices from props, keyed by code
+  // Only pre-load currencies that already have prices saved
   const buildInitialCurrencyPrices = (): Record<string, CurrencyPrice> => {
     const map: Record<string, CurrencyPrice> = {};
-    for (const c of availableCurrencies) {
-      const existing = currencyPrices.find(cp => cp.code === c.code);
-      map[c.code] = existing
-        ? { code: c.code, monthly: existing.monthly, yearly: existing.yearly ?? '' }
-        : { code: c.code, monthly: '', yearly: '' };
+    for (const cp of currencyPrices) {
+      map[cp.code] = { code: cp.code, monthly: cp.monthly, yearly: cp.yearly ?? '' };
     }
     return map;
   };
 
   const [currencyPriceMap, setCurrencyPriceMap] = useState<Record<string, CurrencyPrice>>(buildInitialCurrencyPrices);
+
+  // Track which currencies have been added to the UI
+  const [addedCurrencies, setAddedCurrencies] = useState<string[]>(() => currencyPrices.map(cp => cp.code));
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('');
+
+  const handleAddCurrency = () => {
+    if (!selectedCurrency || addedCurrencies.includes(selectedCurrency)) return;
+    setAddedCurrencies(prev => [...prev, selectedCurrency]);
+    setCurrencyPriceMap(prev => ({
+      ...prev,
+      [selectedCurrency]: { code: selectedCurrency, monthly: '', yearly: '' },
+    }));
+    setSelectedCurrency('');
+  };
+
+  const handleRemoveCurrency = (code: string) => {
+    setAddedCurrencies(prev => prev.filter(c => c !== code));
+    setCurrencyPriceMap(prev => {
+      const next = { ...prev };
+      delete next[code];
+      return next;
+    });
+  };
 
   const handleCurrencyPriceChange = (code: string, field: 'monthly' | 'yearly', value: string) => {
     setCurrencyPriceMap(prev => ({
@@ -288,56 +309,105 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
 
           {/* Currency Prices */}
           {availableCurrencies.length > 0 && (
-            <div className="border rounded-lg p-4 space-y-3">
+            <div className="border rounded-lg p-4 space-y-4">
               <div>
                 <h3 className="font-medium">{t("Currency Prices")}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {t("Set the exact price per currency. Leave empty to fall back to the base price above.")}
                 </p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left">
-                      <th className="pb-2 font-medium text-muted-foreground w-32">{t("Currency")}</th>
-                      <th className="pb-2 font-medium text-muted-foreground">{t("Monthly Price")}</th>
-                      <th className="pb-2 font-medium text-muted-foreground">{t("Yearly Price")}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {availableCurrencies.map(cur => (
-                      <tr key={cur.code}>
-                        <td className="py-2 pr-4">
-                          <span className="font-medium">{cur.code}</span>
-                          <span className="text-muted-foreground ml-1 text-xs">{cur.symbol}</span>
-                        </td>
-                        <td className="py-2 pr-4">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder={t("e.g. 999")}
-                            value={currencyPriceMap[cur.code]?.monthly ?? ''}
-                            onChange={e => handleCurrencyPriceChange(cur.code, 'monthly', e.target.value)}
-                            className="h-8 w-36"
-                          />
-                        </td>
-                        <td className="py-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder={t("Optional")}
-                            value={currencyPriceMap[cur.code]?.yearly ?? ''}
-                            onChange={e => handleCurrencyPriceChange(cur.code, 'yearly', e.target.value)}
-                            className="h-8 w-36"
-                          />
-                        </td>
-                      </tr>
+
+              {/* Add currency row */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedCurrency}
+                  onChange={e => setSelectedCurrency(e.target.value)}
+                  className="flex h-9 w-56 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="">{t("Select a currency...")}</option>
+                  {availableCurrencies
+                    .filter(c => !addedCurrencies.includes(c.code))
+                    .map(c => (
+                      <option key={c.code} value={c.code}>
+                        {c.code} — {c.name} ({c.symbol})
+                      </option>
                     ))}
-                  </tbody>
-                </table>
+                </select>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAddCurrency}
+                  disabled={!selectedCurrency}
+                  className="gap-1"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t("Add")}
+                </Button>
               </div>
+
+              {/* Added currencies list */}
+              {addedCurrencies.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left">
+                        <th className="pb-2 font-medium text-muted-foreground w-32">{t("Currency")}</th>
+                        <th className="pb-2 font-medium text-muted-foreground">{t("Monthly Price")}</th>
+                        <th className="pb-2 font-medium text-muted-foreground">{t("Yearly Price")}</th>
+                        <th className="pb-2 w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {addedCurrencies.map(code => {
+                        const cur = availableCurrencies.find(c => c.code === code);
+                        if (!cur) return null;
+                        return (
+                          <tr key={cur.code}>
+                            <td className="py-2 pr-4">
+                              <span className="font-medium">{cur.code}</span>
+                              <span className="text-muted-foreground ml-1 text-xs">{cur.symbol}</span>
+                            </td>
+                            <td className="py-2 pr-4">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder={t("e.g. 999")}
+                                value={currencyPriceMap[cur.code]?.monthly ?? ''}
+                                onChange={e => handleCurrencyPriceChange(cur.code, 'monthly', e.target.value)}
+                                className="h-8 w-36"
+                              />
+                            </td>
+                            <td className="py-2 pr-2">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder={t("Optional")}
+                                value={currencyPriceMap[cur.code]?.yearly ?? ''}
+                                onChange={e => handleCurrencyPriceChange(cur.code, 'yearly', e.target.value)}
+                                className="h-8 w-36"
+                              />
+                            </td>
+                            <td className="py-2">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveCurrency(cur.code)}
+                                className="text-muted-foreground hover:text-destructive transition-colors"
+                                title={t("Remove")}
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">{t("No currency prices added yet. Select a currency above to add one.")}</p>
+              )}
             </div>
           )}
 

@@ -185,7 +185,7 @@ class DashboardController extends Controller
             $recentActivity[] = [
                 'id' => $order->id,
                 'type' => 'subscription',
-                'message' => ($order->user->name ?? 'Company') . ' subscribed to ' . ($order->plan->name ?? 'Plan') . ' ($' . $order->final_price . ')',
+                'message' => ($order->user->name ?? 'Company') . ' subscribed to ' . ($order->plan->name ?? 'Plan') . ' (' . formatCurrency($order->final_price) . ')',
                 'time' => $order->created_at->diffForHumans(),
                 'status' => 'success',
                 'created_at' => $order->created_at

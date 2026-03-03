@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/utils/currency';
 import {
   Building2,
   CreditCard,
@@ -51,7 +52,7 @@ export function DashboardOverview({ userType, stats }: DashboardOverviewProps) {
       icon: DollarSign,
       color: 'orange',
       href: route('dashboard'),
-      count: `$${(stats?.totalRevenue || 0).toLocaleString()}`
+      count: formatCurrency(stats?.totalRevenue || 0)
     },
     {
       title: t('System Growth'),
