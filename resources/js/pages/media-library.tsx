@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { usePage } from '@inertiajs/react';
-import { Upload, Search, X, Plus, Info, Copy, Download, MoreHorizontal, Image as ImageIcon, Calendar, HardDrive, BarChart3 } from 'lucide-react';
+import { Upload, Search, X, Plus, Info, Copy, Download, MoreHorizontal, Image as ImageIcon, Calendar, HardDrive, BarChart3, File as FileIcon } from 'lucide-react';
 
 interface MediaItem {
   id: number;
@@ -85,10 +85,11 @@ export default function MediaLibraryDemo() {
     setUploading(true);
 
     const validFiles = Array.from(files).filter(file => {
-      if (!file.type.startsWith('image/')) {
-        toast.error(t('{{fileName}} is not an image file', { fileName: file.name }));
-        return false;
-      }
+      // Allow all file types, remove image-only restriction
+      // if (!file.type.startsWith('image/')) {
+      //   toast.error(t('{{fileName}} is not an image file', { fileName: file.name }));
+      //   return false;
+      // }
       return true;
     });
 
@@ -334,15 +335,24 @@ export default function MediaLibraryDemo() {
                       className="group relative bg-card border rounded-lg overflow-hidden hover:shadow-md transition-all duration-200"
                       >
                       {/* Image Container */}
-                      <div className="relative aspect-square bg-muted">
-                        <img
-                          src={item.thumb_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = item.url;
-                          }}
-                        />
+                      <div className="relative aspect-square bg-muted flex items-center justify-center">
+                        {item.mime_type && item.mime_type.startsWith('image/') ? (
+                          <img
+                            src={item.thumb_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = item.url;
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-muted-foreground p-4">
+                            <FileIcon className="h-12 w-12 mb-2 text-primary/50" />
+                            <span className="text-xs font-medium uppercase tracking-wider text-center break-words w-full px-2" title={item.file_name.split('.').pop()}>
+                              {item.file_name.split('.').pop() || 'FILE'}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Overlay with Actions */}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200" />
@@ -564,14 +574,23 @@ export default function MediaLibraryDemo() {
               <div className="space-y-6">
                 {/* Image Preview */}
                 <div className="flex justify-center bg-gray-50 rounded-lg p-4">
-                  <img
-                    src={selectedMediaInfo.thumb_url}
-                    alt={selectedMediaInfo.name}
-                    className="max-w-full h-48 object-contain rounded-md shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.src = selectedMediaInfo.url;
-                    }}
-                  />
+                  {selectedMediaInfo.mime_type && selectedMediaInfo.mime_type.startsWith('image/') ? (
+                    <img
+                      src={selectedMediaInfo.thumb_url}
+                      alt={selectedMediaInfo.name}
+                      className="max-w-full h-48 object-contain rounded-md shadow-sm"
+                      onError={(e) => {
+                        e.currentTarget.src = selectedMediaInfo.url;
+                      }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+                      <FileIcon className="h-16 w-16 mb-4 text-primary/50" />
+                      <span className="text-sm font-medium uppercase tracking-wider bg-white px-3 py-1 rounded-full shadow-sm">
+                        {selectedMediaInfo.file_name.split('.').pop() || 'FILE'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* File Details */}

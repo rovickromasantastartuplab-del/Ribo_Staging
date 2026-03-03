@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
-import { Upload, X, Image as ImageIcon, Search, Plus, Check } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Search, Plus, Check, File as FileIcon } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import { hasPermission } from '@/utils/authorization';
 
@@ -326,20 +326,29 @@ export default function MediaLibraryModal({
                     <div
                       key={item.id}
                       className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all hover:scale-105 ${selectedItems.includes(returnType === 'id' ? item.id : item.url)
-                          ? 'ring-2 ring-primary shadow-lg'
-                          : 'hover:shadow-md border border-border hover:border-primary/50'
+                        ? 'ring-2 ring-primary shadow-lg'
+                        : 'hover:shadow-md border border-border hover:border-primary/50'
                         }`}
                       onClick={() => handleSelect(item)}
                     >
-                      <div className="relative aspect-square bg-muted">
-                        <img
-                          src={item.thumb_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = item.url;
-                          }}
-                        />
+                      <div className="relative aspect-square bg-muted flex items-center justify-center">
+                        {item.mime_type && item.mime_type.startsWith('image/') ? (
+                          <img
+                            src={item.thumb_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = item.url;
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-muted-foreground p-4">
+                            <FileIcon className="h-12 w-12 mb-2 text-primary/50" />
+                            <span className="text-xs font-medium uppercase tracking-wider text-center break-words w-full px-2" title={item.file_name.split('.').pop()}>
+                              {item.file_name.split('.').pop() || 'FILE'}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Selection Indicator */}
                         {selectedItems.includes(returnType === 'id' ? item.id : item.url) && (
