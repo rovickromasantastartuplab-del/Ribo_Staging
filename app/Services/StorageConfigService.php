@@ -15,10 +15,8 @@ class StorageConfigService
      */
     public static function getActiveDisk(): string
     {
-        $userId = Auth::id(); // Current user or superadmin fallback
-        if (!$userId) {
-            return 'public'; // Default for unauthenticated users
-        }
+        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+        $userId = $superadmin ? $superadmin->id : 1;
 
         $cacheKey = 'active_storage_config_' . $userId;
         $config = Cache::remember($cacheKey, 60, function () use ($userId) {
@@ -49,10 +47,8 @@ class StorageConfigService
      */
     public static function getStorageConfig(): array
     {
-        $userId = Auth::id() ?: 1; // Current user or superadmin fallback
-        if (!$userId) {
-            return self::getDefaultConfig(); // Default for unauthenticated users
-        }
+        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+        $userId = $superadmin ? $superadmin->id : 1;
 
         $cacheKey = 'active_storage_config_' . $userId;
         return Cache::remember($cacheKey, 300, function () use ($userId) {
@@ -65,10 +61,16 @@ class StorageConfigService
      */
     public static function clearCache(): void
     {
-        $userId = Auth::id() ?: 1; // Current user or superadmin fallback
-        if ($userId) {
-            Cache::forget('active_storage_config_' . $userId);
+        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+        $userId = $superadmin ? $superadmin->id : 1;
+
+        Cache::forget('active_storage_config_' . $userId);
+
+        // Also clear for current user just in case
+        if (Auth::id()) {
+            Cache::forget('active_storage_config_' . Auth::id());
         }
+
         // Also clear for all users if needed
         Cache::flush();
     }
