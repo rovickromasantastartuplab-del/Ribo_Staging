@@ -14,9 +14,8 @@ interface ColumnMappingModalProps {
   excelColumns: string[];
   databaseFields: { key: string; required?: boolean }[];
   importRoute: string;
+  data: Record<string, string>[];
   previewData?: Record<string, string>[];
-  tempFile: string;
-  totalRows?: number;
 }
 
 export function ColumnMappingModal({
@@ -25,9 +24,8 @@ export function ColumnMappingModal({
   excelColumns,
   databaseFields,
   importRoute,
-  previewData = [],
-  tempFile,
-  totalRows = 0
+  data,
+  previewData = []
 }: ColumnMappingModalProps) {
   const { t } = useTranslation();
   const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -49,8 +47,8 @@ export function ColumnMappingModal({
   }, [isOpen, excelColumns, databaseFields]);
 
   const handleSubmit = () => {
-    if (!tempFile) {
-      toast.error(t('No file available for import. Please re-upload.'));
+    if (!data || data.length === 0) {
+      toast.error(t('No data available for import'));
       return;
     }
 
@@ -62,23 +60,30 @@ export function ColumnMappingModal({
       return;
     }
 
-    setIsImporting(true);
-    toast.loading(t('Importing {{count}} rows...', { count: totalRows }));
+    // Map data according to column mapping
+    const mappedData = (data || []).map(row => {
+      const mappedRow: Record<string, any> = {};
+      Object.entries(mapping).forEach(([dbField, excelColumn]) => {
+        mappedRow[dbField] = row[excelColumn];
+      });
+      return mappedRow;
+    });
 
-    // Send only the column mapping + temp file reference — no data round-trip
+    setIsImporting(true);
+    toast.loading(t('Importing...'));
+
     router.post(route(importRoute), {
-      mapping: mapping,
-      tempFile: tempFile
+      data: mappedData
     }, {
       preserveState: true,
       onSuccess: (page) => {
         onClose();
         setIsImporting(false);
         toast.dismiss();
-        if ((page.props as any).flash?.success) {
-          toast.success(t((page.props as any).flash.success));
-        } else if ((page.props as any).flash?.error) {
-          toast.error(t((page.props as any).flash.error));
+        if (page.props.flash.success) {
+          toast.success(t(page.props.flash.success));
+        } else if (page.props.flash.error) {
+          toast.error(t(page.props.flash.error));
         }
       },
       onError: (errors) => {
@@ -97,18 +102,13 @@ export function ColumnMappingModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal={false}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>{t('Map Columns & Import')}</DialogTitle>
+          <DialogTitle>{t('Import Customers')}</DialogTitle>
         </DialogHeader>
 
         <Alert className="bg-amber-50 border-amber-200">
           <Info className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800">
-            {t('Map your CSV columns to database fields.')}
-            {totalRows > 0 && (
-              <span className="font-semibold ml-1">
-                {t('{{count}} rows will be imported.', { count: totalRows })}
-              </span>
-            )}
+            {t('Map your CSV columns to database fields')}
           </AlertDescription>
         </Alert>
 
@@ -164,7 +164,7 @@ export function ColumnMappingModal({
                 </tr>
               </thead>
               <tbody>
-                {previewData.slice(0, 3).map((row, idx) => (
+                {previewData.slice(0, 2).map((row, idx) => (
                   <tr key={idx} className="border-b">
                     {databaseFields.map(field => (
                       <td key={field.key} className="px-4 py-2 text-gray-600">

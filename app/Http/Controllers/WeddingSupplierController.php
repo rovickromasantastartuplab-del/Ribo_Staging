@@ -230,23 +230,14 @@ class WeddingSupplierController extends Controller
         $this->authorize('create', WeddingSupplier::class);
 
         $request->validate([
-            'file' => 'required|mimes:csv,txt,xls,xlsx|max:51200',
+            'file' => 'required|mimes:csv,txt,xls,xlsx|max:10240',
         ]);
 
         try {
             $file = $request->file('file');
 
-            // Store file server-side
-            $tempDir = storage_path('app/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0755, true);
-            }
-            $tempFileName = 'import_supplier_' . auth()->id() . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move($tempDir, $tempFileName);
-            $storedFilePath = $tempDir . DIRECTORY_SEPARATOR . $tempFileName;
-
-            // Read only headers and a small preview (3 rows)
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($storedFilePath);
+            // Read headers and preview data
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
             $worksheet = $spreadsheet->getActiveSheet();
             $highestColumn = $worksheet->getHighestColumn();
             $highestRow = $worksheet->getHighestRow();
@@ -267,27 +258,23 @@ class WeddingSupplierController extends Controller
                 }
             }
 
-            $previewData = [];
-            $previewLimit = min($highestRow, 4);
-            for ($row = 2; $row <= $previewLimit; $row++) {
+            // Get full data
+            $fullData = [];
+            for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 foreach ($headerMap as $colLetter => $headerName) {
                     $colValue = $worksheet->getCell($colLetter . $row)->getValue();
                     $rowData[$headerName] = $colValue !== null ? trim((string) $colValue) : '';
                 }
+                // Only add row if it has some data
                 if (!empty(array_filter($rowData, fn($value) => $value !== ''))) {
-                    $previewData[] = $rowData;
+                    $fullData[] = $rowData;
                 }
             }
 
-            $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
-
             return response()->json([
                 'excelColumns' => array_values($headers),
-                'previewData' => $previewData,
-                'tempFile' => $tempFileName,
-                'totalRows' => max(0, $highestRow - 1),
+                'previewData' => $fullData // Return full data so frontend can map and import all rows
             ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => __('Failed to parse file: :error', ['error' => $e->getMessage()])], 500);
@@ -302,81 +289,40 @@ class WeddingSupplierController extends Controller
         $this->authorize('create', WeddingSupplier::class);
 
         $request->validate([
-            'mapping' => 'required|array',
-            'tempFile' => 'required|string',
+            'data' => 'required|array',
         ]);
 
         try {
-            set_time_limit(600);
-            ini_set('memory_limit', '512M');
+            $data = $request->data;
 
-            $tempFileName = basename($request->tempFile);
-            $storedFilePath = storage_path('app/temp/' . $tempFileName);
+            // Create temporary CSV file from data
+            // Use storage/app/temp path which is standard for temporary files in Laravel
+            $tempFile = storage_path('app/temp/import_' . time() . '.csv');
 
-            if (!file_exists($storedFilePath)) {
-                return redirect()->back()->with('error', __('Import file not found. Please re-upload.'));
+            // Ensure tmp directory exists
+            if (!file_exists(dirname($tempFile))) {
+                mkdir(dirname($tempFile), 0755, true);
             }
 
-            $mapping = $request->mapping;
+            $handle = fopen($tempFile, 'w');
 
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($storedFilePath);
-            $worksheet = $spreadsheet->getActiveSheet();
-            $highestColumn = $worksheet->getHighestColumn();
-            $highestRow = $worksheet->getHighestRow();
+            // Write headers (keys of the first row)
+            if (!empty($data) && isset($data[0])) {
+                fputcsv($handle, array_keys($data[0]));
 
-            $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
-
-            $fileHeaders = [];
-            for ($col = 1; $col <= $highestColumnIndex; $col++) {
-                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
-                $value = $worksheet->getCell($colLetter . '1')->getValue();
-                if ($value !== null && $value !== '') {
-                    $fileHeaders[$colLetter] = trim((string) $value);
-                }
-            }
-
-            $mappedTempFile = storage_path('app/temp/mapped_' . time() . '_' . auth()->id() . '.csv');
-            $handle = fopen($mappedTempFile, 'w');
-
-            $dbFields = array_keys($mapping);
-            fputcsv($handle, $dbFields);
-
-            $excelColToLetter = array_flip($fileHeaders);
-
-            for ($row = 2; $row <= $highestRow; $row++) {
-                $mappedRow = [];
-                $hasData = false;
-
-                foreach ($mapping as $dbField => $excelColumn) {
-                    $colLetter = $excelColToLetter[$excelColumn] ?? null;
-                    $value = '';
-                    if ($colLetter) {
-                        $cellValue = $worksheet->getCell($colLetter . $row)->getValue();
-                        $value = $cellValue !== null ? trim((string) $cellValue) : '';
-                    }
-                    $mappedRow[] = $value;
-                    if ($value !== '') {
-                        $hasData = true;
-                    }
-                }
-
-                if ($hasData) {
-                    fputcsv($handle, $mappedRow);
+                // Write data rows
+                foreach ($data as $row) {
+                    fputcsv($handle, $row);
                 }
             }
             fclose($handle);
 
-            $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
-
             $import = new \App\Imports\WeddingSupplierImport();
-            \Maatwebsite\Excel\Facades\Excel::import($import, $mappedTempFile);
+            \Maatwebsite\Excel\Facades\Excel::import($import, $tempFile);
 
-            if (file_exists($mappedTempFile)) {
-                unlink($mappedTempFile);
-            }
-            if (file_exists($storedFilePath)) {
-                unlink($storedFilePath);
+            // Clean up temp file
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
             }
 
             $message = __('Import completed: :added suppliers added, :skipped skipped (duplicates/invalid)', [
