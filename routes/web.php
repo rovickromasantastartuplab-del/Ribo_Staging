@@ -595,6 +595,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('leads/{lead}', [LeadController::class, 'show'])->middleware('permission:view-leads')->name('leads.show');
             Route::post('leads', [LeadController::class, 'store'])->middleware('permission:create-leads')->name('leads.store');
             Route::put('leads/{lead}', [LeadController::class, 'update'])->middleware('permission:edit-leads')->name('leads.update');
+            Route::delete('leads/bulk-delete', [LeadController::class, 'bulkDelete'])->middleware('permission:delete-leads')->name('leads.bulk-delete');
             Route::delete('leads/{lead}', [LeadController::class, 'destroy'])->middleware('permission:delete-leads')->name('leads.destroy');
             Route::put('leads/{lead}/toggle-status', [LeadController::class, 'toggleStatus'])->middleware('permission:toggle-status-leads')->name('leads.toggle-status');
             Route::put('leads/{lead}/convert-to-account', [LeadController::class, 'convertToAccount'])->middleware('permission:convert-leads')->name('leads.convert-to-account');
