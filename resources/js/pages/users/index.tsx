@@ -209,7 +209,7 @@ export default function Users() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-users')) {
@@ -231,8 +231,8 @@ export default function Users() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -489,6 +489,7 @@ export default function Users() {
               params.role = selectedRole;
             }
 
+            params.view = activeView;
             router.get(route('users.index'), params, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -516,7 +517,7 @@ export default function Users() {
               edit: 'edit-users',
               delete: 'delete-users'
             }}
-          
+
             onBulkAction={handleBulkAction}
             bulkActions={[
               {
@@ -556,8 +557,7 @@ export default function Users() {
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{(user.display_name || user.name)}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{user.email}</p>
                         <div className="flex items-center">
-                          <div className={`h-2 w-2 rounded-full mr-2 ${
-                            user.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
+                          <div className={`h-2 w-2 rounded-full mr-2 ${user.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
                             }`}></div>
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {user.status === 'active' ? t('Active') : t('Inactive')}

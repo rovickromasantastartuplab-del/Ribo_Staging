@@ -61,7 +61,7 @@ class OpportunityController extends Controller
             $query->orderBy('id', 'desc');
         }
 
-        if ($request->view === 'kanban' || empty($request->view)) {
+        if ($request->view === 'kanban') {
             $opportunities = collect(['data' => $query->get()]);
         } else {
             $opportunities = $query->paginate($request->per_page ?? 10);
@@ -468,11 +468,11 @@ class OpportunityController extends Controller
         try {
             $query = \App\Models\Opportunity::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
-            
+
             if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
+
             $query->delete();
             return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
         } catch (\Exception $e) {

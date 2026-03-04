@@ -707,7 +707,8 @@ export default function Leads() {
           {...(activeView !== 'kanban' && {
             currentPerPage: pageFilters.per_page?.toString() || "10",
             onPerPageChange: (value) => {
-              const params = {
+              const params: any = {
+                view: activeView,
                 page: 1,
                 search: searchTerm || undefined,
                 lead_status_id: selectedLeadStatus !== 'all' ? selectedLeadStatus : undefined,

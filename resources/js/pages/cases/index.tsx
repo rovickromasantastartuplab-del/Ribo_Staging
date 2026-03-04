@@ -124,7 +124,7 @@ export default function Cases() {
             toast.success(t(page.props.flash.success));
           } else if (page.props.flash.error) {
             toast.error(t(page.props.flash.error));
-          } else if(page.props.flash.warning) {
+          } else if (page.props.flash.warning) {
             toast.warning(t(page.props.flash.warning));
           }
         },
@@ -148,7 +148,7 @@ export default function Cases() {
             toast.success(t(page.props.flash.success));
           } else if (page.props.flash.error) {
             toast.error(t(page.props.flash.error));
-          } else if(page.props.flash.warning) {
+          } else if (page.props.flash.warning) {
             toast.warning(t(page.props.flash.warning));
           }
         },
@@ -164,7 +164,7 @@ export default function Cases() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-cases')) {
@@ -186,8 +186,8 @@ export default function Cases() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -205,7 +205,7 @@ export default function Cases() {
           toast.success(t(page.props.flash.success));
         } else if (page.props.flash.error) {
           toast.error(t(page.props.flash.error));
-        } else if(page.props.flash.warning) {
+        } else if (page.props.flash.warning) {
           toast.warning(t(page.props.flash.warning));
         }
       },
@@ -493,7 +493,8 @@ export default function Cases() {
               priority: selectedPriority !== 'all' ? selectedPriority : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
               case_type: selectedCaseType !== 'all' ? selectedCaseType : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -528,7 +529,7 @@ export default function Cases() {
               edit: 'edit-cases',
               delete: 'delete-cases'
             }}
-          
+
             onBulkAction={handleBulkAction}
             bulkActions={[
               {
@@ -566,12 +567,11 @@ export default function Cases() {
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{caseItem.subject}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">#{caseItem.id}</p>
                       <div className="flex items-center mb-2">
-                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                          caseItem.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-red-600/20' :
-                          caseItem.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
-                          caseItem.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                          'bg-gray-50 text-gray-700 ring-gray-600/20'
-                        }`}>
+                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${caseItem.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-red-600/20' :
+                            caseItem.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
+                              caseItem.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                'bg-gray-50 text-gray-700 ring-gray-600/20'
+                          }`}>
                           {caseItem.priority.charAt(0).toUpperCase() + caseItem.priority.slice(1)}
                         </span>
                       </div>
@@ -626,13 +626,12 @@ export default function Cases() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                        caseItem.status === 'new' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                        caseItem.status === 'in_progress' ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' :
-                        caseItem.status === 'pending' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
-                        caseItem.status === 'resolved' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-                        'bg-gray-50 text-gray-700 ring-gray-600/20'
-                      }`}>
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${caseItem.status === 'new' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                          caseItem.status === 'in_progress' ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' :
+                            caseItem.status === 'pending' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
+                              caseItem.status === 'resolved' ? 'bg-green-50 text-green-700 ring-green-600/20' :
+                                'bg-gray-50 text-gray-700 ring-gray-600/20'
+                        }`}>
                         {caseItem.status.replace('_', ' ').charAt(0).toUpperCase() + caseItem.status.replace('_', ' ').slice(1)}
                       </span>
                       <span className="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">

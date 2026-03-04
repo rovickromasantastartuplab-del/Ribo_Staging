@@ -188,7 +188,7 @@ export default function Documents() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-documents')) {
@@ -210,8 +210,8 @@ export default function Documents() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -532,7 +532,8 @@ export default function Documents() {
               folder_id: selectedFolder !== 'all' ? selectedFolder : undefined,
               type_id: selectedType !== 'all' ? selectedType : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -560,7 +561,7 @@ export default function Documents() {
               edit: 'edit-documents',
               delete: 'delete-documents'
             }}
-          
+
             onBulkAction={handleBulkAction}
             bulkActions={[
               {

@@ -255,7 +255,7 @@ export default function Opportunities() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-opportunities')) {
@@ -277,8 +277,8 @@ export default function Opportunities() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -635,6 +635,7 @@ export default function Opportunities() {
               if (parseInt(value) !== 10) {
                 params.per_page = parseInt(value);
               }
+              params.view = activeView;
               router.get(route('opportunities.index'), params, { preserveState: true, preserveScroll: true });
             }
           })}
@@ -679,7 +680,7 @@ export default function Opportunities() {
               edit: 'edit-opportunities',
               delete: 'delete-opportunities'
             }}
-          
+
             onBulkAction={handleBulkAction}
             bulkActions={[
               {

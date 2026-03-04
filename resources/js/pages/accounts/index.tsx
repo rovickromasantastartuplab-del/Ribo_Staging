@@ -170,7 +170,7 @@ export default function Accounts() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-accounts')) {
@@ -192,8 +192,8 @@ export default function Accounts() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -520,7 +520,8 @@ export default function Accounts() {
               account_type_id: selectedType !== 'all' ? selectedType : undefined,
               account_industry_id: selectedIndustry !== 'all' ? selectedIndustry : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -548,7 +549,7 @@ export default function Accounts() {
               edit: 'edit-accounts',
               delete: 'delete-accounts'
             }}
-          
+
             onBulkAction={handleBulkAction}
             bulkActions={[
               {

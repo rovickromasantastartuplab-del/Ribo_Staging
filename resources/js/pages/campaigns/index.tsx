@@ -81,7 +81,7 @@ export default function Campaigns() {
   const handleAction = (action: string, item: any) => {
     setCurrentItem(item);
     setFormErrors({});
-    
+
     switch (action) {
       case 'view':
         setFormMode('view');
@@ -160,7 +160,7 @@ export default function Campaigns() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-campaigns')) {
@@ -182,8 +182,8 @@ export default function Campaigns() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -467,7 +467,8 @@ export default function Campaigns() {
               campaign_type_id: selectedCampaignType !== 'all' ? selectedCampaignType : undefined,
               target_list_id: selectedTargetList !== 'all' ? selectedTargetList : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -494,7 +495,7 @@ export default function Campaigns() {
               edit: 'edit-campaigns',
               delete: 'delete-campaigns'
             }}
-          
+
             onBulkAction={handleBulkAction}
             bulkActions={[
               {

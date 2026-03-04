@@ -154,7 +154,7 @@ class LeadController extends Controller
             $query->orderBy('id', 'desc');
         }
 
-        if ($request->view === 'kanban' || empty($request->view)) {
+        if ($request->view === 'kanban') {
             $leads = collect(['data' => $query->get()]);
         } else {
             $leads = $query->paginate($request->per_page ?? 10);

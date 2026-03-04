@@ -150,7 +150,7 @@ export default function Contacts() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-contacts')) {
@@ -172,8 +172,8 @@ export default function Contacts() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -421,7 +421,8 @@ export default function Contacts() {
               search: searchTerm || undefined,
               account_id: selectedAccount !== 'all' ? selectedAccount : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -449,7 +450,7 @@ export default function Contacts() {
               edit: 'edit-contacts',
               delete: 'delete-contacts'
             }}
-          
+
             onBulkAction={handleBulkAction}
             bulkActions={[
               {
