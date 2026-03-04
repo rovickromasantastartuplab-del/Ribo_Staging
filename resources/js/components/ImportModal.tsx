@@ -61,6 +61,24 @@ export function ImportModal({
         }
       });
 
+      if (!response.ok) {
+        toast.dismiss();
+        if (response.status === 413) {
+          toast.error(t('File is too large. Please reduce the file size and try again.'));
+        } else if (response.status === 422) {
+          try {
+            const errorData = await response.json();
+            toast.error(errorData.message || t('Validation failed. Please check your file.'));
+          } catch {
+            toast.error(t('Validation failed. Please check your file.'));
+          }
+        } else {
+          toast.error(t('Server error. Please try again later.'));
+        }
+        setIsImporting(false);
+        return;
+      }
+
       const data = await response.json();
 
       if (data.excelColumns && data.previewData) {
