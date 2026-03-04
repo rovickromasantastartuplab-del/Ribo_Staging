@@ -843,16 +843,16 @@ export default function Leads() {
                               return;
                             }
 
-                            toast.loading('Updating lead status...');
-
                             // Find the lead to get current data
                             const currentLead = Object.values(kanbanData)
                               .flatMap((column: any) => column.items)
                               .find((lead: any) => lead.id.toString() === leadId);
 
                             if (currentLead) {
-                              // Use the lightweight optimistic update method instead of full Inertia reload
-                              if (currentLead.lead_status_id !== status.id) {
+                              const currentStatusId = currentLead.lead_status_id || currentLead.lead_status?.id;
+
+                              // Only update if moving to a different status column
+                              if (parseInt(currentStatusId) !== parseInt(status.id)) {
                                 handleMoveTo(currentLead, status.id);
                               }
                             }
