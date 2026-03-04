@@ -641,7 +641,7 @@ class LeadController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|mimes:csv,txt,xls,xlsx|max:10240',
+            'file' => 'required|mimes:csv,txt,xls,xlsx|max:51200',
         ]);
 
         try {
