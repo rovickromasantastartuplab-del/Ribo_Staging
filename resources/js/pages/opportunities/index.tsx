@@ -761,34 +761,37 @@ export default function Opportunities() {
                               return;
                             }
 
-                            toast.loading(t('Updating opportunity stage...'));
-
                             // Find the opportunity to get current data
                             const currentOpportunity = Object.values(kanbanData)
                               .flatMap((column: any) => column.items)
                               .find((opportunity: any) => opportunity.id.toString() === opportunityId);
 
                             if (currentOpportunity) {
-                              router.put(route('opportunities.update-status', opportunityId), {
-                                opportunity_stage_id: stage.id
-                              }, {
-                                preserveState: true,
-                                preserveScroll: true,
-                                onSuccess: (page) => {
-                                  toast.dismiss();
-                                  if (page.props.flash?.success) {
-                                    toast.success(t(page.props.flash.success));
-                                  } else if (page.props.flash.error) {
-                                    toast.error(t(page.props.flash.error));
+                              const currentStageId = currentOpportunity.opportunity_stage_id || currentOpportunity.opportunity_stage?.id;
+
+                              if (parseInt(currentStageId) !== parseInt(stage.id)) {
+                                toast.loading(t('Updating opportunity stage...'));
+                                router.put(route('opportunities.update-status', opportunityId), {
+                                  opportunity_stage_id: stage.id
+                                }, {
+                                  preserveState: true,
+                                  preserveScroll: true,
+                                  onSuccess: (page) => {
+                                    toast.dismiss();
+                                    if (page.props.flash?.success) {
+                                      toast.success(t(page.props.flash.success));
+                                    } else if (page.props.flash.error) {
+                                      toast.error(t(page.props.flash.error));
+                                    }
+                                    router.reload({ only: ['opportunities'] });
+                                  },
+                                  onError: () => {
+                                    toast.dismiss();
+                                    toast.error(t('Failed to update opportunity stage'));
+                                    loadKanbanData();
                                   }
-                                  router.reload({ only: ['opportunities'] });
-                                },
-                                onError: () => {
-                                  toast.dismiss();
-                                  toast.error(t('Failed to update opportunity stage'));
-                                  loadKanbanData();
-                                }
-                              });
+                                });
+                              }
                             }
                           }
                         }}
