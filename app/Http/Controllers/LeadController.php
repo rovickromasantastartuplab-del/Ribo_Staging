@@ -783,7 +783,9 @@ class LeadController extends Controller
                 'skipped' => $import->getSkippedCount()
             ]);
 
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()
+                ->with('success', $message)
+                ->with('skippedRows', $import->getSkippedRows());
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to import: :error', ['error' => $e->getMessage()]));
         }
