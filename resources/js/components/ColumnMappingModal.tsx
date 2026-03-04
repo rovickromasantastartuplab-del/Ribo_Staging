@@ -21,7 +21,7 @@ interface ColumnMappingModalProps {
   excelColumns: string[];
   databaseFields: { key: string; required?: boolean }[];
   importRoute: string;
-  data: Record<string, string>[];
+  tempFile: string;
   previewData?: Record<string, string>[];
 }
 
@@ -31,7 +31,7 @@ export function ColumnMappingModal({
   excelColumns,
   databaseFields,
   importRoute,
-  data,
+  tempFile,
   previewData = []
 }: ColumnMappingModalProps) {
   const { t } = useTranslation();
@@ -56,8 +56,8 @@ export function ColumnMappingModal({
   }, [isOpen, excelColumns, databaseFields]);
 
   const handleSubmit = () => {
-    if (!data || data.length === 0) {
-      toast.error(t('No data available for import'));
+    if (!tempFile) {
+      toast.error(t('No file available for import. Please re-upload.'));
       return;
     }
 
@@ -69,20 +69,13 @@ export function ColumnMappingModal({
       return;
     }
 
-    // Map data according to column mapping
-    const mappedData = (data || []).map(row => {
-      const mappedRow: Record<string, any> = {};
-      Object.entries(mapping).forEach(([dbField, excelColumn]) => {
-        mappedRow[dbField] = row[excelColumn];
-      });
-      return mappedRow;
-    });
-
     setIsImporting(true);
     toast.loading(t('Importing...'));
 
+    // Send only the mapping and temp file reference — server handles all data processing
     router.post(route(importRoute), {
-      data: mappedData
+      mapping: mapping,
+      tempFile: tempFile
     }, {
       preserveState: true,
       onSuccess: (page) => {
@@ -272,4 +265,3 @@ export function ColumnMappingModal({
     </>
   );
 }
-
