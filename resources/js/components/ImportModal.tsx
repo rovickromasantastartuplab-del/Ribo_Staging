@@ -64,7 +64,7 @@ export function ImportModal({
       const data = await response.json();
 
       if (data.excelColumns && data.previewData) {
-        console.log("Import data",data.previewData);
+        console.log("Import data", data.previewData);
 
         setExcelColumns(data.excelColumns);
         setParsedData(data.previewData);
@@ -102,75 +102,75 @@ export function ImportModal({
 
   return (
     <>
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          {samplePath && (
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const response = await fetch(samplePath);
-                    if (!response.ok) {
-                      const error = await response.json();
-                      toast.error(t(error.error || 'Failed to download template'));
-                      return;
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {samplePath && (
+              <div className="text-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(samplePath);
+                      if (!response.ok) {
+                        const error = await response.json();
+                        toast.error(t(error.error || 'Failed to download template'));
+                        return;
+                      }
+                      window.location.href = samplePath;
+                    } catch (error) {
+                      toast.error(t('Failed to download template'));
                     }
-                    window.location.href = samplePath;
-                  } catch (error) {
-                    toast.error(t('Failed to download template'));
-                  }
-                }}
-                disabled={!samplePath}
-                className="mb-4"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {t('Download Template')}
-              </Button>
+                  }}
+                  disabled={!samplePath}
+                  className="mb-4"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {t('Download Template')}
+                </Button>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="file">{t('Select File')} <span className="text-red-500">*</span></Label>
+              <Input
+                id="file"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                disabled={isImporting}
+                required
+              />
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="file">{t('Select File')} <span className="text-red-500">*</span></Label>
-            <Input
-              id="file"
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              disabled={isImporting}
-              required
-            />
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <h4 className="text-sm font-medium text-blue-800 mb-2">{t('Import Notes:')}</h4>
+              <p className="text-xs text-blue-700">{importNotes}</p>
+            </div>
           </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-            <h4 className="text-sm font-medium text-blue-800 mb-2">{t('Import Notes:')}</h4>
-            <p className="text-xs text-blue-700">{importNotes}</p>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleClose} disabled={isImporting}>
-            {t('Cancel')}
-          </Button>
-          <Button type="button" onClick={handleSubmit} disabled={isImporting}>
-            {t('Import')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    <ColumnMappingModal
-      isOpen={showMappingModal}
-      onClose={handleMappingClose}
-      excelColumns={excelColumns}
-      databaseFields={databaseFields}
-      importRoute={importRoute}
-      data={parsedData}
-      previewData={previewData}
-    />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isImporting}>
+              {t('Cancel')}
+            </Button>
+            <Button type="button" onClick={handleSubmit} disabled={isImporting}>
+              {t('Import')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <ColumnMappingModal
+        isOpen={showMappingModal}
+        onClose={handleMappingClose}
+        excelColumns={excelColumns}
+        databaseFields={databaseFields}
+        importRoute={importRoute}
+        data={parsedData}
+        previewData={previewData}
+      />
     </>
   );
 }

@@ -15,12 +15,23 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
 {
     private $addedCount = 0;
     private $skippedCount = 0;
+    private $skippedRows = [];
+    private $currentRow = 0;
     private $leads = [];
 
     public function model(array $row)
     {
+        $this->currentRow++;
+
         // Skip if both name and email are empty
         if (empty($row['name']) && empty($row['email'])) {
+            $this->skippedCount++;
+            $this->skippedRows[] = [
+                'row' => $this->currentRow + 1, // +1 for header row
+                'name' => $row['name'] ?? '',
+                'email' => $row['email'] ?? '',
+                'reason' => __('Empty name and email'),
+            ];
             return null;
         }
 
@@ -29,6 +40,12 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
             $leadByEmail = Lead::where('email', $row['email'])->where('created_by', createdBy())->first();
             if ($leadByEmail) {
                 $this->skippedCount++;
+                $this->skippedRows[] = [
+                    'row' => $this->currentRow + 1,
+                    'name' => $row['name'] ?? '',
+                    'email' => $row['email'] ?? '',
+                    'reason' => __('Duplicate email'),
+                ];
                 return null;
             }
         }
@@ -141,5 +158,10 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
     public function getSkippedCount()
     {
         return $this->skippedCount;
+    }
+
+    public function getSkippedRows()
+    {
+        return $this->skippedRows;
     }
 }
