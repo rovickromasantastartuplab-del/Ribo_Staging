@@ -61,7 +61,7 @@ class OpportunityController extends Controller
             $query->orderBy('id', 'desc');
         }
 
-        if ($request->view === 'kanban') {
+        if ($request->view === 'kanban' || empty($request->view)) {
             $opportunities = collect(['data' => $query->get()]);
         } else {
             $opportunities = $query->paginate($request->per_page ?? 10);
