@@ -642,7 +642,6 @@ export default function Opportunities() {
           showViewToggle={true}
           activeView={activeView}
           onViewChange={(view) => {
-            setActiveView(view);
             router.get(route('opportunities.index'), {
               view: view,
               search: searchTerm || undefined,
@@ -651,7 +650,11 @@ export default function Opportunities() {
               opportunity_source_id: selectedSource !== 'all' ? selectedSource : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
               assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
-            }, { preserveState: true, preserveScroll: true });
+            }, {
+              preserveState: true,
+              preserveScroll: true,
+              onSuccess: () => setActiveView(view)
+            });
           }}
           viewOptions={[
             { value: 'list', label: t('List View'), icon: 'List' },

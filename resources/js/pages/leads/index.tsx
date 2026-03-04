@@ -726,7 +726,6 @@ export default function Leads() {
           showViewToggle={true}
           activeView={activeView}
           onViewChange={(view) => {
-            setActiveView(view);
             router.get(route('leads.index'), {
               view: view,
               search: searchTerm || undefined,
@@ -735,7 +734,11 @@ export default function Leads() {
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
               is_converted: selectedConverted !== 'all' ? selectedConverted : undefined,
               assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
-            }, { preserveState: true, preserveScroll: true });
+            }, {
+              preserveState: true,
+              preserveScroll: true,
+              onSuccess: () => setActiveView(view)
+            });
           }}
           viewOptions={[
             { value: 'list', label: t('List View'), icon: 'List' },
