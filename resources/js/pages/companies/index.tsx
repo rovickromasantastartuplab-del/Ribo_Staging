@@ -495,7 +495,7 @@ export default function Companies() {
           onApplyFilters={applyFilters}
           currentPerPage={pageFilters.per_page?.toString() || "10"}
           onPerPageChange={(value) => {
-            const params: any = { page: 1, per_page: parseInt(value) };
+            const params: any = { page: 1, per_page: parseInt(value), view: activeView };
 
             if (searchTerm) {
               params.search = searchTerm;

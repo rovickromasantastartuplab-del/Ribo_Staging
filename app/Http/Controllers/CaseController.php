@@ -327,4 +327,30 @@ class CaseController extends Controller
             return redirect()->back()->with('error', __('Case not found.'));
         }
     }
+
+    public function bulkDelete(Request $request)
+    {
+        if (!auth()->user()->can('delete-cases')) {
+            return redirect()->back()->with('error', __('Permission denied.'));
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
+
+        try {
+            $query = \App\Models\Case::whereIn('id', $validated['ids'])->where('created_by', createdBy());
+            $count = $query->count();
+            
+            if ($count === 0) {
+                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+            }
+            
+            $query->delete();
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
+        }
+    }
 }

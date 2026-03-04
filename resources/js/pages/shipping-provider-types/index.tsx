@@ -136,6 +136,36 @@ export default function ShippingProviderTypes() {
     }
   };
 
+  
+  const handleBulkAction = (action: string, selectedIds: any[]) => {
+    if (action === 'bulk_delete') {
+      if (!hasPermission(permissions, 'delete-shipping-provider-types')) {
+        toast.error(t('Permission denied.'));
+        return;
+      }
+
+      if (confirm(t('Are you sure you want to delete the selected {{count}} records? This action cannot be undone.', { count: selectedIds.length }))) {
+        toast.loading(t('Deleting records...'));
+
+        router.delete(route('shipping-provider-types.bulk-delete'), {
+          data: { ids: selectedIds },
+          onSuccess: (page: any) => {
+            toast.dismiss();
+            if (page.props.flash?.success) {
+              toast.success(t(page.props.flash.success));
+            } else if (page.props.flash?.error) {
+              toast.error(t(page.props.flash.error));
+            }
+          },
+          onError: () => {
+             toast.dismiss();
+             toast.error(t('Failed to delete records.'));
+          }
+        });
+      }
+    }
+  };
+
   const handleDeleteConfirm = () => {
     toast.loading(t('Deleting shipping provider type...'));
 
@@ -357,7 +387,17 @@ export default function ShippingProviderTypes() {
             edit: 'edit-shipping-provider-types',
             delete: 'delete-shipping-provider-types'
           }}
-        />
+        
+            onBulkAction={handleBulkAction}
+            bulkActions={[
+              {
+                label: 'Delete Selected',
+                action: 'bulk_delete',
+                icon: 'Trash2',
+                variant: 'destructive'
+              }
+            ]}
+          />
 
         {/* Pagination section */}
         <Pagination

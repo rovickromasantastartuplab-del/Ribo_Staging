@@ -265,6 +265,38 @@ export default function Leads() {
     }
   };
 
+  const handleBulkAction = (action: string, selectedIds: any[]) => {
+    if (action === 'bulk_delete') {
+      if (!hasPermission(permissions, 'delete-leads')) {
+        toast.error(t('Permission denied.'));
+        return;
+      }
+
+      if (confirm(t('Are you sure you want to delete the selected {{count}} leads? This action cannot be undone.', { count: selectedIds.length }))) {
+        toast.loading(t('Deleting leads...'));
+
+        router.delete(route('leads.bulk-delete'), {
+          data: { ids: selectedIds },
+          onSuccess: (page) => {
+            toast.dismiss();
+            if (page.props.flash.success) {
+              toast.success(t(page.props.flash.success));
+            } else if (page.props.flash.error) {
+              toast.error(t(page.props.flash.error));
+            }
+            if (activeView === 'kanban') {
+              loadKanbanData();
+            }
+          },
+          onError: (errors) => {
+            toast.dismiss();
+            toast.error(t('Failed to delete leads.'));
+          }
+        });
+      }
+    }
+  };
+
   const handleDeleteConfirm = () => {
     toast.loading(t('Deleting lead...'));
 
@@ -675,7 +707,8 @@ export default function Leads() {
           {...(activeView !== 'kanban' && {
             currentPerPage: pageFilters.per_page?.toString() || "10",
             onPerPageChange: (value) => {
-              const params = {
+              const params: any = {
+                view: activeView,
                 page: 1,
                 search: searchTerm || undefined,
                 lead_status_id: selectedLeadStatus !== 'all' ? selectedLeadStatus : undefined,
@@ -725,9 +758,17 @@ export default function Leads() {
             sortDirection={pageFilters.sort_direction}
             onSort={handleSort}
             permissions={permissions}
+            onBulkAction={handleBulkAction}
+            bulkActions={[
+              {
+                label: 'Delete Selected',
+                action: 'bulk_delete',
+                icon: 'Trash2',
+                variant: 'destructive'
+              }
+            ]}
             entityPermissions={{
               view: 'view-leads',
-              create: 'create-leads',
               edit: 'edit-leads',
               delete: 'delete-leads'
             }}
@@ -810,24 +851,10 @@ export default function Leads() {
                               .find((lead: any) => lead.id.toString() === leadId);
 
                             if (currentLead) {
-                              router.put(route('leads.update', leadId), {
-                                ...currentLead,
-                                lead_status_id: status.id
-                              }, {
-                                onSuccess: (page) => {
-                                  toast.dismiss();
-                                  if (page.props.flash?.success) {
-                                    toast.success(t(page.props.flash.success));
-                                  } else if (page.props.flash.error) {
-                                    toast.error(t(page.props.flash.error));
-                                  }
-                                  loadKanbanData();
-                                },
-                                onError: () => {
-                                  toast.dismiss();
-                                  toast.error(t('Failed to update lead status'));
-                                }
-                              });
+                              // Use the lightweight optimistic update method instead of full Inertia reload
+                              if (currentLead.lead_status_id !== status.id) {
+                                handleMoveTo(currentLead, status.id);
+                              }
                             }
                           }
                         }}

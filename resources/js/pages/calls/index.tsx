@@ -133,6 +133,36 @@ export default function Calls() {
     }
   };
 
+  
+  const handleBulkAction = (action: string, selectedIds: any[]) => {
+    if (action === 'bulk_delete') {
+      if (!hasPermission(permissions, 'delete-calls')) {
+        toast.error(t('Permission denied.'));
+        return;
+      }
+
+      if (confirm(t('Are you sure you want to delete the selected {{count}} records? This action cannot be undone.', { count: selectedIds.length }))) {
+        toast.loading(t('Deleting records...'));
+
+        router.delete(route('calls.bulk-delete'), {
+          data: { ids: selectedIds },
+          onSuccess: (page: any) => {
+            toast.dismiss();
+            if (page.props.flash?.success) {
+              toast.success(t(page.props.flash.success));
+            } else if (page.props.flash?.error) {
+              toast.error(t(page.props.flash.error));
+            }
+          },
+          onError: () => {
+             toast.dismiss();
+             toast.error(t('Failed to delete records.'));
+          }
+        });
+      }
+    }
+  };
+
   const handleDeleteConfirm = () => {
     toast.loading(t('Deleting call...'));
     router.delete(route('calls.destroy', currentItem.id), {
@@ -376,7 +406,17 @@ export default function Calls() {
             edit: 'edit-calls',
             delete: 'delete-calls'
           }}
-        />
+        
+            onBulkAction={handleBulkAction}
+            bulkActions={[
+              {
+                label: 'Delete Selected',
+                action: 'bulk_delete',
+                icon: 'Trash2',
+                variant: 'destructive'
+              }
+            ]}
+          />
 
         <Pagination
           from={calls?.from || 0}

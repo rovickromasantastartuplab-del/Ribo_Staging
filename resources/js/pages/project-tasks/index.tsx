@@ -147,6 +147,36 @@ export default function ProjectTasks() {
     }
   };
 
+
+  const handleBulkAction = (action: string, selectedIds: any[]) => {
+    if (action === 'bulk_delete') {
+      if (!hasPermission(permissions, 'delete-project-tasks')) {
+        toast.error(t('Permission denied.'));
+        return;
+      }
+
+      if (confirm(t('Are you sure you want to delete the selected {{count}} records? This action cannot be undone.', { count: selectedIds.length }))) {
+        toast.loading(t('Deleting records...'));
+
+        router.delete(route('project-tasks.bulk-delete'), {
+          data: { ids: selectedIds },
+          onSuccess: (page: any) => {
+            toast.dismiss();
+            if (page.props.flash?.success) {
+              toast.success(t(page.props.flash.success));
+            } else if (page.props.flash?.error) {
+              toast.error(t(page.props.flash.error));
+            }
+          },
+          onError: () => {
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
+          }
+        });
+      }
+    }
+  };
+
   const handleDeleteConfirm = () => {
     toast.loading(t('Deleting task...'));
 
@@ -334,7 +364,7 @@ export default function ProjectTasks() {
   return (
     <PageTemplate
       title={t("Project Tasks")}
-    //   title={t("Project Task Management")}
+      //   title={t("Project Task Management")}
       url="/project-tasks"
       actions={pageActions}
       breadcrumbs={breadcrumbs}
@@ -418,7 +448,8 @@ export default function ProjectTasks() {
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
               priority: selectedPriority !== 'all' ? selectedPriority : undefined,
               project_id: selectedProject !== 'all' ? selectedProject : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -445,6 +476,16 @@ export default function ProjectTasks() {
               edit: 'edit-project-tasks',
               delete: 'delete-project-tasks'
             }}
+
+            onBulkAction={handleBulkAction}
+            bulkActions={[
+              {
+                label: 'Delete Selected',
+                action: 'bulk_delete',
+                icon: 'Trash2',
+                variant: 'destructive'
+              }
+            ]}
           />
 
           <Pagination
@@ -465,7 +506,7 @@ export default function ProjectTasks() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start space-x-4">
                       <div className={`h-16 w-16 rounded-full flex items-center justify-center text-lg font-bold`}
-                           style={{ backgroundColor: taskStatuses.find((ts: any) => ts.id === task.task_status_id)?.color || '#6B7280' }}>
+                        style={{ backgroundColor: taskStatuses.find((ts: any) => ts.id === task.task_status_id)?.color || '#6B7280' }}>
                         {task.status === 'done' ? <CheckCircle className="h-8 w-8" /> : <Clock className="h-8 w-8" />}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -473,7 +514,7 @@ export default function ProjectTasks() {
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{task.project?.name || t('No project')}</p>
                         <div className="flex items-center">
                           <div className="h-2 w-2 rounded-full mr-2"
-                               style={{ backgroundColor: taskStatuses.find((ts: any) => ts.id === task.task_status_id)?.color || '#6B7280' }}></div>
+                            style={{ backgroundColor: taskStatuses.find((ts: any) => ts.id === task.task_status_id)?.color || '#6B7280' }}></div>
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {taskStatuses.find((ts: any) => ts.id === task.task_status_id)?.name || t('No Status')}
                           </span>
@@ -533,12 +574,11 @@ export default function ProjectTasks() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                        task.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-red-600/20' :
-                        task.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
-                        task.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                        'bg-gray-50 text-gray-700 ring-gray-600/20'
-                      }`}>
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${task.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-red-600/20' :
+                          task.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
+                            task.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                              'bg-gray-50 text-gray-700 ring-gray-600/20'
+                        }`}>
                         {t(task.priority.charAt(0).toUpperCase() + task.priority.slice(1))}
                       </span>
                       {task.assigned_user && (

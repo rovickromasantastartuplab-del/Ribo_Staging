@@ -122,4 +122,30 @@ class CategoryController extends Controller
             return redirect()->back()->with('error', __('Category not found.'));
         }
     }
+
+    public function bulkDelete(Request $request)
+    {
+        if (!auth()->user()->can('delete-categories')) {
+            return redirect()->back()->with('error', __('Permission denied.'));
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
+
+        try {
+            $query = \App\Models\Category::whereIn('id', $validated['ids'])->where('created_by', createdBy());
+            $count = $query->count();
+            
+            if ($count === 0) {
+                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+            }
+            
+            $query->delete();
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
+        }
+    }
 }

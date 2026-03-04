@@ -81,7 +81,7 @@ export default function Campaigns() {
   const handleAction = (action: string, item: any) => {
     setCurrentItem(item);
     setFormErrors({});
-    
+
     switch (action) {
       case 'view':
         setFormMode('view');
@@ -157,6 +157,36 @@ export default function Campaigns() {
           }
         }
       });
+    }
+  };
+
+
+  const handleBulkAction = (action: string, selectedIds: any[]) => {
+    if (action === 'bulk_delete') {
+      if (!hasPermission(permissions, 'delete-campaigns')) {
+        toast.error(t('Permission denied.'));
+        return;
+      }
+
+      if (confirm(t('Are you sure you want to delete the selected {{count}} records? This action cannot be undone.', { count: selectedIds.length }))) {
+        toast.loading(t('Deleting records...'));
+
+        router.delete(route('campaigns.bulk-delete'), {
+          data: { ids: selectedIds },
+          onSuccess: (page: any) => {
+            toast.dismiss();
+            if (page.props.flash?.success) {
+              toast.success(t(page.props.flash.success));
+            } else if (page.props.flash?.error) {
+              toast.error(t(page.props.flash.error));
+            }
+          },
+          onError: () => {
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
+          }
+        });
+      }
     }
   };
 
@@ -437,7 +467,8 @@ export default function Campaigns() {
               campaign_type_id: selectedCampaignType !== 'all' ? selectedCampaignType : undefined,
               target_list_id: selectedTargetList !== 'all' ? selectedTargetList : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -464,6 +495,16 @@ export default function Campaigns() {
               edit: 'edit-campaigns',
               delete: 'delete-campaigns'
             }}
+
+            onBulkAction={handleBulkAction}
+            bulkActions={[
+              {
+                label: 'Delete Selected',
+                action: 'bulk_delete',
+                icon: 'Trash2',
+                variant: 'destructive'
+              }
+            ]}
           />
 
           {/* Pagination section */}

@@ -151,6 +151,36 @@ export default function Projects() {
     }
   };
 
+
+  const handleBulkAction = (action: string, selectedIds: any[]) => {
+    if (action === 'bulk_delete') {
+      if (!hasPermission(permissions, 'delete-projects')) {
+        toast.error(t('Permission denied.'));
+        return;
+      }
+
+      if (confirm(t('Are you sure you want to delete the selected {{count}} records? This action cannot be undone.', { count: selectedIds.length }))) {
+        toast.loading(t('Deleting records...'));
+
+        router.delete(route('projects.bulk-delete'), {
+          data: { ids: selectedIds },
+          onSuccess: (page: any) => {
+            toast.dismiss();
+            if (page.props.flash?.success) {
+              toast.success(t(page.props.flash.success));
+            } else if (page.props.flash?.error) {
+              toast.error(t(page.props.flash.error));
+            }
+          },
+          onError: () => {
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
+          }
+        });
+      }
+    }
+  };
+
   const handleDeleteConfirm = () => {
     toast.loading(t('Deleting project...'));
 
@@ -431,7 +461,8 @@ export default function Projects() {
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
               priority: selectedPriority !== 'all' ? selectedPriority : undefined,
               account_id: selectedAccount !== 'all' ? selectedAccount : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -459,6 +490,16 @@ export default function Projects() {
               edit: 'edit-projects',
               delete: 'delete-projects'
             }}
+
+            onBulkAction={handleBulkAction}
+            bulkActions={[
+              {
+                label: 'Delete Selected',
+                action: 'bulk_delete',
+                icon: 'Trash2',
+                variant: 'destructive'
+              }
+            ]}
           />
 
           {/* Pagination section */}
@@ -487,11 +528,10 @@ export default function Projects() {
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{project.name}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{project.code || 'No code'}</p>
                         <div className="flex items-center">
-                          <div className={`h-2 w-2 rounded-full mr-2 ${
-                            project.status === 'active' ? 'bg-green-500' :
-                            project.status === 'completed' ? 'bg-blue-500' :
-                            project.status === 'on_hold' ? 'bg-yellow-500' : 'bg-gray-400'
-                          }`}></div>
+                          <div className={`h-2 w-2 rounded-full mr-2 ${project.status === 'active' ? 'bg-green-500' :
+                              project.status === 'completed' ? 'bg-blue-500' :
+                                project.status === 'on_hold' ? 'bg-yellow-500' : 'bg-gray-400'
+                            }`}></div>
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {t(project.status.replace('_', ' ').charAt(0).toUpperCase() + project.status.replace('_', ' ').slice(1))}
                           </span>
@@ -549,12 +589,11 @@ export default function Projects() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                        project.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-red-600/20' :
-                        project.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
-                        project.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                        'bg-gray-50 text-gray-700 ring-gray-600/20'
-                      }`}>
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${project.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-red-600/20' :
+                          project.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
+                            project.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                              'bg-gray-50 text-gray-700 ring-gray-600/20'
+                        }`}>
                         {t(project.priority.charAt(0).toUpperCase() + project.priority.slice(1))}
                       </span>
                       {project.assigned_user && (

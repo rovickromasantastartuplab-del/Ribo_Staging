@@ -395,6 +395,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('users/{user}/edit', [UserController::class, 'edit'])->middleware('permission:edit-users')->name('users.edit');
             Route::put('users/{user}', [UserController::class, 'update'])->middleware('permission:edit-users')->name('users.update');
             Route::patch('users/{user}', [UserController::class, 'update'])->middleware('permission:edit-users');
+            Route::delete('users/bulk-delete', [\App\Http\Controllers\UserController::class, 'bulkDelete'])->middleware('permission:delete-users')->name('users.bulk-delete');
             Route::delete('users/{user}', [UserController::class, 'destroy'])->middleware('permission:delete-users')->name('users.destroy');
 
             // Additional user routes
@@ -479,6 +480,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('taxes', [TaxController::class, 'index'])->middleware('permission:manage-taxes')->name('taxes.index');
             Route::post('taxes', [TaxController::class, 'store'])->middleware('permission:create-taxes')->name('taxes.store');
             Route::put('taxes/{tax}', [TaxController::class, 'update'])->middleware('permission:edit-taxes')->name('taxes.update');
+            Route::delete('taxes/bulk-delete', [\App\Http\Controllers\TaxController::class, 'bulkDelete'])->middleware('permission:delete-taxes')->name('taxes.bulk-delete');
             Route::delete('taxes/{tax}', [TaxController::class, 'destroy'])->middleware('permission:delete-taxes')->name('taxes.destroy');
             Route::put('taxes/{tax}/toggle-status', [TaxController::class, 'toggleStatus'])->middleware('permission:toggle-status-taxes')->name('taxes.toggle-status');
         });
@@ -488,6 +490,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('brands', [BrandController::class, 'index'])->middleware('permission:manage-brands')->name('brands.index');
             Route::post('brands', [BrandController::class, 'store'])->middleware('permission:create-brands')->name('brands.store');
             Route::put('brands/{brand}', [BrandController::class, 'update'])->middleware('permission:edit-brands')->name('brands.update');
+            Route::delete('brands/bulk-delete', [\App\Http\Controllers\BrandController::class, 'bulkDelete'])->middleware('permission:delete-brands')->name('brands.bulk-delete');
             Route::delete('brands/{brand}', [BrandController::class, 'destroy'])->middleware('permission:delete-brands')->name('brands.destroy');
             Route::put('brands/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->middleware('permission:toggle-status-brands')->name('brands.toggle-status');
         });
@@ -497,6 +500,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('categories', [CategoryController::class, 'index'])->middleware('permission:manage-categories')->name('categories.index');
             Route::post('categories', [CategoryController::class, 'store'])->middleware('permission:create-categories')->name('categories.store');
             Route::put('categories/{category}', [CategoryController::class, 'update'])->middleware('permission:edit-categories')->name('categories.update');
+            Route::delete('categories/bulk-delete', [\App\Http\Controllers\CategoryController::class, 'bulkDelete'])->middleware('permission:delete-categories')->name('categories.bulk-delete');
             Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:delete-categories')->name('categories.destroy');
             Route::put('categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->middleware('permission:toggle-status-categories')->name('categories.toggle-status');
         });
@@ -509,6 +513,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('products/{product}/edit', [ProductController::class, 'edit'])->middleware('permission:edit-products')->name('products.edit');
             Route::post('products', [ProductController::class, 'store'])->middleware('permission:create-products')->name('products.store');
             Route::put('products/{product}', [ProductController::class, 'update'])->middleware('permission:edit-products')->name('products.update');
+            Route::delete('products/bulk-delete', [ProductController::class, 'bulkDelete'])->middleware('permission:delete-products')->name('products.bulk-delete');
             Route::delete('products/{product}/', [ProductController::class, 'destroy'])->middleware('permission:delete-products')->name('products.destroy');
             Route::put('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->middleware('permission:toggle-status-products')->name('products.toggle-status');
 
@@ -533,6 +538,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('account-types', [AccountTypeController::class, 'index'])->middleware('permission:manage-account-types')->name('account-types.index');
             Route::post('account-types', [AccountTypeController::class, 'store'])->middleware('permission:create-account-types')->name('account-types.store');
             Route::put('account-types/{accountType}', [AccountTypeController::class, 'update'])->middleware('permission:edit-account-types')->name('account-types.update');
+            Route::delete('account-types/bulk-delete', [AccountTypeController::class, 'bulkDelete'])->middleware('permission:delete-account-types')->name('account-types.bulk-delete');
             Route::delete('account-types/{accountType}', [AccountTypeController::class, 'destroy'])->middleware('permission:delete-account-types')->name('account-types.destroy');
             Route::put('account-types/{accountType}/toggle-status', [AccountTypeController::class, 'toggleStatus'])->middleware('permission:toggle-status-account-types')->name('account-types.toggle-status');
         });
@@ -542,6 +548,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('account-industries', [AccountIndustryController::class, 'index'])->middleware('permission:manage-account-industries')->name('account-industries.index');
             Route::post('account-industries', [AccountIndustryController::class, 'store'])->middleware('permission:create-account-industries')->name('account-industries.store');
             Route::put('account-industries/{accountIndustry}', [AccountIndustryController::class, 'update'])->middleware('permission:edit-account-industries')->name('account-industries.update');
+            Route::delete('account-industries/bulk-delete', [AccountIndustryController::class, 'bulkDelete'])->middleware('permission:delete-account-industries')->name('account-industries.bulk-delete');
             Route::delete('account-industries/{accountIndustry}', [AccountIndustryController::class, 'destroy'])->middleware('permission:delete-account-industries')->name('account-industries.destroy');
             Route::put('account-industries/{accountIndustry}/toggle-status', [AccountIndustryController::class, 'toggleStatus'])->middleware('permission:toggle-status-account-industries')->name('account-industries.toggle-status');
         });
@@ -552,6 +559,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('accounts/{account}', [AccountController::class, 'show'])->middleware('permission:view-accounts')->name('accounts.show');
             Route::post('accounts', [AccountController::class, 'store'])->middleware('permission:create-accounts')->name('accounts.store');
             Route::put('accounts/{account}', [AccountController::class, 'update'])->middleware('permission:edit-accounts')->name('accounts.update');
+            Route::delete('accounts/bulk-delete', [\App\Http\Controllers\AccountController::class, 'bulkDelete'])->middleware('permission:delete-accounts')->name('accounts.bulk-delete');
             Route::delete('accounts/{account}', [AccountController::class, 'destroy'])->middleware('permission:delete-accounts')->name('accounts.destroy');
             Route::put('accounts/{account}/toggle-status', [AccountController::class, 'toggleStatus'])->middleware('permission:toggle-status-accounts')->name('accounts.toggle-status');
             Route::delete('accounts/{account}/activities', [AccountController::class, 'deleteActivities'])->middleware('permission:delete-accounts')->name('accounts.delete-activities');
@@ -568,6 +576,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('contacts/{contact}', [ContactController::class, 'show'])->middleware('permission:view-contacts')->name('contacts.show');
             Route::post('contacts', [ContactController::class, 'store'])->middleware('permission:create-contacts')->name('contacts.store');
             Route::put('contacts/{contact}', [ContactController::class, 'update'])->middleware('permission:edit-contacts')->name('contacts.update');
+            Route::delete('contacts/bulk-delete', [\App\Http\Controllers\ContactController::class, 'bulkDelete'])->middleware('permission:delete-contacts')->name('contacts.bulk-delete');
             Route::delete('contacts/{contact}', [ContactController::class, 'destroy'])->middleware('permission:delete-contacts')->name('contacts.destroy');
             Route::put('contacts/{contact}/toggle-status', [ContactController::class, 'toggleStatus'])->middleware('permission:toggle-status-contacts')->name('contacts.toggle-status');
         });
@@ -577,6 +586,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('lead-statuses', [LeadStatusController::class, 'index'])->middleware('permission:manage-lead-statuses')->name('lead-statuses.index');
             Route::post('lead-statuses', [LeadStatusController::class, 'store'])->middleware('permission:create-lead-statuses')->name('lead-statuses.store');
             Route::put('lead-statuses/{leadStatus}', [LeadStatusController::class, 'update'])->middleware('permission:edit-lead-statuses')->name('lead-statuses.update');
+            Route::delete('lead-statuses/bulk-delete', [LeadStatusController::class, 'bulkDelete'])->middleware('permission:delete-lead-statuses')->name('lead-statuses.bulk-delete');
             Route::delete('lead-statuses/{leadStatus}', [LeadStatusController::class, 'destroy'])->middleware('permission:delete-lead-statuses')->name('lead-statuses.destroy');
             Route::put('lead-statuses/{leadStatus}/toggle-status', [LeadStatusController::class, 'toggleStatus'])->middleware('permission:toggle-status-lead-statuses')->name('lead-statuses.toggle-status');
         });
@@ -586,6 +596,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('lead-sources', [LeadSourceController::class, 'index'])->middleware('permission:manage-lead-sources')->name('lead-sources.index');
             Route::post('lead-sources', [LeadSourceController::class, 'store'])->middleware('permission:create-lead-sources')->name('lead-sources.store');
             Route::put('lead-sources/{leadSource}', [LeadSourceController::class, 'update'])->middleware('permission:edit-lead-sources')->name('lead-sources.update');
+            Route::delete('lead-sources/bulk-delete', [LeadSourceController::class, 'bulkDelete'])->middleware('permission:delete-lead-sources')->name('lead-sources.bulk-delete');
             Route::delete('lead-sources/{leadSource}', [LeadSourceController::class, 'destroy'])->middleware('permission:delete-lead-sources')->name('lead-sources.destroy');
             Route::put('lead-sources/{leadSource}/toggle-status', [LeadSourceController::class, 'toggleStatus'])->middleware('permission:toggle-status-lead-sources')->name('lead-sources.toggle-status');
         });
@@ -596,6 +607,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('leads/{lead}', [LeadController::class, 'show'])->middleware('permission:view-leads')->name('leads.show');
             Route::post('leads', [LeadController::class, 'store'])->middleware('permission:create-leads')->name('leads.store');
             Route::put('leads/{lead}', [LeadController::class, 'update'])->middleware('permission:edit-leads')->name('leads.update');
+            Route::delete('leads/bulk-delete', [LeadController::class, 'bulkDelete'])->middleware('permission:delete-leads')->name('leads.bulk-delete');
             Route::delete('leads/{lead}', [LeadController::class, 'destroy'])->middleware('permission:delete-leads')->name('leads.destroy');
             Route::put('leads/{lead}/toggle-status', [LeadController::class, 'toggleStatus'])->middleware('permission:toggle-status-leads')->name('leads.toggle-status');
             Route::put('leads/{lead}/convert-to-account', [LeadController::class, 'convertToAccount'])->middleware('permission:convert-leads')->name('leads.convert-to-account');
@@ -624,6 +636,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('opportunity-stages', [OpportunityStageController::class, 'index'])->middleware('permission:manage-opportunity-stages')->name('opportunity-stages.index');
             Route::post('opportunity-stages', [OpportunityStageController::class, 'store'])->middleware('permission:create-opportunity-stages')->name('opportunity-stages.store');
             Route::put('opportunity-stages/{opportunityStage}', [OpportunityStageController::class, 'update'])->middleware('permission:edit-opportunity-stages')->name('opportunity-stages.update');
+            Route::delete('opportunity-stages/bulk-delete', [OpportunityStageController::class, 'bulkDelete'])->middleware('permission:delete-opportunity-stages')->name('opportunity-stages.bulk-delete');
             Route::delete('opportunity-stages/{opportunityStage}', [OpportunityStageController::class, 'destroy'])->middleware('permission:delete-opportunity-stages')->name('opportunity-stages.destroy');
             Route::put('opportunity-stages/{opportunityStage}/toggle-status', [OpportunityStageController::class, 'toggleStatus'])->middleware('permission:toggle-status-opportunity-stages')->name('opportunity-stages.toggle-status');
         });
@@ -633,6 +646,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('opportunity-sources', [OpportunitySourceController::class, 'index'])->middleware('permission:manage-opportunity-sources')->name('opportunity-sources.index');
             Route::post('opportunity-sources', [OpportunitySourceController::class, 'store'])->middleware('permission:create-opportunity-sources')->name('opportunity-sources.store');
             Route::put('opportunity-sources/{opportunitySource}', [OpportunitySourceController::class, 'update'])->middleware('permission:edit-opportunity-sources')->name('opportunity-sources.update');
+            Route::delete('opportunity-sources/bulk-delete', [OpportunitySourceController::class, 'bulkDelete'])->middleware('permission:delete-opportunity-sources')->name('opportunity-sources.bulk-delete');
             Route::delete('opportunity-sources/{opportunitySource}', [OpportunitySourceController::class, 'destroy'])->middleware('permission:delete-opportunity-sources')->name('opportunity-sources.destroy');
             Route::put('opportunity-sources/{opportunitySource}/toggle-status', [OpportunitySourceController::class, 'toggleStatus'])->middleware('permission:toggle-status-opportunity-sources')->name('opportunity-sources.toggle-status');
         });
@@ -643,6 +657,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('opportunities/{opportunity}', [OpportunityController::class, 'show'])->middleware('permission:view-opportunities')->name('opportunities.show');
             Route::post('opportunities', [OpportunityController::class, 'store'])->middleware('permission:create-opportunities')->name('opportunities.store');
             Route::put('opportunities/{opportunity}', [OpportunityController::class, 'update'])->middleware('permission:edit-opportunities')->name('opportunities.update');
+            Route::delete('opportunities/bulk-delete', [\App\Http\Controllers\OpportunityController::class, 'bulkDelete'])->middleware('permission:delete-opportunities')->name('opportunities.bulk-delete');
             Route::delete('opportunities/{opportunity}', [OpportunityController::class, 'destroy'])->middleware('permission:delete-opportunities')->name('opportunities.destroy');
             Route::put('opportunities/{opportunity}/toggle-status', [OpportunityController::class, 'toggleStatus'])->middleware('permission:toggle-status-opportunities')->name('opportunities.toggle-status');
             Route::put('opportunities/{opportunity}/update-status', [OpportunityController::class, 'updateStatus'])->middleware('permission:edit-opportunities')->name('opportunities.update-status');
@@ -659,6 +674,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('campaign-types', [CampaignTypeController::class, 'index'])->middleware('permission:manage-campaign-types')->name('campaign-types.index');
             Route::post('campaign-types', [CampaignTypeController::class, 'store'])->middleware('permission:create-campaign-types')->name('campaign-types.store');
             Route::put('campaign-types/{campaignType}', [CampaignTypeController::class, 'update'])->middleware('permission:edit-campaign-types')->name('campaign-types.update');
+            Route::delete('campaign-types/bulk-delete', [CampaignTypeController::class, 'bulkDelete'])->middleware('permission:delete-campaign-types')->name('campaign-types.bulk-delete');
             Route::delete('campaign-types/{campaignType}', [CampaignTypeController::class, 'destroy'])->middleware('permission:delete-campaign-types')->name('campaign-types.destroy');
             Route::put('campaign-types/{campaignType}/toggle-status', [CampaignTypeController::class, 'toggleStatus'])->middleware('permission:toggle-status-campaign-types')->name('campaign-types.toggle-status');
         });
@@ -668,6 +684,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('target-lists', [TargetListController::class, 'index'])->middleware('permission:manage-target-lists')->name('target-lists.index');
             Route::post('target-lists', [TargetListController::class, 'store'])->middleware('permission:create-target-lists')->name('target-lists.store');
             Route::put('target-lists/{targetList}', [TargetListController::class, 'update'])->middleware('permission:edit-target-lists')->name('target-lists.update');
+            Route::delete('target-lists/bulk-delete', [TargetListController::class, 'bulkDelete'])->middleware('permission:delete-target-lists')->name('target-lists.bulk-delete');
             Route::delete('target-lists/{targetList}', [TargetListController::class, 'destroy'])->middleware('permission:delete-target-lists')->name('target-lists.destroy');
             Route::put('target-lists/{targetList}/toggle-status', [TargetListController::class, 'toggleStatus'])->middleware('permission:toggle-status-target-lists')->name('target-lists.toggle-status');
         });
@@ -677,6 +694,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('campaigns', [CampaignController::class, 'index'])->middleware('permission:manage-campaigns')->name('campaigns.index');
             Route::post('campaigns', [CampaignController::class, 'store'])->middleware('permission:create-campaigns')->name('campaigns.store');
             Route::put('campaigns/{campaign}', [CampaignController::class, 'update'])->middleware('permission:edit-campaigns')->name('campaigns.update');
+            Route::delete('campaigns/bulk-delete', [\App\Http\Controllers\CampaignController::class, 'bulkDelete'])->middleware('permission:delete-campaigns')->name('campaigns.bulk-delete');
             Route::delete('campaigns/{campaign}', [CampaignController::class, 'destroy'])->middleware('permission:delete-campaigns')->name('campaigns.destroy');
             Route::get('campaigns/{campaign}', [CampaignController::class, 'show'])->middleware('permission:view-campaigns')->name('campaigns.show');
             Route::put('campaigns/{campaign}/toggle-status', [CampaignController::class, 'toggleStatus'])->middleware('permission:toggle-status-campaigns')->name('campaigns.toggle-status');
@@ -688,6 +706,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('wedding-suppliers/file/export/', [\App\Http\Controllers\WeddingSupplierController::class, 'fileExport'])->middleware('permission:export-wedding-suppliers')->name('wedding-suppliers.export');
             Route::post('wedding-suppliers/file/parse', [\App\Http\Controllers\WeddingSupplierController::class, 'parseFile'])->middleware('permission:import-wedding-suppliers')->name('wedding-suppliers.parse');
             Route::post('wedding-suppliers/file/import', [\App\Http\Controllers\WeddingSupplierController::class, 'fileImport'])->middleware('permission:import-wedding-suppliers')->name('wedding-suppliers.import');
+            Route::delete('wedding-suppliers/bulk-delete', [\App\Http\Controllers\WeddingSupplierController::class, 'bulkDelete'])->middleware('permission:delete-wedding-suppliers')->name('wedding-suppliers.bulk-delete');
             Route::resource('wedding-suppliers', \App\Http\Controllers\WeddingSupplierController::class);
         });
         Route::resource('wedding-supplier-categories', \App\Http\Controllers\WeddingSupplierCategoryController::class);
@@ -698,6 +717,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('shipping-provider-types/{id}', [ShippingProviderTypeController::class, 'show'])->middleware('permission:view-shipping-provider-types')->name('shipping-provider-types.show');
             Route::post('shipping-provider-types', [ShippingProviderTypeController::class, 'store'])->middleware('permission:create-shipping-provider-types')->name('shipping-provider-types.store');
             Route::put('shipping-provider-types/{shippingProviderType}', [ShippingProviderTypeController::class, 'update'])->middleware('permission:edit-shipping-provider-types')->name('shipping-provider-types.update');
+            Route::delete('shipping-provider-types/bulk-delete', [ShippingProviderTypeController::class, 'bulkDelete'])->middleware('permission:delete-shipping-provider-types')->name('shipping-provider-types.bulk-delete');
             Route::delete('shipping-provider-types/{shippingProviderType}', [ShippingProviderTypeController::class, 'destroy'])->middleware('permission:delete-shipping-provider-types')->name('shipping-provider-types.destroy');
             Route::put('shipping-provider-types/{shippingProviderType}/toggle-status', [ShippingProviderTypeController::class, 'toggleStatus'])->middleware('permission:toggle-status-shipping-provider-types')->name('shipping-provider-types.toggle-status');
         });
@@ -710,6 +730,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('cases/{case}/edit', [CaseController::class, 'edit'])->middleware('permission:edit-cases')->name('cases.edit');
             Route::post('cases', [CaseController::class, 'store'])->middleware('permission:create-cases')->name('cases.store');
             Route::put('cases/{case}', [CaseController::class, 'update'])->middleware('permission:edit-cases')->name('cases.update');
+            Route::delete('cases/bulk-delete', [\App\Http\Controllers\CaseController::class, 'bulkDelete'])->middleware('permission:delete-cases')->name('cases.bulk-delete');
             Route::delete('cases/{case}', [CaseController::class, 'destroy'])->middleware('permission:delete-cases')->name('cases.destroy');
             Route::put('cases/{case}/toggle-status', [CaseController::class, 'toggleStatus'])->middleware('permission:toggle-status-cases')->name('cases.toggle-status');
         });
@@ -720,6 +741,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('quotes/{quote}', [QuoteController::class, 'show'])->middleware('permission:view-quotes')->name('quotes.show');
             Route::post('quotes', [QuoteController::class, 'store'])->middleware('permission:create-quotes')->name('quotes.store');
             Route::put('quotes/{quote}', [QuoteController::class, 'update'])->middleware('permission:edit-quotes')->name('quotes.update');
+            Route::delete('quotes/bulk-delete', [\App\Http\Controllers\QuoteController::class, 'bulkDelete'])->middleware('permission:delete-quotes')->name('quotes.bulk-delete');
             Route::delete('quotes/{quote}', [QuoteController::class, 'destroy'])->middleware('permission:delete-quotes')->name('quotes.destroy');
             Route::put('quotes/{quote}/toggle-status', [QuoteController::class, 'toggleStatus'])->middleware('permission:toggle-status-quotes')->name('quotes.toggle-status');
             Route::put('quotes/{quote}/assign-user', [QuoteController::class, 'assignUser'])->middleware('permission:edit-quotes')->name('quotes.assign-user');
@@ -744,6 +766,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('sales-orders/{salesOrder}', [SalesOrderController::class, 'show'])->middleware('permission:view-sales-orders')->name('sales-orders.show');
             Route::post('sales-orders', [SalesOrderController::class, 'store'])->middleware('permission:create-sales-orders')->name('sales-orders.store');
             Route::put('sales-orders/{salesOrder}', [SalesOrderController::class, 'update'])->middleware('permission:edit-sales-orders')->name('sales-orders.update');
+            Route::delete('sales-orders/bulk-delete', [SalesOrderController::class, 'bulkDelete'])->middleware('permission:delete-sales-orders')->name('sales-orders.bulk-delete');
             Route::delete('sales-orders/{salesOrder}', [SalesOrderController::class, 'destroy'])->middleware('permission:delete-sales-orders')->name('sales-orders.destroy');
             Route::put('sales-orders/{salesOrder}/toggle-status', [SalesOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-sales-orders')->name('sales-orders.toggle-status');
 
@@ -777,6 +800,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('permission:view-invoices')->name('invoices.show');
             Route::post('invoices', [InvoiceController::class, 'store'])->middleware('permission:create-invoices')->name('invoices.store');
             Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])->middleware('permission:edit-invoices')->name('invoices.update');
+            Route::delete('invoices/bulk-delete', [\App\Http\Controllers\InvoiceController::class, 'bulkDelete'])->middleware('permission:delete-invoices')->name('invoices.bulk-delete');
             Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])->middleware('permission:delete-invoices')->name('invoices.destroy');
             Route::put('invoices/{invoice}/toggle-status', [InvoiceController::class, 'toggleStatus'])->middleware('permission:toggle-status-invoices')->name('invoices.toggle-status');
 
@@ -800,6 +824,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'show'])->middleware('permission:view-delivery-orders')->name('delivery-orders.show');
             Route::post('delivery-orders', [DeliveryOrderController::class, 'store'])->middleware('permission:create-delivery-orders')->name('delivery-orders.store');
             Route::put('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'update'])->middleware('permission:edit-delivery-orders')->name('delivery-orders.update');
+            Route::delete('delivery-orders/bulk-delete', [DeliveryOrderController::class, 'bulkDelete'])->middleware('permission:delete-delivery-orders')->name('delivery-orders.bulk-delete');
             Route::delete('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'destroy'])->middleware('permission:delete-delivery-orders')->name('delivery-orders.destroy');
             Route::put('delivery-orders/{deliveryOrder}/toggle-status', [DeliveryOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-delivery-orders')->name('delivery-orders.toggle-status');
 
@@ -812,6 +837,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('return-orders/{returnOrder}', [ReturnOrderController::class, 'show'])->middleware('permission:view-return-orders')->name('return-orders.show');
             Route::post('return-orders', [ReturnOrderController::class, 'store'])->middleware('permission:create-return-orders')->name('return-orders.store');
             Route::put('return-orders/{returnOrder}', [ReturnOrderController::class, 'update'])->middleware('permission:edit-return-orders')->name('return-orders.update');
+            Route::delete('return-orders/bulk-delete', [ReturnOrderController::class, 'bulkDelete'])->middleware('permission:delete-return-orders')->name('return-orders.bulk-delete');
             Route::delete('return-orders/{returnOrder}', [ReturnOrderController::class, 'destroy'])->middleware('permission:delete-return-orders')->name('return-orders.destroy');
         });
 
@@ -821,6 +847,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->middleware('permission:view-purchase-orders')->name('purchase-orders.show');
             Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->middleware('permission:create-purchase-orders')->name('purchase-orders.store');
             Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.update');
+            Route::delete('purchase-orders/bulk-delete', [PurchaseOrderController::class, 'bulkDelete'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.bulk-delete');
             Route::delete('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])->middleware('permission:delete-purchase-orders')->name('purchase-orders.destroy');
             Route::put('purchase-orders/{purchaseOrder}/toggle-status', [PurchaseOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-purchase-orders')->name('purchase-orders.toggle-status');
             Route::put('purchase-orders/{purchaseOrder}/add-sales-order', [PurchaseOrderController::class, 'addSalesOrder'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.add-sales-order');
@@ -837,6 +864,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'show'])->middleware('permission:view-receipt-orders')->name('receipt-orders.show');
             Route::post('receipt-orders', [ReceiptOrderController::class, 'store'])->middleware('permission:create-receipt-orders')->name('receipt-orders.store');
             Route::put('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'update'])->middleware('permission:edit-receipt-orders')->name('receipt-orders.update');
+            Route::delete('receipt-orders/bulk-delete', [ReceiptOrderController::class, 'bulkDelete'])->middleware('permission:delete-receipt-orders')->name('receipt-orders.bulk-delete');
             Route::delete('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'destroy'])->middleware('permission:delete-receipt-orders')->name('receipt-orders.destroy');
             Route::put('receipt-orders/{receiptOrder}/toggle-status', [ReceiptOrderController::class, 'toggleStatus'])->middleware('permission:toggle-status-receipt-orders')->name('receipt-orders.toggle-status');
 
@@ -850,6 +878,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('projects/{project}', [ProjectController::class, 'show'])->middleware('permission:view-projects')->name('projects.show');
             Route::post('projects', [ProjectController::class, 'store'])->middleware('permission:create-projects')->name('projects.store');
             Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware('permission:edit-projects')->name('projects.update');
+            Route::delete('projects/bulk-delete', [\App\Http\Controllers\ProjectController::class, 'bulkDelete'])->middleware('permission:delete-projects')->name('projects.bulk-delete');
             Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->middleware('permission:delete-projects')->name('projects.destroy');
             Route::put('projects/{project}/toggle-status', [ProjectController::class, 'toggleStatus'])->middleware('permission:toggle-status-projects')->name('projects.toggle-status');
 
@@ -863,6 +892,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('project-tasks/{task}', [ProjectTaskController::class, 'show'])->middleware('permission:view-project-tasks')->name('project-tasks.show');
             Route::post('project-tasks', [ProjectTaskController::class, 'store'])->middleware('permission:create-project-tasks')->name('project-tasks.store');
             Route::put('project-tasks/{task}', [ProjectTaskController::class, 'update'])->middleware('permission:edit-project-tasks')->name('project-tasks.update');
+            Route::delete('project-tasks/bulk-delete', [ProjectTaskController::class, 'bulkDelete'])->middleware('permission:delete-project-tasks')->name('project-tasks.bulk-delete');
             Route::delete('project-tasks/{task}', [ProjectTaskController::class, 'destroy'])->middleware('permission:delete-project-tasks')->name('project-tasks.destroy');
             Route::put('project-tasks/{task}/toggle-status', [ProjectTaskController::class, 'toggleStatus'])->middleware('permission:toggle-status-project-tasks')->name('project-tasks.toggle-status');
             Route::get('projects/{project}/kanban', [ProjectTaskController::class, 'kanban'])->middleware('permission:view-project-tasks')->name('projects.kanban');
@@ -880,6 +910,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('task-statuses', [\App\Http\Controllers\TaskStatusController::class, 'index'])->middleware('permission:manage-task-statuses')->name('task-statuses.index');
             Route::post('task-statuses', [\App\Http\Controllers\TaskStatusController::class, 'store'])->middleware('permission:create-task-statuses')->name('task-statuses.store');
             Route::put('task-statuses/{taskStatus}', [\App\Http\Controllers\TaskStatusController::class, 'update'])->middleware('permission:edit-task-statuses')->name('task-statuses.update');
+            Route::delete('task-statuses/bulk-delete', [\App\Http\Controllers\TaskStatusController::class, 'bulkDelete'])->middleware('permission:delete-task-statuses')->name('task-statuses.bulk-delete');
             Route::delete('task-statuses/{taskStatus}', [\App\Http\Controllers\TaskStatusController::class, 'destroy'])->middleware('permission:delete-task-statuses')->name('task-statuses.destroy');
             Route::put('task-statuses/{taskStatus}/toggle-status', [\App\Http\Controllers\TaskStatusController::class, 'toggleStatus'])->middleware('permission:toggle-status-task-statuses')->name('task-statuses.toggle-status');
         });
@@ -890,6 +921,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('meetings/{meeting}', [MeetingController::class, 'show'])->middleware('permission:view-meetings')->name('meetings.show');
             Route::post('meetings', [MeetingController::class, 'store'])->middleware('permission:create-meetings')->name('meetings.store');
             Route::put('meetings/{meeting}', [MeetingController::class, 'update'])->middleware('permission:edit-meetings')->name('meetings.update');
+            Route::delete('meetings/bulk-delete', [\App\Http\Controllers\MeetingController::class, 'bulkDelete'])->middleware('permission:delete-meetings')->name('meetings.bulk-delete');
             Route::delete('meetings/{meeting}', [MeetingController::class, 'destroy'])->middleware('permission:delete-meetings')->name('meetings.destroy');
             Route::put('meetings/{meeting}/toggle-status', [MeetingController::class, 'toggleStatus'])->middleware('permission:toggle-status-meetings')->name('meetings.toggle-status');
             Route::get('api/parent-module/{module}', [MeetingController::class, 'getParentModuleRecords'])->name('api.parent-module.records');
@@ -902,6 +934,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('calls/{call}', [CallController::class, 'show'])->middleware('permission:view-calls')->name('calls.show');
             Route::post('calls', [CallController::class, 'store'])->middleware('permission:create-calls')->name('calls.store');
             Route::put('calls/{call}', [CallController::class, 'update'])->middleware('permission:edit-calls')->name('calls.update');
+            Route::delete('calls/bulk-delete', [\App\Http\Controllers\CallController::class, 'bulkDelete'])->middleware('permission:delete-calls')->name('calls.bulk-delete');
             Route::delete('calls/{call}', [CallController::class, 'destroy'])->middleware('permission:delete-calls')->name('calls.destroy');
             Route::put('calls/{call}/toggle-status', [CallController::class, 'toggleStatus'])->middleware('permission:toggle-status-calls')->name('calls.toggle-status');
             Route::get('api/calls/parent-module/{module}', [CallController::class, 'getParentModuleRecords'])->name('api.calls.parent-module.records');
@@ -922,6 +955,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('document-folders/{documentFolder}', [DocumentFolderController::class, 'show'])->middleware('permission:view-document-folders')->name('document-folders.show');
             Route::post('document-folders', [DocumentFolderController::class, 'store'])->middleware('permission:create-document-folders')->name('document-folders.store');
             Route::put('document-folders/{documentFolder}', [DocumentFolderController::class, 'update'])->middleware('permission:edit-document-folders')->name('document-folders.update');
+            Route::delete('document-folders/bulk-delete', [DocumentFolderController::class, 'bulkDelete'])->middleware('permission:delete-document-folders')->name('document-folders.bulk-delete');
             Route::delete('document-folders/{documentFolder}', [DocumentFolderController::class, 'destroy'])->middleware('permission:delete-document-folders')->name('document-folders.destroy');
             Route::put('document-folders/{documentFolder}/toggle-status', [DocumentFolderController::class, 'toggleStatus'])->middleware('permission:toggle-status-document-folders')->name('document-folders.toggle-status');
         });
@@ -932,6 +966,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('document-types/{documentType}', [DocumentTypeController::class, 'show'])->middleware('permission:view-document-types')->name('document-types.show');
             Route::post('document-types', [DocumentTypeController::class, 'store'])->middleware('permission:create-document-types')->name('document-types.store');
             Route::put('document-types/{documentType}', [DocumentTypeController::class, 'update'])->middleware('permission:edit-document-types')->name('document-types.update');
+            Route::delete('document-types/bulk-delete', [DocumentTypeController::class, 'bulkDelete'])->middleware('permission:delete-document-types')->name('document-types.bulk-delete');
             Route::delete('document-types/{documentType}', [DocumentTypeController::class, 'destroy'])->middleware('permission:delete-document-types')->name('document-types.destroy');
             Route::put('document-types/{documentType}/toggle-status', [DocumentTypeController::class, 'toggleStatus'])->middleware('permission:toggle-status-document-types')->name('document-types.toggle-status');
         });
@@ -943,6 +978,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('documents/{document}/download', [DocumentController::class, 'download'])->middleware('permission:view-documents')->name('documents.download');
             Route::post('documents', [DocumentController::class, 'store'])->middleware('permission:create-documents')->name('documents.store');
             Route::put('documents/{document}', [DocumentController::class, 'update'])->middleware('permission:edit-documents')->name('documents.update');
+            Route::delete('documents/bulk-delete', [\App\Http\Controllers\DocumentController::class, 'bulkDelete'])->middleware('permission:delete-documents')->name('documents.bulk-delete');
             Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->middleware('permission:delete-documents')->name('documents.destroy');
             Route::put('documents/{document}/toggle-status', [DocumentController::class, 'toggleStatus'])->middleware('permission:toggle-status-documents')->name('documents.toggle-status');
         });

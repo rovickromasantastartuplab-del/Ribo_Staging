@@ -154,7 +154,7 @@ class LeadController extends Controller
             $query->orderBy('id', 'desc');
         }
 
-        if ($request->view === 'kanban' || empty($request->view)) {
+        if ($request->view === 'kanban') {
             $leads = collect(['data' => $query->get()]);
         } else {
             $leads = $query->paginate($request->per_page ?? 10);
@@ -691,6 +691,46 @@ class LeadController extends Controller
             return response()->json(['error' => __('Failed to parse file: :error', ['error' => $e->getMessage()])], 500);
         }
     }
+
+    public function bulkDelete(Request $request)
+    {
+        if (!auth()->user()->can('delete-leads')) {
+            return redirect()->back()->with('error', __('Permission denied.'));
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:leads,id',
+        ]);
+
+        try {
+            $leadsQuery = Lead::whereIn('id', $validated['ids'])
+                ->where('created_by', createdBy());
+
+            // Check view/manage scope essentially (users can only delete theirs unless admin/manager)
+            $leadsQuery->where(function ($q) {
+                if (auth()->user()->type === 'company' || auth()->user()->can('manage-leads') || auth()->user()->can('view-leads')) {
+                    $q->where('created_by', createdBy());
+                } else {
+                    $q->where('assigned_to', auth()->id());
+                }
+            });
+
+            $leadsParamsCount = $leadsQuery->count();
+
+            if ($leadsParamsCount === 0) {
+                return redirect()->back()->with('warning', __('No valid leads selected to delete.'));
+            }
+
+            $leadsQuery->delete();
+
+            return redirect()->back()->with('success', __('Successfully deleted :count leads.', ['count' => $leadsParamsCount]));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', __('Failed to delete leads: :error', ['error' => $e->getMessage()]));
+        }
+    }
+
     public function fileImport(Request $request)
     {
         if (!auth()->user()->can('import-leads')) {

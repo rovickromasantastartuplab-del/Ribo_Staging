@@ -155,6 +155,36 @@ export default function Products() {
     }
   };
 
+
+  const handleBulkAction = (action: string, selectedIds: any[]) => {
+    if (action === 'bulk_delete') {
+      if (!hasPermission(permissions, 'delete-products')) {
+        toast.error(t('Permission denied.'));
+        return;
+      }
+
+      if (confirm(t('Are you sure you want to delete the selected {{count}} records? This action cannot be undone.', { count: selectedIds.length }))) {
+        toast.loading(t('Deleting records...'));
+
+        router.delete(route('products.bulk-delete'), {
+          data: { ids: selectedIds },
+          onSuccess: (page: any) => {
+            toast.dismiss();
+            if (page.props.flash?.success) {
+              toast.success(t(page.props.flash.success));
+            } else if (page.props.flash?.error) {
+              toast.error(t(page.props.flash.error));
+            }
+          },
+          onError: () => {
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
+          }
+        });
+      }
+    }
+  };
+
   const handleDeleteConfirm = () => {
     toast.loading(t('Deleting product...'));
 
@@ -305,8 +335,8 @@ export default function Products() {
       sortable: true,
       render: (value: any) => (
         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${value > 10 ? 'bg-green-100 text-green-800' :
-            value > 0 ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
+          value > 0 ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'
           }`}>
           {value} {value === 1 ? t('unit') : t('units')}
         </span>
@@ -482,7 +512,8 @@ export default function Products() {
               category: selectedCategory !== 'all' ? selectedCategory : undefined,
               brand: selectedBrand !== 'all' ? selectedBrand : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              view: activeView
             }, { preserveState: true, preserveScroll: true });
           }}
           showViewToggle={true}
@@ -510,6 +541,16 @@ export default function Products() {
               edit: 'edit-products',
               delete: 'delete-products'
             }}
+
+            onBulkAction={handleBulkAction}
+            bulkActions={[
+              {
+                label: 'Delete Selected',
+                action: 'bulk_delete',
+                icon: 'Trash2',
+                variant: 'destructive'
+              }
+            ]}
           />
 
           {/* Pagination section */}
@@ -557,8 +598,8 @@ export default function Products() {
                   {/* Status Badge */}
                   <div className="absolute top-3 left-3">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.status === 'active'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                       }`}>
                       <div className={`w-1.5 h-1.5 rounded-full mr-1 ${product.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                       {product.status === 'active' ? t('Active') : t('Inactive')}
@@ -617,8 +658,8 @@ export default function Products() {
                       {formatCurrency(parseFloat(product.price || 0))}
                     </div>
                     <div className={`text-xs font-medium px-2 py-1 rounded-full ${product.stock_quantity > 10 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-                        product.stock_quantity > 0 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      product.stock_quantity > 0 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                       }`}>
                       {product.stock_quantity} {t('in stock')}
                     </div>
