@@ -315,17 +315,23 @@ export default function Documents() {
       label: t('Attachment'),
       render: (value: string, item: any) => {
         if (value && item.attachment_url) {
+          const ext = (item.attachment_url as string).split('?')[0].split('.').pop()?.toLowerCase() || '';
+          const viewableTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'txt'];
+          const isViewable = viewableTypes.includes(ext);
+
           return (
             <div className="flex items-center gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800"
-                onClick={() => window.open(item.attachment_url, '_blank')}
-                title={t('View Attachment')}
-              >
-                <Eye className="h-3 w-3" />
-              </Button>
+              {isViewable && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800"
+                  onClick={() => window.open(item.attachment_url, '_blank')}
+                  title={t('View Attachment')}
+                >
+                  <Eye className="h-3 w-3" />
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="ghost"
@@ -576,12 +582,18 @@ export default function Documents() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 z-50" sideOffset={5}>
-                        {hasPermission(permissions, 'view-documents') && (
-                          <DropdownMenuItem onClick={() => handleAction('view', document)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            <span>{t("View Document")}</span>
-                          </DropdownMenuItem>
-                        )}
+                        {(() => {
+                          const ext = (document.attachment_url as string || '').split('?')[0].split('.').pop()?.toLowerCase() || '';
+                          const viewableTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'txt'];
+                          const isViewable = document.attachment_url && viewableTypes.includes(ext);
+
+                          return hasPermission(permissions, 'view-documents') && isViewable && (
+                            <DropdownMenuItem onClick={() => handleAction('view', document)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              <span>{t("View Document")}</span>
+                            </DropdownMenuItem>
+                          );
+                        })()}
 
                         {hasPermission(permissions, 'view-documents') && document.attachment_url && (
                           <DropdownMenuItem onClick={() => handleAction('download', document)}>
@@ -637,15 +649,22 @@ export default function Documents() {
                             {document.attachment_name}
                           </span>
                           <div className="flex items-center gap-0.5 ml-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-5 w-5 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                              onClick={() => window.open(document.attachment_url, '_blank')}
-                              title={t('View Attachment')}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
+                            {(() => {
+                              const ext = (document.attachment_url as string).split('?')[0].split('.').pop()?.toLowerCase() || '';
+                              const viewableTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'txt'];
+                              const isViewable = viewableTypes.includes(ext);
+                              return isViewable && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                                  onClick={() => window.open(document.attachment_url, '_blank')}
+                                  title={t('View Attachment')}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              );
+                            })()}
                             <Button
                               size="sm"
                               variant="ghost"
@@ -803,7 +822,7 @@ export default function Documents() {
           folder_name: currentItem.folder?.name || t('No Folder'),
           type_name: currentItem.type?.type_name || t('No Type'),
           opportunity_name: currentItem.opportunity?.name || t('No Opportunity'),
-          attachment: currentItem.attachment_url || ''
+          attachment: currentItem.media && currentItem.media.length > 0 ? currentItem.media[0].id : null
         } : null}
         title={
           formMode === 'create'

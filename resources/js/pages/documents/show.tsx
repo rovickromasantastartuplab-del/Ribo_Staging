@@ -13,14 +13,14 @@ import { useState } from 'react';
 
 export default function DocumentShow() {
   const { t } = useTranslation();
-  const { 
-    auth, 
-    document, 
-    users = [], 
-    accounts = [], 
-    folders = [], 
-    types = [], 
-    opportunities = [] 
+  const {
+    auth,
+    document,
+    users = [],
+    accounts = [],
+    folders = [],
+    types = [],
+    opportunities = []
   } = usePage().props as any;
   const permissions = auth?.permissions || [];
 
@@ -155,11 +155,10 @@ export default function DocumentShow() {
               <p className="text-sm mt-2">{document.type?.type_name || t('No type specified')}</p>
             </div>
             <div className="text-right">
-              <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                document.status === 'active'
-                  ? 'bg-green-50 text-green-700 ring-green-600/20'
-                  : 'bg-red-50 text-red-700 ring-red-600/10'
-              }`}>
+              <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${document.status === 'active'
+                ? 'bg-green-50 text-green-700 ring-green-600/20'
+                : 'bg-red-50 text-red-700 ring-red-600/10'
+                }`}>
                 {document.status === 'active' ? t('Active') : t('Inactive')}
               </span>
             </div>
@@ -214,11 +213,10 @@ export default function DocumentShow() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">{t('Status')}</label>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                      document.status === 'active'
-                        ? 'bg-green-50 text-green-700 ring-green-600/20'
-                        : 'bg-red-50 text-red-700 ring-red-600/10'
-                    }`}>
+                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${document.status === 'active'
+                      ? 'bg-green-50 text-green-700 ring-green-600/20'
+                      : 'bg-red-50 text-red-700 ring-red-600/10'
+                      }`}>
                       {document.status === 'active' ? t('Active') : t('Inactive')}
                     </span>
                   </div>
@@ -268,10 +266,18 @@ export default function DocumentShow() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => window.open(document.attachment_url, '_blank')} variant="outline" size="sm" className="bg-white">
-                    <Eye className="h-4 w-4 mr-2" />
-                    {t('View')}
-                  </Button>
+                  {(() => {
+                    const ext = (document.attachment_url as string).split('?')[0].split('.').pop()?.toLowerCase() || '';
+                    const viewableTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'txt'];
+                    const isViewable = viewableTypes.includes(ext);
+
+                    return isViewable && (
+                      <Button onClick={() => window.open(document.attachment_url, '_blank')} variant="outline" size="sm" className="bg-white">
+                        <Eye className="h-4 w-4 mr-2" />
+                        {t('View')}
+                      </Button>
+                    );
+                  })()}
                   <Button onClick={handleDownload} variant="outline" size="sm" className="bg-white">
                     <Download className="h-4 w-4 mr-2" />
                     {t('Download')}
@@ -407,9 +413,9 @@ export default function DocumentShow() {
             },
             { name: 'publish_date', label: t('Publish Date'), type: 'date' },
             { name: 'expiration_date', label: t('Expiration Date'), type: 'date' },
-            { 
-              name: 'attachment', 
-              label: t('Attachment'), 
+            {
+              name: 'attachment',
+              label: t('Attachment'),
               type: 'media-picker',
               placeholder: t('Select file...')
             },

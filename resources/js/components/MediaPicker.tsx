@@ -48,32 +48,32 @@ export default function MediaPicker({
         if (returnType === 'id' && value) {
             const ids = Array.isArray(value) ? value : [value].filter(Boolean);
             if (ids.length > 0) {
-                // Fetch media URLs and names from IDs
-                fetch(route('api.media.index'), {
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                })
-                    .then(response => response.json())
-                    .then(media => {
-                        const urls = [];
-                        const names = [];
-                        ids.forEach(id => {
-                            const mediaItem = media.find((m: any) => m.id === Number(id));
-                            if (mediaItem) {
-                                urls.push(mediaItem.url);
-                                names.push(mediaItem.name || mediaItem.file_name || `Image ${id}`);
-                            }
-                        });
-                        setImageUrls(urls);
-                        setImageNames(names);
-                    })
-                    .catch(() => {
-                        setImageUrls([]);
-                        setImageNames([]);
+                // Fetch each media item individually so we can look up
+                // attachments from any model/collection (not just the media library)
+                Promise.all(
+                    ids.map(id =>
+                        fetch(route('api.media.show', id), {
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        })
+                            .then(r => r.ok ? r.json() : null)
+                            .catch(() => null)
+                    )
+                ).then(results => {
+                    const urls: string[] = [];
+                    const names: string[] = [];
+                    results.forEach((mediaItem, i) => {
+                        if (mediaItem) {
+                            urls.push(mediaItem.url || '');
+                            names.push(mediaItem.file_name || mediaItem.name || `File ${ids[i]}`);
+                        }
                     });
+                    setImageUrls(urls);
+                    setImageNames(names);
+                });
             } else {
                 setImageUrls([]);
                 setImageNames([]);
@@ -89,10 +89,12 @@ export default function MediaPicker({
 
     // displayValue = imageUrls.length > 0 ? imageUrls.join(', ') : (Array.isArray(value) ? value.join(',') : String(value || ''));
 
-    const displayValue = imageUrls.map((img) => {
-        const imagePathArr = String(img || '').split('/');
-        return imagePathArr[imagePathArr.length - 1];
-    }).join(', ');
+    const displayValue = imageNames.length > 0
+        ? imageNames.join(', ')
+        : imageUrls.map((img) => {
+            const imagePathArr = String(img || '').split('?')[0].split('/');
+            return imagePathArr[imagePathArr.length - 1];
+        }).join(', ');
 
     return (
         <div className="space-y-2">

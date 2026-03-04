@@ -287,6 +287,30 @@ class MediaController extends Controller
         }
     }
 
+    /**
+     * Return a single media item by its Spatie Media ID.
+     * Works for any collection (images, attachments, etc.).
+     */
+    public function show($id)
+    {
+        $media = Media::findOrFail($id);
+
+        try {
+            $originalUrl = $this->getFullUrl($media->getUrl());
+        } catch (\Exception $e) {
+            $originalUrl = '';
+        }
+
+        return response()->json([
+            'id'        => $media->id,
+            'name'      => $media->name,
+            'file_name' => $media->file_name,
+            'url'       => $originalUrl,
+            'size'      => $media->size,
+            'mime_type' => $media->mime_type,
+        ]);
+    }
+
     public function destroy($id)
     {
         $user = auth()->user();
