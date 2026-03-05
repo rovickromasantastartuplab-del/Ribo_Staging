@@ -459,7 +459,8 @@ class LeadController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'color']);
 
-        $leadsQuery = Lead::with(['leadStatus', 'leadSource', 'assignedUser'])
+        // Build the base query with access control and filters
+        $baseQuery = Lead::with(['leadStatus', 'leadSource', 'assignedUser'])
             ->where(function ($q) {
                 if (auth()->user()->type === 'company' || auth()->user()->can('manage-leads') || auth()->user()->can('view-leads')) {
                     $q->where('created_by', createdBy());
@@ -470,7 +471,7 @@ class LeadController extends Controller
 
         // Handle search
         if ($request->has('search') && !empty($request->search)) {
-            $leadsQuery->where(function ($q) use ($request) {
+            $baseQuery->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('email', 'like', '%' . $request->search . '%')
                     ->orWhere('phone', 'like', '%' . $request->search . '%')
@@ -480,31 +481,56 @@ class LeadController extends Controller
 
         // Handle filters
         if ($request->has('lead_source_id') && !empty($request->lead_source_id) && $request->lead_source_id !== 'all') {
-            $leadsQuery->where('lead_source_id', $request->lead_source_id);
+            $baseQuery->where('lead_source_id', $request->lead_source_id);
         }
 
         if ($request->has('status') && !empty($request->status) && $request->status !== 'all') {
-            $leadsQuery->where('status', $request->status);
+            $baseQuery->where('status', $request->status);
         }
 
         if ($request->has('is_converted') && $request->is_converted !== 'all') {
-            $leadsQuery->where('is_converted', $request->is_converted === '1');
+            $baseQuery->where('is_converted', $request->is_converted === '1');
         }
 
-        $leads = $leadsQuery->get();
+        $perPage = max(1, min(100, intval($request->per_page ?? 20)));
 
-        // Group leads by status
-        $kanbanData = [];
+        // If a specific status_id is requested, return paginated leads for that column only
+        if ($request->has('status_id') && !empty($request->status_id)) {
+            $statusId = intval($request->status_id);
+            $page = max(1, intval($request->page ?? 1));
+
+            $columnQuery = clone $baseQuery;
+            $columnQuery->where('lead_status_id', $statusId)->orderBy('id', 'desc');
+
+            $total = $columnQuery->count();
+            $leads = $columnQuery->forPage($page, $perPage)->get();
+
+            return response()->json([
+                'leads'        => $leads->values(),
+                'total'        => $total,
+                'per_page'     => $perPage,
+                'current_page' => $page,
+                'last_page'    => (int) ceil($total / $perPage),
+                'has_more'     => ($page * $perPage) < $total,
+            ]);
+        }
+
+        // Initial load: return statuses with total counts only (no lead data for speed)
+        $columnMeta = [];
         foreach ($leadStatuses as $status) {
-            $kanbanData[$status->id] = [
+            $countQuery = clone $baseQuery;
+            $total = $countQuery->where('lead_status_id', $status->id)->count();
+
+            $columnMeta[$status->id] = [
                 'status' => $status,
-                'leads' => $leads->where('lead_status_id', $status->id)->values()->toArray()
+                'total'  => $total,
             ];
         }
 
         return response()->json([
-            'kanbanData' => $kanbanData,
-            'leadStatuses' => $leadStatuses->toArray()
+            'columnMeta'   => $columnMeta,
+            'leadStatuses' => $leadStatuses->toArray(),
+            'per_page'     => $perPage,
         ]);
     }
 

@@ -604,6 +604,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Lead routes
         Route::middleware('permission:manage-leads')->group(function () {
             Route::get('leads', [LeadController::class, 'index'])->middleware('permission:manage-leads')->name('leads.index');
+            Route::get('leads/kanban', [LeadController::class, 'kanban'])->middleware('permission:manage-leads')->name('leads.kanban');
             Route::get('leads/{lead}', [LeadController::class, 'show'])->middleware('permission:view-leads')->name('leads.show');
             Route::post('leads', [LeadController::class, 'store'])->middleware('permission:create-leads')->name('leads.store');
             Route::put('leads/{lead}', [LeadController::class, 'update'])->middleware('permission:edit-leads')->name('leads.update');
