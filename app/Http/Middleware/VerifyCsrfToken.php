@@ -24,5 +24,6 @@ class VerifyCsrfToken extends Middleware
         'payments/iyzipay/callback',
         'payments/hitpay/webhook',
         'invoices/payment/hitpay/webhook',
+        'webhooks/*', // Allow external omnichannel lead routing
     ];
 }
