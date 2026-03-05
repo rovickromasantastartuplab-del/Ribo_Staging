@@ -16,6 +16,11 @@ class Contact extends Model
         'account_id',
         'created_by',
         'assigned_to',
+        'facebook_psid',
+        'facebook_page_id',
+        'whatsapp_phone_e164',
+        'last_inbound_channel',
+        'last_inbound_at',
     ];
 
     /**

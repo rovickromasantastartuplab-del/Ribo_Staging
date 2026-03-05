@@ -12,6 +12,7 @@ use App\Http\Controllers\PlanOrderController;
 use App\Http\Controllers\Settings\PaymentSettingController;
 use App\Http\Controllers\Settings\CompanyPaymentSettingController;
 use App\Http\Controllers\Settings\WebhookController;
+use App\Http\Controllers\Settings\IntegrationsSettingsController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\InvoiceStripePaymentController;
 use App\Http\Controllers\PayPalPaymentController;
@@ -77,6 +78,7 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
 
     // Company System Settings routes
     Route::post('settings/company/system', [CompanySystemSettingsController::class, 'update'])->name('settings.company.system.update');
+    Route::post('settings/company/integrations', [IntegrationsSettingsController::class, 'update'])->name('settings.company.integrations.update');
 
     Route::post('settings/recaptcha', [SystemSettingsController::class, 'updateRecaptcha'])->name('settings.recaptcha.update');
     Route::post('settings/chatgpt', [SystemSettingsController::class, 'updateChatgpt'])->middleware('plan.feature:ai_integration')->name('settings.chatgpt.update');

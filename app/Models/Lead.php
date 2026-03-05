@@ -28,6 +28,10 @@ class Lead extends BaseModel
         'created_by',
         'assigned_to',
         'campaign_id',
+        'last_activity_at',
+        'ai_suggested_stage_id',
+        'ai_confidence_score',
+        'ai_last_classified_at',
     ];
 
     protected $casts = [

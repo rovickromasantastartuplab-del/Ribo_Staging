@@ -23,6 +23,7 @@ import CookieSettings from './components/cookie-settings';
 import SeoSettings from './components/seo-settings';
 import CacheSettings from './components/cache-settings';
 import WebhookSettings from './components/webhook-settings';
+import IntegrationsSettings from './components/integrations-settings';
 import GoogleCalendarSettings from './components/google-calendar-settings';
 import InvoiceTemplateSettings from './components/invoice-template-settings';
 import QuoteTemplateSettings from './components/quote-template-settings';
@@ -157,6 +158,12 @@ export default function Settings() {
             icon: <Calendar className="h-4 w-4 mr-2" />,
             permission: 'settings'
         },
+        {
+            title: t('Integrations (Social & WP)'),
+            href: '#integrations-settings',
+            icon: <Link2 className="h-4 w-4 mr-2" />,
+            permission: 'settings'
+        },
 
     ];
 
@@ -229,6 +236,7 @@ export default function Settings() {
     const cacheSettingsRef = useRef<HTMLDivElement>(null);
     const webhookSettingsRef = useRef<HTMLDivElement>(null);
     const googleCalendarSettingsRef = useRef<HTMLDivElement>(null);
+    const integrationsSettingsRef = useRef<HTMLDivElement>(null);
 
     const storageSettingsRef = useRef<HTMLDivElement>(null);
 
@@ -258,6 +266,7 @@ export default function Settings() {
             const cacheSettingsPosition = cacheSettingsRef.current?.offsetTop || 0;
             const webhookSettingsPosition = webhookSettingsRef.current?.offsetTop || 0;
             const googleCalendarSettingsPosition = googleCalendarSettingsRef.current?.offsetTop || 0;
+            const integrationsSettingsPosition = integrationsSettingsRef.current?.offsetTop || 0;
 
             const storageSettingsPosition = storageSettingsRef.current?.offsetTop || 0;
 
@@ -265,6 +274,8 @@ export default function Settings() {
             if (scrollPosition >= storageSettingsPosition) {
                 setActiveSection('storage-settings');
 
+            } else if (scrollPosition >= integrationsSettingsPosition) {
+                setActiveSection('integrations-settings');
             } else if (scrollPosition >= googleCalendarSettingsPosition) {
                 setActiveSection('google-calendar-settings');
             } else if (scrollPosition >= webhookSettingsPosition) {
@@ -518,6 +529,13 @@ export default function Settings() {
 
 
 
+
+                    {/* Integrations Settings Section */}
+                    {(auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
+                        <section id="integrations-settings" ref={integrationsSettingsRef} className="mb-8">
+                            <IntegrationsSettings settings={systemSettings} />
+                        </section>
+                    )}
 
                     {/* Webhook Settings Section */}
                     {(auth.permissions?.includes('manage-webhook-settings') || auth.roles?.includes('company')) && (

@@ -92,9 +92,29 @@ class LeadController extends Controller
 
         $meetings = $parentMeetings->merge($attendeeMeetings)->merge($parentCalls)->merge($attendeeCalls)->unique('id')->sortByDesc('start_date')->values();
 
+        $activities = $lead->activities()->orderBy('created_at', 'asc')->get()->map(function ($a) {
+            $a->is_lead_event = false;
+            return $a;
+        });
+
+        $leadEvents = \App\Models\LeadEvent::where('lead_id', $lead->id)->get()->map(function ($e) {
+            return (object) [
+                'id' => 'evt_' . $e->id,
+                'created_at' => $e->received_at,
+                'title' => 'Received message via ' . ucfirst(str_replace('_', ' ', $e->channel)),
+                'description' => $e->summary_text,
+                'activity_type' => 'message',
+                'is_lead_event' => true,
+                'channel' => $e->channel,
+                'user' => (object) ['name' => 'System (Omnichannel)', 'avatar' => null]
+            ];
+        });
+
+        $streamItems = collect($activities)->merge($leadEvents)->sortBy('created_at')->values();
+
         return Inertia::render('leads/show', [
             'lead' => $lead,
-            'streamItems' => $lead->activities()->orderBy('created_at', 'asc')->get(),
+            'streamItems' => $streamItems,
             'comments' => $lead->comments,
             'relatedAccounts' => $relatedAccounts,
             'relatedContacts' => $relatedContacts,
