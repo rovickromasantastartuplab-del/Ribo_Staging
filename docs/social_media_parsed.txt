@@ -1,0 +1,497 @@
+Omnichannel Lead Capture & AI Activity 
+Classification 
+Product/Engineering Feature Documentation (Internal) 
+Target System: RIBO CRM (ribo.com.ph)​
+Feature Scope: Inbound only • Lead tracking only (no full conversation transcripts)​
+Integrations: Facebook Lead Ads, Facebook Messenger, WhatsApp Business API, 
+WordPress (custom plugin)​
+Document Version: v1.2 (Internal Build Spec)​
+Last Updated: March 3, 2026 (Asia/Manila) 
+1. Executive Summary (For Business & PM) 
+What problem this solves 
+Inbound inquiries arrive through multiple channels and get handled inconsistently. This 
+causes: 
+●​ Missed or late follow-ups 
+●​ Duplicate leads/contacts 
+●​ Manual staging and inconsistent pipeline reporting 
+●​ Limited visibility on lead source effectiveness 
+Business value 
+●​ One unified inbound pipeline: every inbound channel produces a consistent “Lead 
+Event” 
+●​ Fewer duplicates through automated matching rules 
+●​ Faster and more accurate staging through AI-assisted classification 
+●​ Cleaner reporting (source → stage → outcome) because every inbound event is 
+standardized and logged 
+Expected impact 
+●​ Reduced manual data entry (leads created/updated automatically) 
+●​ Reduced time from inquiry to correct stage placement 
+●​ Improved stage consistency across teams 
+●​ Higher conversion due to faster triage and follow-up 
+Why this is important now 
+This is foundational for scaling inbound volume without scaling headcount linearly. It 
+enables reliable pipeline reporting and prevents operational breakdown as marketing and 
+inbound traffic increase. 
+2. User Experience Overview (For UI/UX) 
+UX Principle: “Tracking Only” 
+This feature does not add a chat inbox or store full message threads.​
+Instead, it stores Lead Events (summarized activity + AI signals) that attach to the Lead 
+timeline. 
+2.1 Admin: Connecting Integrations 
+Settings → Integrations → Omnichannel Lead Capture 
+Each channel has a card with: 
+●​ Status: Connected / Not connected 
+●​ Last inbound event received (timestamp) 
+●​ Actions: Connect / Reconnect / Disconnect 
+●​ Configuration: Field Mapping, Stage Mapping, AI Settings, Logs 
+2.2 Screens Added / Updated 
+A) Integrations Dashboard (New) 
+Purpose: connect channels, configure mapping, view health. 
+●​ Channel cards + status indicators 
+●​ “Test connection” action 
+●​ “View logs” action 
+B) Field Mapping (New) 
+Applies to: 
+●​ Facebook Lead Ads 
+●​ WordPress forms 
+UI requirements: 
+●​ Left column: external fields 
+●​ Right column: CRM fields (standard + custom) 
+●​ Validation: required fields, format warnings 
+C) Stage Mapping + AI Settings (New) 
+●​ Map AI “labels” → pipeline stages 
+●​ Configure confidence thresholds for: 
+○​ Show suggestion 
+○​ Auto-apply stage (optional) 
+●​ Toggle: store message snippet (default OFF) 
+D) Lead Record → Timeline / Activity Feed (Enhanced) 
+The lead timeline shows: 
+●​ “Lead Event” entries (Messenger inquiry, WhatsApp inquiry, Lead Ad submission, 
+WP form submission) 
+●​ “AI Suggestion” entries (stage + confidence + reasons) 
+●​ “Manual Override” entries (stage changed by user) 
+What users see 
+●​ A short summary like:​
+“Inbound inquiry received via WhatsApp”​
+“AI suggested stage: Qualified (82%) – Reasons: asked for pricing, urgent timeline” 
+What users do NOT see 
+●​ No full chat view 
+●​ No full transcript 
+●​ No message bubble interface 
+2.3 Workflow Steps (Simple Flow) 
+1.​ Inbound event arrives from channel 
+2.​ System matches/creates Contact 
+3.​ System matches/creates Lead 
+4.​ System logs Lead Event 
+5.​ AI classifies → suggests stage 
+6.​ User accepts or overrides 
+7.​ Timeline logs all actions for audit 
+3. Functional Requirements (Clear & Simple) 
+A. Facebook Lead Ads 
+Plain language requirements 
+●​ When a Facebook Lead Ad submission is received, the system must: 
+○​ Create or update the Contact 
+○​ Create or update the Lead 
+○​ Record a Lead Event with source = “Facebook Lead Ads” 
+○​ Trigger AI classification 
+○​ Apply stage suggestion rules 
+Duplicate handling (Contact + Lead) 
+Match priority: 
+1.​ Email 
+2.​ Phone (normalized) 
+3.​ External lead reference ID (for event idempotency only) 
+Rules: 
+●​ If match found: update missing fields (default) 
+●​ Always log a new Lead Event per submission 
+●​ Never create duplicate contacts for same email/phone (unless forced) 
+Field mapping 
+Admin-configurable mapping: 
+●​ Facebook form fields → CRM lead/contact fields 
+●​ Support custom fields 
+●​ Support “default values” when field is missing 
+Technical notes 
+●​ Use Meta Graph API + Lead Ads Webhooks 
+●​ Must implement: 
+○​ Webhook signature verification 
+○​ Idempotency (same lead submission should not create duplicates) 
+○​ Retry-safe processing 
+B. Facebook Messenger (Lead Tracking Only) 
+Plain language requirements 
+●​ When an inbound Messenger message arrives: 
+○​ Create a Messenger Lead Event (not a conversation record) 
+○​ Match/create Contact 
+○​ Match/create Lead 
+○​ Trigger AI classification 
+○​ Log activity entry in lead timeline 
+Event grouping rules (tracking only) 
+●​ Do not store threads. 
+●​ Optionally group multiple events into a single “Recent Messenger Activity” rollup 
+(UI-level grouping), but storage remains event-based. 
+Contact identification 
+Primary identifier: 
+●​ Page-scoped user identifier (PSID) + Page ID (external reference) 
+If the lead later submits a form with email/phone: 
+●​ Link PSID to the matching contact via verified match rules. 
+Technical notes 
+●​ Use Messenger inbound webhooks 
+●​ Store minimal payload: 
+○​ Channel, timestamp, external IDs 
+○​ Optional sanitized snippet (default OFF) 
+○​ AI extracted signals 
+C. WhatsApp Business API (Lead Tracking Only) 
+Plain language requirements 
+●​ When an inbound WhatsApp message arrives: 
+○​ Create a WhatsApp Lead Event 
+○​ Match contact by phone (E.164) 
+○​ Match/create lead 
+○​ Trigger AI classification 
+○​ Log activity in lead timeline 
+Media support (tracking only) 
+●​ Do not store media files by default. 
+●​ Store only: 
+○​ has_media = true/false 
+○​ media_type (image/document/audio) 
+○​ optional external media reference ID (for audit/troubleshooting) 
+Contact matching rules 
+Primary: 
+●​ Phone number normalized to E.164 
+Conflict handling (same phone on multiple contacts): 
+●​ Attach to the most recently active lead/contact 
+●​ Flag a “Data conflict” warning in logs for cleanup 
+Technical notes 
+●​ Use WhatsApp Cloud API webhooks 
+●​ Validate webhook token/signature 
+●​ Normalize phone numbers consistently 
+D. WordPress Plugin (Custom) 
+Plain language requirements 
+●​ WordPress forms send leads into CRM securely and reliably. 
+●​ The plugin must: 
+○​ Authenticate using an API key 
+○​ Push form data via HTTPS 
+○​ Retry transient failures 
+○​ Queue locally if CRM is unreachable 
+Secure connection 
+●​ CRM generates API key 
+●​ WP admin configures key in plugin settings 
+●​ Requests must be rejected if: 
+○​ key invalid 
+○​ domain restriction mismatch (if enabled) 
+○​ rate limit exceeded 
+Form submission behavior 
+Baseline modes: 
+●​ Plugin provides its own form block/shortcode; OR 
+●​ Plugin hooks into popular form plugins (optional extension) 
+Error handling 
+●​ Retry up to N times (default 3) 
+●​ If still failing: 
+○​ store locally as “Pending Sync” 
+○​ allow manual resend + automatic scheduled resend 
+Technical notes 
+●​ Endpoint: POST /api/inbound/wordpress/leads 
+●​ Every submission includes: 
+○​ submission_id (UUID) for idempotency 
+○​ timestamp 
+○​ form_id/form_name 
+○​ payload 
+4. AI Conversation Analysis (Explained Clearly) 
+Simple explanation 
+AI does not analyze “full conversation history.”​
+AI analyzes the latest inbound lead signal and structured data such as: 
+●​ Form fields (Lead Ads / WordPress) 
+●​ The latest message text (if snippet capture is enabled) OR keyword extraction results 
+●​ Channel metadata (source, time, presence of media) 
+Signals AI looks for 
+●​ Intent: pricing, booking, product inquiry, partnership, support, complaint 
+●​ Urgency: “now”, “today”, “ASAP”, deadlines, time windows 
+●​ Budget sensitivity: “how much”, “discount”, “cheapest”, “budget” 
+●​ Fit indicators: location, category match, requirements 
+●​ Commitment cues: “schedule a call”, “send proposal”, “ready to proceed” 
+How AI decides pipeline stage 
+AI outputs: 
+●​ suggested_stage_label (internal AI label) 
+●​ confidence_score (0–100) 
+●​ reasons/signals (human-readable bullets) 
+Then system maps the AI label to a real CRM pipeline stage via admin settings. 
+What confidence score means 
+●​ A numeric estimate of certainty. 
+●​ Used to: 
+○​ show suggestions more prominently when high 
+○​ optionally auto-apply stage when above threshold 
+When re-analysis happens 
+●​ On every new Lead Event arrival 
+●​ On new form submission 
+●​ Optional manual action: “Re-analyze” 
+Technical explanation 
+●​ Asynchronous processing (does not block lead ingestion) 
+●​ Message/event queue for AI jobs 
+●​ Triggers: 
+○​ inbound_event_created 
+○​ lead_updated (after mapping) 
+●​ Debounce rule: 
+○​ if multiple events arrive quickly, analyze once after short delay (configurable) 
+5. Data & System Impact (For Developers) 
+5.1 Data Model (Minimal Storage, Event-Based) 
+A) Contact (existing object) 
+Add/ensure fields: 
+●​ primary_email 
+●​ primary_phone_e164 
+●​ facebook_psid (nullable) 
+●​ facebook_page_id (nullable) 
+●​ whatsapp_phone_e164 (nullable) 
+●​ last_inbound_channel 
+●​ last_inbound_at 
+B) Lead (existing object) 
+Add/ensure fields: 
+●​ lead_source (enum: fb_lead_ads, messenger, whatsapp, wordpress) 
+●​ pipeline_stage_id 
+●​ last_activity_at 
+●​ ai_suggested_stage_id (nullable) 
+●​ ai_confidence_score (nullable) 
+●​ ai_last_classified_at (nullable) 
+C) Lead Events (new) 
+Stores tracking-only inbound events (no transcript). 
+●​ lead_event_id (PK) 
+●​ lead_id (FK) 
+●​ contact_id (FK) 
+●​ channel (enum) 
+●​ external_event_id (nullable) 
+●​ external_actor_key (PSID+page_id OR phone OR lead_id) 
+●​ received_at 
+●​ summary_text (short human-readable, generated) 
+●​ snippet_text (nullable; default OFF) 
+●​ has_media (bool) 
+●​ media_type (nullable) 
+●​ payload_min_json (sanitized) 
+D) AI Classification Results (new) 
+●​ ai_result_id (PK) 
+●​ lead_event_id (FK) 
+●​ suggested_stage_label 
+●​ mapped_stage_id (nullable until mapping resolves) 
+●​ confidence_score 
+●​ reasons_json 
+●​ model_version 
+●​ created_at 
+E) Activity Timeline entries (existing or new) 
+If RIBO already has an activity timeline mechanism, reuse it. Otherwise implement: 
+●​ activity_id 
+●​ lead_id 
+●​ type (lead_event, ai_suggestion, stage_change, error) 
+●​ summary 
+●​ actor (system/user) 
+●​ created_at 
+●​ metadata_json 
+5.2 Inbound Endpoints 
+●​ POST /webhooks/facebook/lead-ads 
+●​ POST /webhooks/facebook/messenger 
+●​ POST /webhooks/whatsapp/messages 
+●​ POST /api/inbound/wordpress/leads 
+Minimum requirements: 
+●​ Auth verification (signature/token/api key) 
+●​ Schema validation 
+●​ Idempotency handling 
+●​ Error classification (4xx vs 5xx) to allow safe retries 
+5.3 Processing Steps (End-to-End) 
+1.​ Receive inbound payload 
+2.​ Validate (signature/token/schema) 
+3.​ Sanitize + store minimal lead_event 
+4.​ Match contact (email/phone/PSID/WA phone) 
+5.​ Create/update lead 
+6.​ Write timeline entry “Inbound lead event received” 
+7.​ Enqueue AI classification job 
+8.​ Store AI result + timeline entry 
+9.​ If auto-apply enabled and confidence ≥ threshold → update stage + log “Stage 
+auto-updated” 
+5.4 Security Validation 
+●​ Webhook signature checks (Meta) 
+●​ API key management (WordPress) 
+●​ Rate limiting per endpoint 
+●​ Payload minimization (do not store full message dumps unless explicitly enabled) 
+5.5 Error Handling 
+●​ Retry-safe ingestion (idempotency keys) 
+●​ Dead-letter queue for failed AI jobs 
+●​ Integration logs viewable by admins only 
+●​ Alerts/monitoring for: 
+○​ high webhook failures 
+○​ no inbound events received for X hours 
+○​ queue backlog growth 
+6. QA Testing Scenarios 
+Each test includes: Scenario • Steps • Expected Result 
+Positive test cases 
+TC-01 — Facebook Lead Ad submission creates/updates contact + lead 
+●​ Steps: 
+○​ Trigger a test Lead Ad submission 
+○​ Check created/updated Contact 
+○​ Check Lead record and Lead Event 
+●​ Expected: 
+○​ Contact matched/created correctly 
+○​ Lead created/updated 
+○​ Lead Event logged with source “Facebook Lead Ads” 
+○​ AI suggestion created 
+TC-02 — Messenger inbound event creates Lead Event only 
+●​ Steps: 
+○​ Send message to FB Page 
+○​ Open lead timeline 
+●​ Expected: 
+○​ Lead Event created (no conversation thread stored) 
+○​ Contact matched/created 
+○​ AI suggestion created 
+TC-03 — WhatsApp inbound event with media 
+●​ Steps: 
+○​ Send WA message with image 
+○​ Review lead timeline 
+●​ Expected: 
+○​ Lead Event shows “has_media=true, media_type=image” 
+○​ No media file stored by default 
+○​ AI suggestion created 
+TC-04 — WordPress form submission succeeds 
+●​ Steps: 
+○​ Submit form from WP 
+○​ Verify lead/contact created/updated 
+●​ Expected: 
+○​ Event logged 
+○​ Fields mapped properly 
+○​ AI suggestion created 
+Negative test cases 
+TC-05 — Invalid webhook signature 
+●​ Steps: 
+○​ Send a webhook request with invalid signature 
+●​ Expected: 
+○​ Rejected (401/403) 
+○​ No Lead Event created 
+○​ Security log entry created 
+TC-06 — Malformed payload 
+●​ Steps: 
+○​ Send inbound payload missing required fields 
+●​ Expected: 
+○​ Rejected (400) 
+○​ Error logged 
+Duplicate lead scenarios 
+TC-07 — Same email submits FB Lead Ad twice 
+●​ Steps: 
+○​ Submit twice using same email 
+●​ Expected: 
+○​ Single Contact record 
+○​ Lead updated 
+○​ Two Lead Events logged 
+○​ No duplicates created 
+TC-08 — WhatsApp message from existing phone 
+●​ Steps: 
+○​ Create Contact with phone 
+○​ Send WA message from same phone 
+●​ Expected: 
+○​ Contact matched, not duplicated 
+○​ Lead Event attaches to same lead 
+AI misclassification scenario 
+TC-09 — AI suggests wrong stage, user overrides 
+●​ Steps: 
+○​ Generate inbound event with ambiguous intent 
+○​ AI suggests stage 
+○​ User manually changes stage 
+●​ Expected: 
+○​ Manual stage overrides AI 
+○​ Timeline logs override with user identity 
+○​ AI suggestion remains recorded 
+Webhook failure scenario 
+TC-10 — Provider retries after 500 
+●​ Steps: 
+○​ Simulate ingestion endpoint returns 500 
+○​ Provider retries same event 
+●​ Expected: 
+○​ Only one Lead Event created (idempotency) 
+○​ Logs show retry + eventual success 
+Plugin authentication failure scenario 
+TC-11 — WordPress plugin invalid API key 
+●​ Steps: 
+○​ Set invalid key in plugin 
+○​ Submit a form 
+●​ Expected: 
+○​ CRM returns 401 
+○​ Plugin logs failure 
+○​ Submission queued locally (Pending Sync), if enabled 
+7. Admin Configuration & Controls 
+Integration setup dashboard 
+●​ Connect/disconnect each channel 
+●​ Last event timestamp 
+●​ Error counters (24h/7d) 
+●​ Test connection button 
+●​ Logs viewer 
+API key management (WordPress) 
+●​ Generate key 
+●​ Rotate key 
+●​ Disable key 
+●​ Optional restrictions: 
+○​ Allowed domain 
+○​ IP allowlist 
+Stage mapping rules 
+●​ AI labels → CRM pipeline stages mapping 
+●​ Per-channel overrides (optional) 
+AI settings 
+●​ Enable AI suggestions (on/off) 
+●​ Confidence threshold: 
+○​ Show suggestion threshold (e.g., >= 40) 
+○​ Auto-apply threshold (e.g., >= 85) 
+●​ Snippet capture toggle (default OFF) 
+Enable/disable toggles 
+●​ Per integration and per sub-feature (AI, auto-apply, snippet capture) 
+8. Non-Functional Requirements (Simplified) 
+Performance 
+●​ Webhook ingestion responds within seconds 
+●​ AI classification asynchronous (non-blocking) 
+●​ System handles burst traffic (campaign spikes) 
+Security 
+●​ Signature/token validation for Meta webhooks 
+●​ HTTPS only 
+●​ Encryption for tokens/API keys at rest 
+●​ Least-privilege access control for integration settings/logs 
+Scalability 
+●​ Queue-driven AI processing 
+●​ Worker autoscaling (or manual scaling plan) 
+Data privacy 
+●​ Minimal event storage 
+●​ No transcripts by default 
+●​ Configurable retention policy for lead events 
+Logging & monitoring 
+●​ Integration health dashboard 
+●​ Error logs with correlation IDs 
+●​ Alerts for: 
+○​ webhook failure spikes 
+○​ no inbound events in X hours 
+○​ AI queue backlog 
+9. Risks & Dependencies 
+API dependency risks 
+●​ Meta API outages, throttling, schema changes 
+●​ Webhook delivery delays/retries 
+Policy limitations 
+●​ WhatsApp Business verification and compliance requirements 
+●​ Facebook platform policy changes affecting data access 
+AI accuracy risks 
+●​ Misclassification causing wrong stage routing if auto-apply is too aggressive 
+●​ Requires threshold tuning and monitoring 
+Data privacy risks 
+●​ Inbound messages may contain sensitive personal data 
+●​ Mitigation: minimal storage, snippet OFF, retention controls, access control 
+10. Success Metrics (KPIs) 
+AI metrics 
+●​ Suggestion acceptance rate (%)​
+Accepted AI stage suggestions / total suggestions 
+●​ Stage accuracy (sampled %)​
+QA-reviewed correctness rate (weekly sample) 
+Operational metrics 
+●​ Time-to-stage (median minutes)​
+Time from inbound event to lead placed in correct stage 
+●​ Manual data entry reduction (%)​
+Reduction in manually created leads/contacts 
+Business metrics 
+●​ Qualified leads increase (%)​
+Qualified leads per channel compared to baseline 
+●​ Conversion improvement (%)​
+Inquiry → Qualified → Closed rate change 
+Implementation Notes for RIBO Team (Internal 
+Alignment) 
+Out of scope (explicit) 
+●​ Full inbox / conversation UI 
+●​ Full transcript storage and retrieval 
+●​ Outbound messaging/replies through Messenger/WhatsApp 
+●​ Media file storage (beyond “received” flags) 
+Core deliverable 
+Reliable, secure ingestion of inbound lead signals + dedupe + standardized lead events + AI 
+stage suggestion + audit logs + admin controls. 

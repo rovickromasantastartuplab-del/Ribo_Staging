@@ -20,7 +20,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): Response
     {
-       return Inertia::render('auth/login', [
+        return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
             'settings' => settings()
@@ -37,12 +37,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $this->logLoginHistory($request);
-
-        // Check if email verification is enabled and user is not verified
-        $emailVerificationEnabled = getSetting('emailVerification', false);
-        if ($emailVerificationEnabled && !$request->user()->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice');
-        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -71,12 +65,12 @@ class AuthenticatedSessionController extends Controller
             'referrer_host' => $request->headers->get('referer') ? parse_url($request->headers->get('referer'), PHP_URL_HOST) : null,
             'referrer_path' => $request->headers->get('referer') ? parse_url($request->headers->get('referer'), PHP_URL_PATH) : null,
         ]);
-        $loginHistory             = new LoginHistory();
-        $loginHistory->user_id    = Auth::id();
-        $loginHistory->ip         = $ip;
-        $loginHistory->date       = now()->toDateString();
-        $loginHistory->details    = $details;
-        $loginHistory->type       = Auth::user()->type;
+        $loginHistory = new LoginHistory();
+        $loginHistory->user_id = Auth::id();
+        $loginHistory->ip = $ip;
+        $loginHistory->date = now()->toDateString();
+        $loginHistory->details = $details;
+        $loginHistory->type = Auth::user()->type;
         $loginHistory->created_by = createdBy();
         $loginHistory->save();
     }

@@ -35,8 +35,8 @@ export function ImportModal({
   const [isImporting, setIsImporting] = useState(false);
   const [showMappingModal, setShowMappingModal] = useState(false);
   const [excelColumns, setExcelColumns] = useState<string[]>([]);
-  const [parsedData, setParsedData] = useState<Record<string, string>[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, string>[]>([]);
+  const [tempFile, setTempFile] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,14 +61,30 @@ export function ImportModal({
         }
       });
 
+      if (!response.ok) {
+        toast.dismiss();
+        if (response.status === 413) {
+          toast.error(t('File is too large. Please reduce the file size and try again.'));
+        } else if (response.status === 422) {
+          try {
+            const errorData = await response.json();
+            toast.error(errorData.message || t('Validation failed. Please check your file.'));
+          } catch {
+            toast.error(t('Validation failed. Please check your file.'));
+          }
+        } else {
+          toast.error(t('Server error. Please try again later.'));
+        }
+        setIsImporting(false);
+        return;
+      }
+
       const data = await response.json();
 
-      if (data.excelColumns && data.previewData) {
-        console.log("Import data", data.previewData);
-
+      if (data.excelColumns && data.previewData && data.tempFile) {
         setExcelColumns(data.excelColumns);
-        setParsedData(data.previewData);
-        setPreviewData(data.previewData.slice(0, 3) || []);
+        setPreviewData(data.previewData);
+        setTempFile(data.tempFile);
         toast.dismiss();
         onClose();
         setShowMappingModal(true);
@@ -88,8 +104,8 @@ export function ImportModal({
     setShowMappingModal(false);
     setFile(null);
     setExcelColumns([]);
-    setParsedData([]);
     setPreviewData([]);
+    setTempFile('');
   };
 
   const handleClose = () => {
@@ -168,7 +184,7 @@ export function ImportModal({
         excelColumns={excelColumns}
         databaseFields={databaseFields}
         importRoute={importRoute}
-        data={parsedData}
+        tempFile={tempFile}
         previewData={previewData}
       />
     </>

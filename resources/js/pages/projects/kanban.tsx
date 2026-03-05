@@ -34,7 +34,7 @@ export default function ProjectKanban() {
 
   const handleAction = (action: string, item: any) => {
     setCurrentItem(item);
-    
+
     switch (action) {
       case 'view':
         router.get(route('project-tasks.show', item.id));
@@ -63,11 +63,11 @@ export default function ProjectKanban() {
 
   const applyFilters = () => {
     let filtered = { ...currentKanbanData };
-    
+
     Object.keys(filtered).forEach(statusId => {
       const column = filtered[statusId];
       let filteredTasks = column.tasks || [];
-      
+
       if (searchTerm) {
         filteredTasks = filteredTasks.filter(task =>
           task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,21 +75,21 @@ export default function ProjectKanban() {
           task.assigned_user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
-      
+
       if (selectedStatus !== 'all') {
         filteredTasks = filteredTasks.filter(task => task.task_status_id === selectedStatus);
       }
-      
+
       if (selectedPriority !== 'all') {
         filteredTasks = filteredTasks.filter(task => task.priority === selectedPriority);
       }
-      
+
       filtered[statusId] = {
         ...column,
         tasks: filteredTasks
       };
     });
-    
+
     setFilteredKanbanData(filtered);
   };
 
@@ -151,7 +151,7 @@ export default function ProjectKanban() {
         toast.error(t('Permission denied.'));
         return;
       }
-      
+
       toast.loading(t('Updating task...'));
 
       // Ensure task_status_id is properly formatted
@@ -159,7 +159,7 @@ export default function ProjectKanban() {
         ...formData,
         task_status_id: formData.task_status_id ? parseInt(formData.task_status_id) : null
       };
-      
+
       router.put(route('project-tasks.update', currentItem.id), updateData, {
         onSuccess: (page) => {
           setIsFormModalOpen(false);
@@ -310,8 +310,8 @@ export default function ProjectKanban() {
             {statuses.map((status) => {
               const statusTasks = Object.values(filteredKanbanData).find((column: any) => column.status?.id === status.id)?.tasks || [];
               return (
-                <div 
-                  key={status.id} 
+                <div
+                  key={status.id}
                   className="flex-shrink-0"
                   style={{ minWidth: 'calc(20% - 16px)', width: 'calc(20% - 16px)' }}
                   onDrop={(e) => {
@@ -323,31 +323,34 @@ export default function ProjectKanban() {
                         toast.error(t('Permission denied.'));
                         return;
                       }
-                      
-                      toast.loading('Updating task status...');
-                      
+
                       const currentTask = Object.values(filteredKanbanData)
                         .flatMap((column: any) => column.tasks)
                         .find((task: any) => task.id.toString() === taskId);
-                      
+
                       if (currentTask) {
-                        router.put(route('project-tasks.update-status', taskId), {
-                          task_status_id: status.id
-                        }, {
-                          preserveState: true,
-                          preserveScroll: true,
-                          onSuccess: (page) => {
-                            toast.dismiss();
-                            if (page.props.flash?.success) {
-                              toast.success(t(page.props.flash.success));
+                        const currentStatusId = currentTask.task_status_id || currentTask.task_status?.id;
+
+                        if (parseInt(currentStatusId) !== parseInt(status.id)) {
+                          toast.loading('Updating task status...');
+                          router.put(route('project-tasks.update-status', taskId), {
+                            task_status_id: status.id
+                          }, {
+                            preserveState: true,
+                            preserveScroll: true,
+                            onSuccess: (page) => {
+                              toast.dismiss();
+                              if (page.props.flash?.success) {
+                                toast.success(t(page.props.flash.success));
+                              }
+                              router.reload();
+                            },
+                            onError: () => {
+                              toast.dismiss();
+                              toast.error('Failed to update task status');
                             }
-                            router.reload();
-                          },
-                          onError: () => {
-                            toast.dismiss();
-                            toast.error('Failed to update task status');
-                          }
-                        });
+                          });
+                        }
                       }
                     }
                   }}
@@ -396,14 +399,13 @@ export default function ProjectKanban() {
                           onDragEnd={(e) => {
                             e.currentTarget.classList.remove('opacity-50', 'scale-95');
                           }}
-                          className={`transition-all duration-200 ${
-                            hasPermission(permissions, 'edit-project-tasks') ? 'cursor-move' : 'cursor-default'
-                          }`}
+                          className={`transition-all duration-200 ${hasPermission(permissions, 'edit-project-tasks') ? 'cursor-move' : 'cursor-default'
+                            }`}
                         >
                           <Card className="bg-white border-l-4 border-t border-r border-b border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 group" style={{ borderLeftColor: status.color }}>
                             <div className="p-3">
                               <div className="flex items-center justify-between mb-2">
-                                <h4 
+                                <h4
                                   className="font-medium text-sm text-gray-900 cursor-pointer hover:text-blue-600 flex-1 pr-2"
                                   onClick={() => handleAction('view', task)}
                                 >
@@ -440,35 +442,33 @@ export default function ProjectKanban() {
                                   </DropdownMenu>
                                 </div>
                               </div>
-                              
+
                               {task.description && (
                                 <p className="text-xs text-gray-500 mb-3 line-clamp-2">{task.description}</p>
                               )}
-                              
+
                               <div className="mb-3">
                                 <div className="flex justify-between text-xs mb-1">
                                   <span className="text-gray-600">Progress</span>
                                   <span className="font-medium">{task.progress}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                  <div 
-                                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                                      task.progress >= 100 ? 'bg-green-500' :
-                                      task.progress >= 75 ? 'bg-blue-500' :
-                                      task.progress >= 50 ? 'bg-yellow-500' : 'bg-orange-500'
-                                    }`}
+                                  <div
+                                    className={`h-1.5 rounded-full transition-all duration-300 ${task.progress >= 100 ? 'bg-green-500' :
+                                        task.progress >= 75 ? 'bg-blue-500' :
+                                          task.progress >= 50 ? 'bg-yellow-500' : 'bg-orange-500'
+                                      }`}
                                     style={{ width: `${task.progress}%` }}
                                   ></div>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center justify-between text-xs">
-                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                                  task.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' :
-                                  task.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20' :
-                                  task.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' :
-                                  'bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20'
-                                }`}>
+                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${task.priority === 'urgent' ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' :
+                                    task.priority === 'high' ? 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20' :
+                                      task.priority === 'medium' ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' :
+                                        'bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20'
+                                  }`}>
                                   {task.priority}
                                 </span>
                                 {task.assigned_user && (
@@ -480,7 +480,7 @@ export default function ProjectKanban() {
                                   </div>
                                 )}
                               </div>
-                              
+
                               {task.due_date && (
                                 <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
                                   <Calendar className="h-3 w-3" />
