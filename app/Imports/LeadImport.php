@@ -23,6 +23,17 @@ class LeadImport implements ToModel, WithHeadingRow, WithEvents
     {
         $this->currentRow++;
 
+        // DEBUG: Log first 5 rows to see what keys and values are available
+        if ($this->currentRow <= 5) {
+            \Log::info("LeadImport Row {$this->currentRow} - Keys: " . implode(', ', array_keys($row)));
+            \Log::info("LeadImport Row {$this->currentRow} - Name value: [" . ($row['name'] ?? 'KEY_NOT_FOUND') . "]");
+        }
+
+        // DEBUG: Log every row where name is empty
+        if (empty($row['name'] ?? '')) {
+            \Log::warning("LeadImport Row {$this->currentRow} - EMPTY NAME. All keys: " . json_encode(array_keys($row)) . " | First 3 values: " . json_encode(array_slice(array_values($row), 0, 3)));
+        }
+
         // Skip if both name and email are empty
         if (empty($row['name']) && empty($row['email'])) {
             $this->skippedCount++;

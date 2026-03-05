@@ -706,6 +706,10 @@ class LeadController extends Controller
                     throw new \Exception('File is empty or invalid');
                 }
                 $headers = array_map('trim', $headerRow);
+                // Strip BOM from first column (Excel-exported CSVs add invisible \xEF\xBB\xBF)
+                if (!empty($headers[0])) {
+                    $headers[0] = preg_replace('/^\x{FEFF}/u', '', $headers[0]);
+                }
                 $headers = array_filter($headers, fn($h) => $h !== '');
 
                 // Read only first 3 data rows for preview
@@ -854,6 +858,10 @@ class LeadController extends Controller
                 // Stream the original CSV line by line
                 $inHandle = fopen($storedFilePath, 'r');
                 $headerRow = fgetcsv($inHandle);
+                // Strip BOM from first column (Excel-exported CSVs add invisible \xEF\xBB\xBF)
+                if (!empty($headerRow[0])) {
+                    $headerRow[0] = preg_replace('/^\x{FEFF}/u', '', $headerRow[0]);
+                }
                 $headerRow = array_map('trim', $headerRow);
 
                 // Build index map: excelColumnName => column index
