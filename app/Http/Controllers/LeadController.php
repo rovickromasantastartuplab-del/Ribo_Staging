@@ -155,7 +155,10 @@ class LeadController extends Controller
         }
 
         if ($request->view === 'kanban' || empty($request->view)) {
-            $leads = collect(['data' => $query->get()]);
+            // Kanban view: don't fetch leads here — the frontend loads them
+            // lazily per-column via the /leads/kanban API endpoint.
+            $leads = collect(['data' => []]);
+
         } else {
             $leads = $query->paginate($request->per_page ?? 10);
 
