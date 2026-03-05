@@ -509,12 +509,12 @@ class LeadController extends Controller
             $leads = $columnQuery->forPage($page, $perPage)->get();
 
             return response()->json([
-                'leads'        => $leads->values(),
-                'total'        => $total,
-                'per_page'     => $perPage,
+                'leads' => $leads->values(),
+                'total' => $total,
+                'per_page' => $perPage,
                 'current_page' => $page,
-                'last_page'    => (int) ceil($total / $perPage),
-                'has_more'     => ($page * $perPage) < $total,
+                'last_page' => (int) ceil($total / $perPage),
+                'has_more' => ($page * $perPage) < $total,
             ]);
         }
 
@@ -526,14 +526,14 @@ class LeadController extends Controller
 
             $columnMeta[$status->id] = [
                 'status' => $status,
-                'total'  => $total,
+                'total' => $total,
             ];
         }
 
         return response()->json([
-            'columnMeta'   => $columnMeta,
+            'columnMeta' => $columnMeta,
             'leadStatuses' => $leadStatuses->toArray(),
-            'per_page'     => $perPage,
+            'per_page' => $perPage,
         ]);
     }
 
@@ -674,7 +674,6 @@ class LeadController extends Controller
         ]);
 
         try {
-            ini_set('memory_limit', '512M');
             ini_set('max_execution_time', '300');
             set_time_limit(300);
 
@@ -830,7 +829,6 @@ class LeadController extends Controller
         }
 
         try {
-            ini_set('memory_limit', '512M');
             ini_set('max_execution_time', '600');
             set_time_limit(600);
 
