@@ -352,6 +352,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Media Library API routes
         Route::get('api/media', [MediaController::class, 'index'])->middleware('permission:manage-media')->name('api.media.index');
+        Route::get('api/media/{id}', [MediaController::class, 'show'])->name('api.media.show');
         Route::post('api/media/batch', [MediaController::class, 'batchStore'])->middleware('permission:create-media')->name('api.media.batch');
         Route::get('api/media/{id}/download', [MediaController::class, 'download'])->middleware('permission:download-media')->name('api.media.download');
         Route::delete('api/media/{id}', [MediaController::class, 'destroy'])->middleware('permission:delete-media')->name('api.media.destroy');
@@ -608,6 +609,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Lead routes
         Route::middleware('permission:manage-leads')->group(function () {
             Route::get('leads', [LeadController::class, 'index'])->middleware('permission:manage-leads')->name('leads.index');
+            Route::get('leads/kanban', [LeadController::class, 'kanban'])->middleware('permission:manage-leads')->name('leads.kanban');
             Route::get('leads/{lead}', [LeadController::class, 'show'])->middleware('permission:view-leads')->name('leads.show');
             Route::post('leads', [LeadController::class, 'store'])->middleware('permission:create-leads')->name('leads.store');
             Route::put('leads/{lead}', [LeadController::class, 'update'])->middleware('permission:edit-leads')->name('leads.update');

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
 import { Plus, Eye, Edit, Trash2, MoreHorizontal, Building2, User, Users, Download, Upload, ArrowRight } from 'lucide-react';
@@ -42,9 +42,23 @@ export default function Leads() {
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
   const [activeView, setActiveView] = useState(pageFilters.view || 'kanban');
-  const [kanbanData, setKanbanData] = useState<any>(null);
-  const [kanbanDataRef, setKanbanDataRef] = useState<any>(null);
+
+  // Per-column kanban state: { [statusId]: { status, items, totalCount, page, hasMore, isLoading } }
+  const [kanbanColumns, setKanbanColumns] = useState<Record<string, {
+    status: any;
+    items: any[];
+    totalCount: number;
+    page: number;
+    hasMore: boolean;
+    isLoading: boolean;
+  }>>({});
   const [isLoadingKanban, setIsLoadingKanban] = useState(false);
+  const kanbanColumnsRef = useRef(kanbanColumns);
+  kanbanColumnsRef.current = kanbanColumns;
+
+  // Keep a ref to current filters so fetchColumn always uses fresh values
+  const filtersRef = useRef({ searchTerm, selectedLeadSource, selectedStatus, selectedConverted });
+  filtersRef.current = { searchTerm, selectedLeadSource, selectedStatus, selectedConverted };
 
   const [prefilledLeadStatus, setPrefilledLeadStatus] = useState<string>('');
 
@@ -102,36 +116,33 @@ export default function Leads() {
       return;
     }
 
-    // Find destination status
     const destStatus = leadStatuses.find((s: any) => s.id === statusId);
     if (!destStatus) return;
 
-    // --- Optimistic update ---
-    const prevKanbanData = kanbanData;
-    const sourceStatusId = lead.lead_status_id?.toString() || lead.lead_status?.id?.toString();
+    const sourceStatusId = (lead.lead_status_id || lead.lead_status?.id)?.toString();
+    const destKey = statusId.toString();
     const updatedLead = { ...lead, lead_status_id: statusId, lead_status: destStatus };
 
-    setKanbanData((prev: any) => {
-      if (!prev) return prev;
+    // Optimistic update on per-column state
+    const snapshot = kanbanColumnsRef.current;
+    setKanbanColumns(prev => {
       const next = { ...prev };
-      // Remove from source column
       if (sourceStatusId && next[sourceStatusId]) {
         next[sourceStatusId] = {
           ...next[sourceStatusId],
-          items: next[sourceStatusId].items.filter((l: any) => l.id !== lead.id)
+          items: next[sourceStatusId].items.filter((l: any) => l.id !== lead.id),
+          totalCount: Math.max(0, next[sourceStatusId].totalCount - 1),
         };
       }
-      // Add to destination column
-      const destKey = statusId.toString();
       if (next[destKey]) {
         next[destKey] = {
           ...next[destKey],
-          items: [...next[destKey].items, updatedLead]
+          items: [updatedLead, ...next[destKey].items],
+          totalCount: next[destKey].totalCount + 1,
         };
       }
       return next;
     });
-    // --- End optimistic update ---
 
     toast.loading(t('Moving lead...'));
     try {
@@ -149,8 +160,8 @@ export default function Leads() {
       if (!response.ok) throw new Error(data.message || t('Failed to move lead'));
       toast.success(data.message || t('Lead moved successfully'));
     } catch (error) {
-      // Rollback on failure
-      setKanbanData(prevKanbanData);
+      // Rollback optimistic update
+      setKanbanColumns(snapshot);
       toast.dismiss();
       toast.error(error instanceof Error ? error.message : t('Failed to move lead'));
     }
@@ -406,46 +417,105 @@ export default function Leads() {
     }, { preserveState: true, preserveScroll: true });
   };
 
-  const loadKanbanData = useCallback(() => {
+  /**
+   * Fetch one page of leads for a specific column from the API.
+   * Merges results into kanbanColumns state.
+   */
+  const fetchColumnPage = useCallback(async (statusId: number, page: number, reset = false) => {
+    const statusKey = statusId.toString();
+    const { searchTerm: s, selectedLeadSource: src, selectedStatus: st, selectedConverted: conv } = filtersRef.current;
+
+    setKanbanColumns(prev => ({
+      ...prev,
+      [statusKey]: { ...(prev[statusKey] || {}), isLoading: true } as any
+    }));
+
+    try {
+      const params = new URLSearchParams();
+      params.set('status_id', statusId.toString());
+      params.set('page', page.toString());
+      params.set('per_page', '20');
+      if (s) params.set('search', s);
+      if (src && src !== 'all') params.set('lead_source_id', src);
+      if (st && st !== 'all') params.set('status', st);
+      if (conv && conv !== 'all') params.set('is_converted', conv);
+
+      const res = await fetch(`${route('leads.kanban')}?${params.toString()}`, {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+
+      setKanbanColumns(prev => {
+        const existing = reset ? [] : (prev[statusKey]?.items || []);
+        const newItems = data.leads || [];
+        // Deduplicate by id
+        const merged = reset ? newItems : [...existing, ...newItems.filter((n: any) => !existing.some((e: any) => e.id === n.id))];
+        return {
+          ...prev,
+          [statusKey]: {
+            status: prev[statusKey]?.status,
+            items: merged,
+            totalCount: data.total ?? 0,
+            page: data.current_page ?? page,
+            hasMore: data.has_more ?? false,
+            isLoading: false,
+          }
+        };
+      });
+    } catch {
+      setKanbanColumns(prev => ({
+        ...prev,
+        [statusKey]: { ...(prev[statusKey] || {}), isLoading: false } as any
+      }));
+    }
+  }, []);
+
+  /**
+   * Load all columns from scratch (initial load or after filter/search change).
+   * Fetches column meta first, then fires per-column page-1 requests in parallel.
+   */
+  const loadKanbanData = useCallback(async () => {
     if (activeView !== 'kanban' || leadStatuses.length === 0) return;
 
     setIsLoadingKanban(true);
 
-    // Use existing leads data to structure kanban
-    const leadsData = leads?.data || [];
-    const structuredData = {};
-
-    leadStatuses.forEach(status => {
-      structuredData[status.id] = {
-        status: status,
-        items: leadsData.filter(lead => {
-          const matchesStatus = lead.lead_status?.id === status.id;
-          const matchesSearch = !searchTerm ||
-            lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            lead.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            lead.company?.toLowerCase().includes(searchTerm.toLowerCase());
-          const matchesSource = selectedLeadSource === 'all' || lead.lead_source_id?.toString() === selectedLeadSource;
-          const matchesActiveStatus = selectedStatus === 'all' || lead.status === selectedStatus;
-          const matchesConverted = selectedConverted === 'all' ||
-            (selectedConverted === '1' && lead.is_converted) ||
-            (selectedConverted === '0' && !lead.is_converted);
-
-          return matchesStatus && matchesSearch && matchesSource && matchesActiveStatus && matchesConverted;
-        })
+    // Initialise column skeletons with statuses
+    const initial: Record<string, any> = {};
+    leadStatuses.forEach((status: any) => {
+      initial[status.id.toString()] = {
+        status,
+        items: [],
+        totalCount: 0,
+        page: 1,
+        hasMore: false,
+        isLoading: true,
       };
     });
-
-    setKanbanData(structuredData);
-    setKanbanDataRef(structuredData);
+    setKanbanColumns(initial);
     setIsLoadingKanban(false);
-  }, [activeView, leads?.data, searchTerm, selectedLeadSource, selectedStatus, selectedConverted, leadStatuses.length]);
+
+    // Load page 1 for every column in parallel
+    await Promise.all(leadStatuses.map((status: any) => fetchColumnPage(status.id, 1, true)));
+  }, [activeView, leadStatuses, fetchColumnPage]);
 
   useEffect(() => {
     if (activeView === 'kanban' && leadStatuses.length > 0) {
       loadKanbanData();
     }
-  }, [loadKanbanData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView, leadStatuses.length]);
+
+  /**
+   * Called when a kanban column's scroll container nears the bottom.
+   */
+  const handleColumnScroll = useCallback((e: React.UIEvent<HTMLDivElement>, statusId: number) => {
+    const el = e.currentTarget;
+    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 80;
+    const col = kanbanColumnsRef.current[statusId.toString()];
+    if (nearBottom && col && col.hasMore && !col.isLoading) {
+      fetchColumnPage(statusId, col.page + 1, false);
+    }
+  }, [fetchColumnPage]);
 
   // Define page actions
   const pageActions = [];
@@ -828,8 +898,13 @@ export default function Leads() {
                 </div>
               ) : (
                 <div className="flex gap-4 overflow-x-auto pb-4" style={{ height: 'calc(100vh - 280px)', width: '100%' }}>
-                  {leadStatuses.map((status) => {
-                    const statusLeads = kanbanData?.[status.id]?.items || [];
+                  {leadStatuses.map((status: any) => {
+                    const col = kanbanColumns[status.id.toString()];
+                    const statusLeads = col?.items || [];
+                    const totalCount = col?.totalCount ?? 0;
+                    const colIsLoading = col?.isLoading ?? false;
+                    const hasMore = col?.hasMore ?? false;
+
                     return (
                       <div
                         key={status.id}
@@ -840,21 +915,16 @@ export default function Leads() {
                           e.currentTarget.classList.remove('bg-blue-50');
                           const leadId = e.dataTransfer.getData('leadId');
                           if (leadId) {
-                            // Check permission before updating
                             if (!hasPermission(permissions, 'edit-leads')) {
                               toast.error(t('Permission denied.'));
                               return;
                             }
-
-                            // Find the lead to get current data
-                            const currentLead = Object.values(kanbanData)
-                              .flatMap((column: any) => column.items)
+                            // Find the lead across all columns
+                            const currentLead = Object.values(kanbanColumnsRef.current)
+                              .flatMap((c: any) => c.items || [])
                               .find((lead: any) => lead.id.toString() === leadId);
-
                             if (currentLead) {
                               const currentStatusId = currentLead.lead_status_id || currentLead.lead_status?.id;
-
-                              // Only update if moving to a different status column
                               if (parseInt(currentStatusId) !== parseInt(status.id)) {
                                 handleMoveTo(currentLead, status.id);
                               }
@@ -870,14 +940,16 @@ export default function Leads() {
                         }}
                       >
                         <div className="bg-gray-100 rounded-lg h-full flex flex-col">
+                          {/* Column header */}
                           <div className="p-3 border-b border-gray-200">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: status.color }}></div>
                                 <h3 className="font-semibold text-sm text-gray-700">{status.name}</h3>
                               </div>
+                              {/* Show real total count, not just loaded items */}
                               <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
-                                {statusLeads.length}
+                                {totalCount}
                               </span>
                             </div>
                             {hasPermission(permissions, 'create-leads') && (
@@ -890,8 +962,14 @@ export default function Leads() {
                               </button>
                             )}
                           </div>
-                          <div className="p-2 space-y-2 overflow-y-auto flex-1" style={{ maxHeight: 'calc(100vh - 350px)' }}>
-                            {statusLeads.map((lead) => (
+
+                          {/* Scrollable column body with infinite scroll */}
+                          <div
+                            className="p-2 space-y-2 overflow-y-auto flex-1"
+                            style={{ maxHeight: 'calc(100vh - 350px)' }}
+                            onScroll={(e) => handleColumnScroll(e, status.id)}
+                          >
+                            {statusLeads.map((lead: any) => (
                               <div
                                 key={lead.id}
                                 draggable={hasPermission(permissions, 'edit-leads')}
@@ -1006,8 +1084,8 @@ export default function Leads() {
                                             </span>
                                           )}
                                           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${lead.status === 'active'
-                                            ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                            : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                              ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                                              : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
                                             }`}>
                                             {lead.status === 'active' ? t('Active') : t('Inactive')}
                                           </span>
@@ -1019,10 +1097,26 @@ export default function Leads() {
                                 </Card>
                               </div>
                             ))}
-                            {statusLeads.length === 0 && (
+
+                            {/* Empty state */}
+                            {statusLeads.length === 0 && !colIsLoading && (
                               <div className="text-center py-8 text-gray-400">
                                 <User className="h-8 w-8 mx-auto mb-2" />
                                 <p className="text-sm">{t('No leads')}</p>
+                              </div>
+                            )}
+
+                            {/* Infinite scroll loader */}
+                            {(colIsLoading || hasMore) && (
+                              <div className="flex items-center justify-center py-3">
+                                {colIsLoading ? (
+                                  <div className="flex items-center gap-2 text-gray-400">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                                    <span className="text-xs">{t('Loading...')}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-gray-400">{t('Scroll for more')}</span>
+                                )}
                               </div>
                             )}
                           </div>
