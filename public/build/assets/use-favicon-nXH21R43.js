@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:public/build/assets/use-favicon-BsJ7F_Go.js
-import{r as i}from"./ui-DS2b07Zp.js";import{e as n}from"./app-JttnnVnO.js";function c(){const{favicon:t}=n();i.useEffect(()=>{if(!t)return;const e=t.startsWith("http")?t:t.startsWith("/storage/")?`${window.location.origin}${t}`:t.startsWith("/")?`${window.location.origin}${t}`:t;let o=document.querySelector("link[rel*='icon']");o||(o=document.createElement("link"),o.rel="icon",document.head.appendChild(o)),o.href=e},[t])}export{c as u};
-========
-import{r as i}from"./ui-DS2b07Zp.js";import{e as n}from"./app-CVIEDEY7.js";function c(){const{favicon:t}=n();i.useEffect(()=>{if(!t)return;const e=t.startsWith("http")?t:t.startsWith("/storage/")?`${window.location.origin}${t}`:t.startsWith("/")?`${window.location.origin}${t}`:t;let o=document.querySelector("link[rel*='icon']");o||(o=document.createElement("link"),o.rel="icon",document.head.appendChild(o)),o.href=e},[t])}export{c as u};
->>>>>>>> main:public/build/assets/use-favicon-nXH21R43.js

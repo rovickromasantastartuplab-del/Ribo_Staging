@@ -277,6 +277,14 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the social accounts connected to this company.
+     */
+    public function socialAccounts()
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
+    /**
      * Check if user can be impersonated
      */
     public function canBeImpersonated()

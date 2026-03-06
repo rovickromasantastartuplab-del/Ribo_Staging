@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Facebook / Meta OAuth (via Laravel Socialite)
+    |--------------------------------------------------------------------------
+    |
+    | Used by SocialAuthController to connect company Facebook Pages.
+    | Get these values from https://developers.facebook.com
+    |
+    */
+    'facebook' => [
+        'client_id' => env('FACEBOOK_APP_ID'),
+        'client_secret' => env('FACEBOOK_APP_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI', '/auth/facebook/callback'),
+    ],
+
 ];

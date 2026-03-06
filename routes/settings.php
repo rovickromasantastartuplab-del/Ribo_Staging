@@ -80,6 +80,10 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('settings/company/system', [CompanySystemSettingsController::class, 'update'])->name('settings.company.system.update');
     Route::post('settings/company/integrations', [IntegrationsSettingsController::class, 'update'])->name('settings.company.integrations.update');
 
+    // Social & Omnichannel OAuth Integration Routes
+    Route::get('auth/{provider}/redirect', [\App\Http\Controllers\Settings\SocialAuthController::class, 'redirect'])->name('social.redirect');
+    Route::get('auth/{provider}/callback', [\App\Http\Controllers\Settings\SocialAuthController::class, 'callback'])->name('social.callback');
+
     Route::post('settings/recaptcha', [SystemSettingsController::class, 'updateRecaptcha'])->name('settings.recaptcha.update');
     Route::post('settings/chatgpt', [SystemSettingsController::class, 'updateChatgpt'])->middleware('plan.feature:ai_integration')->name('settings.chatgpt.update');
     Route::post('settings/cookie', [SystemSettingsController::class, 'updateCookie'])->name('settings.cookie.update');

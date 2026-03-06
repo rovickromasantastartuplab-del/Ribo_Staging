@@ -11,7 +11,7 @@ class ContactMatcherService
      * Finds or creates a Contact based on incoming channel data.
      * Prevents duplicate leads by unifying around email or phone.
      */
-    public function matchOrCreate(array $data)
+    public function matchOrCreate(array $data, int $companyId)
     {
         $channel = $data['channel'] ?? 'unknown';
         $email = $data['email'] ?? null;
@@ -19,26 +19,26 @@ class ContactMatcherService
         $psid = $data['facebook_psid'] ?? null;
         $whatsappMap = $data['whatsapp_phone_e164'] ?? null;
 
-        $query = Contact::query();
+        $query = Contact::where('created_by', $companyId)->where(function ($q) use ($email, $phone, $psid, $whatsappMap) {
+            // High priority match: Email
+            if ($email) {
+                $q->orWhere('email', $email);
+            }
 
-        // High priority match: Email
-        if ($email) {
-            $query->orWhere('email', $email);
-        }
+            // Secondary priority match: Phone
+            if ($phone) {
+                $q->orWhere('phone', $phone);
+            }
 
-        // Secondary priority match: Phone
-        if ($phone) {
-            $query->orWhere('phone', $phone);
-        }
+            // Tertiary priority: Channel specific IDs
+            if ($psid) {
+                $q->orWhere('facebook_psid', $psid);
+            }
 
-        // Tertiary priority: Channel specific IDs
-        if ($psid) {
-            $query->orWhere('facebook_psid', $psid);
-        }
-
-        if ($whatsappMap) {
-            $query->orWhere('whatsapp_phone_e164', $whatsappMap);
-        }
+            if ($whatsappMap) {
+                $q->orWhere('whatsapp_phone_e164', $whatsappMap);
+            }
+        });
 
         $contact = $query->first();
 
@@ -52,6 +52,7 @@ class ContactMatcherService
                 'whatsapp_phone_e164' => $whatsappMap,
                 'last_inbound_channel' => $channel,
                 'last_inbound_at' => now(),
+                'created_by' => $companyId,
             ]);
         } else {
             // Update channel tracking metrics if contact already exists

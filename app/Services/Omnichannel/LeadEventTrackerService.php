@@ -19,7 +19,7 @@ class LeadEventTrackerService
     /**
      * Processes an incoming parsed omnichannel payload into the CRM.
      */
-    public function recordInboundEvent(array $payload)
+    public function recordInboundEvent(array $payload, int $companyId)
     {
         // 1. Identify or Create the Contact
         $contact = $this->contactMatcher->matchOrCreate([
@@ -29,19 +29,21 @@ class LeadEventTrackerService
             'name' => $payload['name'] ?? null,
             'facebook_psid' => $payload['facebook_psid'] ?? null,
             'whatsapp_phone_e164' => $payload['whatsapp_phone_e164'] ?? null,
-        ]);
+        ], $companyId);
 
         // 2. Identify active Lead or create new Lead
         // We look for an open lead for this contact. If none, create one.
-        $lead = Lead::whereHas('activities', function ($q) use ($contact) {
-            // Simplified link based on email/phone matching. In a full system, Link Lead to Contact directly.
-            // Since Lead doesn't have contact_id natively in this CRM, we match by email/phone
-        })->whereIn('email', [$contact->email])
+        $lead = Lead::where('created_by', $companyId)
+            ->whereHas('activities', function ($q) use ($contact) {
+                // Simplified link based on email/phone matching. In a full system, Link Lead to Contact directly.
+                // Since Lead doesn't have contact_id natively in this CRM, we match by email/phone
+            })->whereIn('email', [$contact->email])
             ->whereNotIn('status', ['lost', 'converted', 'junk'])
             ->first();
 
         if (!$lead) {
-            $lead = Lead::where('phone', $contact->phone)
+            $lead = Lead::where('created_by', $companyId)
+                ->where('phone', $contact->phone)
                 ->whereNotIn('status', ['lost', 'converted', 'junk'])
                 ->first();
         }
@@ -53,6 +55,7 @@ class LeadEventTrackerService
                 'phone' => $contact->phone,
                 'status' => 'new',
                 'description' => 'Created via ' . $payload['channel'],
+                'created_by' => $companyId,
                 'last_activity_at' => now(),
             ]);
         } else {

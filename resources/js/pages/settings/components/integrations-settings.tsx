@@ -5,16 +5,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useTranslation } from 'react-i18next';
-import { Link2, LayoutTemplate, MessageSquare, Loader2 } from 'lucide-react';
+import { Link2, LayoutTemplate, MessageSquare, Loader2, CheckCircle2 } from 'lucide-react';
 import { useForm } from '@inertiajs/react';
+
+interface SocialAccount {
+    id: number;
+    provider: string;
+    provider_id: string;
+    provider_name: string;
+}
 
 interface Props {
     settings: any;
+    socialAccounts?: SocialAccount[];
 }
 
-export default function IntegrationsSettings({ settings }: Props) {
+export default function IntegrationsSettings({ settings, socialAccounts = [] }: Props) {
     const { t } = useTranslation();
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // Find connected accounts by provider
+    const facebookAccount = socialAccounts.find((a: SocialAccount) => a.provider === 'facebook');
+    const whatsappAccount = socialAccounts.find((a: SocialAccount) => a.provider === 'whatsapp');
 
     const { data, setData, post, processing } = useForm({
         wordpress_api_key: settings?.wordpress_api_key || '',
@@ -58,7 +70,7 @@ export default function IntegrationsSettings({ settings }: Props) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                             {/* Facebook Lead Ads & Messenger */}
-                            <div className="border rounded-lg p-5 flex flex-col justify-between">
+                            <div className={`border rounded-lg p-5 flex flex-col justify-between ${facebookAccount ? 'border-green-300 bg-green-50/30 dark:border-green-800 dark:bg-green-950/20' : ''}`}>
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="bg-[#1877F2] p-2 rounded-md">
@@ -66,6 +78,9 @@ export default function IntegrationsSettings({ settings }: Props) {
                                         </div>
                                         <div>
                                             <h4 className="font-semibold">{t('Facebook Lead Ads')}</h4>
+                                            {facebookAccount && (
+                                                <p className="text-xs text-muted-foreground">{facebookAccount.provider_name} (ID: {facebookAccount.provider_id})</p>
+                                            )}
                                         </div>
                                     </div>
                                     <p className="text-sm text-muted-foreground mt-2">
@@ -73,13 +88,23 @@ export default function IntegrationsSettings({ settings }: Props) {
                                     </p>
                                 </div>
                                 <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                                    <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
-                                    <Button variant="outline" size="sm" type="button" onClick={() => alert('OAuth flow will be initiated here.')}>{t('Connect Meta')}</Button>
+                                    {facebookAccount ? (
+                                        <span className="text-sm font-medium text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/40 px-2 py-1 rounded flex items-center gap-1">
+                                            <CheckCircle2 className="h-3.5 w-3.5" /> Connected
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
+                                    )}
+                                    <a href={route('social.redirect', { provider: 'facebook' })}>
+                                        <Button variant={facebookAccount ? 'ghost' : 'outline'} size="sm" type="button">
+                                            {facebookAccount ? t('Reconnect') : t('Connect Meta')}
+                                        </Button>
+                                    </a>
                                 </div>
                             </div>
 
                             {/* WhatsApp Cloud API */}
-                            <div className="border rounded-lg p-5 flex flex-col justify-between">
+                            <div className={`border rounded-lg p-5 flex flex-col justify-between ${whatsappAccount ? 'border-green-300 bg-green-50/30 dark:border-green-800 dark:bg-green-950/20' : ''}`}>
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="bg-[#25D366] p-2 rounded-md">
@@ -87,6 +112,9 @@ export default function IntegrationsSettings({ settings }: Props) {
                                         </div>
                                         <div>
                                             <h4 className="font-semibold">{t('WhatsApp Business')}</h4>
+                                            {whatsappAccount && (
+                                                <p className="text-xs text-muted-foreground">{whatsappAccount.provider_name} (ID: {whatsappAccount.provider_id})</p>
+                                            )}
                                         </div>
                                     </div>
                                     <p className="text-sm text-muted-foreground mt-2">
@@ -94,8 +122,16 @@ export default function IntegrationsSettings({ settings }: Props) {
                                     </p>
                                 </div>
                                 <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                                    <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
-                                    <Button variant="outline" size="sm" type="button" onClick={() => alert('OAuth flow will be initiated here.')}>{t('Connect Number')}</Button>
+                                    {whatsappAccount ? (
+                                        <span className="text-sm font-medium text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/40 px-2 py-1 rounded flex items-center gap-1">
+                                            <CheckCircle2 className="h-3.5 w-3.5" /> Connected
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
+                                    )}
+                                    <Button variant={whatsappAccount ? 'ghost' : 'outline'} size="sm" type="button" onClick={() => alert('WhatsApp Cloud API connection coming soon.')}>
+                                        {whatsappAccount ? t('Reconnect') : t('Connect Number')}
+                                    </Button>
                                 </div>
                             </div>
                         </div>

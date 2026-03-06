@@ -97,8 +97,13 @@ class SettingsController extends Controller
 
         // Get current workspace for company users
         $currentWorkspace = null;
-        if ($user->type === 'company' && $workspaceId) {
-            $currentWorkspace = Workspace::find($workspaceId);
+        $socialAccounts = [];
+        if ($user->type === 'company') {
+            if ($workspaceId) {
+                $currentWorkspace = Workspace::find($workspaceId);
+            }
+            // Fetch connected social accounts for the frontend integrations view
+            $socialAccounts = $user->socialAccounts()->get();
         }
 
         return Inertia::render('settings/index', [
@@ -112,6 +117,7 @@ class SettingsController extends Controller
             'paymentSettings' => $paymentSettings,
             'currentWorkspace' => $currentWorkspace,
             'webhooks' => $webhooks,
+            'socialAccounts' => $socialAccounts,
             'isDemoMode' => config('app.is_demo', false),
         ]);
     }
