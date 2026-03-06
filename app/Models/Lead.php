@@ -14,6 +14,7 @@ class Lead extends BaseModel
         'email',
         'phone',
         'company',
+        'description',
         'account_name',
         'account_industry_id',
         'website',

@@ -48,6 +48,7 @@ return [
         'client_id' => env('FACEBOOK_APP_ID'),
         'client_secret' => env('FACEBOOK_APP_SECRET'),
         'redirect' => env('FACEBOOK_REDIRECT_URI', '/auth/facebook/callback'),
+        'verify_token' => env('FACEBOOK_VERIFY_TOKEN', 'ribo_fb_verify_token'),
     ],
 
 ];

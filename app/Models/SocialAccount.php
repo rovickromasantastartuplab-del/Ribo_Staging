@@ -23,6 +23,11 @@ class SocialAccount extends Model
         'expires_at' => 'datetime',
     ];
 
+    protected $hidden = [
+        'access_token',
+        'refresh_token',
+    ];
+
     /**
      * Get the user (company owner) that owns the social account.
      */

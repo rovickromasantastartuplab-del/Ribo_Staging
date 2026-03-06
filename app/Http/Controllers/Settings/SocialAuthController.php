@@ -34,7 +34,7 @@ class SocialAuthController extends Controller
     {
         if ($request->has('error')) {
             Log::error("OAuth Error from {$provider}: " . $request->get('error_description'));
-            return redirect()->route('settings.company.integrations.index')
+            return redirect('/settings#integrations-settings')
                 ->with('error', 'Connection request was cancelled or failed.');
         }
 
@@ -73,20 +73,20 @@ class SocialAuthController extends Controller
                         ]
                     );
 
-                    return redirect()->route('settings.company.integrations.index')
+                    return redirect('/settings#integrations-settings')
                         ->with('success', "Successfully connected to Facebook Page: {$pageName}");
                 } else {
-                    return redirect()->route('settings.company.integrations.index')
+                    return redirect('/settings#integrations-settings')
                         ->with('error', "No Facebook Pages found for this account. You must create a Page first.");
                 }
             }
 
-            return redirect()->route('settings.company.integrations.index')
+            return redirect('/settings#integrations-settings')
                 ->with('success', ucfirst($provider) . ' connected successfully!');
 
         } catch (\Exception $e) {
             Log::error("Exception in {$provider} callback: " . $e->getMessage());
-            return redirect()->route('settings.company.integrations.index')
+            return redirect('/settings#integrations-settings')
                 ->with('error', "Failed to connect to {$provider}: " . $e->getMessage());
         }
     }
