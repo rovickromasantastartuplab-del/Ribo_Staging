@@ -79,6 +79,8 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     // Company System Settings routes
     Route::post('settings/company/system', [CompanySystemSettingsController::class, 'update'])->name('settings.company.system.update');
     Route::post('settings/company/integrations', [IntegrationsSettingsController::class, 'update'])->name('settings.company.integrations.update');
+    Route::get('settings/field-mappings/{provider}', [IntegrationsSettingsController::class, 'getFieldMappings'])->name('settings.field-mappings.get');
+    Route::post('settings/field-mappings/{provider}', [IntegrationsSettingsController::class, 'saveFieldMappings'])->name('settings.field-mappings.save');
 
     // Social & Omnichannel OAuth Integration Routes
     Route::get('auth/{provider}/redirect', [\App\Http\Controllers\Settings\SocialAuthController::class, 'redirect'])->name('social.redirect');

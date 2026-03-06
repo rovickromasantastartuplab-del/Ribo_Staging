@@ -98,12 +98,17 @@ class SettingsController extends Controller
         // Get current workspace for company users
         $currentWorkspace = null;
         $socialAccounts = [];
+        $fieldMappings = [];
         if ($user->type === 'company') {
             if ($workspaceId) {
                 $currentWorkspace = Workspace::find($workspaceId);
             }
             // Fetch connected social accounts for the frontend integrations view
             $socialAccounts = $user->socialAccounts()->get();
+            // Fetch field mappings for facebook
+            $fieldMappings = \App\Models\FieldMapping::where('user_id', $user->id)
+                ->where('provider', 'facebook')
+                ->get(['id', 'external_field', 'crm_field', 'default_value']);
         }
 
         return Inertia::render('settings/index', [
@@ -118,6 +123,7 @@ class SettingsController extends Controller
             'currentWorkspace' => $currentWorkspace,
             'webhooks' => $webhooks,
             'socialAccounts' => $socialAccounts,
+            'fieldMappings' => $fieldMappings,
             'isDemoMode' => config('app.is_demo', false),
         ]);
     }

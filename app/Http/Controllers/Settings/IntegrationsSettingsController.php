@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\FieldMapping;
 use Illuminate\Http\Request;
 
 class IntegrationsSettingsController extends Controller
 {
     /**
      * Update the company integrations settings.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request)
     {
@@ -23,7 +21,6 @@ class IntegrationsSettingsController extends Controller
             ]);
 
             foreach ($validated as $key => $value) {
-                // Store boolean as string 'true' or 'false'
                 if (is_bool($value)) {
                     $value = $value ? 'true' : 'false';
                 }
@@ -35,4 +32,50 @@ class IntegrationsSettingsController extends Controller
             return redirect()->back()->with('error', __('Failed to update integrations settings: :error', ['error' => $e->getMessage()]));
         }
     }
+
+    /**
+     * Get all field mappings for the current company and provider.
+     */
+    public function getFieldMappings(string $provider)
+    {
+        $user = auth()->user();
+        $mappings = FieldMapping::where('user_id', $user->id)
+            ->where('provider', $provider)
+            ->get(['id', 'external_field', 'crm_field', 'default_value']);
+
+        return response()->json($mappings);
+    }
+
+    /**
+     * Save (bulk upsert) field mappings for the current company and provider.
+     */
+    public function saveFieldMappings(Request $request, string $provider)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'mappings' => 'required|array',
+            'mappings.*.external_field' => 'required|string|max:255',
+            'mappings.*.crm_field' => 'required|string|max:255',
+            'mappings.*.default_value' => 'nullable|string|max:255',
+        ]);
+
+        // Delete old mappings for this provider, then insert new ones
+        FieldMapping::where('user_id', $user->id)
+            ->where('provider', $provider)
+            ->delete();
+
+        foreach ($validated['mappings'] as $mapping) {
+            FieldMapping::create([
+                'user_id' => $user->id,
+                'provider' => $provider,
+                'external_field' => $mapping['external_field'],
+                'crm_field' => $mapping['crm_field'],
+                'default_value' => $mapping['default_value'] ?? null,
+            ]);
+        }
+
+        return response()->json(['message' => 'Field mappings saved successfully.']);
+    }
 }
+

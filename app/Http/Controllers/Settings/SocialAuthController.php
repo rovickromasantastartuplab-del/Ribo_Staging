@@ -20,7 +20,7 @@ class SocialAuthController extends Controller
         // For Facebook, we specifically ask for Pages access
         if ($provider === 'facebook') {
             return Socialite::driver('facebook')
-                ->scopes(['pages_show_list', 'pages_messaging', 'pages_read_engagement', 'pages_manage_metadata'])
+                ->scopes(['pages_show_list', 'pages_messaging', 'pages_read_engagement', 'pages_manage_metadata', 'leads_retrieve'])
                 ->redirect();
         }
 
