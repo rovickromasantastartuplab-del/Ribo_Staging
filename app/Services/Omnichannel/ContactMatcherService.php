@@ -2,6 +2,7 @@
 
 namespace App\Services\Omnichannel;
 
+use App\Models\Account;
 use App\Models\Contact;
 use Illuminate\Support\Str;
 
@@ -44,10 +45,14 @@ class ContactMatcherService
 
         // If no contact exists, we create a new one
         if (!$contact) {
+            // Resolve account_id: match by company name or use default inbound account
+            $accountId = $this->resolveAccountId($data, $companyId);
+
             $contact = Contact::create([
                 'name' => $data['name'] ?? 'Unknown Lead ' . Str::random(5),
                 'email' => $email,
                 'phone' => $phone,
+                'account_id' => $accountId,
                 'facebook_psid' => $psid,
                 'whatsapp_phone_e164' => $whatsappMap,
                 'last_inbound_channel' => $channel,
@@ -71,5 +76,41 @@ class ContactMatcherService
         }
 
         return $contact;
+    }
+
+    /**
+     * Resolve the account_id for a new inbound contact.
+     * 1. If a company name is in the payload, try to match an existing account.
+     * 2. Otherwise, find or create a default "Inbound Leads" account for this company.
+     */
+    private function resolveAccountId(array $data, int $companyId): int
+    {
+        $companyName = $data['company'] ?? null;
+
+        // Try to match by company name if provided
+        if ($companyName) {
+            $account = Account::where('created_by', $companyId)
+                ->where('name', $companyName)
+                ->first();
+
+            if ($account) {
+                return $account->id;
+            }
+        }
+
+        // Find or create a default "Inbound Leads" account
+        $defaultAccount = Account::firstOrCreate(
+            [
+                'created_by' => $companyId,
+                'name' => 'Inbound Leads',
+            ],
+            [
+                'email' => null,
+                'phone' => null,
+                'status' => 'active',
+            ]
+        );
+
+        return $defaultAccount->id;
     }
 }

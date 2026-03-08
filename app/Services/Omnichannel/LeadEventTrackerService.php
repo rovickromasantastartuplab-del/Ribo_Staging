@@ -27,6 +27,7 @@ class LeadEventTrackerService
             'email' => $payload['email'] ?? null,
             'phone' => $payload['phone'] ?? null,
             'name' => $payload['name'] ?? null,
+            'company' => $payload['company'] ?? null,
             'facebook_psid' => $payload['facebook_psid'] ?? null,
             'whatsapp_phone_e164' => $payload['whatsapp_phone_e164'] ?? null,
         ], $companyId);
