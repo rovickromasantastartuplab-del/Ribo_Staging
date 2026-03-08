@@ -68,6 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'invoices/payment/easebuzz/failure',
                 'api/media/batch',
                 'webhooks/*', // Allow external omnichannel lead routing
+                'api/inbound/*', // WordPress inbound lead endpoint
             ],
         );
 
