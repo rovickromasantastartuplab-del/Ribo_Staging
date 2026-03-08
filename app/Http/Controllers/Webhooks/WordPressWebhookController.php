@@ -162,13 +162,16 @@ class WordPressWebhookController extends Controller
             Log::error('WordPress webhook: processing failed', [
                 'company_id' => $companyId,
                 'submission_id' => $validated['submission_id'],
+                'exception_class' => get_class($e),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile() . ':' . $e->getLine(),
+                'trace' => substr($e->getTraceAsString(), 0, 1000),
             ]);
             return response()->json([
                 'status' => 'error',
                 'code' => 'PROCESSING_FAILED',
                 'message' => 'An internal error occurred. Safe to retry.',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
