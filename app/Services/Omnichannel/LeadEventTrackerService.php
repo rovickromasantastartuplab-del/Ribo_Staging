@@ -50,11 +50,14 @@ class LeadEventTrackerService
         }
 
         if (!$lead) {
+            $leadStatus = \App\Models\LeadStatus::where('name', 'New')->first();
+
             $lead = Lead::create([
                 'name' => $contact->name ?? 'New Inbound Lead',
                 'email' => $contact->email,
                 'phone' => $contact->phone,
-                'status' => 'new',
+                'status' => 'active',
+                'lead_status_id' => $leadStatus?->id,
                 'notes' => 'Created via ' . $payload['channel'],
                 'created_by' => $companyId,
                 'last_activity_at' => now(),
