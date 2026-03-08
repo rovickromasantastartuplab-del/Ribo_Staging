@@ -143,6 +143,15 @@ Route::get('/hc/{path?}', function ($path = '') {
 
 // Public form submission routes
 
+// TEMPORARY: Visit this URL once to clear cache, then remove this route
+Route::get('clear-all-cache', function () {
+    \Artisan::call('route:clear');
+    \Artisan::call('config:clear');
+    \Artisan::call('cache:clear');
+    \Artisan::call('view:clear');
+    return 'All caches cleared successfully!';
+});
+
 // Omnichannel Inbound Webhooks (Public)
 Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhooks\FacebookWebhookController::class, 'handle'])->name('webhooks.facebook')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
