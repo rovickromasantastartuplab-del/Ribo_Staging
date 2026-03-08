@@ -143,10 +143,19 @@ Route::get('/hc/{path?}', function ($path = '') {
 
 // Public form submission routes
 
-// Omnichannel Inbound Webhooks (Public)
-Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhooks\FacebookWebhookController::class, 'handle'])->name('webhooks.facebook')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+// Omnichannel Inbound Webhooks (Public - excludes session/Inertia middleware)
+$webhookExcludedMiddleware = [
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \App\Http\Middleware\HandleInertiaRequests::class,
+    \App\Http\Middleware\ShareGlobalSettings::class,
+    \App\Http\Middleware\CheckInstallation::class,
+    \App\Http\Middleware\HandleAppearance::class,
+    \App\Http\Middleware\DemoModeMiddleware::class,
+    \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+];
+Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhooks\FacebookWebhookController::class, 'handle'])->name('webhooks.facebook')->withoutMiddleware($webhookExcludedMiddleware);
+Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware($webhookExcludedMiddleware);
+Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 
 // Cashfree webhook (public route)
 Route::post('cashfree/webhook', [CashfreeController::class, 'webhook'])->name('cashfree.webhook');
