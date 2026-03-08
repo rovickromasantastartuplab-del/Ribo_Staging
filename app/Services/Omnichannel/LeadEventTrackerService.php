@@ -55,7 +55,7 @@ class LeadEventTrackerService
                 'email' => $contact->email,
                 'phone' => $contact->phone,
                 'status' => 'new',
-                'description' => 'Created via ' . $payload['channel'],
+                'notes' => 'Created via ' . $payload['channel'],
                 'created_by' => $companyId,
                 'last_activity_at' => now(),
             ]);
