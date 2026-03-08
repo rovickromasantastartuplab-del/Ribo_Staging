@@ -146,7 +146,7 @@ Route::get('/hc/{path?}', function ($path = '') {
 // Omnichannel Inbound Webhooks (Public)
 Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhooks\FacebookWebhookController::class, 'handle'])->name('webhooks.facebook')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-Route::match(['GET', 'POST'], 'webhooks/wordpress', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('webhooks.wordpress')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 // Cashfree webhook (public route)
 Route::post('cashfree/webhook', [CashfreeController::class, 'webhook'])->name('cashfree.webhook');

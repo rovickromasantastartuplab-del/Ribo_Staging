@@ -79,8 +79,8 @@ class LeadEventTrackerService
             'payload_min_json' => $payload['raw_payload'] ?? [],
         ]);
 
-        // 4. Trigger Async AI Intent Job (ToDo)
-        // \App\Jobs\ClassifyLeadIntentJob::dispatch($event);
+        // 4. Trigger Async AI Intent Classification
+        \App\Jobs\ClassifyLeadIntentJob::dispatch($event->id);
 
         return $event;
     }
