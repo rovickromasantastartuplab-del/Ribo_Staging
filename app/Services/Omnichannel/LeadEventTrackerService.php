@@ -67,7 +67,7 @@ class LeadEventTrackerService
                 'position' => $payload['position'] ?? null,
                 'address' => $payload['address'] ?? null,
                 'value' => $payload['value'] ?? null,
-                'status' => 'new',
+                'status' => 'active',
                 'lead_status_id' => $leadStatus?->id,
                 'lead_source_id' => $leadSource->id,
                 'notes' => $notes, // use notes instead of description
