@@ -50,7 +50,11 @@ class LeadEventTrackerService
         }
 
         if (!$lead) {
-            $leadStatus = \App\Models\LeadStatus::where('created_by', $companyId)->where('name', 'New')->first();
+            $leadStatus = \App\Models\LeadStatus::where('created_by', $companyId)->where('name', 'New')->where('status', 'active')->first();
+            if (!$leadStatus) {
+                $leadStatus = \App\Models\LeadStatus::where('created_by', $companyId)->where('status', 'active')->first();
+            }
+
             $leadSource = \App\Models\LeadSource::firstOrCreate(
                 ['created_by' => $companyId, 'name' => 'WordPress'],
                 ['description' => 'Leads generated from WordPress webhooks', 'status' => 'active']
