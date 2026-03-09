@@ -157,6 +157,17 @@ Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhoo
 Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware($webhookExcludedMiddleware);
 Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 
+// Health check endpoint for external plugins to verify connection
+Route::get('api/health', function (\Illuminate\Http\Request $request) {
+    if ($apiKey = $request->header('X-WP-API-Key')) {
+        $setting = \App\Models\Setting::where('key', 'wordpress_api_key')->where('value', $apiKey)->first();
+        if (!$setting) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid API key'], 401);
+        }
+    }
+    return response()->json(['status' => 'ok', 'message' => 'Ribo CRM API is up and running']);
+})->name('api.health')->withoutMiddleware($webhookExcludedMiddleware);
+
 // Cashfree webhook (public route)
 Route::post('cashfree/webhook', [CashfreeController::class, 'webhook'])->name('cashfree.webhook');
 
