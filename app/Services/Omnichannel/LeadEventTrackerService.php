@@ -50,15 +50,27 @@ class LeadEventTrackerService
         }
 
         if (!$lead) {
-            $leadStatus = \App\Models\LeadStatus::where('name', 'New')->first();
+            $leadStatus = \App\Models\LeadStatus::where('created_by', $companyId)->where('name', 'New')->first();
+            $leadSource = \App\Models\LeadSource::firstOrCreate(
+                ['created_by' => $companyId, 'name' => 'WordPress'],
+                ['description' => 'Leads generated from WordPress webhooks', 'status' => 'active']
+            );
+
+            $notes = $payload['notes'] ?? ('Created via ' . $payload['channel']);
 
             $lead = Lead::create([
                 'name' => $contact->name ?? 'New Inbound Lead',
                 'email' => $contact->email,
                 'phone' => $contact->phone,
+                'company' => $payload['company'] ?? null,
+                'website' => $payload['website'] ?? null,
+                'position' => $payload['position'] ?? null,
+                'address' => $payload['address'] ?? null,
+                'value' => $payload['value'] ?? null,
                 'status' => 'active',
                 'lead_status_id' => $leadStatus?->id,
-                'notes' => 'Created via ' . $payload['channel'],
+                'lead_source_id' => $leadSource->id,
+                'notes' => $notes,
                 'created_by' => $companyId,
                 'last_activity_at' => now(),
             ]);

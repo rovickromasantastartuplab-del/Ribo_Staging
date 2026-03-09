@@ -79,6 +79,12 @@ class WordPressWebhookController extends Controller
             'payload.email' => 'nullable|email|max:255',
             'payload.phone' => 'nullable|string|max:50',
             'payload.message' => 'nullable|string|max:5000',
+            'payload.notes' => 'nullable|string|max:5000',
+            'payload.company' => 'nullable|string|max:255',
+            'payload.website' => 'nullable|string|max:255',
+            'payload.position' => 'nullable|string|max:255',
+            'payload.address' => 'nullable|string|max:1000',
+            'payload.value' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -128,6 +134,12 @@ class WordPressWebhookController extends Controller
         $name = $mappedFields['name'] ?? $sanitized['name'] ?? $sanitized['full_name'] ?? $sanitized['your-name'] ?? null;
         $email = $mappedFields['email'] ?? $sanitized['email'] ?? $sanitized['your-email'] ?? null;
         $phone = $mappedFields['phone'] ?? $sanitized['phone'] ?? $sanitized['your-tel'] ?? null;
+        $company = $mappedFields['company'] ?? $sanitized['company'] ?? null;
+        $website = $mappedFields['website'] ?? $sanitized['website'] ?? null;
+        $position = $mappedFields['position'] ?? $sanitized['position'] ?? null;
+        $address = $mappedFields['address'] ?? $sanitized['address'] ?? null;
+        $value = $mappedFields['value'] ?? $sanitized['value'] ?? null;
+        $notes = $mappedFields['notes'] ?? $mappedFields['message'] ?? $sanitized['notes'] ?? $sanitized['message'] ?? $sanitized['your-message'] ?? null;
 
         // ─── 6. Process through existing pipeline ───
         try {
@@ -140,9 +152,14 @@ class WordPressWebhookController extends Controller
                 'name' => $name,
                 'email' => $email,
                 'phone' => $phone,
-                'company' => $mappedFields['company'] ?? $sanitized['company'] ?? null,
+                'company' => $company,
+                'website' => $website,
+                'position' => $position,
+                'address' => $address,
+                'value' => $value,
+                'notes' => $notes,
                 'summary_text' => "WordPress form submission: {$formName}" . ($name ? " from {$name}" : ''),
-                'snippet_text' => $sanitized['message'] ?? $sanitized['your-message'] ?? '',
+                'snippet_text' => $notes ?? '',
                 'raw_payload' => $sanitized,
             ], $companyId);
 
