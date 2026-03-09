@@ -99,17 +99,24 @@ class ContactMatcherService
         }
 
         // Find or create a default "Inbound Leads" account
-        $defaultAccount = Account::firstOrCreate(
-            [
+        // Find a default "Inbound Leads" account
+        $defaultAccount = Account::where('created_by', $companyId)
+            ->where('name', 'Inbound Leads')
+            ->first();
+
+        if (!$defaultAccount) {
+            // We must provide basic required fields for an Account to avoid DB errors
+            $type = \App\Models\AccountType::where('created_by', $companyId)->first();
+            $industry = \App\Models\AccountIndustry::where('created_by', $companyId)->first();
+
+            $defaultAccount = Account::create([
                 'created_by' => $companyId,
                 'name' => 'Inbound Leads',
-            ],
-            [
-                'email' => null,
-                'phone' => null,
                 'status' => 'active',
-            ]
-        );
+                'account_type_id' => $type ? $type->id : null,
+                'account_industry_id' => $industry ? $industry->id : null,
+            ]);
+        }
 
         return $defaultAccount->id;
     }

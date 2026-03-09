@@ -67,10 +67,10 @@ class LeadEventTrackerService
                 'position' => $payload['position'] ?? null,
                 'address' => $payload['address'] ?? null,
                 'value' => $payload['value'] ?? null,
-                'status' => 'active',
+                'status' => 'new',
                 'lead_status_id' => $leadStatus?->id,
                 'lead_source_id' => $leadSource->id,
-                'notes' => $notes,
+                'notes' => $notes, // use notes instead of description
                 'created_by' => $companyId,
                 'last_activity_at' => now(),
             ]);

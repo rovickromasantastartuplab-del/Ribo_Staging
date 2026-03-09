@@ -122,8 +122,12 @@ class WordPressWebhookController extends Controller
         }
 
         // ─── 4. Sanitize payload ───
-        $rawPayload = $validated['payload'];
+        $rawPayload = $request->input('payload'); // Retrieve all fields, not just those predefined in the validator
         $sanitized = array_map(function ($value) {
+            if (is_array($value)) {
+                // Return arrays as-is (they will be JSON encoded later if stored)
+                return $value;
+            }
             return is_string($value) ? strip_tags(trim($value)) : $value;
         }, $rawPayload);
 
