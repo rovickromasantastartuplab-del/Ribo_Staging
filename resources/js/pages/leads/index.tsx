@@ -90,7 +90,18 @@ export default function Leads() {
   };
 
   const handleExport = () => {
-    (CrudFormModal as any).handleExport?.();
+    const filters = filtersRef.current;
+
+    // Convert current filters into query parameters
+    const queryParams = new URLSearchParams();
+    if (filters.searchTerm) queryParams.append('search', filters.searchTerm);
+    if (filters.selectedStatus !== 'all') queryParams.append('lead_status_id', filters.selectedStatus);
+    if (filters.selectedLeadSource !== 'all') queryParams.append('lead_source_id', filters.selectedLeadSource);
+    if (filters.selectedStatus !== 'all') queryParams.append('status', filters.selectedStatus);
+    if (filters.selectedConverted !== 'all') queryParams.append('is_converted', filters.selectedConverted);
+
+    // Redirect to the export route with filters
+    window.location.href = `${route('leads.export')}?${queryParams.toString()}`;
   };
 
   const handleSort = (field: string) => {

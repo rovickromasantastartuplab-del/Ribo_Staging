@@ -634,14 +634,14 @@ class LeadController extends Controller
         return redirect()->back()->with('success', __('Lead converted to contact successfully.'));
     }
 
-    public function fileExport()
+    public function fileExport(Request $request)
     {
         if (!auth()->user()->can('export-leads')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
         $name = 'lead_' . date('Y-m-d_H-i-s');
-        return Excel::download(new LeadExport(), $name . '.xlsx');
+        return Excel::download(new LeadExport($request), $name . '.xlsx');
     }
 
     public function downloadTemplate()
