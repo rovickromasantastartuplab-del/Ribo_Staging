@@ -57,8 +57,8 @@ export default function Leads() {
   kanbanColumnsRef.current = kanbanColumns;
 
   // Keep a ref to current filters so fetchColumn always uses fresh values
-  const filtersRef = useRef({ searchTerm, selectedLeadSource, selectedStatus, selectedConverted });
-  filtersRef.current = { searchTerm, selectedLeadSource, selectedStatus, selectedConverted };
+  const filtersRef = useRef({ searchTerm, selectedLeadStatus, selectedLeadSource, selectedStatus, selectedConverted, selectedAssignee });
+  filtersRef.current = { searchTerm, selectedLeadStatus, selectedLeadSource, selectedStatus, selectedConverted, selectedAssignee };
 
   const [prefilledLeadStatus, setPrefilledLeadStatus] = useState<string>('');
 
@@ -95,13 +95,14 @@ export default function Leads() {
     // Convert current filters into query parameters
     const queryParams = new URLSearchParams();
     if (filters.searchTerm) queryParams.append('search', filters.searchTerm);
-    if (filters.selectedStatus !== 'all') queryParams.append('lead_status_id', filters.selectedStatus);
+    if (filters.selectedLeadStatus !== 'all') queryParams.append('lead_status_id', filters.selectedLeadStatus);
     if (filters.selectedLeadSource !== 'all') queryParams.append('lead_source_id', filters.selectedLeadSource);
     if (filters.selectedStatus !== 'all') queryParams.append('status', filters.selectedStatus);
     if (filters.selectedConverted !== 'all') queryParams.append('is_converted', filters.selectedConverted);
+    if (filters.selectedAssignee !== 'all') queryParams.append('assigned_to', filters.selectedAssignee);
 
     // Redirect to the export route with filters
-    window.location.href = `${route('leads.export')}?${queryParams.toString()}`;
+    window.location.href = `${route('lead.export')}?${queryParams.toString()}`;
   };
 
   const handleSort = (field: string) => {
