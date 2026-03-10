@@ -503,7 +503,7 @@ export default function Leads() {
       loadKanbanData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeView, leadStatuses.length]);
+  }, [activeView, leadStatuses.length, pageFilters]);
 
   /**
    * Called when a kanban column's scroll container nears the bottom.
@@ -1084,8 +1084,8 @@ export default function Leads() {
                                             </span>
                                           )}
                                           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${lead.status === 'active'
-                                              ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                              : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                            ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                                            : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
                                             }`}>
                                             {lead.status === 'active' ? t('Active') : t('Inactive')}
                                           </span>
