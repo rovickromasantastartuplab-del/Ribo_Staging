@@ -525,12 +525,15 @@ export default function Leads() {
     await Promise.all(leadStatuses.map((status: any) => fetchColumnPage(status.id, 1, true)));
   }, [activeView, leadStatuses, fetchColumnPage]);
 
+  // Build a stable key that changes when statuses are reordered (not just added/removed)
+  const leadStatusOrderKey = JSON.stringify(leadStatuses.map((s: any) => s.id));
+
   useEffect(() => {
     if (activeView === 'kanban' && leadStatuses.length > 0) {
       loadKanbanData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeView, leadStatuses.length, pageFilters]);
+  }, [activeView, leadStatusOrderKey, pageFilters]);
 
   /**
    * Called when a kanban column's scroll container nears the bottom.
