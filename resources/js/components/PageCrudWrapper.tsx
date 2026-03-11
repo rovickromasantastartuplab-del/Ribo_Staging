@@ -18,6 +18,19 @@ import { CrudConfig } from '@/types/crud';
 import { BreadcrumbItem } from '@/types';
 import { useTranslation } from 'react-i18next';
 
+// Properly singularize an entity name (e.g. currencies → currency, roles → role)
+function singularize(name: string): string {
+  if (name.endsWith('ies')) return name.slice(0, -3) + 'y';
+  if (name.endsWith('ses') || name.endsWith('xes') || name.endsWith('zes')) return name.slice(0, -2);
+  if (name.endsWith('s')) return name.slice(0, -1);
+  return name;
+}
+
+// Capitalize first letter
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 export interface CrudButton {
   label: string;
   icon?: ReactNode;
@@ -270,7 +283,7 @@ export function PageCrudWrapper({
           onSuccess: (page) => {
             setIsFormModalOpen(false);
             toast.dismiss();
-            toast.success(t(`${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)} created successfully`));
+            toast.success(t(`${capitalize(singularize(entity.name))} created successfully`));
             if (hooks?.afterCreate) {
               hooks.afterCreate(formData, page.props[entity.name]);
             }
@@ -288,7 +301,7 @@ export function PageCrudWrapper({
           onSuccess: (page) => {
             setIsFormModalOpen(false);
             toast.dismiss();
-            toast.success(t(`${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)} updated successfully`));
+            toast.success(t(`${capitalize(singularize(entity.name))} updated successfully`));
             if (hooks?.afterUpdate) {
               hooks.afterUpdate(formData, page.props[entity.name]);
             }
@@ -310,7 +323,7 @@ export function PageCrudWrapper({
         onSuccess: (page) => {
           setIsFormModalOpen(false);
           toast.dismiss();
-          toast.success(t(`${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)} created successfully`));
+          toast.success(t(`${capitalize(singularize(entity.name))} created successfully`));
           if (hooks?.afterCreate) {
             hooks.afterCreate(formData, page.props[entity.name]);
           }
@@ -328,7 +341,7 @@ export function PageCrudWrapper({
         onSuccess: (page) => {
           setIsFormModalOpen(false);
           toast.dismiss();
-          toast.success(t(`${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)} updated successfully`));
+          toast.success(t(`${capitalize(singularize(entity.name))} updated successfully`));
           if (hooks?.afterUpdate) {
             hooks.afterUpdate(formData, page.props[entity.name]);
           }
@@ -353,7 +366,7 @@ export function PageCrudWrapper({
           toast.error(t(page.props.flash?.error));
           return;
         }
-        toast.success(t(`${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)} deleted successfully`));
+        toast.success(t(`${capitalize(singularize(entity.name))} deleted successfully`));
         if (hooks?.afterDelete) {
           hooks.afterDelete(currentItem.id);
         }
@@ -403,7 +416,7 @@ export function PageCrudWrapper({
   // Add the default "Add New" button if allowed and user has permission
   if (showAddButton && hasPermission(permissions, entity.permissions.create)) {
     pageActions.push({
-      label: `Add New ${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)}`,
+      label: `Add New ${capitalize(singularize(entity.name))}`,
       icon: <PlusIcon className="h-4 w-4" />,
       variant: 'default',
       onClick: () => handleAddNew()
@@ -585,10 +598,10 @@ export function PageCrudWrapper({
         initialData={currentItem}
         title={
           formMode === 'create'
-            ? `Add New ${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)}`
+            ? `Add New ${capitalize(singularize(entity.name))}`
             : formMode === 'edit'
-              ? `Edit ${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)}`
-              : `View ${entity.name.slice(0, -1).charAt(0).toUpperCase() + entity.name.slice(0, -1).slice(1)}`
+              ? `Edit ${capitalize(singularize(entity.name))}`
+              : `View ${capitalize(singularize(entity.name))}`
         }
         mode={formMode}
         description={config.description}

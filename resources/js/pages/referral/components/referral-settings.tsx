@@ -80,7 +80,7 @@ export default function ReferralSettings({ settings }: ReferralSettingsProps) {
                         </div>
 
                         <div>
-                            <Label htmlFor="threshold_amount">{t('Minimum Threshold Amount ($)')}</Label>
+                            <Label htmlFor="threshold_amount">{t('Minimum Threshold Amount')} ({window.appSettings?.currencySettings?.currencySymbol || '$'})</Label>
                             <Input
                                 id="threshold_amount"
                                 type="number"

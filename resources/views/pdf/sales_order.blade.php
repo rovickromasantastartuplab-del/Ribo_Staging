@@ -8,7 +8,7 @@
     <title>Sales Order {{ $salesOrder->order_number }}</title>
     <style>
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-family: 'DejaVu Sans', sans-serif;
             color: #111;
             margin: 0;
             padding: 0;
@@ -141,7 +141,9 @@
 
 <body>
     @php
-        $currencySymbol = getSetting('currency_symbol', '$');
+        $currencyCode = getSetting('defaultCurrency', 'USD');
+        $currencyModel = \App\Models\Currency::where('code', $currencyCode)->first();
+        $currencySymbol = $currencyModel ? $currencyModel->symbol : '₱';
 
         // Calculations
         $subtotal = 0;

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { Copy, Check, Users, DollarSign, FileText, TrendingUp, Award, Clock } from 'lucide-react';
+import { Copy, Check, Users, Banknote, FileText, TrendingUp, Award, Clock } from 'lucide-react';
 import { toast } from '@/components/custom-toast';
 import { formatCurrency } from '@/utils/currency';
 
@@ -56,7 +56,7 @@ export default function ReferralDashboard({ userType, stats, referralLink, recen
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('Total Commission Paid')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(stats.totalCommissionPaid)}</div>
@@ -94,7 +94,7 @@ export default function ReferralDashboard({ userType, stats, referralLink, recen
                     </div>
                     <div className="text-right">
                       <p className="font-medium">{company.referral_count} referrals</p>
-                      <p className="text-sm text-muted-foreground">{formatCurrency(company.total_earned)}</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(company.total_earned ?? 0)}</p>
                     </div>
                   </div>
                 ))}
@@ -118,7 +118,7 @@ export default function ReferralDashboard({ userType, stats, referralLink, recen
                 <div>
                   <h4 className="font-medium mb-2">{t('Payouts Processed')}</h4>
                   <div className="text-2xl font-bold">
-                    ${Object.values(stats.monthlyPayouts || {}).reduce((a: any, b: any) => a + b, 0)}
+                    {formatCurrency(Number(Object.values(stats.monthlyPayouts || {}).reduce((a: any, b: any) => a + b, 0)) || 0)}
                   </div>
                   <p className="text-sm text-muted-foreground">{t('This year')}</p>
                 </div>
@@ -169,7 +169,7 @@ export default function ReferralDashboard({ userType, stats, referralLink, recen
                 <h3 className="mt-2 text-2xl font-bold">{window.appSettings.formatCurrency(stats.totalEarned)}</h3>
               </div>
               <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900">
-                <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                <Banknote className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </CardContent>
