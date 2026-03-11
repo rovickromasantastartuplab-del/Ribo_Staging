@@ -698,6 +698,12 @@ export default function Invoices() {
         onSubmit={handleFormSubmit}
         formConfig={{
           ...(hasPermission(permissions, 'export-invoices') && { exportRoute: 'invoice.export' }),
+          ...(hasPermission(permissions, 'export-invoices') && { exportFilters: {
+            search: searchTerm || undefined,
+            status: selectedStatus !== 'all' ? selectedStatus : undefined,
+            account_id: selectedAccount !== 'all' ? selectedAccount : undefined,
+            assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+          } }),
           productOptions: products,
           modalSize: '5xl',
           layout: 'grid',

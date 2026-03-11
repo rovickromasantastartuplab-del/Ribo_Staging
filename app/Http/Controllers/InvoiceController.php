@@ -796,13 +796,13 @@ class InvoiceController extends Controller
         return $methods;
     }
 
-    public function fileExport()
+    public function fileExport(Request $request)
     {
         if (!auth()->user()->can('export-invoices')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        return Excel::download(new InvoiceExport, 'invoices-' . now()->format('Y-m-d-H-i-s') . '.xlsx');
+        return Excel::download(new InvoiceExport($request), 'invoices-' . now()->format('Y-m-d-H-i-s') . '.xlsx');
     }
 
     public function getSalesOrderDetails($salesOrderId)

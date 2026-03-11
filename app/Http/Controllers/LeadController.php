@@ -167,6 +167,14 @@ class LeadController extends Controller
             $query->where('assigned_to', $request->assigned_to);
         }
 
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
         // Handle sorting
         if ($request->has('sort_field') && !empty($request->sort_field)) {
             $query->orderBy($request->sort_field, $request->sort_direction ?? 'asc');
@@ -234,7 +242,7 @@ class LeadController extends Controller
             'accountTypes' => $accountTypes,
             'users' => $users,
             'samplePath' => route('lead.download.template'),
-            'filters' => $request->all(['view', 'search', 'lead_status_id', 'lead_source_id', 'status', 'is_converted', 'assigned_to', 'sort_field', 'sort_direction', 'per_page']),
+            'filters' => $request->all(['view', 'search', 'lead_status_id', 'lead_source_id', 'status', 'is_converted', 'assigned_to', 'date_from', 'date_to', 'sort_field', 'sort_direction', 'per_page']),
         ]);
     }
 
@@ -503,6 +511,10 @@ class LeadController extends Controller
         }
 
         // Handle filters
+        if ($request->has('lead_status_id') && !empty($request->lead_status_id) && $request->lead_status_id !== 'all') {
+            $baseQuery->where('lead_status_id', $request->lead_status_id);
+        }
+
         if ($request->has('lead_source_id') && !empty($request->lead_source_id) && $request->lead_source_id !== 'all') {
             $baseQuery->where('lead_source_id', $request->lead_source_id);
         }
@@ -513,6 +525,18 @@ class LeadController extends Controller
 
         if ($request->has('is_converted') && $request->is_converted !== 'all') {
             $baseQuery->where('is_converted', $request->is_converted === '1');
+        }
+
+        if ($request->has('assigned_to') && !empty($request->assigned_to) && $request->assigned_to !== 'all') {
+            $baseQuery->where('assigned_to', $request->assigned_to);
+        }
+
+        if ($request->filled('date_from')) {
+            $baseQuery->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $baseQuery->whereDate('created_at', '<=', $request->date_to);
         }
 
         $perPage = max(1, min(100, intval($request->per_page ?? 20)));

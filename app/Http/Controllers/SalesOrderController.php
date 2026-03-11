@@ -599,13 +599,13 @@ class SalesOrderController extends Controller
         return redirect()->back()->with('success', __('Activity deleted successfully.'));
     }
 
-    public function fileExport()
+    public function fileExport(Request $request)
     {
         if (!auth()->user()->can('export-sales-orders')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        return Excel::download(new SalesOrderExport, 'sales-orders-' . now()->format('Y-m-d-H-i-s') . '.xlsx');
+        return Excel::download(new SalesOrderExport($request), 'sales-orders-' . now()->format('Y-m-d-H-i-s') . '.xlsx');
     }
 
     public function getQuoteDetails($quoteId)

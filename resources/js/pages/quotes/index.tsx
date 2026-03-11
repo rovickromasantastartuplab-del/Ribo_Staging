@@ -551,6 +551,13 @@ export default function Quotes() {
           onSubmit={handleFormSubmit}
           formConfig={{
             ...(hasPermission(permissions, 'export-quotes') && { exportRoute: 'quote.export' }),
+            ...(hasPermission(permissions, 'export-quotes') && { exportFilters: {
+              search: searchTerm || undefined,
+              status: selectedStatus !== 'all' ? selectedStatus : undefined,
+              account_id: selectedAccount !== 'all' ? selectedAccount : undefined,
+              opportunity_id: selectedOpportunity !== 'all' ? selectedOpportunity : undefined,
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+            } }),
             productOptions: products,
             modalSize: '5xl',
             layout: 'grid',

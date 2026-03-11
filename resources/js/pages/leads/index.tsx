@@ -33,6 +33,8 @@ export default function Leads() {
   const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');
   const [selectedConverted, setSelectedConverted] = useState(pageFilters.is_converted || 'all');
   const [selectedAssignee, setSelectedAssignee] = useState(pageFilters.assigned_to || 'all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(pageFilters.date_from ? new Date(pageFilters.date_from) : undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(pageFilters.date_to ? new Date(pageFilters.date_to) : undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -57,19 +59,19 @@ export default function Leads() {
   kanbanColumnsRef.current = kanbanColumns;
 
   // Keep a ref to current filters so fetchColumn always uses fresh values
-  const filtersRef = useRef({ searchTerm, selectedLeadStatus, selectedLeadSource, selectedStatus, selectedConverted, selectedAssignee });
-  filtersRef.current = { searchTerm, selectedLeadStatus, selectedLeadSource, selectedStatus, selectedConverted, selectedAssignee };
+  const filtersRef = useRef({ searchTerm, selectedLeadStatus, selectedLeadSource, selectedStatus, selectedConverted, selectedAssignee, dateFrom, dateTo });
+  filtersRef.current = { searchTerm, selectedLeadStatus, selectedLeadSource, selectedStatus, selectedConverted, selectedAssignee, dateFrom, dateTo };
 
   const [prefilledLeadStatus, setPrefilledLeadStatus] = useState<string>('');
 
   // Check if any filters are active
   const hasActiveFilters = () => {
-    return searchTerm !== '' || selectedLeadStatus !== 'all' || selectedLeadSource !== 'all' || selectedStatus !== 'all' || selectedConverted !== 'all' || selectedAssignee !== 'all';
+    return searchTerm !== '' || selectedLeadStatus !== 'all' || selectedLeadSource !== 'all' || selectedStatus !== 'all' || selectedConverted !== 'all' || selectedAssignee !== 'all' || !!dateFrom || !!dateTo;
   };
 
   // Count active filters
   const activeFilterCount = () => {
-    return (searchTerm ? 1 : 0) + (selectedLeadStatus !== 'all' ? 1 : 0) + (selectedLeadSource !== 'all' ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0) + (selectedConverted !== 'all' ? 1 : 0) + (selectedAssignee !== 'all' ? 1 : 0);
+    return (searchTerm ? 1 : 0) + (selectedLeadStatus !== 'all' ? 1 : 0) + (selectedLeadSource !== 'all' ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0) + (selectedConverted !== 'all' ? 1 : 0) + (selectedAssignee !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -85,7 +87,10 @@ export default function Leads() {
       lead_status_id: selectedLeadStatus !== 'all' ? selectedLeadStatus : undefined,
       lead_source_id: selectedLeadSource !== 'all' ? selectedLeadSource : undefined,
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
+      is_converted: selectedConverted !== 'all' ? selectedConverted : undefined,
       assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+      date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : undefined,
+      date_to: dateTo ? dateTo.toISOString().split('T')[0] : undefined,
     }, { preserveState: true, preserveScroll: true });
   };
 
@@ -100,6 +105,8 @@ export default function Leads() {
     if (filters.selectedStatus !== 'all') queryParams.append('status', filters.selectedStatus);
     if (filters.selectedConverted !== 'all') queryParams.append('is_converted', filters.selectedConverted);
     if (filters.selectedAssignee !== 'all') queryParams.append('assigned_to', filters.selectedAssignee);
+    if (filters.dateFrom) queryParams.append('date_from', filters.dateFrom.toISOString().split('T')[0]);
+    if (filters.dateTo) queryParams.append('date_to', filters.dateTo.toISOString().split('T')[0]);
 
     // Redirect to the export route with filters
     window.location.href = `${route('lead.export')}?${queryParams.toString()}`;
@@ -118,6 +125,8 @@ export default function Leads() {
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
       is_converted: selectedConverted !== 'all' ? selectedConverted : undefined,
       assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+      date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : undefined,
+      date_to: dateTo ? dateTo.toISOString().split('T')[0] : undefined,
       ...(pageFilters.per_page && pageFilters.per_page !== 10 && { per_page: pageFilters.per_page })
     }, { preserveState: true, preserveScroll: true });
   };
@@ -421,6 +430,8 @@ export default function Leads() {
     setSelectedStatus('all');
     setSelectedConverted('all');
     setSelectedAssignee('all');
+    setDateFrom(undefined);
+    setDateTo(undefined);
     setShowFilters(false);
 
     router.get(route('leads.index'), {
@@ -435,7 +446,7 @@ export default function Leads() {
    */
   const fetchColumnPage = useCallback(async (statusId: number, page: number, reset = false) => {
     const statusKey = statusId.toString();
-    const { searchTerm: s, selectedLeadSource: src, selectedStatus: st, selectedConverted: conv } = filtersRef.current;
+    const { searchTerm: s, selectedLeadStatus: ls, selectedLeadSource: src, selectedStatus: st, selectedConverted: conv, selectedAssignee: asgn, dateFrom: df, dateTo: dt } = filtersRef.current;
 
     setKanbanColumns(prev => ({
       ...prev,
@@ -448,9 +459,13 @@ export default function Leads() {
       params.set('page', page.toString());
       params.set('per_page', '20');
       if (s) params.set('search', s);
+      if (ls && ls !== 'all') params.set('lead_status_id', ls);
       if (src && src !== 'all') params.set('lead_source_id', src);
       if (st && st !== 'all') params.set('status', st);
       if (conv && conv !== 'all') params.set('is_converted', conv);
+      if (asgn && asgn !== 'all') params.set('assigned_to', asgn);
+      if (df) params.set('date_from', df.toISOString().split('T')[0]);
+      if (dt) params.set('date_to', dt.toISOString().split('T')[0]);
 
       const res = await fetch(`${route('leads.kanban')}?${params.toString()}`, {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
@@ -778,7 +793,21 @@ export default function Leads() {
                   label: (user.display_name || user.name)
                 }))
               ]
-            }] : [])
+            }] : []),
+            {
+              name: 'date_from',
+              label: t('Created From'),
+              type: 'date',
+              value: dateFrom,
+              onChange: setDateFrom,
+            },
+            {
+              name: 'date_to',
+              label: t('Created To'),
+              type: 'date',
+              value: dateTo,
+              onChange: setDateTo,
+            },
           ]}
           showFilters={showFilters}
           setShowFilters={setShowFilters}
@@ -797,7 +826,9 @@ export default function Leads() {
                 lead_source_id: selectedLeadSource !== 'all' ? selectedLeadSource : undefined,
                 status: selectedStatus !== 'all' ? selectedStatus : undefined,
                 is_converted: selectedConverted !== 'all' ? selectedConverted : undefined,
-                assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+                assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+                date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : undefined,
+                date_to: dateTo ? dateTo.toISOString().split('T')[0] : undefined,
               };
               if (parseInt(value) !== 10) {
                 params.per_page = parseInt(value);
@@ -815,7 +846,9 @@ export default function Leads() {
               lead_source_id: selectedLeadSource !== 'all' ? selectedLeadSource : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined,
               is_converted: selectedConverted !== 'all' ? selectedConverted : undefined,
-              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined
+              assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+              date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : undefined,
+              date_to: dateTo ? dateTo.toISOString().split('T')[0] : undefined,
             }, {
               preserveState: true,
               preserveScroll: true,

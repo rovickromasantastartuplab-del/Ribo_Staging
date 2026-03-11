@@ -2,12 +2,15 @@
 
 namespace App\Exports;
 
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use App\Models\Quote;
 
-class QuoteExport implements FromCollection,WithHeadings
+class QuoteExport implements FromCollection, WithHeadings
 {
+    public function __construct(private Request $request) {}
+
     public function collection()
     {
         $query = Quote::with(['opportunity', 'account', 'billingContact', 'shippingContact', 'shippingProviderType', 'assignedUser', 'creator'])
@@ -16,9 +19,38 @@ class QuoteExport implements FromCollection,WithHeadings
                 $q->where('assigned_to', auth()->id());
             });
 
+        if ($this->request->filled('search')) {
+            $search = $this->request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('quote_number', 'like', '%' . $search . '%')
+                  ->orWhere('name', 'like', '%' . $search . '%')
+                  ->orWhereHas('account', fn($q) => $q->where('name', 'like', '%' . $search . '%'));
+            });
+        }
+
+        if ($this->request->filled('status') && $this->request->status !== 'all') {
+            $query->where('status', $this->request->status);
+        }
+
+        if ($this->request->filled('account_id') && $this->request->account_id !== 'all') {
+            $query->where('account_id', $this->request->account_id);
+        }
+
+        if ($this->request->filled('opportunity_id') && $this->request->opportunity_id !== 'all') {
+            $query->where('opportunity_id', $this->request->opportunity_id);
+        }
+
+        if ($this->request->filled('assigned_to') && $this->request->assigned_to !== 'all') {
+            if ($this->request->assigned_to === 'unassigned') {
+                $query->whereNull('assigned_to');
+            } else {
+                $query->where('assigned_to', $this->request->assigned_to);
+            }
+        }
+
         $data = $query->get();
 
-        foreach($data as $k => $quote) {
+        foreach ($data as $k => $quote) {
             $opportunity = $quote->opportunity ? $quote->opportunity->name : '';
             $account = $quote->account ? $quote->account->name : '';
             $billing_contact = $quote->billingContact ? $quote->billingContact->name : '';

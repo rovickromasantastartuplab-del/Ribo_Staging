@@ -34,6 +34,7 @@ interface CrudFormModalProps {
       quantityFieldName?: string;
     };
     exportRoute?: string;
+    exportFilters?: Record<string, string | undefined>;
   };
   initialData?: any;
   title: string;
@@ -63,7 +64,12 @@ export function CrudFormModal({
 
   // Conditionally declare handleExport only if exportRoute exists
   const handleExportAction = formConfig.exportRoute ? () => {
-    window.location.href = route(formConfig.exportRoute!);
+    const filterParams = new URLSearchParams();
+    Object.entries(formConfig.exportFilters ?? {}).forEach(([k, v]) => {
+      if (v !== undefined && v !== '' && v !== 'all') filterParams.set(k, v);
+    });
+    const qs = filterParams.toString();
+    window.location.href = route(formConfig.exportRoute!) + (qs ? '?' + qs : '');
   } : undefined;
 
   // Calculate total price for price summary

@@ -539,6 +539,12 @@ export default function SalesOrders() {
         onSubmit={handleFormSubmit}
         formConfig={{
           ...(hasPermission(permissions, 'export-sales-orders') && { exportRoute: 'sales-order.export' }),
+          ...(hasPermission(permissions, 'export-sales-orders') && { exportFilters: {
+            search: searchTerm || undefined,
+            status: selectedStatus !== 'all' ? selectedStatus : undefined,
+            account_id: selectedAccount !== 'all' ? selectedAccount : undefined,
+            assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+          } }),
           productOptions: products,
           modalSize: '5xl',
           layout: 'grid',
