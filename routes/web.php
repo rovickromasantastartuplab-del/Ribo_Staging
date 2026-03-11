@@ -606,9 +606,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('contacts/{contact}/toggle-status', [ContactController::class, 'toggleStatus'])->middleware('permission:toggle-status-contacts')->name('contacts.toggle-status');
         });
 
-        // Lead Status routes
         Route::middleware('permission:manage-lead-statuses')->group(function () {
             Route::get('lead-statuses', [LeadStatusController::class, 'index'])->middleware('permission:manage-lead-statuses')->name('lead-statuses.index');
+            Route::post('lead-statuses/reorder', [LeadStatusController::class, 'reorder'])->middleware('permission:edit-lead-statuses')->name('lead-statuses.reorder');
             Route::post('lead-statuses', [LeadStatusController::class, 'store'])->middleware('permission:create-lead-statuses')->name('lead-statuses.store');
             Route::put('lead-statuses/{leadStatus}', [LeadStatusController::class, 'update'])->middleware('permission:edit-lead-statuses')->name('lead-statuses.update');
             Route::delete('lead-statuses/bulk-delete', [LeadStatusController::class, 'bulkDelete'])->middleware('permission:delete-lead-statuses')->name('lead-statuses.bulk-delete');
@@ -657,9 +657,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('leads/{lead}/comments/{comment}', [LeadCommentController::class, 'destroy'])->middleware('permission:delete-leads')->name('leads.comments.destroy');
         });
 
-        // Opportunity Stage routes
         Route::middleware('permission:manage-opportunity-stages')->group(function () {
             Route::get('opportunity-stages', [OpportunityStageController::class, 'index'])->middleware('permission:manage-opportunity-stages')->name('opportunity-stages.index');
+            Route::post('opportunity-stages/reorder', [OpportunityStageController::class, 'reorder'])->middleware('permission:edit-opportunity-stages')->name('opportunity-stages.reorder');
             Route::post('opportunity-stages', [OpportunityStageController::class, 'store'])->middleware('permission:create-opportunity-stages')->name('opportunity-stages.store');
             Route::put('opportunity-stages/{opportunityStage}', [OpportunityStageController::class, 'update'])->middleware('permission:edit-opportunity-stages')->name('opportunity-stages.update');
             Route::delete('opportunity-stages/bulk-delete', [OpportunityStageController::class, 'bulkDelete'])->middleware('permission:delete-opportunity-stages')->name('opportunity-stages.bulk-delete');

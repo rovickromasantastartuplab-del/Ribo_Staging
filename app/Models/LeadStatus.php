@@ -14,6 +14,7 @@ class LeadStatus extends BaseModel
         'color',
         'description',
         'status',
+        'order',
         'created_by',
     ];
 

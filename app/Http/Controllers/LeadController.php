@@ -203,6 +203,7 @@ class LeadController extends Controller
         $canViewCampaigns = auth()->user()->can('manage-campaigns') || auth()->user()->can('view-campaigns');
 
         $leadStatuses = LeadStatus::where('created_by', createdBy())->where('status', 'active')
+            ->orderBy('order', 'asc')->orderBy('id', 'asc')
             ->get(['id', 'name', 'color']);
 
         $leadSources = LeadSource::where('created_by', createdBy())->where('status', 'active')
@@ -487,7 +488,8 @@ class LeadController extends Controller
     {
         $leadStatuses = LeadStatus::where('created_by', createdBy())
             ->where('status', 'active')
-            ->orderBy('name')
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
             ->get(['id', 'name', 'color']);
 
         // Build the base query with access control and filters

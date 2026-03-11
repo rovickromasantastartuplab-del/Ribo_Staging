@@ -10,6 +10,8 @@ import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
+import { DropResult } from '@hello-pangea/dnd';
+import axios from 'axios';
 
 export default function OpportunityStages() {
   const { t } = useTranslation();
@@ -137,7 +139,7 @@ export default function OpportunityStages() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-opportunity-stages')) {
@@ -159,8 +161,8 @@ export default function OpportunityStages() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -238,6 +240,38 @@ export default function OpportunityStages() {
       onClick: () => handleAddNew()
     });
   }
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    if (result.destination.index === result.source.index) return;
+
+    if (!hasPermission(permissions, 'edit-opportunity-stages')) {
+      toast.error(t('Permission denied.'));
+      return;
+    }
+
+    const items = Array.from(opportunityStages.data);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    const payload = items.map((item: any, index: number) => ({
+      id: item.id,
+      order: index
+    }));
+
+    toast.loading(t('Saving new order...'));
+
+    axios.post(route('opportunity-stages.reorder'), { items: payload })
+      .then(() => {
+        toast.dismiss();
+        toast.success(t('Order updated successfully.'));
+        router.reload({ only: ['opportunityStages'] });
+      })
+      .catch(() => {
+        toast.dismiss();
+        toast.error(t('Failed to update order.'));
+      });
+  };
 
   const breadcrumbs = [
     { title: t('Dashboard'), href: route('dashboard') },
@@ -391,17 +425,17 @@ export default function OpportunityStages() {
             edit: 'edit-opportunity-stages',
             delete: 'delete-opportunity-stages'
           }}
-        
-            onBulkAction={handleBulkAction}
-            bulkActions={[
-              {
-                label: 'Delete Selected',
-                action: 'bulk_delete',
-                icon: 'Trash2',
-                variant: 'destructive'
-              }
-            ]}
-          />
+          onBulkAction={handleBulkAction}
+          bulkActions={[
+            {
+              label: 'Delete Selected',
+              action: 'bulk_delete',
+              icon: 'Trash2',
+              variant: 'destructive'
+            }
+          ]}
+          onDragEnd={handleDragEnd}
+        />
 
         {/* Pagination section */}
         <Pagination

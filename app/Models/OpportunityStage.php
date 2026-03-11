@@ -15,6 +15,7 @@ class OpportunityStage extends BaseModel
         'probability',
         'description',
         'status',
+        'order',
         'created_by',
     ];
 

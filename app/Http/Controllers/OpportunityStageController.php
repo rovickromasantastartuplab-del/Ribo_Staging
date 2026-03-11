@@ -12,7 +12,7 @@ class OpportunityStageController extends Controller
     {
         $query = OpportunityStage::query()
             ->where('created_by', createdBy());
-            
+
         if (auth()->user()->type !== 'company' && !auth()->user()->can('manage-opportunity-stages')) {
             $query->whereRaw('1 = 0');
         }
@@ -34,7 +34,7 @@ class OpportunityStageController extends Controller
         if ($request->has('sort_field') && !empty($request->sort_field)) {
             $query->orderBy($request->sort_field, $request->sort_direction ?? 'asc');
         } else {
-            $query->orderBy('id', 'desc');
+            $query->orderBy('order', 'asc')->orderBy('id', 'asc');
         }
 
         $opportunityStages = $query->paginate($request->per_page ?? 10);
@@ -142,15 +142,35 @@ class OpportunityStageController extends Controller
         try {
             $query = \App\Models\OpportunityStage::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
-            
+
             if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
+
             $query->delete();
             return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
+        }
+    }
+
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:opportunity_stages,id',
+            'items.*.order' => 'required|integer',
+        ]);
+
+        try {
+            foreach ($validated['items'] as $item) {
+                OpportunityStage::where('id', $item['id'])
+                    ->where('created_by', createdBy())
+                    ->update(['order' => $item['order']]);
+            }
+            return response()->json(['message' => __('Order updated successfully.')]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => __('Failed to update order.')], 500);
         }
     }
 }

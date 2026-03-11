@@ -24,6 +24,7 @@ import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface CrudTableProps {
   columns: TableColumn[];
@@ -44,6 +45,7 @@ interface CrudTableProps {
   showActionsAsIcons?: boolean;
   onBulkAction?: (action: string, selectedIds: any[]) => void;
   bulkActions?: { label: string; action: string; icon?: string; variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" }[];
+  onDragEnd?: (result: DropResult) => void;
 }
 
 export function CrudTable({
@@ -59,7 +61,8 @@ export function CrudTable({
   permissions,
   entityPermissions,
   onBulkAction,
-  bulkActions = []
+  bulkActions = [],
+  onDragEnd
 }: CrudTableProps) {
   const { t } = useTranslation();
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
@@ -343,58 +346,110 @@ export function CrudTable({
               {hasAnyActionPermission && <TableHead className="w-48 py-2.5 text-right font-semibold">{t('Actions')}</TableHead>}
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {data.length > 0 ? (
-              data.map((row, index) => (
-                <TableRow
-                  key={row.id || index}
-                  className={cn(
-                    "hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 border-b",
-                    selectedRows.includes(row.id) && "bg-blue-50/50 dark:bg-blue-900/10"
-                  )}
-                >
-                  {hasBulkActions && (
-                    <TableCell className="text-center py-2.5">
-                      <Checkbox
-                        checked={selectedRows.includes(row.id)}
-                        onCheckedChange={() => toggleRow(row.id)}
-                        aria-label={`Select row ${row.id}`}
-                      />
-                    </TableCell>
-                  )}
-                  <TableCell className="font-medium py-2.5 w-10">{from + index}</TableCell>
-                  {columns.map((col) => {
-                    const cellContent = renderCellContent(row, col);
-                    const rawValue = typeof cellContent === 'string' ? cellContent : undefined;
-                    return (
-                      <TableCell
-                        key={col.key}
-                        className={cn(
-                          "py-2.5",
-                          col.className
-                        )}
-                        title={rawValue}
-                      >
-                        <div className="break-words whitespace-normal">
-                          {cellContent}
-                        </div>
+          {onDragEnd ? (
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="crud-table-droppable">
+                {(provided) => (
+                  <TableBody ref={provided.innerRef} {...provided.droppableProps}>
+                    {data.length > 0 ? (
+                      data.map((row, index) => (
+                        <Draggable key={row.id?.toString() || index.toString()} draggableId={row.id?.toString() || index.toString()} index={index}>
+                          {(provided, snapshot) => (
+                            <TableRow
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={cn(
+                                "hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 border-b",
+                                selectedRows.includes(row.id) && "bg-blue-50/50 dark:bg-blue-900/10",
+                                snapshot.isDragging && "bg-gray-100 shadow-md ring-1 ring-gray-300 z-50 rounded-md"
+                              )}
+                              style={{ ...provided.draggableProps.style }}
+                            >
+                              {hasBulkActions && (
+                                <TableCell className="text-center py-2.5">
+                                  <Checkbox
+                                    checked={selectedRows.includes(row.id)}
+                                    onCheckedChange={() => toggleRow(row.id)}
+                                    aria-label={`Select row ${row.id}`}
+                                  />
+                                </TableCell>
+                              )}
+                              <TableCell className="font-medium py-2.5 w-10">
+                                <span {...provided.dragHandleProps} className="cursor-grab hover:text-blue-500 inline-block p-1">
+                                  <LucidIcons.GripVertical className="h-4 w-4 mr-2 inline" />
+                                </span>
+                                {from + index}
+                              </TableCell>
+                              {columns.map((col) => {
+                                const cellContent = renderCellContent(row, col);
+                                const rawValue = typeof cellContent === 'string' ? cellContent : undefined;
+                                return (
+                                  <TableCell
+                                    key={col.key}
+                                    className={cn("py-2.5", col.className)}
+                                    title={rawValue}
+                                  >
+                                    <div className="break-words whitespace-normal">
+                                      {cellContent}
+                                    </div>
+                                  </TableCell>
+                                );
+                              })}
+                              {hasAnyActionPermission && <TableCell className="py-2.5 text-right w-48">{renderActionButtons(row)}</TableCell>}
+                            </TableRow>
+                          )}
+                        </Draggable>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={columns.length + (hasAnyActionPermission ? 2 : 1) + (hasBulkActions ? 1 : 0)} className="text-muted-foreground h-24 text-center dark:text-gray-400">
+                          {t('No results found.')}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {provided.placeholder}
+                  </TableBody>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            <TableBody>
+              {data.length > 0 ? (
+                data.map((row, index) => (
+                  <TableRow
+                    key={row.id || index}
+                    className={cn(
+                      "hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 border-b",
+                      selectedRows.includes(row.id) && "bg-blue-50/50 dark:bg-blue-900/10"
+                    )}
+                  >
+                    {hasBulkActions && (
+                      <TableCell className="text-center py-2.5">
+                        <Checkbox checked={selectedRows.includes(row.id)} onCheckedChange={() => toggleRow(row.id)} aria-label={`Select row ${row.id}`} />
                       </TableCell>
-                    );
-                  })}
-                  {hasAnyActionPermission && <TableCell className="py-2.5 text-right w-48">{renderActionButtons(row)}</TableCell>}
+                    )}
+                    <TableCell className="font-medium py-2.5 w-10">{from + index}</TableCell>
+                    {columns.map((col) => {
+                      const cellContent = renderCellContent(row, col);
+                      const rawValue = typeof cellContent === 'string' ? cellContent : undefined;
+                      return (
+                        <TableCell key={col.key} className={cn("py-2.5", col.className)} title={rawValue}>
+                          <div className="break-words whitespace-normal">{cellContent}</div>
+                        </TableCell>
+                      );
+                    })}
+                    {hasAnyActionPermission && <TableCell className="py-2.5 text-right w-48">{renderActionButtons(row)}</TableCell>}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length + (hasAnyActionPermission ? 2 : 1) + (hasBulkActions ? 1 : 0)} className="text-muted-foreground h-24 text-center dark:text-gray-400">
+                    {t('No results found.')}
+                  </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length + (hasAnyActionPermission ? 2 : 1) + (hasBulkActions ? 1 : 0)}
-                  className="text-muted-foreground h-24 text-center dark:text-gray-400"
-                >
-                  {t('No results found.')}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+              )}
+            </TableBody>
+          )}
         </Table>
       </div>
     </div>

@@ -10,6 +10,8 @@ import { toast } from '@/components/custom-toast';
 import { useTranslation } from 'react-i18next';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
+import { DropResult } from '@hello-pangea/dnd';
+import axios from 'axios';
 
 export default function LeadStatuses() {
   const { t } = useTranslation();
@@ -137,7 +139,7 @@ export default function LeadStatuses() {
     }
   };
 
-  
+
   const handleBulkAction = (action: string, selectedIds: any[]) => {
     if (action === 'bulk_delete') {
       if (!hasPermission(permissions, 'delete-lead-statuses')) {
@@ -159,8 +161,8 @@ export default function LeadStatuses() {
             }
           },
           onError: () => {
-             toast.dismiss();
-             toast.error(t('Failed to delete records.'));
+            toast.dismiss();
+            toast.error(t('Failed to delete records.'));
           }
         });
       }
@@ -238,6 +240,38 @@ export default function LeadStatuses() {
       onClick: () => handleAddNew()
     });
   }
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    if (result.destination.index === result.source.index) return;
+
+    if (!hasPermission(permissions, 'edit-lead-statuses')) {
+      toast.error(t('Permission denied.'));
+      return;
+    }
+
+    const items = Array.from(leadStatuses.data);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    const payload = items.map((item: any, index: number) => ({
+      id: item.id,
+      order: index
+    }));
+
+    toast.loading(t('Saving new order...'));
+
+    axios.post(route('lead-statuses.reorder'), { items: payload })
+      .then(() => {
+        toast.dismiss();
+        toast.success(t('Order updated successfully.'));
+        router.reload({ only: ['leadStatuses'] });
+      })
+      .catch(() => {
+        toast.dismiss();
+        toast.error(t('Failed to update order.'));
+      });
+  };
 
   const breadcrumbs = [
     { title: t('Dashboard'), href: route('dashboard') },
@@ -385,21 +419,22 @@ export default function LeadStatuses() {
             edit: 'edit-lead-statuses',
             delete: 'delete-lead-statuses'
           }}
-        
-            onBulkAction={handleBulkAction}
-            bulkActions={[
-              {
-                label: 'Delete Selected',
-                action: 'bulk_delete',
-                icon: 'Trash2',
-                variant: 'destructive'
-              }
-            ]}
-          />
+          onBulkAction={handleBulkAction}
+          bulkActions={[
+            {
+              label: 'Delete Selected',
+              action: 'bulk_delete',
+              icon: 'Trash2',
+              variant: 'destructive'
+            }
+          ]}
+          onDragEnd={handleDragEnd}
+        />
 
         {/* Pagination section */}
-        <Pagination
-          from={leadStatuses?.from || 0}
+        < Pagination
+          from={leadStatuses?.from || 0
+          }
           to={leadStatuses?.to || 0}
           total={leadStatuses?.total || 0}
           links={leadStatuses?.links}
