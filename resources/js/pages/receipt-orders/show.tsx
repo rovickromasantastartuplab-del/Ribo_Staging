@@ -1,10 +1,11 @@
 import { PageTemplate } from '@/components/page-template';
-import { usePage, Link } from '@inertiajs/react';
+import { usePage, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/utils/currency';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ShowReceiptOrder() {
   const { t } = useTranslation();
@@ -32,11 +33,21 @@ export default function ShowReceiptOrder() {
   };
     // Using imported formatCurrency from @/utils/currency
 
+  const pageActions = [
+    {
+      label: t('Back to Receipt Orders'),
+      icon: <ArrowLeft className="h-4 w-4 mr-2" />,
+      variant: 'outline' as const,
+      onClick: () => router.get(route('receipt-orders.index'))
+    }
+  ];
+
   return (
     <PageTemplate
       title={`Receipt Order: ${receiptOrder.receipt_number}`}
       url={`/receipt-orders/${receiptOrder.id}`}
       breadcrumbs={breadcrumbs}
+      actions={pageActions}
     >
       <div className="space-y-6">
         {/* Header Information */}
