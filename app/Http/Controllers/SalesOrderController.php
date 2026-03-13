@@ -25,12 +25,13 @@ class SalesOrderController extends Controller
         $query = SalesOrder::query()
             ->with(['quote', 'account', 'billingContact', 'shippingContact', 'shippingProviderType', 'creator', 'assignedUser', 'products.tax'])
             ->where(function ($q) {
-                if (auth()->user()->type === 'company') {
-                    $q->where('created_by', createdBy());
-                } else {
-                    $q->where('assigned_to', auth()->id());
-                }
-            });
+            if (auth()->user()->type === 'company') {
+                $q->where('created_by', createdBy());
+            }
+            else {
+                $q->where('assigned_to', auth()->id());
+            }
+        });
 
         if ($request->has('search') && !empty($request->search)) {
             $query->where(function ($q) use ($request) {
@@ -51,14 +52,16 @@ class SalesOrderController extends Controller
         if ($request->has('assigned_to') && !empty($request->assigned_to) && $request->assigned_to !== 'all') {
             if ($request->assigned_to === 'unassigned') {
                 $query->whereNull('assigned_to');
-            } else {
+            }
+            else {
                 $query->where('assigned_to', $request->assigned_to);
             }
         }
 
         if ($request->has('sort_field') && !empty($request->sort_field)) {
             $query->orderBy($request->sort_field, $request->sort_direction ?? 'asc');
-        } else {
+        }
+        else {
             $query->orderBy('id', 'desc');
         }
 
@@ -76,22 +79,22 @@ class SalesOrderController extends Controller
         return Inertia::render('sales-orders/index', [
             'salesOrders' => $salesOrders,
             'accounts' => Account::where('created_by', createdBy())
-                ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company', function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name')->get(),
+            ->where('status', 'active')
+            ->when(auth()->user()->type !== 'company', function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name')->get(),
             'contacts' => Contact::where('created_by', createdBy())
-                ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company', function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name', 'account_id')->get(),
+            ->where('status', 'active')
+            ->when(auth()->user()->type !== 'company', function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name', 'account_id')->get(),
             'quotes' => Quote::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company', function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name', 'quote_number', 'account_id')->get(),
+            ->when(auth()->user()->type !== 'company', function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name', 'quote_number', 'account_id')->get(),
             'products' => $this->getFilteredProducts(),
             'shippingProviderTypes' => ShippingProviderType::where('created_by', createdBy())->where('status', 'active')->select('id', 'name')->get(),
             'taxes' => Tax::where('created_by', createdBy())->select('id', 'name', 'rate')->get(),
@@ -99,8 +102,8 @@ class SalesOrderController extends Controller
             'filters' => $request->all(['search', 'status', 'account_id', 'assigned_to', 'sort_field', 'sort_direction', 'per_page']),
             'publicUrlBase' => config('app.url'),
             'encryptedSalesOrderIds' => $salesOrders->getCollection()->mapWithKeys(function ($salesOrder) {
-                return [$salesOrder->id => encrypt($salesOrder->id)];
-            }),
+            return [$salesOrder->id => encrypt($salesOrder->id)];
+        }),
         ]);
     }
 
@@ -109,17 +112,17 @@ class SalesOrderController extends Controller
         $salesOrder = SalesOrder::where('id', $salesOrderId)
             ->where('created_by', createdBy())
             ->with([
-                'quote',
-                'account',
-                'contact',
-                'billingContact',
-                'shippingContact',
-                'shippingProviderType',
-                'creator',
-                'assignedUser',
-                'products.tax',
-                'activities.user'
-            ])
+            'quote',
+            'account',
+            'contact',
+            'billingContact',
+            'shippingContact',
+            'shippingProviderType',
+            'creator',
+            'assignedUser',
+            'products.tax',
+            'activities.user'
+        ])
             ->first();
 
         if (!$salesOrder) {
@@ -137,19 +140,19 @@ class SalesOrderController extends Controller
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'quote_number', 'account_id')->get();
         $products = $this->getFilteredProducts();
         $shippingProviderTypes = ShippingProviderType::where('created_by', createdBy())
@@ -195,19 +198,19 @@ class SalesOrderController extends Controller
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'quote_number', 'account_id')->get();
         $products = $this->getFilteredProducts();
         $shippingProviderTypes = ShippingProviderType::where('created_by', createdBy())
@@ -244,39 +247,42 @@ class SalesOrderController extends Controller
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(auth()->user()->type !== 'company', function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'billing_contact_id' => [
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(auth()->user()->type !== 'company', function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'shipping_contact_id' => [
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(auth()->user()->type !== 'company', function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'shipping_provider_type_id' => [
                 'nullable',
                 Rule::exists('shipping_provider_types', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active');
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
             ],
             'billing_address' => 'nullable|string',
             'billing_city' => 'nullable|string',
@@ -296,12 +302,12 @@ class SalesOrderController extends Controller
             'products.*.product_id' => [
                 'required',
                 Rule::exists('products', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active');
-                    if (auth()->user()->type !== 'company') {
-                        $query->where('assigned_to', auth()->id());
-                    }
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+            if (auth()->user()->type !== 'company') {
+                $query->where('assigned_to', auth()->id());
+            }
+        }),
             ],
             'products.*.quantity' => 'required|integer|min:1',
             'products.*.unit_price' => 'required|numeric|min:0',
@@ -366,39 +372,42 @@ class SalesOrderController extends Controller
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(auth()->user()->type !== 'company', function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'billing_contact_id' => [
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(auth()->user()->type !== 'company', function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'shipping_contact_id' => [
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(auth()->user()->type !== 'company', function ($q) {
-                            $q->where('assigned_to', auth()->id());
-                        });
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(auth()->user()->type !== 'company', function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'shipping_provider_type_id' => [
                 'nullable',
                 Rule::exists('shipping_provider_types', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active');
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
             ],
             'billing_address' => 'nullable|string',
             'billing_city' => 'nullable|string',
@@ -418,12 +427,12 @@ class SalesOrderController extends Controller
             'products.*.product_id' => [
                 'required',
                 Rule::exists('products', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active');
-                    if (auth()->user()->type !== 'company') {
-                        $query->where('assigned_to', auth()->id());
-                    }
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+            if (auth()->user()->type !== 'company') {
+                $query->where('assigned_to', auth()->id());
+            }
+        }),
             ],
             'products.*.quantity' => 'required|integer|min:1',
             'products.*.unit_price' => 'required|numeric|min:0',
@@ -464,7 +473,8 @@ class SalesOrderController extends Controller
                 ];
             }
             $salesOrder->products()->sync($syncData);
-        } else {
+        }
+        else {
             $salesOrder->products()->detach();
         }
 
@@ -551,7 +561,8 @@ class SalesOrderController extends Controller
     {
         if (auth()->user()->type === 'company') {
             return Product::where('created_by', createdBy())->where('status', 'active')->with('tax')->select('id', 'name', 'price', 'tax_id')->get();
-        } else {
+        }
+        else {
             return Product::where('created_by', createdBy())
                 ->where('status', 'active')
                 ->where('assigned_to', auth()->id())
@@ -635,14 +646,14 @@ class SalesOrderController extends Controller
             'shipping_country' => $quote->shipping_country,
             'shipping_provider_type_id' => $quote->shipping_provider_type_id,
             'products' => $quote->products->map(function ($product) {
-                return [
+            return [
                     'product_id' => $product->id,
                     'quantity' => $product->pivot->quantity ?? 1,
                     'unit_price' => $product->pivot->unit_price ?? $product->price ?? 0,
                     'discount_type' => $product->pivot->discount_type ?? 'none',
                     'discount_value' => $product->pivot->discount_value ?? 0
                 ];
-            })
+        })
         ]);
     }
 
@@ -653,16 +664,16 @@ class SalesOrderController extends Controller
 
             $salesOrder = SalesOrder::where('id', $decryptedId)
                 ->with([
-                    'account',
-                    'billingContact',
-                    'shippingContact',
-                    'products.tax',
-                    'creator',
-                    'assignedUser',
-                    'quote',
-                    'shippingProviderType',
-                    'activities.user'
-                ])
+                'account',
+                'billingContact',
+                'shippingContact',
+                'products.tax',
+                'creator',
+                'assignedUser',
+                'quote',
+                'shippingProviderType',
+                'activities.user'
+            ])
                 ->first();
 
             if (!$salesOrder) {
@@ -690,7 +701,8 @@ class SalesOrderController extends Controller
                 'themeColor' => $themeColor,
                 'customColor' => $customColor,
             ]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             \Log::error('Failed to decrypt sales order ID', ['encrypted' => $salesOrder, 'error' => $e->getMessage()]);
             abort(404, __('Invalid sales order link'));
         }
@@ -710,14 +722,15 @@ class SalesOrderController extends Controller
         try {
             $query = \App\Models\SalesOrder::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
-            
+
             if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
+
             $query->delete();
             return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }
     }

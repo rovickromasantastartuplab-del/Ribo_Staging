@@ -1372,7 +1372,7 @@ export default function Leads() {
           fields: [
             { name: 'name', label: t('Lead Name'), type: 'text', required: true },
             { name: 'email', label: t('Email'), type: 'email' },
-            { name: 'phone', label: t('Phone'), type: 'text' },
+            { name: 'phone', label: t('Phone'), type: 'tel' },
             { name: 'company', label: t('Company'), type: 'text' },
             { name: 'account_name', label: t('Account Name'), type: 'text' },
             {

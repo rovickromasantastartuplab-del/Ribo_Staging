@@ -27,12 +27,13 @@ class InvoiceController extends Controller
         $query = Invoice::query()
             ->with(['salesOrder', 'quote', 'opportunity', 'account', 'contact', 'creator', 'assignedUser', 'products.tax'])
             ->where(function ($q) {
-                if (auth()->user()->type === 'company' || auth()->user()->can('view-invoices')) {
-                    $q->where('created_by', createdBy());
-                } else {
-                    $q->where('assigned_to', auth()->id());
-                }
-            });
+            if (auth()->user()->type === 'company' || auth()->user()->can('view-invoices')) {
+                $q->where('created_by', createdBy());
+            }
+            else {
+                $q->where('assigned_to', auth()->id());
+            }
+        });
 
         if ($request->has('search') && !empty($request->search)) {
             $query->where(function ($q) use ($request) {
@@ -53,14 +54,16 @@ class InvoiceController extends Controller
         if ($request->has('assigned_to') && !empty($request->assigned_to) && $request->assigned_to !== 'all') {
             if ($request->assigned_to === 'unassigned') {
                 $query->whereNull('assigned_to');
-            } else {
+            }
+            else {
                 $query->where('assigned_to', $request->assigned_to);
             }
         }
 
         if ($request->has('sort_field') && !empty($request->sort_field)) {
             $query->orderBy($request->sort_field, $request->sort_direction ?? 'asc');
-        } else {
+        }
+        else {
             $query->orderBy('id', 'desc');
         }
 
@@ -83,44 +86,44 @@ class InvoiceController extends Controller
         return Inertia::render('invoices/index', [
             'invoices' => $invoices,
             'accounts' => Account::where('created_by', createdBy())
-                ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name')->get(),
+            ->where('status', 'active')
+            ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name')->get(),
             'contacts' => Contact::where('created_by', createdBy())
-                ->where('status', 'active')
-                ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name', 'account_id')->get(),
+            ->where('status', 'active')
+            ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name', 'account_id')->get(),
             'salesOrders' => SalesOrder::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company', function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name', 'order_number', 'account_id')->get(),
+            ->when(auth()->user()->type !== 'company', function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name', 'order_number', 'account_id')->get(),
             'availableSalesOrders' => SalesOrder::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company', function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name', 'order_number')->get(),
+            ->when(auth()->user()->type !== 'company', function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name', 'order_number')->get(),
             'quotes' => Quote::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company' && !$canViewQuotes, function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name', 'quote_number', 'account_id')->get(),
+            ->when(auth()->user()->type !== 'company' && !$canViewQuotes, function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name', 'quote_number', 'account_id')->get(),
             'opportunities' => Opportunity::where('created_by', createdBy())
-                ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function ($q) {
-                    $q->where('assigned_to', auth()->id());
-                })
-                ->select('id', 'name', 'account_id')->get(),
+            ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function ($q) {
+            $q->where('assigned_to', auth()->id());
+        })
+            ->select('id', 'name', 'account_id')->get(),
             'products' => $this->getFilteredProducts(),
             'users' => $users,
             'filters' => $request->all(['search', 'status', 'account_id', 'assigned_to', 'sort_field', 'sort_direction', 'per_page']),
             'publicUrlBase' => config('app.url'),
             'encryptedInvoiceIds' => $invoices->getCollection()->mapWithKeys(function ($invoice) {
-                return [$invoice->id => encrypt($invoice->id)];
-            }),
+            return [$invoice->id => encrypt($invoice->id)];
+        }),
         ]);
     }
 
@@ -129,17 +132,17 @@ class InvoiceController extends Controller
         $invoice = Invoice::where('id', $invoiceId)
             ->where('created_by', createdBy())
             ->with([
-                'salesOrder',
-                'quote',
-                'opportunity',
-                'account',
-                'contact',
-                'creator',
-                'assignedUser',
-                'products.tax',
-                'payments',
-                'activities.user'
-            ])
+            'salesOrder',
+            'quote',
+            'opportunity',
+            'account',
+            'contact',
+            'creator',
+            'assignedUser',
+            'products.tax',
+            'payments',
+            'activities.user'
+        ])
             ->first();
 
         if (!$invoice) {
@@ -166,29 +169,29 @@ class InvoiceController extends Controller
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'account_id')->get();
         $salesOrders = SalesOrder::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'order_number', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'quote_number', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'account_id')->get();
         $products = $this->getFilteredProducts();
 
@@ -232,29 +235,29 @@ class InvoiceController extends Controller
         $accounts = Account::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company' && !$canViewAccounts, function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name')->get();
         $contacts = Contact::where('created_by', createdBy())
             ->where('status', 'active')
             ->when(auth()->user()->type !== 'company' && !$canViewContacts, function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'account_id')->get();
         $salesOrders = SalesOrder::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'order_number', 'account_id')->get();
         $quotes = Quote::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'quote_number', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
             ->when(auth()->user()->type !== 'company', function ($q) {
-                $q->where('assigned_to', auth()->id());
-            })
+            $q->where('assigned_to', auth()->id());
+        })
             ->select('id', 'name', 'account_id')->get();
         $products = $this->getFilteredProducts();
 
@@ -289,28 +292,28 @@ class InvoiceController extends Controller
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(
-                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts')),
-                            function ($q) {
-                                $q->where('assigned_to', auth()->id());
-                            }
-                        );
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(
+                    auth()->user()->type !== 'company' && !(auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts')),
+                    function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'contact_id' => [
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(
-                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
-                            function ($q) {
-                                $q->where('assigned_to', auth()->id());
-                            }
-                        );
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(
+                    auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                    function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after:invoice_date',
@@ -328,9 +331,9 @@ class InvoiceController extends Controller
             'products.*.product_id' => [
                 'required',
                 Rule::exists('products', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active');
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
             ],
             'products.*.quantity' => 'required|integer|min:1',
             'products.*.unit_price' => 'required|numeric|min:0',
@@ -397,28 +400,28 @@ class InvoiceController extends Controller
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(
-                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts')),
-                            function ($q) {
-                                $q->where('assigned_to', auth()->id());
-                            }
-                        );
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(
+                    auth()->user()->type !== 'company' && !(auth()->user()->can('manage-accounts') || auth()->user()->can('view-accounts')),
+                    function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'contact_id' => [
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active')
-                        ->when(
-                            auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
-                            function ($q) {
-                                $q->where('assigned_to', auth()->id());
-                            }
-                        );
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active')
+                    ->when(
+                    auth()->user()->type !== 'company' && !(auth()->user()->can('manage-contacts') || auth()->user()->can('view-contacts')),
+                    function ($q) {
+                $q->where('assigned_to', auth()->id());
+            }
+                );
+        }),
             ],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after:invoice_date',
@@ -436,9 +439,9 @@ class InvoiceController extends Controller
             'products.*.product_id' => [
                 'required',
                 Rule::exists('products', 'id')->where(function ($query) {
-                    $query->where('created_by', createdBy())
-                        ->where('status', 'active');
-                }),
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
             ],
             'products.*.quantity' => 'required|integer|min:1',
             'products.*.unit_price' => 'required|numeric|min:0',
@@ -479,7 +482,8 @@ class InvoiceController extends Controller
                 ];
             }
             $invoice->products()->sync($syncData);
-        } else {
+        }
+        else {
             $invoice->products()->detach();
         }
 
@@ -642,12 +646,12 @@ class InvoiceController extends Controller
 
             $invoice = Invoice::where('id', $decryptedId)
                 ->with([
-                    'account',
-                    'contact',
-                    'products.tax',
-                    'payments',
-                    'creator'
-                ])
+                'account',
+                'contact',
+                'products.tax',
+                'payments',
+                'creator'
+            ])
                 ->first();
 
             if (!$invoice) {
@@ -683,7 +687,8 @@ class InvoiceController extends Controller
                 'themeColor' => $themeColor,
                 'customColor' => $customColor,
             ]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             \Log::error('Failed to decrypt invoice ID', ['encrypted' => $invoiceId, 'error' => $e->getMessage()]);
             abort(404, __('Invalid invoice link'));
         }
@@ -827,14 +832,14 @@ class InvoiceController extends Controller
             'billing_postal_code' => $salesOrder->billing_postal_code,
             'billing_country' => $salesOrder->billing_country,
             'products' => $salesOrder->products->map(function ($product) {
-                return [
+            return [
                     'product_id' => $product->id,
                     'quantity' => $product->pivot->quantity ?? 1,
                     'unit_price' => $product->pivot->unit_price ?? $product->price ?? 0,
                     'discount_type' => $product->pivot->discount_type ?? 'none',
                     'discount_value' => $product->pivot->discount_value ?? 0
                 ];
-            })
+        })
         ]);
     }
 
@@ -858,14 +863,14 @@ class InvoiceController extends Controller
             'billing_postal_code' => $quote->billing_postal_code,
             'billing_country' => $quote->billing_country,
             'products' => $quote->products->map(function ($product) {
-                return [
+            return [
                     'product_id' => $product->id,
                     'quantity' => $product->pivot->quantity ?? 1,
                     'unit_price' => $product->pivot->unit_price ?? $product->price ?? 0,
                     'discount_type' => $product->pivot->discount_type ?? 'none',
                     'discount_value' => $product->pivot->discount_value ?? 0
                 ];
-            })
+        })
         ]);
     }
 
@@ -884,14 +889,14 @@ class InvoiceController extends Controller
             'account_id' => $opportunity->account_id,
             'contact_id' => $opportunity->contact_id,
             'products' => $opportunity->products->map(function ($product) {
-                return [
+            return [
                     'product_id' => $product->id,
                     'quantity' => $product->pivot->quantity ?? 1,
                     'unit_price' => $product->pivot->unit_price ?? $product->price ?? 0,
                     'discount_type' => $product->pivot->discount_type ?? 'none',
                     'discount_value' => $product->pivot->discount_value ?? 0
                 ];
-            })
+        })
         ]);
     }
 
@@ -933,7 +938,8 @@ class InvoiceController extends Controller
 
             return back()->with('success', __('Payment approved successfully.'));
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return back()->withErrors(['error' => __('Failed to approve payment.')]);
         }
     }
@@ -960,7 +966,8 @@ class InvoiceController extends Controller
 
             return back()->with('success', __('Payment rejected successfully.'));
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return back()->withErrors(['error' => __('Failed to reject payment.')]);
         }
     }
@@ -973,7 +980,8 @@ class InvoiceController extends Controller
                 ->with('tax')
                 ->select('id', 'name', 'price', 'tax_id')
                 ->get();
-        } else {
+        }
+        else {
             return Product::where('created_by', createdBy())
                 ->where('status', 'active')
                 ->where('assigned_to', auth()->id())
@@ -992,7 +1000,7 @@ class InvoiceController extends Controller
         $settings = settings($userId);
 
         // Sample invoice data for preview
-        $invoice = (object) [
+        $invoice = (object)[
             'invoice_number' => 'INV-2024-001',
             'invoice_date' => now()->format('Y-m-d'),
             'due_date' => now()->addDays(30)->format('Y-m-d'),
@@ -1000,7 +1008,7 @@ class InvoiceController extends Controller
             'subtotal' => 1000,
             'tax_amount' => 100,
             'total_amount' => 1100,
-            'account' => (object) [
+            'account' => (object)[
                 'name' => 'Sample Client',
                 'email' => 'client@example.com',
                 'phone' => '(555) 123-4567'
@@ -1010,15 +1018,15 @@ class InvoiceController extends Controller
             'billing_state' => 'State',
             'billing_postal_code' => '67890',
             'products' => [
-                (object) [
+                (object)[
                     'name' => 'Web Development',
-                    'pivot' => (object) ['quantity' => 10, 'unit_price' => 75, 'total_price' => 750],
-                    'tax' => (object) ['name' => 'VAT', 'rate' => 10]
+                    'pivot' => (object)['quantity' => 10, 'unit_price' => 75, 'total_price' => 750],
+                    'tax' => (object)['name' => 'VAT', 'rate' => 10]
                 ],
-                (object) [
+                (object)[
                     'name' => 'Design Services',
-                    'pivot' => (object) ['quantity' => 5, 'unit_price' => 50, 'total_price' => 250],
-                    'tax' => (object) ['name' => 'VAT', 'rate' => 10]
+                    'pivot' => (object)['quantity' => 5, 'unit_price' => 50, 'total_price' => 250],
+                    'tax' => (object)['name' => 'VAT', 'rate' => 10]
                 ]
             ],
             'notes' => 'Thank you for your business!'
@@ -1029,7 +1037,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoices-template/TemplatePreview', [
             'invoice' => $invoice,
-            'templateId' => (int) $templateId,
+            'templateId' => (int)$templateId,
             'templateColor' => $templateColor,
             'settings' => $settings,
             'isPreview' => $isPreview
@@ -1050,14 +1058,15 @@ class InvoiceController extends Controller
         try {
             $query = \App\Models\Invoice::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
-            
+
             if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
+
             $query->delete();
             return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }
     }

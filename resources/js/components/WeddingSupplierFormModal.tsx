@@ -97,6 +97,17 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
         }
     };
 
+    // Shared props for all phone/telephone inputs — blocks letters
+    const phoneKeyHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'Home', 'End', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+        if (allowedKeys.includes(e.key)) return;
+        if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+        if (/^[0-9+\-\s]$/.test(e.key)) return;
+        e.preventDefault();
+    };
+
+    const sanitizePhone = (value: string) => value.replace(/[^0-9+\-\s]/g, '');
+
     const addContact = () => {
         setData('contacts', [...data.contacts, { name: '', position: '', phone: '', email: '' }]);
     };
@@ -153,13 +164,27 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
 
                         <div className="space-y-2">
                             <Label htmlFor="phone">{t('Mobile')}</Label>
-                            <Input id="phone" value={data.phone} onChange={e => setData('phone', e.target.value)} />
+                            <Input
+                                id="phone"
+                                type="tel"
+                                inputMode="tel"
+                                value={data.phone}
+                                onChange={e => setData('phone', sanitizePhone(e.target.value))}
+                                onKeyDown={phoneKeyHandler}
+                            />
                             {errors.phone && <span className="text-red-500 text-xs">{errors.phone}</span>}
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="telephone">{t('Telephone')}</Label>
-                            <Input id="telephone" value={data.telephone} onChange={e => setData('telephone', e.target.value)} />
+                            <Input
+                                id="telephone"
+                                type="tel"
+                                inputMode="tel"
+                                value={data.telephone}
+                                onChange={e => setData('telephone', sanitizePhone(e.target.value))}
+                                onKeyDown={phoneKeyHandler}
+                            />
                             {errors.telephone && <span className="text-red-500 text-xs">{errors.telephone}</span>}
                         </div>
 
@@ -234,9 +259,12 @@ export function WeddingSupplierFormModal({ isOpen, onClose, supplier, mode, cate
                                             </div>
                                             <div className="space-y-1">
                                                 <Input
+                                                    type="tel"
+                                                    inputMode="tel"
                                                     placeholder={t('Phone')}
                                                     value={contact.phone}
-                                                    onChange={e => updateContact(index, 'phone', e.target.value)}
+                                                    onChange={e => updateContact(index, 'phone', sanitizePhone(e.target.value))}
+                                                    onKeyDown={phoneKeyHandler}
                                                 />
                                                 {errors[`contacts.${index}.phone`] && <span className="text-red-500 text-xs">{errors[`contacts.${index}.phone`]}</span>}
                                             </div>

@@ -76,6 +76,25 @@ class SystemSettingsController extends Controller
                 updateSetting($key, $value, $userId);
             }
 
+            // If superadmin, propagate brand settings to all company users so their
+            // favicon, logos, theme, etc. stay in sync immediately.
+            if (auth()->user()->isSuperAdmin()) {
+                $brandKeys = [
+                    'logoDark', 'logoLight', 'favicon', 'titleText', 'footerText',
+                    'themeColor', 'customColor', 'sidebarVariant', 'sidebarStyle',
+                    'layoutDirection', 'themeMode',
+                ];
+
+                $companyUserIds = \App\Models\User::where('type', 'company')->pluck('id');
+                foreach ($companyUserIds as $companyId) {
+                    foreach ($validated['settings'] as $key => $value) {
+                        if (in_array($key, $brandKeys)) {
+                            updateSetting($key, $value, $companyId);
+                        }
+                    }
+                }
+            }
+
             return redirect()->back()->with('success', __('Brand settings updated successfully.'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to update brand settings: :error', ['error' => $e->getMessage()]));

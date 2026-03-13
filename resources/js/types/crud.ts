@@ -71,7 +71,7 @@ export interface FileValidation {
 export interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'password' | 'select' | 'textarea' | 'radio' | 'checkbox' | 'switch' | 'file' | 'date' | 'number' | 'multi-select' | 'media-picker' | 'array' | 'custom' | 'calculated' | 'time' | 'color';
+  type: 'text' | 'email' | 'password' | 'select' | 'textarea' | 'radio' | 'checkbox' | 'switch' | 'file' | 'date' | 'number' | 'multi-select' | 'media-picker' | 'array' | 'custom' | 'calculated' | 'time' | 'color' | 'tel';
   placeholder?: string;
   required?: boolean;
   multiple?: boolean; // For media-picker and multi-select fields
