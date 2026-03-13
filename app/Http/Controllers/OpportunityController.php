@@ -90,6 +90,7 @@ class OpportunityController extends Controller
                 $q->where('assigned_to', auth()->id());
             })->with('tax')->get(['id', 'name', 'price', 'tax_id']);
         $opportunityStages = OpportunityStage::where('created_by', createdBy())->where('status', 'active')
+            ->orderBy('order', 'asc')->orderBy('id', 'asc')
             ->get(['id', 'name', 'color']);
         $opportunitySources = OpportunitySource::where('created_by', createdBy())->where('status', 'active')
             ->get(['id', 'name']);

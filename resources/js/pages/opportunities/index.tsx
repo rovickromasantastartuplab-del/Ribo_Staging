@@ -359,6 +359,9 @@ export default function Opportunities() {
     }, { preserveState: true, preserveScroll: true });
   };
 
+  // Build a stable key that changes when stages are reordered (not just added/removed)
+  const opportunityStageOrderKey = JSON.stringify(opportunityStages.map((s: any) => s.id));
+
   const loadKanbanData = useCallback(() => {
     if (activeView !== 'kanban') return;
 
@@ -388,7 +391,7 @@ export default function Opportunities() {
     setKanbanData(structuredData);
     setKanbanDataRef(structuredData);
     setIsLoadingKanban(false);
-  }, [activeView, opportunities?.data, searchTerm, selectedAccount, selectedSource, selectedStatus, opportunityStages.length]);
+  }, [activeView, opportunities?.data, searchTerm, selectedAccount, selectedSource, selectedStatus, opportunityStageOrderKey]);
 
   useEffect(() => {
     if (activeView === 'kanban') {

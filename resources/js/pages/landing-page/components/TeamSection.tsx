@@ -52,10 +52,30 @@ export default function TeamSection({ settings, sectionData, brandColor = '#3b82
           {teamMembers.map((member, index) => (
             <div key={index} className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:border-gray-300 transition-colors">
               {/* Profile Image */}
-              <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: brandColor }}>
-                <span className="text-white text-lg font-bold">
-                  {member.name.split(' ').map(n => n[0]).join('')}
-                </span>
+              <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden" style={{ backgroundColor: member.image ? 'transparent' : brandColor }}>
+                {member.image ? (
+                  <img
+                    src={member.image.startsWith('http') ? member.image : `${(window as any).appSettings?.imageUrl || ''}${member.image}`}
+                    alt={member.name}
+                    className="w-full h-full object-cover rounded-full"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.style.backgroundColor = brandColor;
+                        const span = document.createElement('span');
+                        span.className = 'text-white text-lg font-bold';
+                        span.textContent = member.name.split(' ').map((n: string) => n[0]).join('');
+                        parent.appendChild(span);
+                      }
+                    }}
+                  />
+                ) : (
+                  <span className="text-white text-lg font-bold">
+                    {member.name.split(' ').map(n => n[0]).join('')}
+                  </span>
+                )}
               </div>
 
               {/* Member Info */}

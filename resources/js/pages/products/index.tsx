@@ -717,6 +717,13 @@ export default function Products() {
         onSubmit={handleFormSubmit}
         formConfig={{
           ...(hasPermission(permissions, 'export-products') && { exportRoute: 'product.export' }),
+          ...(hasPermission(permissions, 'export-products') && { exportFilters: {
+            search: searchTerm || undefined,
+            category: selectedCategory !== 'all' ? selectedCategory : undefined,
+            brand: selectedBrand !== 'all' ? selectedBrand : undefined,
+            status: selectedStatus !== 'all' ? selectedStatus : undefined,
+            assigned_to: selectedAssignee !== 'all' ? selectedAssignee : undefined,
+          } }),
           fields: [
             { name: 'name', label: t('Product Name'), type: 'text', required: true },
             { name: 'sku', label: t('SKU'), type: 'text', required: true },

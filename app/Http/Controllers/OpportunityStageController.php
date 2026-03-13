@@ -12,7 +12,7 @@ class OpportunityStageController extends Controller
     {
         $query = OpportunityStage::query()
             ->where('created_by', createdBy());
-            
+
         if (auth()->user()->type !== 'company' && !auth()->user()->can('manage-opportunity-stages')) {
             $query->whereRaw('1 = 0');
         }
@@ -34,7 +34,7 @@ class OpportunityStageController extends Controller
         if ($request->has('sort_field') && !empty($request->sort_field)) {
             $query->orderBy($request->sort_field, $request->sort_direction ?? 'asc');
         } else {
-            $query->orderBy('id', 'desc');
+            $query->orderBy('order', 'asc')->orderBy('id', 'asc');
         }
 
         $opportunityStages = $query->paginate($request->per_page ?? 10);
@@ -98,6 +98,10 @@ class OpportunityStageController extends Controller
 
         if ($opportunityStage) {
             try {
+                if ($opportunityStage->opportunities()->count() > 0) {
+                    return redirect()->back()->with('error', __('Cannot delete opportunity stage that is currently assigned to one or more opportunities.'));
+                }
+
                 $opportunityStage->delete();
                 return redirect()->back()->with('success', __('Opportunity stage deleted successfully.'));
             } catch (\Exception $e) {
@@ -140,17 +144,46 @@ class OpportunityStageController extends Controller
         ]);
 
         try {
-            $query = \App\Models\OpportunityStage::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
-            
-            if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+            $stages = \App\Models\OpportunityStage::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
+
+            if ($stages->isEmpty()) {
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+
+            $inUse = $stages->filter(fn($s) => $s->opportunities()->count() > 0);
+            $deletable = $stages->filter(fn($s) => $s->opportunities()->count() === 0);
+
+            $deletable->each->delete();
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to opportunities.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected opportunity stages because they are currently assigned to opportunities.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
+        }
+    }
+
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:opportunity_stages,id',
+            'items.*.order' => 'required|integer',
+        ]);
+
+        try {
+            foreach ($validated['items'] as $item) {
+                OpportunityStage::where('id', $item['id'])
+                    ->where('created_by', createdBy())
+                    ->update(['order' => $item['order']]);
+            }
+            return response()->json(['message' => __('Order updated successfully.')]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => __('Failed to update order.')], 500);
         }
     }
 }

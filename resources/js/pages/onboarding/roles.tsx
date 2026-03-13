@@ -170,7 +170,7 @@ export default function OnboardingRoles({
         <OnboardingLayout
             currentStep={3}
             title={t("Set up roles & permissions")}
-            description={t("Configure roles for your team at :company.", { company: companyName })}
+            description={t("Configure roles for your team at {{company}}.", { company: companyName })}
         >
             <form className="space-y-6" onSubmit={submit}>
                 {/* Existing default roles */}

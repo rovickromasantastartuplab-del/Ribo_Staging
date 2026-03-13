@@ -295,14 +295,14 @@ class ProductController extends Controller
         }
     }
 
-    public function fileExport()
+    public function fileExport(Request $request)
     {
         if (!auth()->user()->can('export-products')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
         $name = 'product_' . date('Y-m-d_H-i-s');
-        return Excel::download(new ProductExport(), $name . '.xlsx');
+        return Excel::download(new ProductExport($request), $name . '.xlsx');
     }
 
     public function downloadTemplate()

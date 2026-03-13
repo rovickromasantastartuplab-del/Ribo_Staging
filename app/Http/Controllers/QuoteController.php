@@ -715,19 +715,14 @@ class QuoteController extends Controller
         ]);
     }
 
-    public function fileExport()
+    public function fileExport(Request $request)
     {
         if (!auth()->user()->can('export-quotes')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
         $name = 'quote_' . date('Y-m-d_H-i-s');
-        ob_start();
-
-        $data = Excel::download(new QuoteExport(), $name . '.xlsx');
-        ob_end_clean();
-
-        return $data;
+        return Excel::download(new QuoteExport($request), $name . '.xlsx');
     }
 
     private function calculateDiscountAmount($lineTotal, $discountType, $discountValue)

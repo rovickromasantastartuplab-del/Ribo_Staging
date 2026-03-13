@@ -94,6 +94,10 @@ class OpportunitySourceController extends Controller
 
         if ($opportunitySource) {
             try {
+                if ($opportunitySource->opportunities()->count() > 0) {
+                    return redirect()->back()->with('error', __('Cannot delete opportunity source that is currently assigned to one or more opportunities.'));
+                }
+
                 $opportunitySource->delete();
                 return redirect()->back()->with('success', __('Opportunity source deleted successfully.'));
             } catch (\Exception $e) {
@@ -136,15 +140,24 @@ class OpportunitySourceController extends Controller
         ]);
 
         try {
-            $query = \App\Models\OpportunitySource::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
-            
-            if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+            $sources = \App\Models\OpportunitySource::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
+
+            if ($sources->isEmpty()) {
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+
+            $inUse = $sources->filter(fn($s) => $s->opportunities()->count() > 0);
+            $deletable = $sources->filter(fn($s) => $s->opportunities()->count() === 0);
+
+            $deletable->each->delete();
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to opportunities.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected opportunity sources because they are currently assigned to opportunities.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }

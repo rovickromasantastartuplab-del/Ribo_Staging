@@ -51,6 +51,14 @@ class LeadExport implements FromCollection, WithHeadings
             if ($this->request->has('assigned_to') && !empty($this->request->assigned_to) && $this->request->assigned_to !== 'all') {
                 $query->where('assigned_to', $this->request->assigned_to);
             }
+
+            if ($this->request->filled('date_from')) {
+                $query->whereDate('created_at', '>=', $this->request->date_from);
+            }
+
+            if ($this->request->filled('date_to')) {
+                $query->whereDate('created_at', '<=', $this->request->date_to);
+            }
         }
 
         return $query->get()
@@ -73,6 +81,7 @@ class LeadExport implements FromCollection, WithHeadings
                     'lead source' => $lead->leadSource?->name,
                     'assigned to' => $lead->assignedUser?->name,
                     'campaign' => $lead->campaign?->name,
+                    'created at' => $lead->created_at?->format('Y-m-d'),
                 ];
             });
     }
@@ -97,6 +106,7 @@ class LeadExport implements FromCollection, WithHeadings
             'Lead Source',
             'Assigned User',
             'Campaign',
+            'Created At',
         ];
     }
 }

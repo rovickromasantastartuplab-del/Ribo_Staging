@@ -154,9 +154,10 @@ export default function ProjectKanban() {
 
       toast.loading(t('Updating task...'));
 
-      // Ensure task_status_id is properly formatted
+      // Ensure task_status_id is properly formatted and project_id is included
       const updateData = {
         ...formData,
+        project_id: project.id,
         task_status_id: formData.task_status_id ? parseInt(formData.task_status_id) : null
       };
 
@@ -166,6 +167,9 @@ export default function ProjectKanban() {
           toast.dismiss();
           if (page.props.flash.success) {
             toast.success(t(page.props.flash.success));
+          }
+          if ((page.props.flash as any).error) {
+            toast.error(t((page.props.flash as any).error));
           }
           router.reload();
         },

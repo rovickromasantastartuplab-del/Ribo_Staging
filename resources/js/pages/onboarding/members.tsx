@@ -89,7 +89,7 @@ export default function OnboardingMembers({
         <OnboardingLayout
             currentStep={4}
             title={t("Invite your team")}
-            description={t("Add team members to :company. You can add up to :count more member(s) on your current plan.", {
+            description={t("Add team members to {{company}}. You can add up to {{count}} member(s) on your current plan.", {
                 company: companyName,
                 count: availableSlots,
             })}

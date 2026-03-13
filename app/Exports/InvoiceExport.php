@@ -3,11 +3,14 @@
 namespace App\Exports;
 
 use App\Models\Invoice;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class InvoiceExport implements FromCollection, WithHeadings
 {
+    public function __construct(private Request $request) {}
+
     public function collection()
     {
         $query = Invoice::with(['salesOrder', 'quote', 'opportunity', 'account', 'contact', 'assignedUser'])
@@ -15,6 +18,31 @@ class InvoiceExport implements FromCollection, WithHeadings
             ->when(!auth()->user()->hasRole('company'), function ($q) {
                 $q->where('assigned_to', auth()->id());
             });
+
+        if ($this->request->filled('search')) {
+            $search = $this->request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', '%' . $search . '%')
+                  ->orWhere('name', 'like', '%' . $search . '%')
+                  ->orWhereHas('account', fn($q) => $q->where('name', 'like', '%' . $search . '%'));
+            });
+        }
+
+        if ($this->request->filled('status') && $this->request->status !== 'all') {
+            $query->where('status', $this->request->status);
+        }
+
+        if ($this->request->filled('account_id') && $this->request->account_id !== 'all') {
+            $query->where('account_id', $this->request->account_id);
+        }
+
+        if ($this->request->filled('assigned_to') && $this->request->assigned_to !== 'all') {
+            if ($this->request->assigned_to === 'unassigned') {
+                $query->whereNull('assigned_to');
+            } else {
+                $query->where('assigned_to', $this->request->assigned_to);
+            }
+        }
 
         return $query->get()
             ->map(function ($invoice) {
