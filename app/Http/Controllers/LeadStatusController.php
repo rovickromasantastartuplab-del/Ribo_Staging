@@ -92,6 +92,10 @@ class LeadStatusController extends Controller
 
         if ($leadStatus) {
             try {
+                if ($leadStatus->leads()->count() > 0) {
+                    return redirect()->back()->with('error', __('Cannot delete lead status that is currently assigned to one or more leads.'));
+                }
+
                 $leadStatus->delete();
                 return redirect()->back()->with('success', __('Lead status deleted successfully.'));
             } catch (\Exception $e) {
@@ -134,15 +138,24 @@ class LeadStatusController extends Controller
         ]);
 
         try {
-            $query = \App\Models\LeadStatus::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $statuses = \App\Models\LeadStatus::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
 
-            if ($count === 0) {
+            if ($statuses->isEmpty()) {
                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
 
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUse = $statuses->filter(fn($s) => $s->leads()->count() > 0);
+            $deletable = $statuses->filter(fn($s) => $s->leads()->count() === 0);
+
+            $deletable->each->delete();
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to leads.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected lead statuses because they are currently assigned to leads.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }

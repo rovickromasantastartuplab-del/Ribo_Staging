@@ -98,6 +98,10 @@ class OpportunityStageController extends Controller
 
         if ($opportunityStage) {
             try {
+                if ($opportunityStage->opportunities()->count() > 0) {
+                    return redirect()->back()->with('error', __('Cannot delete opportunity stage that is currently assigned to one or more opportunities.'));
+                }
+
                 $opportunityStage->delete();
                 return redirect()->back()->with('success', __('Opportunity stage deleted successfully.'));
             } catch (\Exception $e) {
@@ -140,15 +144,24 @@ class OpportunityStageController extends Controller
         ]);
 
         try {
-            $query = \App\Models\OpportunityStage::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $stages = \App\Models\OpportunityStage::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
 
-            if ($count === 0) {
+            if ($stages->isEmpty()) {
                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
 
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUse = $stages->filter(fn($s) => $s->opportunities()->count() > 0);
+            $deletable = $stages->filter(fn($s) => $s->opportunities()->count() === 0);
+
+            $deletable->each->delete();
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to opportunities.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected opportunity stages because they are currently assigned to opportunities.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }
