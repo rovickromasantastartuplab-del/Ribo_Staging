@@ -5,7 +5,6 @@ import { Calendar, MapPin, CreditCard, Printer, Package, DollarSign, User, Copy,
 import { InvoicePaymentModal } from '@/components/invoice-payment-modal';
 import { toast } from '@/components/custom-toast';
 import { hasPermission } from '@/utils/authorization';
-import { useFavicon } from '@/hooks/use-favicon';
 
 import Template1 from './templates/Template1';
 import Template2 from './templates/Template2';
@@ -118,7 +117,6 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
     const { props } = usePage<any>();
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [copied, setCopied] = useState(false);
-    useFavicon();
 
     const auth = props.auth || {};
     const permissions = auth?.permissions || [];
