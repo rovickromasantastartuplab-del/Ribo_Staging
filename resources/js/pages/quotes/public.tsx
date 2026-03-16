@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Printer, Copy, Check, Calendar, DollarSign, Package, User, Building, Truck } from 'lucide-react';
 import { toast } from '@/components/custom-toast';
 import { hasPermission } from '@/utils/authorization';
+import { useFavicon } from '@/hooks/use-favicon';
 
 // Import quote templates
 import Template1 from './templates/Template1';
@@ -121,6 +122,7 @@ export default function PublicQuote({ quote, templateId = 'template1', color = '
     const { t } = useTranslation();
     const { props } = usePage<any>();
     const [copied, setCopied] = useState(false);
+    useFavicon();
 
     const auth = props.auth || {};
     const permissions = auth?.permissions || [];
