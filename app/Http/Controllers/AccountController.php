@@ -274,6 +274,10 @@ class AccountController extends Controller
 
         if ($account) {
             try {
+                if ($account->opportunities()->exists()) {
+                    return redirect()->back()->with('error', __('Cannot delete account that is currently assigned to one or more opportunities.'));
+                }
+
                 $account->delete();
                 return redirect()->back()->with('success', __('Account deleted successfully'));
             } catch (\Exception $e) {
@@ -342,11 +346,20 @@ class AccountController extends Controller
         try {
             $query = \App\Models\Account::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
-            
+
             if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
+
+            $accountsInUse = \App\Models\Account::whereIn('id', $validated['ids'])
+                ->where('created_by', createdBy())
+                ->whereHas('opportunities')
+                ->count();
+
+            if ($accountsInUse > 0) {
+                return redirect()->back()->with('error', __('Cannot delete the selected accounts because they are currently assigned to opportunities.'));
+            }
+
             $query->delete();
             return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
         } catch (\Exception $e) {
