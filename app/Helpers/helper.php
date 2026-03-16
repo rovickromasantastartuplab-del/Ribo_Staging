@@ -63,8 +63,10 @@ if (!function_exists('settings')) {
 
         $userSettings = Setting::where('user_id', $user_id)->pluck('value', 'key')->toArray();
 
-        // If user is not superadmin, merge with superadmin settings for specific keys
-        if (auth()->check() && auth()->user()->type !== 'superadmin') {
+        // If the resolved user is not a superadmin, merge superadmin settings for specific keys.
+        // This applies both to authenticated sessions AND unauthenticated public pages (invoices, quotes, etc.)
+        $isNotSuperAdmin = !$userForSetting || $userForSetting->type !== 'superadmin';
+        if ($isNotSuperAdmin) {
             $superAdmin = User::where('type', 'superadmin')->first();
             if ($superAdmin) {
                 $superAdminKeys = [
@@ -78,7 +80,19 @@ if (!function_exists('settings')) {
                     'thousandsSeparator',
                     'floatNumber',
                     'currencySymbolSpace',
-                    'currencySymbolPosition'
+                    'currencySymbolPosition',
+                    // Brand settings — used as fallback if company row is missing
+                    'favicon',
+                    'logoDark',
+                    'logoLight',
+                    'titleText',
+                    'footerText',
+                    'themeColor',
+                    'customColor',
+                    'sidebarVariant',
+                    'sidebarStyle',
+                    'layoutDirection',
+                    'themeMode',
                 ];
                 $superAdminSettings = Setting::where('user_id', $superAdmin->id)
                     ->whereIn('key', $superAdminKeys)

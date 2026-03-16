@@ -82,4 +82,9 @@ class Account extends BaseModel
     {
         return $this->hasMany(Project::class);
     }
+
+    public function opportunities(): HasMany
+    {
+        return $this->hasMany(Opportunity::class);
+    }
 }

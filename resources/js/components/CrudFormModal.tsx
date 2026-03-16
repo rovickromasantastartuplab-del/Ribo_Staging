@@ -645,6 +645,37 @@ export function CrudFormModal({
           />
         );
 
+      case 'tel':
+        return (
+          <Input
+            id={field.name}
+            name={field.name}
+            type="tel"
+            inputMode="tel"
+            placeholder={field.placeholder}
+            value={formData[field.name] || ''}
+            onChange={(e) => {
+              // Strip any non-numeric characters except + - and spaces
+              const cleaned = e.target.value.replace(/[^0-9+\-\s]/g, '');
+              handleChange(field.name, cleaned);
+            }}
+            onKeyDown={(e) => {
+              // Allow: Backspace, Delete, Tab, Escape, Enter, Home, End, arrows
+              const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'Home', 'End', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+              if (allowedKeys.includes(e.key)) return;
+              // Allow: Ctrl/Cmd+A, Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+X
+              if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+              // Allow: digits, +, -, space
+              if (/^[0-9+\-\s]$/.test(e.key)) return;
+              // Block everything else
+              e.preventDefault();
+            }}
+            required={field.required}
+            className={errors[field.name] ? 'border-red-500' : ''}
+            disabled={false}
+          />
+        );
+
       case 'date':
         // Format date value for input (YYYY-MM-DD format)
         const dateValue = formData[field.name] ?

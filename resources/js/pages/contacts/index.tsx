@@ -630,7 +630,7 @@ export default function Contacts() {
           fields: [
             { name: 'name', label: t('Contact Name'), type: 'text', required: true },
             { name: 'email', label: t('Email'), type: 'email' },
-            { name: 'phone', label: t('Phone'), type: 'text' },
+            { name: 'phone', label: t('Phone'), type: 'tel' },
             { name: 'position', label: t('Position'), type: 'text' },
             {
               name: formMode === 'view' ? 'account_name' : 'account_id',

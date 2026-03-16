@@ -749,7 +749,7 @@ export default function Accounts() {
           fields: [
             { name: 'name', label: t('Account Name'), type: 'text', required: true },
             { name: 'email', label: t('Email'), type: 'email' },
-            { name: 'phone', label: t('Phone'), type: 'text' },
+            { name: 'phone', label: t('Phone'), type: 'tel' },
             { name: 'website', label: t('Website'), type: 'text' },
             {
               name: formMode === 'view' ? 'account_type_name' : 'account_type_id',
