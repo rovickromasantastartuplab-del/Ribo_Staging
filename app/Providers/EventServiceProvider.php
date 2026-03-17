@@ -57,66 +57,63 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
         UserCreated::class => [
-            SendUserCreatedEmail::class,
-            WebhookUserCreateListener::class,
+            SendUserCreatedEmail::class ,
+            WebhookUserCreateListener::class ,
         ],
         LeadAssigned::class => [
-            SendAssignLeadEmail::class,
-            SendLeadWelcomeEmail::class,
-            TwilioLeadCreateListener::class,
-            WebhookAssignLeadListener::class,
+            SendAssignLeadEmail::class ,
+            SendLeadWelcomeEmail::class ,
+            TwilioLeadCreateListener::class ,
+            WebhookAssignLeadListener::class ,
         ],
         LeadStatusChanged::class => [
-            SendLeadStatusChangedEmail::class,
-            SendLeadStatusChangedToLeadEmail::class,
+            SendLeadStatusChangedEmail::class ,
+            SendLeadStatusChangedToLeadEmail::class ,
         ],
         QuoteCreated::class => [
-            SendQuoteCreatedEmail::class,
-            TwilioQuoteCreateListener::class,
-            WebhookQuoteCreateListener::class,
+            SendQuoteCreatedEmail::class ,
+            TwilioQuoteCreateListener::class ,
+            WebhookQuoteCreateListener::class ,
         ],
         QuoteStatusChanged::class => [
-            SendQuoteStatusChangedEmail::class,
+            SendQuoteStatusChangedEmail::class ,
         ],
         TaskAssigned::class => [
-            SendTaskAssignedEmail::class,
-            WebhookTaskCreateListener::class,
+            SendTaskAssignedEmail::class ,
+            WebhookTaskCreateListener::class ,
         ],
         MeetingInvitation::class => [
-            SendMeetingInvitationEmail::class,
-            TwilioMettingCreateListener::class,
-            WebhookMeetingInvitationListener::class,
+            SendMeetingInvitationEmail::class ,
+            TwilioMettingCreateListener::class ,
+            WebhookMeetingInvitationListener::class ,
         ],
         CaseCreated::class => [
-            SendCaseCreatedEmail::class,
-            TwilioCaseCreateListener::class,
-            WebhookCaseCreateListener::class,
+            SendCaseCreatedEmail::class ,
+            TwilioCaseCreateListener::class ,
+            WebhookCaseCreateListener::class ,
         ],
         OpportunityCreated::class => [
-            SendOpportunityCreatedEmail::class,
-            TwilioOpportunityCreateListener::class,
-            WebhookOpportunityCreateListener::class,
+            SendOpportunityCreatedEmail::class ,
+            TwilioOpportunityCreateListener::class ,
+            WebhookOpportunityCreateListener::class ,
         ],
         OpportunityStageChanged::class => [
-            SendOpportunityStageChangedEmail::class,
+            SendOpportunityStageChangedEmail::class ,
         ],
         AccountCreate::class => [
-            TwilioAccountCreateListener::class,
+            TwilioAccountCreateListener::class ,
         ],
         SalesOrderCreated::class => [
-            SendSalesOrderCreatedEmail::class,
+            SendSalesOrderCreatedEmail::class ,
         ],
         SalesOrderStatusChanged::class => [
-            SendSalesOrderStatusChangedEmail::class,
+            SendSalesOrderStatusChangedEmail::class ,
         ],
         InvoiceCreated::class => [
-            SendInvoiceCreatedEmail::class,
+            SendInvoiceCreatedEmail::class ,
         ],
         InvoiceStatusChanged::class => [
-            SendInvoiceStatusChangedEmail::class,
-        ],
-        \SocialiteProviders\Manager\SocialiteWasCalled::class => [
-            \SocialiteProviders\Google\GoogleExtendSocialite::class . '@handle',
+            SendInvoiceStatusChangedEmail::class ,
         ],
     ];
 
@@ -125,7 +122,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+    //
     }
 
     /**
@@ -133,7 +130,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+    //
     }
 
     /**
