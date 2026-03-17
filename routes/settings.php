@@ -83,8 +83,8 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('settings/field-mappings/{provider}', [IntegrationsSettingsController::class, 'saveFieldMappings'])->name('settings.field-mappings.save');
 
     // Social & Omnichannel OAuth Integration Routes
-    Route::get('auth/{provider}/redirect', [\App\Http\Controllers\Settings\SocialAuthController::class, 'redirect'])->name('social.redirect');
-    Route::get('auth/{provider}/callback', [\App\Http\Controllers\Settings\SocialAuthController::class, 'callback'])->name('social.callback');
+    Route::get('auth/redirect/{provider}', [\App\Http\Controllers\Settings\SocialAuthController::class, 'redirect'])->name('social.redirect');
+    Route::get('auth/callback/{provider}', [\App\Http\Controllers\Settings\SocialAuthController::class, 'callback'])->name('social.callback');
 
     Route::post('settings/recaptcha', [SystemSettingsController::class, 'updateRecaptcha'])->name('settings.recaptcha.update');
     Route::post('settings/chatgpt', [SystemSettingsController::class, 'updateChatgpt'])->middleware('plan.feature:ai_integration')->name('settings.chatgpt.update');
