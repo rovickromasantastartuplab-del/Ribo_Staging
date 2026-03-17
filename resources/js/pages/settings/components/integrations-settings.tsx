@@ -296,7 +296,7 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                                 </span>
                                                 {gmailAccount.last_sync_at && (
                                                     <span className="text-[10px] text-muted-foreground">
-                                                        Last sync: {new Date(gmailAccount.last_sync_at).toLocaleString()}
+                                                        {t('Last sync')}: {new Date(gmailAccount.last_sync_at).toLocaleString()}
                                                     </span>
                                                 )}
                                             </>

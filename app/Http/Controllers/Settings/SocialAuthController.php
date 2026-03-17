@@ -118,6 +118,7 @@ class SocialAuthController extends Controller
                 $gmailAccount = GmailAccount::updateOrCreate(
                     [
                         'user_id' => $companyId,
+                        'gmail_address' => $socialUser->getEmail(),
                     ],
                     [
                         'google_id' => $socialUser->getId(),

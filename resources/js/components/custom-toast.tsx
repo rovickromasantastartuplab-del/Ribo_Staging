@@ -44,7 +44,7 @@ export const toast = {
     if(isDemoMode()){
         return;
     }
-    if (isDemoMode() && (message.includes('Delet') || message.includes('Updat') || message.includes('Reset') || message.includes('Modif') || message.includes('Acti') || message.includes('Deacti'))) {
+    if (isDemoMode() && message && (message.includes('Delet') || message.includes('Updat') || message.includes('Reset') || message.includes('Modif') || message.includes('Acti') || message.includes('Deacti'))) {
       return;
     }
     return sonnerToast.loading(message, options);
