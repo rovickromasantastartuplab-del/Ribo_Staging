@@ -153,13 +153,13 @@ class SocialAuthController extends Controller
         $superadmin = \App\Models\User::where('type', 'superadmin')->first();
         $superadminId = $superadmin?->id;
 
-        $clientId = ($superadminId ? getSetting('google_client_id', $superadminId) : null)
+        $clientId = ($superadminId ? getSetting('google_client_id', null, $superadminId) : null)
             ?: config('services.google.client_id');
 
-        $clientSecret = ($superadminId ? getSetting('google_client_secret', $superadminId) : null)
+        $clientSecret = ($superadminId ? getSetting('google_client_secret', null, $superadminId) : null)
             ?: config('services.google.client_secret');
 
-        $redirectUri = ($superadminId ? getSetting('google_redirect_uri', $superadminId) : null)
+        $redirectUri = ($superadminId ? getSetting('google_redirect_uri', null, $superadminId) : null)
             ?: config('services.google.redirect');
 
         // Dynamically update the Socialite Google config at runtime

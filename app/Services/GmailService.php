@@ -23,10 +23,10 @@ class GmailService
         $user = $account->user;
         $superadminId = $user ? $user->creatorId() : null;
 
-        $clientId = ($superadminId ? getSetting('google_client_id', $superadminId) : null)
+        $clientId = ($superadminId ? getSetting('google_client_id', null, $superadminId) : null)
             ?? config('services.google.client_id');
 
-        $clientSecret = ($superadminId ? getSetting('google_client_secret', $superadminId) : null)
+        $clientSecret = ($superadminId ? getSetting('google_client_secret', null, $superadminId) : null)
             ?? config('services.google.client_secret');
 
         $this->client = new GoogleClient();

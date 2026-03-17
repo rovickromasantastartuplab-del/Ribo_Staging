@@ -106,6 +106,22 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
         setTimeout(() => setIsGenerating(false), 500);
     };
 
+    const handleGmailSync = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('settings.gmail.sync'), {
+            preserveScroll: true,
+        });
+    };
+
+    const handleGmailDisconnect = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (confirm(t('Are you sure you want to disconnect Gmail? This will remove all synced emails.'))) {
+            post(route('settings.gmail.disconnect'), {
+                preserveScroll: true,
+            });
+        }
+    };
+
     // Field Mapping Handlers
     const addMappingRow = () => {
         setMappingRows([...mappingRows, { external_field: '', crm_field: '', default_value: '' }]);
@@ -291,23 +307,26 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                     <div className="flex items-center gap-2">
                                         {gmailAccount ? (
                                             <>
-                                                <form action={route('settings.gmail.sync')} method="POST" className="inline">
-                                                    <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
-                                                        type="submit" 
-                                                        disabled={gmailAccount.sync_status === 'syncing'}
-                                                    >
-                                                        {t('Sync Now')}
-                                                    </Button>
-                                                </form>
-                                                <form action={route('settings.gmail.disconnect')} method="POST" className="inline" onSubmit={(e) => { if(!confirm('Are you sure you want to disconnect Gmail? This will remove all synced emails.')) e.preventDefault(); }}>
-                                                    <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
-                                                    <Button variant="ghost" size="sm" type="submit" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                                        {t('Disconnect')}
-                                                    </Button>
-                                                </form>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    type="button" 
+                                                    onClick={handleGmailSync}
+                                                    disabled={gmailAccount.sync_status === 'syncing' || processing}
+                                                >
+                                                    {gmailAccount.sync_status === 'syncing' ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                                                    {t('Sync Now')}
+                                                </Button>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    type="button" 
+                                                    onClick={handleGmailDisconnect}
+                                                    disabled={processing}
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                >
+                                                    {t('Disconnect')}
+                                                </Button>
                                             </>
                                         ) : (
                                             <a href={route('social.redirect', { provider: 'google' })}>
