@@ -54,7 +54,7 @@ class SocialAuthController extends Controller
     {
         if ($request->has('error')) {
             Log::error("OAuth Error from {$provider}: " . $request->get('error_description'));
-            return redirect()->route('settings.index', ['#integrations-settings'])
+            return redirect()->route('settings', ['#integrations-settings'])
                 ->with('error', 'Connection request was cancelled or failed.');
         }
 
@@ -136,16 +136,16 @@ class SocialAuthController extends Controller
                 // Dispatch initial sync in the background
                 SyncGmailThreadsJob::dispatch($gmailAccount->id);
 
-                return redirect()->route('settings.index', ['#integrations-settings'])
+                return redirect()->route('settings', ['#integrations-settings'])
                     ->with('success', "Gmail connected successfully: {$socialUser->getEmail()}");
             }
 
-            return redirect()->route('settings.index', ['#integrations-settings'])
+            return redirect()->route('settings', ['#integrations-settings'])
                 ->with('success', ucfirst($provider) . ' connected successfully!');
 
         } catch (\Exception $e) {
             Log::error("Exception in {$provider} callback: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return redirect()->route('settings.index', ['#integrations-settings'])
+            return redirect()->route('settings', ['#integrations-settings'])
                 ->with('error', "Failed to connect to {$provider}: " . $e->getMessage());
         }
     }
