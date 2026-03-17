@@ -99,6 +99,7 @@ class SettingsController extends Controller
         $currentWorkspace = null;
         $socialAccounts = [];
         $fieldMappings = [];
+        $gmailAccount = null;
         // Fetch connected Gmail account for anyone who can see the translations/integrations section
         $gmailAccountConfig = GmailAccount::where('user_id', $user->creatorId())->first();
         if ($gmailAccountConfig) {

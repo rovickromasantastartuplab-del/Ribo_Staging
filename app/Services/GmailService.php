@@ -19,9 +19,9 @@ class GmailService
     {
         $this->account = $account;
 
-        // Resolve the superadmin (owner) to get their stored Google credentials
-        $user = $account->user;
-        $superadminId = $user ? $user->creatorId() : null;
+        // Google OAuth credentials are always stored under the superadmin's settings
+        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+        $superadminId = $superadmin?->id;
 
         $clientId = ($superadminId ? getSetting('google_client_id', null, $superadminId) : null)
             ?? config('services.google.client_id');
@@ -32,7 +32,16 @@ class GmailService
         $this->client = new GoogleClient();
         $this->client->setClientId($clientId);
         $this->client->setClientSecret($clientSecret);
-        $this->client->setAccessToken($account->access_token);
+
+        // Google Client expects a token array, not just a bare access_token string
+        $this->client->setAccessToken([
+            'access_token' => $account->access_token,
+            'token_type' => 'Bearer',
+            'expires_in' => $account->token_expires_at
+                ? max(0, now()->diffInSeconds($account->token_expires_at, false))
+                : 3600,
+            'created' => $account->updated_at?->timestamp ?? time(),
+        ]);
 
         if ($account->refresh_token) {
             $this->client->setAccessType('offline');
@@ -69,10 +78,17 @@ class GmailService
                 return false;
             }
 
-            $this->account->update([
+            $updateData = [
                 'access_token' => $newToken['access_token'],
                 'token_expires_at' => now()->addSeconds($newToken['expires_in'] ?? 3600),
-            ]);
+            ];
+
+            // Google may issue a new refresh token — persist it if so
+            if (!empty($newToken['refresh_token'])) {
+                $updateData['refresh_token'] = $newToken['refresh_token'];
+            }
+
+            $this->account->update($updateData);
 
             return true;
         } catch (\Exception $e) {

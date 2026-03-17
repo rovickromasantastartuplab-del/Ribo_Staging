@@ -20,8 +20,15 @@ class IntegrationsSettingsController extends Controller
                 'ai_auto_apply_threshold' => 'nullable|numeric|min:1|max:100',
                 'google_client_id' => 'nullable|string',
                 'google_client_secret' => 'nullable|string',
-                'google_redirect_uri' => 'nullable|string|url',
+                'google_redirect_uri' => 'nullable|string',
             ]);
+
+            // Only superadmins may update Google OAuth credentials
+            $user = auth()->user();
+            $googleFields = ['google_client_id', 'google_client_secret', 'google_redirect_uri'];
+            if (!in_array($user->type, ['superadmin', 'super admin'])) {
+                $validated = array_diff_key($validated, array_flip($googleFields));
+            }
 
             foreach ($validated as $key => $value) {
                 if (is_bool($value)) {

@@ -10,6 +10,24 @@ class GmailAccount extends BaseModel
 {
     use HasFactory;
 
+    /**
+     * Override BaseModel's permission scope to use user_id (this table has no created_by column).
+     */
+    public function scopeWithPermissionCheck($query)
+    {
+        if (!auth()->check()) {
+            return $query;
+        }
+
+        $user = auth()->user();
+
+        if ($user->hasRole(['superadmin'])) {
+            return $query;
+        }
+
+        return $query->where('user_id', $user->creatorId());
+    }
+
     protected $fillable = [
         'user_id',
         'gmail_address',

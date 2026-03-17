@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useTranslation } from 'react-i18next';
 import { Link2, LayoutTemplate, MessageSquare, Loader2, CheckCircle2, Plus, Trash2, Settings2, ChevronDown, ChevronUp, Mail, Eye, EyeOff } from 'lucide-react';
-import { useForm, usePage } from '@inertiajs/react';
+import { useForm, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 
 interface SocialAccount {
@@ -108,7 +108,7 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
 
     const handleGmailSync = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('settings.gmail.sync'), {
+        router.post(route('settings.gmail.sync'), {}, {
             preserveScroll: true,
         });
     };
@@ -116,7 +116,7 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
     const handleGmailDisconnect = (e: React.FormEvent) => {
         e.preventDefault();
         if (confirm(t('Are you sure you want to disconnect Gmail? This will remove all synced emails.'))) {
-            post(route('settings.gmail.disconnect'), {
+            router.post(route('settings.gmail.disconnect'), {}, {
                 preserveScroll: true,
             });
         }
