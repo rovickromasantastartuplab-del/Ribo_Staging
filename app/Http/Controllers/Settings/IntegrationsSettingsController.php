@@ -18,6 +18,9 @@ class IntegrationsSettingsController extends Controller
                 'wordpress_api_key' => 'nullable|string',
                 'ai_intent_enabled' => 'nullable|boolean',
                 'ai_auto_apply_threshold' => 'nullable|numeric|min:1|max:100',
+                'google_client_id' => 'nullable|string',
+                'google_client_secret' => 'nullable|string',
+                'google_redirect_uri' => 'nullable|string|url',
             ]);
 
             foreach ($validated as $key => $value) {

@@ -124,6 +124,16 @@ class SettingsController extends Controller
             }
         }
 
+        // Fetch Google app credentials for superadmin
+        $googleSettings = [];
+        if ($user->type === 'superadmin') {
+            $googleSettings = [
+                'google_client_id' => getSetting('google_client_id', $user->id) ?? '',
+                'google_client_secret' => getSetting('google_client_secret', $user->id) ?? '',
+                'google_redirect_uri' => getSetting('google_redirect_uri', $user->id) ?? url('/auth/callback/google'),
+            ];
+        }
+
         return Inertia::render('settings/index', [
             'systemSettings' => $systemSettings,
             'settings' => $systemSettings, // For helper functions
@@ -138,6 +148,7 @@ class SettingsController extends Controller
             'socialAccounts' => $socialAccounts,
             'fieldMappings' => $fieldMappings,
             'gmailAccount' => $gmailAccount,
+            'googleSettings' => $googleSettings,
             'isDemoMode' => config('app.is_demo', false),
         ]);
     }

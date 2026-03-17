@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useTranslation } from 'react-i18next';
-import { Link2, LayoutTemplate, MessageSquare, Loader2, CheckCircle2, Plus, Trash2, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
-import { useForm } from '@inertiajs/react';
+import { Link2, LayoutTemplate, MessageSquare, Loader2, CheckCircle2, Plus, Trash2, Settings2, ChevronDown, ChevronUp, Mail, Eye, EyeOff } from 'lucide-react';
+import { useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 
 interface SocialAccount {
@@ -35,6 +35,11 @@ interface Props {
     socialAccounts?: SocialAccount[];
     fieldMappings?: FieldMappingRow[];
     gmailAccount?: GmailAccount | null;
+    googleSettings?: {
+        google_client_id: string;
+        google_client_secret: string;
+        google_redirect_uri: string;
+    } | null;
 }
 
 // Available CRM fields that Facebook form fields can map to
@@ -51,13 +56,16 @@ const CRM_FIELDS = [
     { value: 'status', label: 'Status' },
 ];
 
-export default function IntegrationsSettings({ settings, socialAccounts = [], fieldMappings: initialMappings = [], gmailAccount = null }: Props) {
+export default function IntegrationsSettings({ settings, socialAccounts = [], fieldMappings: initialMappings = [], gmailAccount = null, googleSettings = null }: Props) {
     const { t } = useTranslation();
+    const { auth } = usePage().props as any;
+    const isSuperAdmin = auth?.user?.type === 'superadmin' || auth?.user?.type === 'super admin';
     const [isGenerating, setIsGenerating] = useState(false);
     const [showFieldMapping, setShowFieldMapping] = useState(false);
     const [mappingRows, setMappingRows] = useState<FieldMappingRow[]>([]);
     const [savingMappings, setSavingMappings] = useState(false);
     const [mappingSaved, setMappingSaved] = useState(false);
+    const [showClientSecret, setShowClientSecret] = useState(false);
 
     // Find connected accounts by provider
     const facebookAccount = socialAccounts.find((a: SocialAccount) => a.provider === 'facebook');
@@ -78,6 +86,9 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
         wordpress_api_key: settings?.wordpress_api_key || '',
         ai_intent_enabled: settings?.ai_intent_enabled === 'true' || false,
         ai_auto_apply_threshold: settings?.ai_auto_apply_threshold || '85',
+        google_client_id: googleSettings?.google_client_id || '',
+        google_client_secret: googleSettings?.google_client_secret || '',
+        google_redirect_uri: googleSettings?.google_redirect_uri || '',
     });
 
     const handleSave = (e: React.FormEvent) => {
@@ -436,6 +447,74 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                             </div>
                         </div>
                     </div>
+
+                    {/* Google / Gmail App Credentials (Superadmin Only) */}
+                    {isSuperAdmin && (
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-white border rounded-md p-1.5">
+                                    <svg viewBox="0 0 24 24" className="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-medium">{t('Google / Gmail App')}</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                {t('Enter your Google Cloud OAuth 2.0 credentials. Company users will use these credentials when connecting their Gmail accounts.')}
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="google_client_id">{t('Google Client ID')}</Label>
+                                    <Input
+                                        id="google_client_id"
+                                        value={data.google_client_id}
+                                        onChange={(e) => setData('google_client_id', e.target.value)}
+                                        placeholder="xxxx.apps.googleusercontent.com"
+                                        className="font-mono text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="google_client_secret">{t('Google Client Secret')}</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="google_client_secret"
+                                            type={showClientSecret ? 'text' : 'password'}
+                                            value={data.google_client_secret}
+                                            onChange={(e) => setData('google_client_secret', e.target.value)}
+                                            placeholder="GOCSPX-..."
+                                            className="font-mono text-sm pr-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowClientSecret(!showClientSecret)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        >
+                                            {showClientSecret
+                                                ? <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                : <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="google_redirect_uri">{t('Authorized Redirect URI')}</Label>
+                                    <Input
+                                        id="google_redirect_uri"
+                                        value={data.google_redirect_uri}
+                                        onChange={(e) => setData('google_redirect_uri', e.target.value)}
+                                        placeholder="https://yourdomain.com/auth/callback/google"
+                                        className="font-mono text-sm"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('Copy this URI and add it to your Google Cloud Console → OAuth 2.0 Credentials → Authorized redirect URIs.')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* AI Intent Settings */}
                     <div className="space-y-4 pt-4 border-t">

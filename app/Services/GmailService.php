@@ -19,9 +19,19 @@ class GmailService
     {
         $this->account = $account;
 
+        // Resolve the superadmin (owner) to get their stored Google credentials
+        $user = $account->user;
+        $superadminId = $user ? $user->creatorId() : null;
+
+        $clientId = ($superadminId ? getSetting('google_client_id', $superadminId) : null)
+            ?? config('services.google.client_id');
+
+        $clientSecret = ($superadminId ? getSetting('google_client_secret', $superadminId) : null)
+            ?? config('services.google.client_secret');
+
         $this->client = new GoogleClient();
-        $this->client->setClientId(config('services.google.client_id'));
-        $this->client->setClientSecret(config('services.google.client_secret'));
+        $this->client->setClientId($clientId);
+        $this->client->setClientSecret($clientSecret);
         $this->client->setAccessToken($account->access_token);
 
         if ($account->refresh_token) {

@@ -26,8 +26,10 @@ class SocialAuthController extends Controller
                 ->redirect();
         }
 
-        // For Google/Gmail, request read-only Gmail access with offline mode
+        // For Google/Gmail, build config dynamically from settings table
         if ($provider === 'google') {
+            $this->configureGoogleSocialite();
+
             return Socialite::driver('google')
                 ->scopes([
                     'https://www.googleapis.com/auth/gmail.readonly',
@@ -54,6 +56,11 @@ class SocialAuthController extends Controller
             Log::error("OAuth Error from {$provider}: " . $request->get('error_description'));
             return redirect('/settings#integrations-settings')
                 ->with('error', 'Connection request was cancelled or failed.');
+        }
+
+        // Reconfigure Socialite for Google before processing the callback
+        if ($provider === 'google') {
+            $this->configureGoogleSocialite();
         }
 
         try {
@@ -134,5 +141,32 @@ class SocialAuthController extends Controller
             return redirect('/settings#integrations-settings')
                 ->with('error', "Failed to connect to {$provider}: " . $e->getMessage());
         }
+    }
+    /**
+     * Dynamically configure the Socialite Google driver using credentials
+     * stored in the settings table by the superadmin.
+     * Falls back to config/services.php if DB settings are empty.
+     */
+    private function configureGoogleSocialite(): void
+    {
+        // The superadmin is always user_id = 1 or first superadmin
+        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+        $superadminId = $superadmin?->id;
+
+        $clientId = ($superadminId ? getSetting('google_client_id', $superadminId) : null)
+            ?: config('services.google.client_id');
+
+        $clientSecret = ($superadminId ? getSetting('google_client_secret', $superadminId) : null)
+            ?: config('services.google.client_secret');
+
+        $redirectUri = ($superadminId ? getSetting('google_redirect_uri', $superadminId) : null)
+            ?: config('services.google.redirect');
+
+        // Dynamically update the Socialite Google config at runtime
+        config([
+            'services.google.client_id' => $clientId,
+            'services.google.client_secret' => $clientSecret,
+            'services.google.redirect' => $redirectUri,
+        ]);
     }
 }
