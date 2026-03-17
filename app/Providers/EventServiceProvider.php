@@ -115,6 +115,9 @@ class EventServiceProvider extends ServiceProvider
         InvoiceStatusChanged::class => [
             SendInvoiceStatusChangedEmail::class,
         ],
+        \SocialiteProviders\Manager\SocialiteWasCalled::class => [
+            \SocialiteProviders\Google\GoogleExtendSocialite::class . '@handle',
+        ],
     ];
 
     /**
