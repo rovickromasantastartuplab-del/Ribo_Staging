@@ -99,7 +99,18 @@ class SettingsController extends Controller
         $currentWorkspace = null;
         $socialAccounts = [];
         $fieldMappings = [];
-        $gmailAccount = null;
+        // Fetch connected Gmail account for anyone who can see the translations/integrations section
+        $gmailAccountConfig = GmailAccount::where('user_id', $user->creatorId())->first();
+        if ($gmailAccountConfig) {
+            $gmailAccount = [
+                'id' => $gmailAccountConfig->id,
+                'gmail_address' => $gmailAccountConfig->gmail_address,
+                'last_sync_at' => $gmailAccountConfig->last_sync_at,
+                'sync_status' => $gmailAccountConfig->sync_status,
+                'sync_error' => $gmailAccountConfig->sync_error,
+            ];
+        }
+
         if ($user->type === 'company') {
             if ($workspaceId) {
                 $currentWorkspace = Workspace::find($workspaceId);
@@ -110,18 +121,6 @@ class SettingsController extends Controller
             $fieldMappings = \App\Models\FieldMapping::where('user_id', $user->id)
                 ->where('provider', 'facebook')
                 ->get(['id', 'external_field', 'crm_field', 'default_value']);
-            
-            // Fetch connected Gmail account
-            $gmailAccountConfig = GmailAccount::where('user_id', $user->id)->first();
-            if ($gmailAccountConfig) {
-                $gmailAccount = [
-                    'id' => $gmailAccountConfig->id,
-                    'gmail_address' => $gmailAccountConfig->gmail_address,
-                    'last_sync_at' => $gmailAccountConfig->last_sync_at,
-                    'sync_status' => $gmailAccountConfig->sync_status,
-                    'sync_error' => $gmailAccountConfig->sync_error,
-                ];
-            }
         }
 
         // Fetch Google app credentials for superadmin

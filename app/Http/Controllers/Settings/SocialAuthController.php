@@ -54,7 +54,7 @@ class SocialAuthController extends Controller
     {
         if ($request->has('error')) {
             Log::error("OAuth Error from {$provider}: " . $request->get('error_description'));
-            return redirect('/settings#integrations-settings')
+            return redirect()->route('settings.index', ['#integrations-settings'])
                 ->with('error', 'Connection request was cancelled or failed.');
         }
 
@@ -67,7 +67,13 @@ class SocialAuthController extends Controller
             // Get the user from the provider
             $socialUser = Socialite::driver($provider)->user();
 
-            $companyId = auth()->user()->id; // Assuming logged in as company
+            if (!auth()->check()) {
+                Log::error("OAuth Callback: No authenticated user session found for {$provider}.");
+                return redirect()->route('login')
+                    ->with('error', 'Your session expired. Please log in again to connect your account.');
+            }
+
+            $companyId = auth()->user()->creatorId();
 
             if ($provider === 'facebook') {
                 // To get all pages this user owns, we have to hit the Graph API
@@ -108,10 +114,10 @@ class SocialAuthController extends Controller
 
             // Handle Google/Gmail OAuth callback
             if ($provider === 'google') {
+                $companyId = auth()->user()->creatorId();
                 $gmailAccount = GmailAccount::updateOrCreate(
                     [
                         'user_id' => $companyId,
-                        'gmail_address' => $socialUser->getEmail(),
                     ],
                     [
                         'google_id' => $socialUser->getId(),
@@ -129,16 +135,16 @@ class SocialAuthController extends Controller
                 // Dispatch initial sync in the background
                 SyncGmailThreadsJob::dispatch($gmailAccount->id);
 
-                return redirect('/settings#integrations-settings')
+                return redirect()->route('settings.index', ['#integrations-settings'])
                     ->with('success', "Gmail connected successfully: {$socialUser->getEmail()}");
             }
 
-            return redirect('/settings#integrations-settings')
+            return redirect()->route('settings.index', ['#integrations-settings'])
                 ->with('success', ucfirst($provider) . ' connected successfully!');
 
         } catch (\Exception $e) {
-            Log::error("Exception in {$provider} callback: " . $e->getMessage());
-            return redirect('/settings#integrations-settings')
+            Log::error("Exception in {$provider} callback: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return redirect()->route('settings.index', ['#integrations-settings'])
                 ->with('error', "Failed to connect to {$provider}: " . $e->getMessage());
         }
     }

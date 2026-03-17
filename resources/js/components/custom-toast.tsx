@@ -1,6 +1,6 @@
 import { Toaster } from '@/components/ui/sonner';
 import { toast as sonnerToast } from 'sonner';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 const isDemoMode = (): boolean => {
@@ -52,5 +52,20 @@ export const toast = {
 };
 
 export const CustomToast = () => {
+    const { flash = {} } = usePage().props as any;
+    const [lastFlash, setLastFlash] = useState({ success: null, error: null });
+
+    useEffect(() => {
+        // Only show toast if the flash message has changed or is new
+        if (flash.success && flash.success !== lastFlash.success) {
+            sonnerToast.success(flash.success);
+            setLastFlash(prev => ({ ...prev, success: flash.success }));
+        }
+        if (flash.error && flash.error !== lastFlash.error) {
+            sonnerToast.error(flash.error);
+            setLastFlash(prev => ({ ...prev, error: flash.error }));
+        }
+    }, [flash, lastFlash]);
+
     return <Toaster position="top-right" duration={4000} richColors closeButton />;
 };
