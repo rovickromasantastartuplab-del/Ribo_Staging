@@ -1,0 +1,59 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class EmailThread extends BaseModel
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'gmail_account_id',
+        'gmail_thread_id',
+        'subject',
+        'snippet',
+        'participants',
+        'message_count',
+        'last_message_at',
+        'is_read',
+        'labels',
+        'created_by',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'participants' => 'array',
+            'labels' => 'array',
+            'last_message_at' => 'datetime',
+            'is_read' => 'boolean',
+        ];
+    }
+
+    /**
+     * The Gmail account this thread belongs to.
+     */
+    public function gmailAccount(): BelongsTo
+    {
+        return $this->belongsTo(GmailAccount::class);
+    }
+
+    /**
+     * Messages within this thread.
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(EmailMessage::class)->orderBy('sent_at', 'asc');
+    }
+
+    /**
+     * The latest message in this thread.
+     */
+    public function latestMessage()
+    {
+        return $this->hasOne(EmailMessage::class)->latestOfMany('sent_at');
+    }
+}

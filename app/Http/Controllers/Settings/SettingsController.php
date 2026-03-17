@@ -10,6 +10,7 @@ use App\Models\Currency;
 use App\Models\PaymentSetting;
 use App\Models\Webhook;
 use App\Models\Workspace;
+use App\Models\GmailAccount;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class SettingsController extends Controller
@@ -95,10 +96,10 @@ class SettingsController extends Controller
         $webhooks = Webhook::where('user_id', $user->id)
             ->get();
 
-        // Get current workspace for company users
         $currentWorkspace = null;
         $socialAccounts = [];
         $fieldMappings = [];
+        $gmailAccount = null;
         if ($user->type === 'company') {
             if ($workspaceId) {
                 $currentWorkspace = Workspace::find($workspaceId);
@@ -109,6 +110,18 @@ class SettingsController extends Controller
             $fieldMappings = \App\Models\FieldMapping::where('user_id', $user->id)
                 ->where('provider', 'facebook')
                 ->get(['id', 'external_field', 'crm_field', 'default_value']);
+            
+            // Fetch connected Gmail account
+            $gmailAccountConfig = GmailAccount::where('user_id', $user->id)->first();
+            if ($gmailAccountConfig) {
+                $gmailAccount = [
+                    'id' => $gmailAccountConfig->id,
+                    'gmail_address' => $gmailAccountConfig->gmail_address,
+                    'last_sync_at' => $gmailAccountConfig->last_sync_at,
+                    'sync_status' => $gmailAccountConfig->sync_status,
+                    'sync_error' => $gmailAccountConfig->sync_error,
+                ];
+            }
         }
 
         return Inertia::render('settings/index', [
@@ -124,6 +137,7 @@ class SettingsController extends Controller
             'webhooks' => $webhooks,
             'socialAccounts' => $socialAccounts,
             'fieldMappings' => $fieldMappings,
+            'gmailAccount' => $gmailAccount,
             'isDemoMode' => config('app.is_demo', false),
         ]);
     }

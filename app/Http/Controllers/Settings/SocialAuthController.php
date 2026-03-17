@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\SocialAccount;
+use App\Models\GmailAccount;
+use App\Jobs\SyncGmailThreadsJob;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -21,6 +23,22 @@ class SocialAuthController extends Controller
         if ($provider === 'facebook') {
             return Socialite::driver('facebook')
                 ->scopes(['pages_show_list', 'pages_messaging', 'pages_read_engagement', 'pages_manage_metadata', 'leads_retrieve'])
+                ->redirect();
+        }
+
+        // For Google/Gmail, request read-only Gmail access with offline mode
+        if ($provider === 'google') {
+            return Socialite::driver('google')
+                ->scopes([
+                    'https://www.googleapis.com/auth/gmail.readonly',
+                    'openid',
+                    'email',
+                    'profile',
+                ])
+                ->with([
+                    'access_type' => 'offline',
+                    'prompt' => 'consent',
+                ])
                 ->redirect();
         }
 
@@ -79,6 +97,33 @@ class SocialAuthController extends Controller
                     return redirect('/settings#integrations-settings')
                         ->with('error', "No Facebook Pages found for this account. You must create a Page first.");
                 }
+            }
+
+            // Handle Google/Gmail OAuth callback
+            if ($provider === 'google') {
+                $gmailAccount = GmailAccount::updateOrCreate(
+                    [
+                        'user_id' => $companyId,
+                        'gmail_address' => $socialUser->getEmail(),
+                    ],
+                    [
+                        'google_id' => $socialUser->getId(),
+                        'access_token' => $socialUser->token,
+                        'refresh_token' => $socialUser->refreshToken ?? null,
+                        'token_expires_at' => $socialUser->expiresIn
+                            ? now()->addSeconds($socialUser->expiresIn)
+                            : null,
+                        'scopes' => 'https://www.googleapis.com/auth/gmail.readonly',
+                        'sync_status' => 'idle',
+                        'sync_error' => null,
+                    ]
+                );
+
+                // Dispatch initial sync in the background
+                SyncGmailThreadsJob::dispatch($gmailAccount->id);
+
+                return redirect('/settings#integrations-settings')
+                    ->with('success', "Gmail connected successfully: {$socialUser->getEmail()}");
             }
 
             return redirect('/settings#integrations-settings')

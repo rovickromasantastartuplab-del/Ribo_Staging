@@ -16,6 +16,14 @@ interface SocialAccount {
     provider_name: string;
 }
 
+interface GmailAccount {
+    id: number;
+    gmail_address: string;
+    last_sync_at: string | null;
+    sync_status: string;
+    sync_error: string | null;
+}
+
 interface FieldMappingRow {
     external_field: string;
     crm_field: string;
@@ -26,6 +34,7 @@ interface Props {
     settings: any;
     socialAccounts?: SocialAccount[];
     fieldMappings?: FieldMappingRow[];
+    gmailAccount?: GmailAccount | null;
 }
 
 // Available CRM fields that Facebook form fields can map to
@@ -42,7 +51,7 @@ const CRM_FIELDS = [
     { value: 'status', label: 'Status' },
 ];
 
-export default function IntegrationsSettings({ settings, socialAccounts = [], fieldMappings: initialMappings = [] }: Props) {
+export default function IntegrationsSettings({ settings, socialAccounts = [], fieldMappings: initialMappings = [], gmailAccount = null }: Props) {
     const { t } = useTranslation();
     const [isGenerating, setIsGenerating] = useState(false);
     const [showFieldMapping, setShowFieldMapping] = useState(false);
@@ -220,6 +229,83 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                     <Button variant={whatsappAccount ? 'ghost' : 'outline'} size="sm" type="button" onClick={() => alert('WhatsApp Cloud API connection coming soon.')}>
                                         {whatsappAccount ? t('Reconnect') : t('Connect Number')}
                                     </Button>
+                                </div>
+                            </div>
+
+                            {/* Gmail / Google Workspace */}
+                            <div className={`border rounded-lg p-5 flex flex-col justify-between ${gmailAccount ? 'border-red-300 bg-red-50/30 dark:border-red-800 dark:bg-red-950/20' : ''}`}>
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="bg-[#EA4335] p-2 rounded-md">
+                                            <svg xmlns="http://www.w3.org/-2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M4 7V17A2 2 0 0 0 6 19H18A2 2 0 0 0 20 17V7"></path><path d="M4 7l8 5 8-5"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold">{t('Gmail Integration')}</h4>
+                                            {gmailAccount && (
+                                                <p className="text-xs text-muted-foreground">{gmailAccount.gmail_address}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                        {t('Sync email conversations and link them directly to Leads and Contacts.')}
+                                    </p>
+                                    
+                                    {gmailAccount && gmailAccount.sync_status === 'error' && (
+                                        <div className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded">
+                                            {t('Sync Error')}: {gmailAccount.sync_error || t('Authentication failed. Please reconnect.')}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                                    <div className="flex flex-col gap-1">
+                                        {gmailAccount ? (
+                                            <>
+                                                <span className="text-sm font-medium text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/40 px-2 py-1 rounded w-fit flex items-center gap-1">
+                                                    {gmailAccount.sync_status === 'syncing' ? (
+                                                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('Syncing...')}</>
+                                                    ) : (
+                                                        <><CheckCircle2 className="h-3.5 w-3.5" /> {t('Connected')}</>
+                                                    )}
+                                                </span>
+                                                {gmailAccount.last_sync_at && (
+                                                    <span className="text-[10px] text-muted-foreground">
+                                                        Last sync: {new Date(gmailAccount.last_sync_at).toLocaleString()}
+                                                    </span>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded w-fit">Not Connected</span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {gmailAccount ? (
+                                            <>
+                                                <form action={route('settings.gmail.sync')} method="POST" className="inline">
+                                                    <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        type="submit" 
+                                                        disabled={gmailAccount.sync_status === 'syncing'}
+                                                    >
+                                                        {t('Sync Now')}
+                                                    </Button>
+                                                </form>
+                                                <form action={route('settings.gmail.disconnect')} method="POST" className="inline" onSubmit={(e) => { if(!confirm('Are you sure you want to disconnect Gmail? This will remove all synced emails.')) e.preventDefault(); }}>
+                                                    <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
+                                                    <Button variant="ghost" size="sm" type="submit" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                        {t('Disconnect')}
+                                                    </Button>
+                                                </form>
+                                            </>
+                                        ) : (
+                                            <a href={route('social.redirect', { provider: 'google' })}>
+                                                <Button variant="outline" size="sm" type="button">
+                                                    {t('Connect Gmail')}
+                                                </Button>
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

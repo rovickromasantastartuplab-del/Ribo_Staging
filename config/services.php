@@ -51,4 +51,19 @@ return [
         'verify_token' => env('FACEBOOK_VERIFY_TOKEN', 'ribo_fb_verify_token'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Google / Gmail OAuth (via Laravel Socialite)
+    |--------------------------------------------------------------------------
+    |
+    | Used by SocialAuthController to connect company Gmail accounts.
+    | Get these values from https://console.cloud.google.com
+    |
+    */
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
 ];

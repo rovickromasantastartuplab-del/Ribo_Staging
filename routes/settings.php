@@ -123,5 +123,10 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('settings/google-calendar', [SystemSettingsController::class, 'updateGoogleCalendar'])->name('settings.google-calendar.update');
     Route::post('settings/google-calendar/sync', [SystemSettingsController::class, 'syncGoogleCalendar'])->name('settings.google-calendar.sync');
 
+    // Gmail Integration routes
+    Route::post('settings/gmail/disconnect', [\App\Http\Controllers\GmailController::class, 'disconnect'])->name('settings.gmail.disconnect');
+    Route::post('settings/gmail/sync', [\App\Http\Controllers\GmailController::class, 'syncNow'])->name('settings.gmail.sync');
+    Route::get('gmail/threads', [\App\Http\Controllers\GmailController::class, 'threads'])->name('gmail.threads');
+    Route::get('gmail/threads/{threadId}', [\App\Http\Controllers\GmailController::class, 'showThread'])->name('gmail.thread.show');
 
 });
