@@ -8,6 +8,7 @@ import { useBrand } from '@/contexts/BrandContext';
 import { useAppearance, THEME_COLORS } from '@/hooks/use-appearance';
 import { useFavicon } from '@/hooks/use-favicon';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
+import { CustomToast } from '@/components/custom-toast';
 
 interface AuthLayoutProps {
     children: ReactNode;
@@ -192,6 +193,7 @@ export default function AuthLayout({
                 </div>
             </div>
             <CookieConsentBanner />
+            <CustomToast />
         </div>
     );
 }
