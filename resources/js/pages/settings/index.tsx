@@ -190,6 +190,11 @@ export default function Settings() {
             if (item.href === '#twilio-notification-settings') return false;
         }
 
+        // Allow superadmins to see most items by default unless explicitly blocked above
+        if (isSuperAdmin) {
+            return true;
+        }
+
         // Check for both role and permission if both exist
         if (item.role && item.permission) {
             return auth.roles?.includes(item.role) && auth.permissions?.includes(item.permission);
@@ -521,7 +526,7 @@ export default function Settings() {
                     )}
 
                     {/* Google Calendar Settings Section */}
-                    {(auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
+                    {(isSuperAdmin || auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
                         <section id="google-calendar-settings" ref={googleCalendarSettingsRef} className="mb-8">
                             <GoogleCalendarSettings settings={systemSettings} />
                         </section>
@@ -531,7 +536,7 @@ export default function Settings() {
 
 
                     {/* Integrations Settings Section */}
-                    {(auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
+                    {(isSuperAdmin || auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
                         <section id="integrations-settings" ref={integrationsSettingsRef} className="mb-8">
                             <IntegrationsSettings settings={systemSettings} socialAccounts={socialAccounts} fieldMappings={fieldMappings} googleSettings={googleSettings} />
                         </section>
