@@ -39,7 +39,7 @@ import { hasPlanFeature } from '@/utils/planFeatures';
 export default function Settings() {
     const { t } = useTranslation();
     const { position } = useLayout();
-    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}, socialAccounts = [], fieldMappings = [], googleSettings = null } = usePage().props as any;
+    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}, socialAccounts = [], fieldMappings = [], googleSettings = null, gmailAccount = null } = usePage().props as any;
     const [activeSection, setActiveSection] = useState('system-settings');
 
     const isSuperAdmin =
@@ -538,7 +538,7 @@ export default function Settings() {
                     {/* Integrations Settings Section */}
                     {(isSuperAdmin || auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
                         <section id="integrations-settings" ref={integrationsSettingsRef} className="mb-8">
-                            <IntegrationsSettings settings={systemSettings} socialAccounts={socialAccounts} fieldMappings={fieldMappings} googleSettings={googleSettings} />
+                            <IntegrationsSettings settings={systemSettings} socialAccounts={socialAccounts} fieldMappings={fieldMappings} googleSettings={googleSettings} gmailAccount={gmailAccount} />
                         </section>
                     )}
 
