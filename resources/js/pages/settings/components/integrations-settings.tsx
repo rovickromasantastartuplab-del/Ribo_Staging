@@ -173,173 +173,175 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
             <CardContent className="p-6">
                 <form onSubmit={handleSave} className="space-y-8">
 
-                    {/* Social Connectors Section */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-medium">{t('Social Channels')}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Social Connectors Section (Company Only) */}
+                    {!isSuperAdmin && (
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">{t('Social Channels')}</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                            {/* Facebook Lead Ads & Messenger */}
-                            <div className={`border rounded-lg p-5 flex flex-col justify-between ${facebookAccount ? 'border-green-300 bg-green-50/30 dark:border-green-800 dark:bg-green-950/20' : ''}`}>
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="bg-[#1877F2] p-2 rounded-md">
-                                            <LayoutTemplate className="h-5 w-5 text-white" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold">{t('Facebook Lead Ads')}</h4>
-                                            {facebookAccount && (
-                                                <p className="text-xs text-muted-foreground">{facebookAccount.provider_name} (ID: {facebookAccount.provider_id})</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-2">
-                                        {t('Automatically sync leads from Facebook forms to RIBO CRM.')}
-                                    </p>
-                                </div>
-                                <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                                    {facebookAccount ? (
-                                        <span className="text-sm font-medium text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/40 px-2 py-1 rounded flex items-center gap-1">
-                                            <CheckCircle2 className="h-3.5 w-3.5" /> Connected
-                                        </span>
-                                    ) : (
-                                        <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
-                                    )}
-                                    <div className="flex items-center gap-2">
-                                        {facebookAccount && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                type="button"
-                                                onClick={() => setShowFieldMapping(!showFieldMapping)}
-                                                className="flex items-center gap-1"
-                                            >
-                                                <Settings2 className="h-3.5 w-3.5" />
-                                                {t('Field Mapping')}
-                                                {showFieldMapping ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                                            </Button>
-                                        )}
-                                        <a href={route('social.redirect', { provider: 'facebook' })}>
-                                            <Button variant={facebookAccount ? 'ghost' : 'outline'} size="sm" type="button">
-                                                {facebookAccount ? t('Reconnect') : t('Connect Meta')}
-                                            </Button>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* WhatsApp Cloud API */}
-                            <div className={`border rounded-lg p-5 flex flex-col justify-between ${whatsappAccount ? 'border-green-300 bg-green-50/30 dark:border-green-800 dark:bg-green-950/20' : ''}`}>
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="bg-[#25D366] p-2 rounded-md">
-                                            <MessageSquare className="h-5 w-5 text-white" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold">{t('WhatsApp Business')}</h4>
-                                            {whatsappAccount && (
-                                                <p className="text-xs text-muted-foreground">{whatsappAccount.provider_name} (ID: {whatsappAccount.provider_id})</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-2">
-                                        {t('Capture inbound messages as Lead Events on the timeline.')}
-                                    </p>
-                                </div>
-                                <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                                    {whatsappAccount ? (
-                                        <span className="text-sm font-medium text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/40 px-2 py-1 rounded flex items-center gap-1">
-                                            <CheckCircle2 className="h-3.5 w-3.5" /> Connected
-                                        </span>
-                                    ) : (
-                                        <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
-                                    )}
-                                    <Button variant={whatsappAccount ? 'ghost' : 'outline'} size="sm" type="button" onClick={() => alert('WhatsApp Cloud API connection coming soon.')}>
-                                        {whatsappAccount ? t('Reconnect') : t('Connect Number')}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Gmail / Google Workspace */}
-                            <div className={`border rounded-lg p-5 flex flex-col justify-between ${gmailAccount ? 'border-red-300 bg-red-50/30 dark:border-red-800 dark:bg-red-950/20' : ''}`}>
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="bg-[#EA4335] p-2 rounded-md">
-                                            <svg xmlns="http://www.w3.org/-2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M4 7V17A2 2 0 0 0 6 19H18A2 2 0 0 0 20 17V7"></path><path d="M4 7l8 5 8-5"></path></svg>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold">{t('Gmail Integration')}</h4>
-                                            {gmailAccount && (
-                                                <p className="text-xs text-muted-foreground">{gmailAccount.gmail_address}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-2">
-                                        {t('Sync email conversations and link them directly to Leads and Contacts.')}
-                                    </p>
-                                    
-                                    {gmailAccount && gmailAccount.sync_status === 'error' && (
-                                        <div className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded">
-                                            {t('Sync Error')}: {gmailAccount.sync_error || t('Authentication failed. Please reconnect.')}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                                    <div className="flex flex-col gap-1">
-                                        {gmailAccount ? (
-                                            <>
-                                                <span className="text-sm font-medium text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/40 px-2 py-1 rounded w-fit flex items-center gap-1">
-                                                    {gmailAccount.sync_status === 'syncing' ? (
-                                                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('Syncing...')}</>
-                                                    ) : (
-                                                        <><CheckCircle2 className="h-3.5 w-3.5" /> {t('Connected')}</>
-                                                    )}
-                                                </span>
-                                                {gmailAccount.last_sync_at && (
-                                                    <span className="text-[10px] text-muted-foreground">
-                                                        {t('Last sync')}: {new Date(gmailAccount.last_sync_at).toLocaleString()}
-                                                    </span>
+                                {/* Facebook Lead Ads & Messenger */}
+                                <div className={`border rounded-lg p-5 flex flex-col justify-between ${facebookAccount ? 'border-green-300 bg-green-50/30 dark:border-green-800 dark:bg-green-950/20' : ''}`}>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="bg-[#1877F2] p-2 rounded-md">
+                                                <LayoutTemplate className="h-5 w-5 text-white" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold">{t('Facebook Lead Ads')}</h4>
+                                                {facebookAccount && (
+                                                    <p className="text-xs text-muted-foreground">{facebookAccount.provider_name} (ID: {facebookAccount.provider_id})</p>
                                                 )}
-                                            </>
-                                        ) : (
-                                            <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded w-fit">Not Connected</span>
-                                        )}
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mt-2">
+                                            {t('Automatically sync leads from Facebook forms to RIBO CRM.')}
+                                        </p>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        {gmailAccount ? (
-                                            <>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    type="button" 
-                                                    onClick={handleGmailSync}
-                                                    disabled={gmailAccount.sync_status === 'syncing' || processing}
-                                                >
-                                                    {gmailAccount.sync_status === 'syncing' ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
-                                                    {t('Sync Now')}
-                                                </Button>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="sm" 
-                                                    type="button" 
-                                                    onClick={handleGmailDisconnect}
-                                                    disabled={processing}
-                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                >
-                                                    {t('Disconnect')}
-                                                </Button>
-                                            </>
+                                    <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                                        {facebookAccount ? (
+                                            <span className="text-sm font-medium text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/40 px-2 py-1 rounded flex items-center gap-1">
+                                                <CheckCircle2 className="h-3.5 w-3.5" /> Connected
+                                            </span>
                                         ) : (
-                                            <a href={route('social.redirect', { provider: 'google' })}>
-                                                <Button variant="outline" size="sm" type="button">
-                                                    {t('Connect Gmail')}
+                                            <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {facebookAccount && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    type="button"
+                                                    onClick={() => setShowFieldMapping(!showFieldMapping)}
+                                                    className="flex items-center gap-1"
+                                                >
+                                                    <Settings2 className="h-3.5 w-3.5" />
+                                                    {t('Field Mapping')}
+                                                    {showFieldMapping ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                                </Button>
+                                            )}
+                                            <a href={route('social.redirect', { provider: 'facebook' })}>
+                                                <Button variant={facebookAccount ? 'ghost' : 'outline'} size="sm" type="button">
+                                                    {facebookAccount ? t('Reconnect') : t('Connect Meta')}
                                                 </Button>
                                             </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* WhatsApp Cloud API */}
+                                <div className={`border rounded-lg p-5 flex flex-col justify-between ${whatsappAccount ? 'border-green-300 bg-green-50/30 dark:border-green-800 dark:bg-green-950/20' : ''}`}>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="bg-[#25D366] p-2 rounded-md">
+                                                <MessageSquare className="h-5 w-5 text-white" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold">{t('WhatsApp Business')}</h4>
+                                                {whatsappAccount && (
+                                                    <p className="text-xs text-muted-foreground">{whatsappAccount.provider_name} (ID: {whatsappAccount.provider_id})</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mt-2">
+                                            {t('Capture inbound messages as Lead Events on the timeline.')}
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                                        {whatsappAccount ? (
+                                            <span className="text-sm font-medium text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/40 px-2 py-1 rounded flex items-center gap-1">
+                                                <CheckCircle2 className="h-3.5 w-3.5" /> Connected
+                                            </span>
+                                        ) : (
+                                            <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
                                         )}
+                                        <Button variant={whatsappAccount ? 'ghost' : 'outline'} size="sm" type="button" onClick={() => alert('WhatsApp Cloud API connection coming soon.')}>
+                                            {whatsappAccount ? t('Reconnect') : t('Connect Number')}
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Gmail / Google Workspace */}
+                                <div className={`border rounded-lg p-5 flex flex-col justify-between ${gmailAccount ? 'border-red-300 bg-red-50/30 dark:border-red-800 dark:bg-red-950/20' : ''}`}>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="bg-[#EA4335] p-2 rounded-md">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M4 7V17A2 2 0 0 0 6 19H18A2 2 0 0 0 20 17V7"></path><path d="M4 7l8 5 8-5"></path></svg>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold">{t('Gmail Integration')}</h4>
+                                                {gmailAccount && (
+                                                    <p className="text-xs text-muted-foreground">{gmailAccount.gmail_address}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mt-2">
+                                            {t('Sync email conversations and link them directly to Leads and Contacts.')}
+                                        </p>
+                                        
+                                        {gmailAccount && gmailAccount.sync_status === 'error' && (
+                                            <div className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded">
+                                                {t('Sync Error')}: {gmailAccount.sync_error || t('Authentication failed. Please reconnect.')}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                                        <div className="flex flex-col gap-1">
+                                            {gmailAccount ? (
+                                                <>
+                                                    <span className="text-sm font-medium text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/40 px-2 py-1 rounded w-fit flex items-center gap-1">
+                                                        {gmailAccount.sync_status === 'syncing' ? (
+                                                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('Syncing...')}</>
+                                                        ) : (
+                                                            <><CheckCircle2 className="h-3.5 w-3.5" /> {t('Connected')}</>
+                                                        )}
+                                                    </span>
+                                                    {gmailAccount.last_sync_at && (
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            {t('Last sync')}: {new Date(gmailAccount.last_sync_at).toLocaleString()}
+                                                        </span>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded w-fit">Not Connected</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {gmailAccount ? (
+                                                <>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        type="button" 
+                                                        onClick={handleGmailSync}
+                                                        disabled={gmailAccount.sync_status === 'syncing' || processing}
+                                                    >
+                                                        {gmailAccount.sync_status === 'syncing' ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                                                        {t('Sync Now')}
+                                                    </Button>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        type="button" 
+                                                        onClick={handleGmailDisconnect}
+                                                        disabled={processing}
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    >
+                                                        {t('Disconnect')}
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <a href={route('social.redirect', { provider: 'google' })}>
+                                                    <Button variant="outline" size="sm" type="button">
+                                                        {t('Connect Gmail')}
+                                                    </Button>
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Field Mapping Section (only shows when Facebook is connected and user clicks Field Mapping) */}
                     {facebookAccount && showFieldMapping && (
@@ -441,31 +443,33 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                         </div>
                     )}
 
-                    {/* WordPress API Section */}
-                    <div className="space-y-4 pt-4 border-t">
-                        <h3 className="text-lg font-medium">{t('WordPress Form Integration')}</h3>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Use this API key in your RIBO WordPress Plugin to push form submissions directly to this account.')}
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="wordpress_api_key">{t('WordPress API Key')}</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="wordpress_api_key"
-                                        value={data.wordpress_api_key}
-                                        onChange={(e) => setData('wordpress_api_key', e.target.value)}
-                                        placeholder={t('Generate a new key...')}
-                                        readOnly
-                                        className="bg-muted/50 font-mono text-sm"
-                                    />
-                                    <Button type="button" variant="secondary" onClick={generateApiKey} disabled={isGenerating}>
-                                        {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Generate')}
-                                    </Button>
+                    {/* WordPress API Section (Company Only) */}
+                    {!isSuperAdmin && (
+                        <div className="space-y-4 pt-4 border-t">
+                            <h3 className="text-lg font-medium">{t('WordPress Form Integration')}</h3>
+                            <p className="text-sm text-muted-foreground">
+                                {t('Use this API key in your RIBO WordPress Plugin to push form submissions directly to this account.')}
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="wordpress_api_key">{t('WordPress API Key')}</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="wordpress_api_key"
+                                            value={data.wordpress_api_key}
+                                            onChange={(e) => setData('wordpress_api_key', e.target.value)}
+                                            placeholder={t('Generate a new key...')}
+                                            readOnly
+                                            className="bg-muted/50 font-mono text-sm"
+                                        />
+                                        <Button type="button" variant="secondary" onClick={generateApiKey} disabled={isGenerating}>
+                                            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Generate')}
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Google / Gmail App Credentials (Superadmin Only) */}
                     {isSuperAdmin && (
@@ -535,41 +539,43 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                         </div>
                     )}
 
-                    {/* AI Intent Settings */}
-                    <div className="space-y-4 pt-4 border-t">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-lg font-medium">{t('AI Lead Classification')}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    {t('Use ChatGPT to automatically determine the intent of incoming social leads.')}
-                                </p>
-                            </div>
-                            <Switch
-                                checked={data.ai_intent_enabled}
-                                onCheckedChange={(checked) => setData('ai_intent_enabled', checked)}
-                            />
-                        </div>
-
-                        {data.ai_intent_enabled && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="ai_auto_apply_threshold">{t('Auto-Apply Threshold (%)')}</Label>
-                                    <Input
-                                        id="ai_auto_apply_threshold"
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        value={data.ai_auto_apply_threshold}
-                                        onChange={(e) => setData('ai_auto_apply_threshold', e.target.value)}
-                                        placeholder="85"
-                                    />
-                                    <p className="text-xs text-muted-foreground text-left mt-1">
-                                        {t('Only set pipeline stage if AI confidence is above this threshold.')}
+                    {/* AI Intent Settings (Company Only) */}
+                    {!isSuperAdmin && (
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-medium">{t('AI Lead Classification')}</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('Use ChatGPT to automatically determine the intent of incoming social leads.')}
                                     </p>
                                 </div>
+                                <Switch
+                                    checked={data.ai_intent_enabled}
+                                    onCheckedChange={(checked) => setData('ai_intent_enabled', checked)}
+                                />
                             </div>
-                        )}
-                    </div>
+
+                            {data.ai_intent_enabled && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="ai_auto_apply_threshold">{t('Auto-Apply Threshold (%)')}</Label>
+                                        <Input
+                                            id="ai_auto_apply_threshold"
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            value={data.ai_auto_apply_threshold}
+                                            onChange={(e) => setData('ai_auto_apply_threshold', e.target.value)}
+                                            placeholder="85"
+                                        />
+                                        <p className="text-xs text-muted-foreground text-left mt-1">
+                                            {t('Only set pipeline stage if AI confidence is above this threshold.')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex justify-end pt-6 border-t">
                         <Button type="submit" disabled={processing}>
