@@ -98,6 +98,7 @@ use App\Http\Controllers\LeadCommentController;
 use App\Http\Controllers\OpportunityCommentController;
 use App\Http\Controllers\InvoiceStripePaymentController;
 use App\Http\Controllers\InvoicePayPalPaymentController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\InvoiceBankPaymentController;
 use App\Http\Controllers\InvoiceBenefitPaymentController;
 use App\Http\Controllers\InvoiceCommentController;
