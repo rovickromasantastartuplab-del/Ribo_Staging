@@ -40,6 +40,10 @@ interface Props {
         google_client_secret: string;
         google_redirect_uri: string;
         google_gmail_pub_sub_topic: string;
+        pusher_app_id: string;
+        pusher_app_key: string;
+        pusher_app_secret: string;
+        pusher_app_cluster: string;
     } | null;
 }
 
@@ -91,6 +95,10 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
         google_client_secret: googleSettings?.google_client_secret || '',
         google_redirect_uri: googleSettings?.google_redirect_uri || '',
         google_gmail_pub_sub_topic: googleSettings?.google_gmail_pub_sub_topic || '',
+        pusher_app_id: googleSettings?.pusher_app_id || '',
+        pusher_app_key: googleSettings?.pusher_app_key || '',
+        pusher_app_secret: googleSettings?.pusher_app_secret || '',
+        pusher_app_cluster: googleSettings?.pusher_app_cluster || '',
     });
 
     const handleSave = (e: React.FormEvent) => {
@@ -549,6 +557,66 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                     <p className="text-xs text-muted-foreground">
                                         {t('Enter the full topic name from Google Cloud Pub/Sub. Company users will use this topic to start "watching" their Gmail inbox for real-time sync.')}
                                     </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pusher Real-time Credentials (Superadmin Only) */}
+                    {isSuperAdmin && (
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-primary/10 p-2 rounded-md">
+                                    <Settings2 className="h-4 w-4 text-primary" />
+                                </div>
+                                <h3 className="text-lg font-medium">{t('Pusher / Webhook Real-time')}</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                {t('Enable real-time updates for the Conversations Hub. If configured, new emails will pop up automatically without refreshing.')}
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="pusher_app_id">{t('Pusher App ID')}</Label>
+                                    <Input
+                                        id="pusher_app_id"
+                                        value={data.pusher_app_id}
+                                        onChange={(e) => setData('pusher_app_id', e.target.value)}
+                                        placeholder="2129375"
+                                        className="font-mono text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="pusher_app_key">{t('Pusher App Key')}</Label>
+                                    <Input
+                                        id="pusher_app_key"
+                                        value={data.pusher_app_key}
+                                        onChange={(e) => setData('pusher_app_key', e.target.value)}
+                                        placeholder="b68274ea07af131c3f40"
+                                        className="font-mono text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="pusher_app_secret">{t('Pusher App Secret')}</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="pusher_app_secret"
+                                            type={showClientSecret ? 'text' : 'password'}
+                                            value={data.pusher_app_secret}
+                                            onChange={(e) => setData('pusher_app_secret', e.target.value)}
+                                            placeholder="fcf4bf5391c3cf6d0f28"
+                                            className="font-mono text-sm pr-10"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="pusher_app_cluster">{t('Pusher App Cluster')}</Label>
+                                    <Input
+                                        id="pusher_app_cluster"
+                                        value={data.pusher_app_cluster}
+                                        onChange={(e) => setData('pusher_app_cluster', e.target.value)}
+                                        placeholder="ap1"
+                                        className="font-mono text-sm"
+                                    />
                                 </div>
                             </div>
                         </div>

@@ -93,6 +93,9 @@ if (!function_exists('settings')) {
                     'sidebarStyle',
                     'layoutDirection',
                     'themeMode',
+                    'pusher_app_key',
+                    'pusher_app_cluster',
+                    'google_gmail_pub_sub_topic',
                 ];
                 $superAdminSettings = Setting::where('user_id', $superAdmin->id)
                     ->whereIn('key', $superAdminKeys)

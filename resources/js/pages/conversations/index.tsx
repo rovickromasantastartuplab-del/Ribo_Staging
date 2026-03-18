@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/components/custom-toast';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
+import { getEcho } from '@/utils/echo';
 
 // Sub-components
 const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
@@ -62,19 +63,33 @@ export default function ConversationsIndex({ gmailAccount }: { gmailAccount: any
     const { post: inertiaPost } = useForm({});
 
     useEffect(() => {
-        fetchThreads();
-    }, [selectedFolder]);
+        fetchThreads(false);
 
-    const fetchThreads = async () => {
-        setLoading(true);
+        // Initialize Pusher listener for real-time updates
+        const channel = getEcho().channel('gmail-sync')
+            .listen('.gmail.sync.completed', (data: any) => {
+                console.log('Real-time sync completed:', data);
+                // Only refresh if it's for this account
+                if (gmailAccount && data.gmailAccountId === gmailAccount.id) {
+                    fetchThreads(true); // Silent refresh
+                }
+            });
+
+        return () => {
+            channel.stopListening('.gmail.sync.completed');
+        };
+    }, [selectedFolder, gmailAccount?.id]);
+
+    const fetchThreads = async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const response = await axios.get(route('api.conversations.threads', { folder: selectedFolder }));
             setThreads(response.data.data);
         } catch (error) {
             console.error('Failed to fetch threads:', error);
-            toast.error(t('Failed to fetch threads'));
+            if (!silent) toast.error(t('Failed to fetch threads'));
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 

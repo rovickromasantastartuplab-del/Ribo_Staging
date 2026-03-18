@@ -64,6 +64,9 @@ class SyncGmailThreadsJob implements ShouldQueue
             // Perform the sync
             $stats = $service->syncThreads(50);
 
+            // Broadcast completion for real-time UI updates
+            \App\Events\GmailSyncCompleted::dispatch($this->gmailAccountId, $account->user_id);
+
             Log::info('Gmail sync completed', [
                 'gmail_account_id' => $this->gmailAccountId,
                 'synced' => $stats['synced'],

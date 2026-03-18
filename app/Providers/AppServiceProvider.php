@@ -21,6 +21,8 @@ use App\Observers\SalesOrderObserver;
 use App\Observers\InvoiceObserver;
 use App\Observers\PurchaseOrderObserver;
 use App\Providers\AssetServiceProvider;
+use App\Services\MailConfigService;
+use App\Services\DynamicStorageService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -72,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         try {
             \App\Services\DynamicStorageService::configureDynamicDisks();
             \App\Services\MailConfigService::setDynamicConfig();
+            \App\Services\MailConfigService::setBroadcastingConfig();
         } catch (\Exception $e) {
             // Silently fail during migrations or when database is not ready
         }
