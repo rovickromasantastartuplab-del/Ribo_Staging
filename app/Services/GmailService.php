@@ -244,6 +244,44 @@ class GmailService
     }
 
     /**
+     * Start watching the user's Gmail inbox for real-time webhooks.
+     */
+    public function watchInbox(): bool
+    {
+        try {
+            $topicName = config('services.google.pubsub_topic') ?? request()->server('GMAIL_PUB_SUB_TOPIC') ?? env('GMAIL_PUB_SUB_TOPIC');
+            
+            if (!$topicName) {
+                Log::warning('Cannot watch Gmail inbox: GMAIL_PUB_SUB_TOPIC is not configured in .env', [
+                    'gmail_account_id' => $this->account->id,
+                ]);
+                return false;
+            }
+
+            $watchRequest = new \Google\Service\Gmail\WatchRequest();
+            $watchRequest->setTopicName($topicName);
+            $watchRequest->setLabelIds(['INBOX']);
+
+            $response = $this->gmail->users->watch('me', $watchRequest);
+
+            Log::info('Successfully started watching Gmail inbox', [
+                'gmail_account_id' => $this->account->id,
+                'email' => $this->account->gmail_address,
+                'history_id' => $response->getHistoryId(),
+                'expiration' => $response->getExpiration(),
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to watch Gmail inbox', [
+                'gmail_account_id' => $this->account->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Extract a specific header from a Gmail message.
      */
     private function extractHeader($message, string $headerName): ?string

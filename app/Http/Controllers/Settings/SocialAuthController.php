@@ -133,6 +133,14 @@ class SocialAuthController extends Controller
                     ]
                 );
 
+                // Initiate real-time Pub/Sub Webhooks
+                try {
+                    $gmailService = new \App\Services\GmailService($gmailAccount);
+                    $gmailService->watchInbox();
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to initiate watch inbox on connect', ['error' => $e->getMessage()]);
+                }
+
                 // Dispatch initial sync in the background
                 SyncGmailThreadsJob::dispatch($gmailAccount->id);
 
