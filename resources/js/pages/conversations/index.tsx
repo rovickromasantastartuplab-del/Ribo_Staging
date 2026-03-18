@@ -351,7 +351,7 @@ export default function ConversationsIndex({ gmailAccount }: { gmailAccount: any
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-sm font-semibold">{msg.from_email}</span>
                                                     <span className="text-xs text-muted-foreground">
-                                                        {formatDistanceToNow(new Date(msg.internal_date), { addSuffix: true })}
+                                                        {msg.sent_at ? formatDistanceToNow(new Date(msg.sent_at), { addSuffix: true }) : ''}
                                                     </span>
                                                 </div>
                                                 <div className="bg-background border rounded-lg p-4 shadow-sm text-sm leading-relaxed whitespace-pre-wrap">
