@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\GmailAccount;
 use App\Models\EmailThread;
 use App\Models\EmailMessage;
+use App\Models\Lead;
+use App\Models\Contact;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Illuminate\Support\Facades\Log;
@@ -193,6 +195,9 @@ class GmailService
                         $this->upsertMessage($emailThread, $message, $companyId);
                     }
 
+                    // Auto-link this thread to matching Leads/Contacts
+                    $this->autoLinkThread($emailThread, $companyId);
+
                     $stats['synced']++;
                 } catch (\Exception $e) {
                     Log::error('Failed to sync Gmail thread', [
@@ -278,6 +283,119 @@ class GmailService
                 'error' => $e->getMessage()
             ]);
             return false;
+        }
+    }
+
+    /**
+     * Send an email message or reply.
+     */
+    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null): bool
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+
+            $message = new \Google\Service\Gmail\Message();
+            
+            // Create raw RFC 2822 message
+            $rawMessage = "To: {$to}\r\n";
+            $rawMessage .= "Subject: {$subject}\r\n";
+            $rawMessage .= "Content-Type: text/html; charset=utf-8\r\n";
+            $rawMessage .= "MIME-Version: 1.0\r\n";
+            
+            if ($inReplyTo) {
+                $rawMessage .= "In-Reply-To: {$inReplyTo}\r\n";
+                $rawMessage .= "References: {$inReplyTo}\r\n";
+            }
+            
+            $rawMessage .= "\r\n{$body}";
+            
+            // Base64Url encode
+            $encodedMessage = strtr(base64_encode($rawMessage), '+/', '-_');
+            $message->setRaw($encodedMessage);
+
+            if ($threadId) {
+                $message->setThreadId($threadId);
+            }
+
+            $this->gmail->users_messages->send('me', $message);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to send Gmail message', [
+                'gmail_account_id' => $this->account->id,
+                'to' => $to,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Automatically link an email thread to matching Leads and Contacts
+     * by scanning participant email addresses against CRM records.
+     */
+    public function autoLinkThread(EmailThread $emailThread, int $companyId): void
+    {
+        $participants = $emailThread->participants ?? [];
+
+        if (empty($participants)) {
+            return;
+        }
+
+        // Filter out the connected Gmail address itself
+        $externalParticipants = array_filter($participants, function ($email) {
+            return strtolower($email) !== strtolower($this->account->gmail_address);
+        });
+
+        if (empty($externalParticipants)) {
+            return;
+        }
+
+        // Find matching Leads (scoped to the same company)
+        $matchingLeads = Lead::where('created_by', $companyId)
+            ->whereIn('email', $externalParticipants)
+            ->pluck('id');
+
+        foreach ($matchingLeads as $leadId) {
+            try {
+                $emailThread->leads()->syncWithoutDetaching([
+                    $leadId => ['matched_via' => 'auto']
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to auto-link thread to lead', [
+                    'thread_id' => $emailThread->id,
+                    'lead_id' => $leadId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Find matching Contacts (scoped to the same company)
+        $matchingContacts = Contact::where('created_by', $companyId)
+            ->whereIn('email', $externalParticipants)
+            ->pluck('id');
+
+        foreach ($matchingContacts as $contactId) {
+            try {
+                $emailThread->contacts()->syncWithoutDetaching([
+                    $contactId => ['matched_via' => 'auto']
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to auto-link thread to contact', [
+                    'thread_id' => $emailThread->id,
+                    'contact_id' => $contactId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($matchingLeads->count() > 0 || $matchingContacts->count() > 0) {
+            Log::info('Auto-linked email thread to CRM records', [
+                'thread_id' => $emailThread->id,
+                'subject' => $emailThread->subject,
+                'leads_linked' => $matchingLeads->count(),
+                'contacts_linked' => $matchingContacts->count(),
+            ]);
         }
     }
 

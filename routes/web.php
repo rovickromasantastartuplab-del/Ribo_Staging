@@ -607,6 +607,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('contacts/{contact}/toggle-status', [ContactController::class, 'toggleStatus'])->middleware('permission:toggle-status-contacts')->name('contacts.toggle-status');
         });
 
+        // Conversations Hub routes
+        Route::middleware('permission:manage-conversations')->group(function () {
+            Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
+            Route::get('api/conversations/threads', [ConversationController::class, 'threads'])->name('api.conversations.threads');
+            Route::get('api/conversations/threads/{thread}', [ConversationController::class, 'show'])->name('api.conversations.show');
+            Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])->name('api.conversations.reply');
+        });
+
         Route::middleware('permission:manage-lead-statuses')->group(function () {
             Route::get('lead-statuses', [LeadStatusController::class, 'index'])->middleware('permission:manage-lead-statuses')->name('lead-statuses.index');
             Route::post('lead-statuses/reorder', [LeadStatusController::class, 'reorder'])->middleware('permission:edit-lead-statuses')->name('lead-statuses.reorder');

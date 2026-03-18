@@ -56,4 +56,24 @@ class EmailThread extends BaseModel
     {
         return $this->hasOne(EmailMessage::class)->latestOfMany('sent_at');
     }
+
+    /**
+     * Leads linked to this email thread.
+     */
+    public function leads()
+    {
+        return $this->morphedByMany(Lead::class, 'email_threadable', 'email_threadables')
+            ->withPivot('matched_via')
+            ->withTimestamps();
+    }
+
+    /**
+     * Contacts linked to this email thread.
+     */
+    public function contacts()
+    {
+        return $this->morphedByMany(Contact::class, 'email_threadable', 'email_threadables')
+            ->withPivot('matched_via')
+            ->withTimestamps();
+    }
 }

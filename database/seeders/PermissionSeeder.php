@@ -466,6 +466,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'delete-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Delete Wedding Suppliers', 'description' => 'Can delete wedding suppliers'],
             ['name' => 'export-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Export Wedding Suppliers', 'description' => 'Can export wedding suppliers'],
             ['name' => 'import-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Import Wedding Suppliers', 'description' => 'Can import wedding suppliers'],
+
+            // Conversations Hub permissions
+            ['name' => 'manage-conversations', 'module' => 'conversations', 'label' => 'Manage Conversations', 'description' => 'Can access the Conversations Hub and link threads to CRM records'],
         ];
 
         foreach ($permissions as $permission) {

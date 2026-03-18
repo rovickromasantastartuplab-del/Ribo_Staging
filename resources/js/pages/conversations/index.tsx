@@ -1,0 +1,449 @@
+import React, { useState, useEffect } from 'react';
+import { PageTemplate } from '@/components/page-template';
+import { Head, useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import { 
+    Inbox, 
+    Send, 
+    Archive, 
+    Search, 
+    Filter, 
+    MoreVertical, 
+    User,
+    CheckCircle2,
+    Clock,
+    UserPlus,
+    X,
+    RefreshCw,
+    AlertCircle
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from '@/components/custom-toast';
+import axios from 'axios';
+import { formatDistanceToNow } from 'date-fns';
+
+// Sub-components
+const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${
+            active ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground'
+        }`}
+    >
+        <div className="flex items-center gap-3">
+            <Icon className="h-4 w-4" />
+            <span>{label}</span>
+        </div>
+        {count > 0 && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                active ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+            }`}>
+                {count}
+            </span>
+        )}
+    </button>
+);
+
+export default function ConversationsIndex() {
+    const { t } = useTranslation();
+    const [selectedFolder, setSelectedFolder] = useState('inbox');
+    const [threads, setThreads] = useState<any[]>([]);
+    const [selectedThread, setSelectedThread] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [showContactSidebar, setShowContactSidebar] = useState(true);
+    const [replyBody, setReplyBody] = useState('');
+    const [submittingReply, setSubmittingReply] = useState(false);
+
+    const { post: inertiaPost } = useForm({});
+
+    useEffect(() => {
+        fetchThreads();
+    }, [selectedFolder]);
+
+    const fetchThreads = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(route('api.conversations.threads', { folder: selectedFolder }));
+            setThreads(response.data.data);
+        } catch (error) {
+            console.error('Failed to fetch threads:', error);
+            toast.error(t('Failed to fetch threads'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSync = () => {
+        setIsSyncing(true);
+        inertiaPost(route('settings.gmail.sync'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsSyncing(false);
+                fetchThreads();
+                toast.success(t('Inbox synchronized successfully'));
+            },
+            onError: () => {
+                setIsSyncing(false);
+                toast.error(t('Failed to synchronize inbox'));
+            }
+        });
+    };
+
+    const handleSelectThread = async (thread: any) => {
+        setLoading(true);
+        try {
+            const response = await axios.get(route('api.conversations.show', thread.id));
+            setSelectedThread(response.data);
+        } catch (error) {
+            console.error('Failed to fetch thread details:', error);
+            toast.error(t('Failed to load conversation details'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendReply = async () => {
+        if (!replyBody.trim()) return;
+
+        setSubmittingReply(true);
+        try {
+            const response = await axios.post(route('api.conversations.reply', selectedThread.id), {
+                body: replyBody
+            });
+            
+            toast.success(t('Reply sent successfully'));
+            setReplyBody('');
+            
+            // Refresh thread details to show new message (if our backend synced it back)
+            handleSelectThread(selectedThread);
+        } catch (error: any) {
+            console.error('Failed to send reply:', error);
+            toast.error(error.response?.data?.error || t('Failed to send reply'));
+        } finally {
+            setSubmittingReply(false);
+        }
+    };
+
+    return (
+        <PageTemplate 
+            title={t('Conversations')}
+            description={t('Unified inbox for all relationships')}
+            url="/conversations"
+        >
+            <Head title={t('Conversations Hub')} />
+
+            <div className="flex h-[calc(100vh-180px)] overflow-hidden border rounded-xl bg-background shadow-sm">
+                
+                {/* Pane 1: Folders (Left Sidebar) */}
+                <div className="w-[240px] border-r flex flex-col bg-muted/30">
+                    <div className="p-4 flex-1">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                            <h2 className="text-lg font-semibold">{t('Conversations')}</h2>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSync} disabled={isSyncing}>
+                                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
+                            </Button>
+                        </div>
+                        <div className="space-y-1">
+                            <SidebarItem 
+                                icon={Inbox} 
+                                label={t('Inbox')} 
+                                active={selectedFolder === 'inbox'} 
+                                onClick={() => setSelectedFolder('inbox')}
+                                count={5} // Demo count
+                            />
+                            <SidebarItem 
+                                icon={Archive} 
+                                label={t('Unassigned')} 
+                                active={selectedFolder === 'unassigned'} 
+                                onClick={() => setSelectedFolder('unassigned')}
+                            />
+                            <SidebarItem 
+                                icon={Send} 
+                                label={t('Sent')} 
+                                active={selectedFolder === 'sent'} 
+                                onClick={() => setSelectedFolder('sent')}
+                            />
+                        </div>
+
+                        <div className="mt-8">
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
+                                {t('Lead Sources')}
+                            </h3>
+                            <div className="space-y-1">
+                                <SidebarItem 
+                                    icon={Clock} 
+                                    label={t('Hot Leads')} 
+                                    onClick={() => {}}
+                                />
+                                <SidebarItem 
+                                    icon={UserPlus} 
+                                    label={t('New Leads')} 
+                                    onClick={() => {}}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Pane 2: Thread List */}
+                <div className="w-[380px] border-r flex flex-col bg-background">
+                    <div className="p-4 border-b">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                                placeholder={t('Search threads...')} 
+                                className="pl-9 bg-muted/50 border-none h-9 focus-visible:ring-1"
+                            />
+                        </div>
+                    </div>
+                    <ScrollArea className="flex-1">
+                        {threads.length > 0 ? (
+                            <div className="divide-y">
+                                {threads.map((thread) => (
+                                    <button
+                                        key={thread.id}
+                                        onClick={() => handleSelectThread(thread)}
+                                        className={`w-full text-left p-4 hover:bg-muted/50 transition-colors relative flex items-start gap-3 ${
+                                            selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
+                                        }`}
+                                    >
+                                        <Avatar className="h-10 w-10 border">
+                                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                                {thread.participants?.[0]?.charAt(0).toUpperCase() || 'U'}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex justify-between items-center mb-0.5">
+                                                <span className={`text-sm truncate font-semibold transition-colors ${
+                                                    selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'
+                                                }`}>
+                                                    {thread.participants?.[0] || 'Unknown'}
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground">
+                                                    {thread.last_message_at ? formatDistanceToNow(new Date(thread.last_message_at), { addSuffix: false }) : ''}
+                                                </span>
+                                            </div>
+                                            <div className="text-sm font-medium truncate mb-1 text-foreground/90">
+                                                {thread.subject || t('(No Subject)')}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground truncate line-clamp-1">
+                                                {thread.snippet}
+                                            </div>
+                                            
+                                            {/* Entity Badge */}
+                                            <div className="mt-2 flex gap-1">
+                                                {thread.leads?.length > 0 && (
+                                                    <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                                                        {t('Lead')}
+                                                    </Badge>
+                                                )}
+                                                {thread.contacts?.length > 0 && (
+                                                    <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">
+                                                        {t('Contact')}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-64 text-center px-4">
+                                <Inbox className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                                <p className="text-sm text-muted-foreground">{t('No threads found here.')}</p>
+                            </div>
+                        )}
+                    </ScrollArea>
+                </div>
+
+                {/* Pane 3: Thread Details & Reply */}
+                <div className="flex-1 flex flex-col min-w-0 bg-muted/5">
+                    {selectedThread ? (
+                        <>
+                            {/* Header */}
+                            <div className="h-16 border-b flex items-center justify-between px-6 bg-background">
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="text-base font-semibold truncate text-foreground/90">
+                                        {selectedThread.subject || t('(No Subject)')}
+                                    </h2>
+                                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                        <span>{selectedThread.participants?.join(', ')}</span>
+                                        <span>•</span>
+                                        <span>{selectedThread.message_count} {t('messages')}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 ml-4">
+                                    <Button variant="ghost" size="icon" onClick={() => setShowContactSidebar(!showContactSidebar)}>
+                                        <User className={`h-4 w-4 ${showContactSidebar ? 'text-primary' : ''}`} />
+                                    </Button>
+                                    <Button variant="ghost" size="icon">
+                                        <Archive className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Messages Scroll Area */}
+                            <ScrollArea className="flex-1 p-6">
+                                <div className="max-w-4xl mx-auto space-y-8">
+                                    {selectedThread.messages?.map((msg: any) => (
+                                        <div key={msg.id} className="flex gap-4">
+                                            <Avatar className="h-9 w-9 border">
+                                                <AvatarFallback className="bg-muted text-xs">
+                                                    {msg.from_email?.charAt(0).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm font-semibold">{msg.from_email}</span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {formatDistanceToNow(new Date(msg.internal_date), { addSuffix: true })}
+                                                    </span>
+                                                </div>
+                                                <div className="bg-background border rounded-lg p-4 shadow-sm text-sm leading-relaxed whitespace-pre-wrap">
+                                                    {msg.body_html ? (
+                                                        <div dangerouslySetInnerHTML={{ __html: msg.body_html }} />
+                                                    ) : (
+                                                        msg.snippet
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+
+                            {/* Reply Box */}
+                            <div className="p-4 border-t bg-background">
+                                <div className="max-w-4xl mx-auto border rounded-xl shadow-sm focus-within:ring-1 focus-within:ring-primary/30 transition-shadow overflow-hidden">
+                                    <textarea 
+                                        className="w-full min-h-[120px] p-4 text-sm bg-transparent border-none focus:ring-0 resize-none"
+                                        placeholder={t('Write your reply here...')}
+                                        value={replyBody}
+                                        onChange={(e) => setReplyBody(e.target.value)}
+                                        disabled={submittingReply}
+                                    />
+                                    <div className="flex items-center justify-between px-4 py-2 bg-muted/20 border-t">
+                                        <div className="flex gap-2">
+                                            {/* Formatting options placeholder */}
+                                        </div>
+                                        <Button 
+                                            size="sm" 
+                                            className="gap-2 px-6" 
+                                            onClick={handleSendReply} 
+                                            disabled={submittingReply || !replyBody.trim()}
+                                        >
+                                            {submittingReply ? (
+                                                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <Send className="h-3.5 w-3.5" />
+                                            )}
+                                            {submittingReply ? t('Sending...') : t('Send Reply')}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
+                            <div className="h-20 w-20 bg-muted/50 rounded-full flex items-center justify-center mb-6">
+                                <Inbox className="h-10 w-10 text-muted-foreground/30" />
+                            </div>
+                            <h3 className="text-xl font-semibold mb-2">{t('Select a conversation')}</h3>
+                            <p className="text-muted-foreground max-w-sm">
+                                {t('Choose a thread from the list to view the full message history and CRM details.')}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Pane 4: Contact/Lead Details (Right Drawer) */}
+                {selectedThread && showContactSidebar && (
+                    <div className="w-[300px] border-l flex flex-col bg-background animate-in slide-in-from-right-1 transition-all duration-300">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-semibold">{t('Contact Details')}</h3>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowContactSidebar(false)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            {/* Profile Info */}
+                            <div className="flex flex-col items-center text-center mb-8">
+                                <Avatar className="h-20 w-20 mb-4 border-2 border-primary/10">
+                                    <AvatarFallback className="text-xl font-bold bg-primary/5 text-primary">
+                                        {selectedThread.participants?.[0]?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <h4 className="font-bold text-lg">{selectedThread.participants?.[0]}</h4>
+                                <p className="text-xs text-muted-foreground">{selectedThread.participants?.[1]}</p>
+                            </div>
+
+                            {/* CRM Context */}
+                            <div className="space-y-6">
+                                {selectedThread.leads?.length > 0 ? (
+                                    <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Badge className="bg-blue-600 font-bold">{t('LEAD')}</Badge>
+                                            <span className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">{t('Active')}</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-muted-foreground">{t('Value')}:</span>
+                                                <span className="font-semibold">$5,000</span>
+                                            </div>
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-muted-foreground">{t('Status')}:</span>
+                                                <Badge variant="outline" className="h-5 text-[10px]">{t('Working')}</Badge>
+                                            </div>
+                                        </div>
+                                        <Button variant="link" size="sm" className="p-0 h-auto mt-4 text-xs font-semibold">
+                                            {t('View Full Lead Record')}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-lg">
+                                        <UserPlus className="h-6 w-6 text-muted-foreground/30 mb-2" />
+                                        <p className="text-xs text-muted-foreground mb-4 text-center">
+                                            {t('This contact is not yet linked to a Lead or Contact record.')}
+                                        </p>
+                                        <Button size="sm" variant="outline" className="w-full text-xs">
+                                            {t('Add as Lead')}
+                                        </Button>
+                                    </div>
+                                )}
+                                
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        {t('Activities')}
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <div className="flex gap-3">
+                                            <div className="h-2 w-2 rounded-full bg-green-500 mt-1.5 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                                            <p className="text-xs">
+                                                <span className="font-semibold">{t('Last Contact')}:</span> Today
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="h-2 w-2 rounded-full bg-muted mt-1.5" />
+                                            <p className="text-xs">
+                                                <span className="font-semibold">{t('Created')}:</span> 2 days ago
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </PageTemplate>
+    );
+}

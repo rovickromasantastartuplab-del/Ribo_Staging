@@ -142,6 +142,16 @@ export function AppSidebar() {
             });
         }
 
+        // 1.5 Conversations
+        if (hasPermission(permissions, 'manage-conversations')) {
+            items.push({
+                title: t('Conversations'),
+                href: route('conversations.index'),
+                icon: MessageSquare,
+                badge: { label: t('New') }
+            });
+        }
+
         // 2. Staff
         const staffChildren = [];
         if (hasPermission(permissions, 'manage-users')) {

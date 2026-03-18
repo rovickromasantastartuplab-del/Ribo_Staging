@@ -36,7 +36,7 @@ class Contact extends Model
      */
     public function assignedUser()
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(User::class , 'assigned_to');
     }
 
     /**
@@ -44,7 +44,7 @@ class Contact extends Model
      */
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class , 'created_by');
     }
 
     /**
@@ -52,7 +52,7 @@ class Contact extends Model
      */
     public function cases()
     {
-        return $this->hasMany(CaseModel::class, 'contact_id');
+        return $this->hasMany(CaseModel::class , 'contact_id');
     }
 
     /**
@@ -60,6 +60,17 @@ class Contact extends Model
      */
     public function quotes()
     {
-        return $this->hasMany(Quote::class, 'billing_contact_id');
+        return $this->hasMany(Quote::class , 'billing_contact_id');
+    }
+
+    /**
+     * Email threads linked to this contact.
+     */
+    public function emailThreads()
+    {
+        return $this->morphToMany(EmailThread::class, 'email_threadable', 'email_threadables')
+            ->withPivot('matched_via')
+            ->withTimestamps()
+            ->orderByDesc('last_message_at');
     }
 }
