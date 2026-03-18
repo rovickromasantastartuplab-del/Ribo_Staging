@@ -78,9 +78,10 @@ export default function ConversationsIndex({ gmailAccount, companyId }: { gmailA
         // Initialize Pusher listener for real-time updates securely
         const channel = getEcho().private(`company.${companyId}`)
             .listen('.gmail.sync.completed', (data: any) => {
-                console.log('Real-time sync completed:', data);
+                console.log('Real-time sync completed:', data, 'Current Auth GmailAccountId:', gmailAccount?.id);
                 // Only refresh if it's for this account
-                if (gmailAccount && data.gmailAccountId === gmailAccount.id) {
+                // Use loose equality (==) to handle string vs integer mismatch between JS and PHP serialization
+                if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
                     fetchThreads(true); // Silent refresh of the sidebar list
                     
                     // If the user currently has a thread open, silently refresh its contents too
