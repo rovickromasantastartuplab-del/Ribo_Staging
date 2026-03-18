@@ -48,7 +48,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
     </button>
 );
 
-export default function ConversationsIndex() {
+export default function ConversationsIndex({ gmailAccount }: { gmailAccount: any }) {
     const { t } = useTranslation();
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
@@ -85,10 +85,12 @@ export default function ConversationsIndex() {
             onSuccess: () => {
                 setIsSyncing(false);
                 fetchThreads();
-                toast.success(t('Inbox synchronized successfully'));
+                // success toast is handled by Laravel session and our global flash listener, 
+                // but we can add an extra one here if needed.
             },
-            onError: () => {
+            onError: (errors) => {
                 setIsSyncing(false);
+                console.error('Sync failed:', errors);
                 toast.error(t('Failed to synchronize inbox'));
             }
         });
@@ -202,8 +204,36 @@ export default function ConversationsIndex() {
                         </div>
                     </div>
                     <ScrollArea className="flex-1">
-                        {threads.length > 0 ? (
-                            <div className="divide-y">
+                        {!gmailAccount ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
+                                <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                                    <AlertCircle className="h-8 w-8 text-primary" />
+                                </div>
+                                <h3 className="text-lg font-semibold mb-2">{t('Email Not Connected')}</h3>
+                                <p className="text-sm text-muted-foreground mb-6 max-w-[240px]">
+                                    {t('Connect your Gmail account in settings to start managing conversations.')}
+                                </p>
+                                <Button onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
+                                    {t('Connect Gmail')}
+                                </Button>
+                            </div>
+                        ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
+                                <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+                                <h3 className="text-lg font-semibold mb-2">{t('Synchronization Error')}</h3>
+                                <p className="text-sm text-muted-foreground mb-6 max-w-[240px]">
+                                    {gmailAccount.sync_error || t('An error occurred while syncing your emails. Please try reconnecting.')}
+                                </p>
+                                <Button variant="outline" onClick={handleSync} disabled={isSyncing}>
+                                    {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                                    {t('Try Again')}
+                                </Button>
+                                <Button variant="link" size="sm" className="mt-2" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
+                                    {t('Go to Integration Settings')}
+                                </Button>
+                            </div>
+                        ) : threads.length > 0 ? (
+                            <div className="divide-y text-foreground/90">
                                 {threads.map((thread) => (
                                     <button
                                         key={thread.id}
@@ -212,38 +242,38 @@ export default function ConversationsIndex() {
                                             selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
                                         }`}
                                     >
-                                        <Avatar className="h-10 w-10 border">
-                                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                        <Avatar className="h-10 w-10 border border-primary/10 shadow-sm">
+                                            <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
                                                 {thread.participants?.[0]?.charAt(0).toUpperCase() || 'U'}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex justify-between items-center mb-0.5">
-                                                <span className={`text-sm truncate font-semibold transition-colors ${
+                                                <span className={`text-sm truncate font-bold transition-colors ${
                                                     selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'
                                                 }`}>
                                                     {thread.participants?.[0] || 'Unknown'}
                                                 </span>
-                                                <span className="text-[10px] text-muted-foreground">
+                                                <span className="text-[10px] text-muted-foreground/80 font-medium">
                                                     {thread.last_message_at ? formatDistanceToNow(new Date(thread.last_message_at), { addSuffix: false }) : ''}
                                                 </span>
                                             </div>
-                                            <div className="text-sm font-medium truncate mb-1 text-foreground/90">
+                                            <div className="text-sm font-semibold truncate mb-1 text-foreground/90">
                                                 {thread.subject || t('(No Subject)')}
                                             </div>
-                                            <div className="text-xs text-muted-foreground truncate line-clamp-1">
+                                            <div className="text-xs text-muted-foreground/80 truncate line-clamp-1">
                                                 {thread.snippet}
                                             </div>
                                             
                                             {/* Entity Badge */}
                                             <div className="mt-2 flex gap-1">
                                                 {thread.leads?.length > 0 && (
-                                                    <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                                                    <Badge variant="outline" className="text-[10px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1.5 py-0">
                                                         {t('Lead')}
                                                     </Badge>
                                                 )}
                                                 {thread.contacts?.length > 0 && (
-                                                    <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">
+                                                    <Badge variant="outline" className="text-[10px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1.5 py-0">
                                                         {t('Contact')}
                                                     </Badge>
                                                 )}
@@ -253,9 +283,26 @@ export default function ConversationsIndex() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-64 text-center px-4">
-                                <Inbox className="h-10 w-10 text-muted-foreground/30 mb-2" />
-                                <p className="text-sm text-muted-foreground">{t('No threads found here.')}</p>
+                            <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
+                                <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                                    <Inbox className="h-8 w-8 text-muted-foreground/30" />
+                                </div>
+                                <h3 className="text-base font-semibold mb-1">{t('No conversations found')}</h3>
+                                <p className="text-sm text-muted-foreground mb-6 max-w-[200px]">
+                                    {gmailAccount?.sync_status === 'syncing' 
+                                        ? t('We are currently syncing your inbox...')
+                                        : t('Try clicking the sync button to fetch your latest emails.')}
+                                </p>
+                                {gmailAccount?.sync_error && (
+                                    <div className="mx-4 p-3 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-xs mb-4">
+                                        <span className="font-bold block mb-1 uppercase tracking-tight">{t('Sync Error')}:</span>
+                                        {gmailAccount.sync_error}
+                                    </div>
+                                )}
+                                <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+                                    <RefreshCw className={`h-3.5 w-3.5 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                                    {t('Sync Now')}
+                                </Button>
                             </div>
                         )}
                     </ScrollArea>
@@ -392,21 +439,23 @@ export default function ConversationsIndex() {
                                     <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
                                         <div className="flex items-center gap-2 mb-3">
                                             <Badge className="bg-blue-600 font-bold">{t('LEAD')}</Badge>
-                                            <span className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">{t('Active')}</span>
+                                            <span className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">{selectedThread.leads[0].type || t('Active')}</span>
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-muted-foreground">{t('Value')}:</span>
-                                                <span className="font-semibold">$5,000</span>
+                                                <span className="font-semibold">{selectedThread.leads[0].value ? `$${selectedThread.leads[0].value}` : t('N/A')}</span>
                                             </div>
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-muted-foreground">{t('Status')}:</span>
-                                                <Badge variant="outline" className="h-5 text-[10px]">{t('Working')}</Badge>
+                                                <Badge variant="outline" className="h-5 text-[10px]">{selectedThread.leads[0].status || t('New')}</Badge>
                                             </div>
                                         </div>
-                                        <Button variant="link" size="sm" className="p-0 h-auto mt-4 text-xs font-semibold">
-                                            {t('View Full Lead Record')}
-                                        </Button>
+                                        <a href={route('leads.show', selectedThread.leads[0].id)}>
+                                            <Button variant="link" size="sm" className="p-0 h-auto mt-4 text-xs font-semibold">
+                                                {t('View Full Lead Record')}
+                                            </Button>
+                                        </a>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-lg">

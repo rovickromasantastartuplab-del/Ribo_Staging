@@ -21,11 +21,12 @@ class IntegrationsSettingsController extends Controller
                 'google_client_id' => 'nullable|string',
                 'google_client_secret' => 'nullable|string',
                 'google_redirect_uri' => 'nullable|string',
+                'google_gmail_pub_sub_topic' => 'nullable|string',
             ]);
 
             // Only superadmins may update Google OAuth credentials
             $user = auth()->user();
-            $googleFields = ['google_client_id', 'google_client_secret', 'google_redirect_uri'];
+            $googleFields = ['google_client_id', 'google_client_secret', 'google_redirect_uri', 'google_gmail_pub_sub_topic'];
             if (!in_array($user->type, ['superadmin', 'super admin'])) {
                 $validated = array_diff_key($validated, array_flip($googleFields));
             }

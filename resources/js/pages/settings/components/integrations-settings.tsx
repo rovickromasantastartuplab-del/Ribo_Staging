@@ -39,6 +39,7 @@ interface Props {
         google_client_id: string;
         google_client_secret: string;
         google_redirect_uri: string;
+        google_gmail_pub_sub_topic: string;
     } | null;
 }
 
@@ -89,6 +90,7 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
         google_client_id: googleSettings?.google_client_id || '',
         google_client_secret: googleSettings?.google_client_secret || '',
         google_redirect_uri: googleSettings?.google_redirect_uri || '',
+        google_gmail_pub_sub_topic: googleSettings?.google_gmail_pub_sub_topic || '',
     });
 
     const handleSave = (e: React.FormEvent) => {
@@ -533,6 +535,19 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                     />
                                     <p className="text-xs text-muted-foreground">
                                         {t('Copy this URI and add it to your Google Cloud Console → OAuth 2.0 Credentials → Authorized redirect URIs.')}
+                                    </p>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="google_gmail_pub_sub_topic">{t('Google Pub/Sub Topic')}</Label>
+                                    <Input
+                                        id="google_gmail_pub_sub_topic"
+                                        value={data.google_gmail_pub_sub_topic}
+                                        onChange={(e) => setData('google_gmail_pub_sub_topic', e.target.value)}
+                                        placeholder="projects/your-project-id/topics/ribo-gmail-webhooks"
+                                        className="font-mono text-sm"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('Enter the full topic name from Google Cloud Pub/Sub. Company users will use this topic to start "watching" their Gmail inbox for real-time sync.')}
                                     </p>
                                 </div>
                             </div>

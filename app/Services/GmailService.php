@@ -254,10 +254,14 @@ class GmailService
     public function watchInbox(): bool
     {
         try {
-            $topicName = config('services.google.pubsub_topic') ?? request()->server('GMAIL_PUB_SUB_TOPIC') ?? env('GMAIL_PUB_SUB_TOPIC');
+            // Priority: Database setting (Superadmin) > config/env
+            $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+            $topicName = ($superadmin ? getSetting('google_gmail_pub_sub_topic', null, $superadmin->id) : null)
+                ?? config('services.google.pubsub_topic') 
+                ?? env('GMAIL_PUB_SUB_TOPIC');
             
             if (!$topicName) {
-                Log::warning('Cannot watch Gmail inbox: GMAIL_PUB_SUB_TOPIC is not configured in .env', [
+                Log::warning('Cannot watch Gmail inbox: Google Pub/Sub Topic is not configured in Settings or .env', [
                     'gmail_account_id' => $this->account->id,
                 ]);
                 return false;

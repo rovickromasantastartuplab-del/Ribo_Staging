@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GmailAccount;
 use App\Models\EmailThread;
 use App\Models\EmailMessage;
 use App\Services\GmailService;
@@ -16,8 +17,20 @@ class ConversationController extends Controller
      */
     public function index()
     {
+        $user = auth()->user();
+        $companyId = $user->creatorId();
+        
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+
         return Inertia::render('conversations/index', [
-            'initialFolder' => 'inbox'
+            'initialFolder' => 'inbox',
+            'gmailAccount' => $gmailAccount ? [
+                'id' => $gmailAccount->id,
+                'email' => $gmailAccount->gmail_address,
+                'last_sync_at' => $gmailAccount->last_sync_at?->toIso8601String(),
+                'sync_status' => $gmailAccount->sync_status,
+                'sync_error' => $gmailAccount->sync_error,
+            ] : null
         ]);
     }
 

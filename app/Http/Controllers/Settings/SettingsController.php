@@ -131,6 +131,7 @@ class SettingsController extends Controller
                 'google_client_id' => getSetting('google_client_id', null, $user->id) ?? '',
                 'google_client_secret' => getSetting('google_client_secret', null, $user->id) ?? '',
                 'google_redirect_uri' => getSetting('google_redirect_uri', url('/auth/callback/google'), $user->id),
+                'google_gmail_pub_sub_topic' => getSetting('google_gmail_pub_sub_topic', null, $user->id) ?? '',
             ];
         }
 
