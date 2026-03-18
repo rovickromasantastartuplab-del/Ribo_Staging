@@ -114,6 +114,9 @@ class ConversationController extends Controller
             );
 
             if ($success) {
+                // Immediately sync this thread so the reply appears in the UI
+                \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
+                
                 return response()->json(['message' => 'Reply sent successfully.']);
             }
 
