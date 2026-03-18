@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
+Broadcast::routes(['middleware' => ['web', 'auth']]);
+
 Broadcast::channel('company.{companyId}', function ($user, $companyId) {
     return (int) $user->creatorId() === (int) $companyId;
 });

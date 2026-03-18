@@ -46,4 +46,3 @@ class GmailSyncCompleted implements ShouldBroadcast
         return 'gmail.sync.completed';
     }
 }
-
