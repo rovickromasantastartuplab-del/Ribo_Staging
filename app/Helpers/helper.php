@@ -107,6 +107,18 @@ if (!function_exists('settings')) {
             }
         }
 
+        // Auto-decrypt sensitive keys safely
+        $sensitiveKeys = ['google_client_secret', 'pusher_app_secret'];
+        foreach ($sensitiveKeys as $key) {
+            if (isset($userSettings[$key]) && !empty($userSettings[$key])) {
+                try {
+                    $userSettings[$key] = \Illuminate\Support\Facades\Crypt::decrypt($userSettings[$key]);
+                } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                    // Ignore error, it was likely stored as plaintext before the encryption update
+                }
+            }
+        }
+
         return $userSettings;
     }
 }
