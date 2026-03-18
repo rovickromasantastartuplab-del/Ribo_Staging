@@ -185,9 +185,13 @@ export default function Settings() {
             // Removed twilio-notification-settings
             // Removed: if (item.href === '#payment-settings') return false;
         } else {
-            // Superadmin explicitly does not see company-level notification settings
+            // Superadmin explicitly does not see company-level notification settings and templates
             if (item.href === '#email-notification-settings') return false;
             if (item.href === '#twilio-notification-settings') return false;
+            if (item.href === '#quote-templates') return false;
+            if (item.href === '#sales-order-templates') return false;
+            if (item.href === '#invoice-templates') return false;
+            if (item.href === '#google-calendar-settings') return false;
         }
 
         // Allow superadmins to see most items by default unless explicitly blocked above
