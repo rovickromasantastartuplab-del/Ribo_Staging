@@ -38,10 +38,18 @@ class IntegrationsSettingsController extends Controller
                 $validated = array_diff_key($validated, array_flip($restrictedFields));
             }
 
+            $sensitiveKeys = ['google_client_secret', 'pusher_app_secret'];
+
             foreach ($validated as $key => $value) {
                 if (is_bool($value)) {
                     $value = $value ? 'true' : 'false';
                 }
+
+                // Encrypt sensitive secrets so they don't sit in plaintext DB
+                if (in_array($key, $sensitiveKeys) && !empty($value)) {
+                    $value = encrypt($value);
+                }
+
                 updateSetting($key, $value);
             }
 

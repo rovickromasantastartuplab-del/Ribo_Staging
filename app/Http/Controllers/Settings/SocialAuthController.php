@@ -33,6 +33,7 @@ class SocialAuthController extends Controller
             return Socialite::driver('google')
                 ->scopes([
                     'https://www.googleapis.com/auth/gmail.readonly',
+                    'https://www.googleapis.com/auth/gmail.send',
                     'openid',
                     'email',
                     'profile',

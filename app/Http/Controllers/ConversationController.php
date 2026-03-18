@@ -22,8 +22,15 @@ class ConversationController extends Controller
         
         $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
 
+        // Compute actual unread count
+        $unreadCount = $gmailAccount
+            ? EmailThread::where('created_by', $companyId)->where('is_read', false)->count()
+            : 0;
+
         return Inertia::render('conversations/index', [
             'initialFolder' => 'inbox',
+            'unreadCount' => $unreadCount,
+            'companyId' => $companyId,
             'gmailAccount' => $gmailAccount ? [
                 'id' => $gmailAccount->id,
                 'email' => $gmailAccount->gmail_address,
@@ -39,14 +46,21 @@ class ConversationController extends Controller
      */
     public function threads(Request $request)
     {
+        $companyId = auth()->user()->creatorId();
         $folder = $request->get('folder', 'inbox');
+
         $query = EmailThread::with(['leads', 'contacts', 'latestMessage'])
-            ->where('created_by', auth()->user()->creatorId())
+            ->where('created_by', $companyId)
             ->orderByDesc('last_message_at');
 
-        // Apply folder logic (basic implementation)
+        // Apply folder filtering by Gmail labels
         if ($folder === 'sent') {
-            // Placeholder: filter for threads where last message is sent by user
+            $query->whereHas('latestMessage', function ($q) {
+                $gmailAccount = GmailAccount::where('user_id', auth()->user()->creatorId())->first();
+                if ($gmailAccount) {
+                    $q->where('from_email', strtolower($gmailAccount->gmail_address));
+                }
+            });
         }
 
         return response()->json($query->paginate(20));
@@ -89,33 +103,38 @@ class ConversationController extends Controller
 
             $service = new GmailService($account);
             
-            // Determine recipient (the first participant that is NOT the account itself)
+            // Build recipient list: all external participants
             $participants = $thread->participants ?? [];
-            $recipient = collect($participants)->first(function ($email) use ($account) {
-                return strtolower($email) !== strtolower($account->gmail_address);
-            });
+            $accountEmail = strtolower($account->gmail_address);
 
-            if (!$recipient) {
+            $externalParticipants = collect($participants)->filter(function ($email) use ($accountEmail) {
+                return strtolower($email) !== $accountEmail;
+            })->values();
+
+            if ($externalParticipants->isEmpty()) {
                 return response()->json(['error' => 'No recipient found for this thread.'], 422);
             }
 
-            // Get the latest message to find the Message-ID for In-Reply-To
+            // First external participant is the primary TO; rest are CC
+            $primaryRecipient = $externalParticipants->first();
+            $ccRecipients = $externalParticipants->slice(1)->values()->all();
+
+            // Get the latest message's Message-ID for proper In-Reply-To threading
             $latestMessage = $thread->latestMessage;
-            $inReplyTo = null;
-            // Note: We'd ideally store the Message-ID header in the database. 
-            // If we don't have it, Gmail still tries to thread by threadId.
+            $inReplyTo = $latestMessage?->message_id_header;
 
             $success = $service->sendMessage(
-                $recipient,
+                $primaryRecipient,
                 "Re: " . $thread->subject,
                 $request->body,
                 $thread->gmail_thread_id,
-                $inReplyTo
+                $inReplyTo,
+                $ccRecipients
             );
 
             if ($success) {
-                // Immediately sync this thread so the reply appears in the UI
-                \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
+                // Dispatch async sync — the GmailSyncCompleted event will refresh the UI in real time
+                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
                 
                 return response()->json(['message' => 'Reply sent successfully.']);
             }

@@ -156,7 +156,7 @@ $webhookExcludedMiddleware = [
 ];
 Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhooks\FacebookWebhookController::class, 'handle'])->name('webhooks.facebook')->withoutMiddleware($webhookExcludedMiddleware);
 Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware($webhookExcludedMiddleware);
-Route::match(['GET', 'POST'], 'api/webhooks/gmail', [\App\Http\Controllers\GmailWebhookController::class, 'handle'])->name('webhooks.gmail')->withoutMiddleware($webhookExcludedMiddleware);
+Route::match(['GET', 'POST'], 'api/webhooks/gmail', [\App\Http\Controllers\GmailWebhookController::class, 'handle'])->name('webhooks.gmail')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 
 // Health check endpoint for external plugins to verify connection

@@ -33,10 +33,8 @@ class GmailSyncCompleted implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        // For simplicity, we'll use a public channel for now. 
-        // In a real production app, this should be a PrivateChannel('company.' . $this->companyId)
         return [
-            new Channel('gmail-sync'),
+            new PrivateChannel('company.' . $this->companyId),
         ];
     }
 
@@ -48,3 +46,4 @@ class GmailSyncCompleted implements ShouldBroadcast
         return 'gmail.sync.completed';
     }
 }
+

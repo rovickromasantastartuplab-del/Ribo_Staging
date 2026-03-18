@@ -26,6 +26,7 @@ import { toast } from '@/components/custom-toast';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { getEcho } from '@/utils/echo';
+import { sanitizeHtml } from '@/utils/sanitize-html';
 
 // Sub-components
 const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
@@ -49,7 +50,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
     </button>
 );
 
-export default function ConversationsIndex({ gmailAccount }: { gmailAccount: any }) {
+export default function ConversationsIndex({ gmailAccount, companyId }: { gmailAccount: any, companyId: number }) {
     const { t } = useTranslation();
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
@@ -62,23 +63,40 @@ export default function ConversationsIndex({ gmailAccount }: { gmailAccount: any
 
     const { post: inertiaPost } = useForm({});
 
+    // Keep track of the currently selected thread so the Pusher callback can access it
+    // without needing to include selectedThread in the useEffect dependency array (which would re-attach listeners constantly)
+    const selectedThreadIdRef = React.useRef<number | null>(null);
+    useEffect(() => {
+        selectedThreadIdRef.current = selectedThread?.id || null;
+    }, [selectedThread?.id]);
+
     useEffect(() => {
         fetchThreads(false);
 
-        // Initialize Pusher listener for real-time updates
-        const channel = getEcho().channel('gmail-sync')
+        if (!companyId) return;
+
+        // Initialize Pusher listener for real-time updates securely
+        const channel = getEcho().private(`company.${companyId}`)
             .listen('.gmail.sync.completed', (data: any) => {
                 console.log('Real-time sync completed:', data);
                 // Only refresh if it's for this account
                 if (gmailAccount && data.gmailAccountId === gmailAccount.id) {
-                    fetchThreads(true); // Silent refresh
+                    fetchThreads(true); // Silent refresh of the sidebar list
+                    
+                    // If the user currently has a thread open, silently refresh its contents too
+                    // so the new message pops in automatically
+                    if (selectedThreadIdRef.current) {
+                        axios.get(route('api.conversations.show', selectedThreadIdRef.current))
+                            .then(response => setSelectedThread(response.data))
+                            .catch(err => console.error('Failed to silent-refresh active thread:', err));
+                    }
                 }
             });
 
         return () => {
             channel.stopListening('.gmail.sync.completed');
         };
-    }, [selectedFolder, gmailAccount?.id]);
+    }, [selectedFolder, gmailAccount?.id, companyId]);
 
     const fetchThreads = async (silent = false) => {
         if (!silent) setLoading(true);
@@ -371,7 +389,7 @@ export default function ConversationsIndex({ gmailAccount }: { gmailAccount: any
                                                 </div>
                                                 <div className="bg-background border rounded-lg p-4 shadow-sm text-sm leading-relaxed whitespace-pre-wrap">
                                                     {msg.body_html ? (
-                                                        <div dangerouslySetInnerHTML={{ __html: msg.body_html }} />
+                                                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
                                                     ) : (
                                                         msg.snippet
                                                     )}

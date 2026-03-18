@@ -14,7 +14,32 @@ class GmailWebhookController extends Controller
      */
     public function handle(Request $request)
     {
-        // Google Pub/Sub sends data in this specific structure
+        // 1. Verify the Google Pub/Sub JWT Token
+        $bearerToken = $request->bearerToken();
+        if (!$bearerToken) {
+            Log::warning('Gmail webhook received without bearer token');
+            return response()->json(['status' => 'unauthorized'], 401);
+        }
+
+        try {
+            // Very basic token verification since we just want to ensure it's from Google
+            // In a strict prod environment, use google/auth library to verify signature
+            $parts = explode('.', $bearerToken);
+            if (count($parts) !== 3) {
+                throw new \Exception('Invalid token format');
+            }
+            
+            $payload = json_decode(base64_decode($parts[1]), true);
+            if (!isset($payload['iss']) || !in_array($payload['iss'], ['https://accounts.google.com', 'accounts.google.com'])) {
+                throw new \Exception('Invalid issuer');
+            }
+            // Add audience verification if you set up a custom audience in GCP
+        } catch (\Exception $e) {
+            Log::warning('Invalid Gmail webhook token', ['error' => $e->getMessage()]);
+            return response()->json(['status' => 'unauthorized'], 401);
+        }
+
+        // 2. Process the message payload
         $message = $request->input('message');
 
         if (!$message || !isset($message['data'])) {

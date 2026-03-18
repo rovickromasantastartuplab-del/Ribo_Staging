@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\Contact;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class GmailService
@@ -22,8 +23,10 @@ class GmailService
         $this->account = $account;
 
         // Google OAuth credentials are always stored under the superadmin's settings
-        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
-        $superadminId = $superadmin?->id;
+        // Cache the superadmin ID to avoid repeated DB queries
+        $superadminId = Cache::remember('superadmin_id', 3600, function () {
+            return \App\Models\User::where('type', 'superadmin')->value('id');
+        });
 
         $clientId = ($superadminId ? getSetting('google_client_id', null, $superadminId) : null)
             ?? config('services.google.client_id');
@@ -144,7 +147,7 @@ class GmailService
     }
 
     /**
-     * Sync threads from Gmail into the CRM database.
+     * Sync threads from Gmail into the CRM database (full sync).
      */
     public function syncThreads(int $maxResults = 50): array
     {
@@ -154,6 +157,9 @@ class GmailService
             $result = $this->listThreads($maxResults);
             $companyId = $this->resolveCompanyId();
 
+            // Track the latest historyId from any thread for incremental sync baseline
+            $latestHistoryId = null;
+
             foreach ($result['threads'] as $threadMeta) {
                 try {
                     $thread = $this->getThread($threadMeta->getId());
@@ -162,42 +168,13 @@ class GmailService
                         continue;
                     }
 
-                    $messages = $thread->getMessages() ?? [];
-                    $firstMessage = $messages[0] ?? null;
-                    $lastMessage = end($messages) ?: $firstMessage;
-
-                    // Extract subject from first message headers
-                    $subject = $this->extractHeader($firstMessage, 'Subject');
-                    $participants = $this->extractParticipants($messages);
-
-                    // Upsert the thread
-                    $emailThread = EmailThread::updateOrCreate(
-                        [
-                            'gmail_account_id' => $this->account->id,
-                            'gmail_thread_id' => $thread->getId(),
-                        ],
-                        [
-                            'subject' => $subject,
-                            'snippet' => $thread->getSnippet() ?? '',
-                            'participants' => $participants,
-                            'message_count' => count($messages),
-                            'last_message_at' => $lastMessage
-                                ? $this->parseMessageDate($lastMessage)
-                                : now(),
-                            'is_read' => true,
-                            'labels' => $this->extractThreadLabels($messages),
-                            'created_by' => $companyId,
-                        ]
-                    );
-
-                    // Upsert each message
-                    foreach ($messages as $message) {
-                        $this->upsertMessage($emailThread, $message, $companyId);
+                    // Track the highest historyId
+                    $threadHistoryId = $thread->getHistoryId();
+                    if ($threadHistoryId && (!$latestHistoryId || $threadHistoryId > $latestHistoryId)) {
+                        $latestHistoryId = $threadHistoryId;
                     }
 
-                    // Auto-link this thread to matching Leads/Contacts
-                    $this->autoLinkThread($emailThread, $companyId);
-
+                    $this->syncSingleThread($thread, $companyId);
                     $stats['synced']++;
                 } catch (\Exception $e) {
                     Log::error('Failed to sync Gmail thread', [
@@ -208,11 +185,12 @@ class GmailService
                 }
             }
 
-            // Update account sync status
+            // Update account sync status and persist the historyId for incremental sync
             $this->account->update([
                 'last_sync_at' => now(),
                 'sync_status' => 'idle',
                 'sync_error' => null,
+                'last_history_id' => $latestHistoryId ?? $this->account->last_history_id,
             ]);
 
         } catch (\Exception $e) {
@@ -230,6 +208,131 @@ class GmailService
         }
 
         return $stats;
+    }
+
+    /**
+     * Perform incremental sync using Gmail history.list API.
+     * Only fetches changes since the last known historyId.
+     * Returns ['synced' => N, 'errors' => N] or null if fallback to full sync is needed.
+     */
+    public function incrementalSync(): ?array
+    {
+        $startHistoryId = $this->account->last_history_id;
+        if (!$startHistoryId) {
+            return null; // No baseline — caller should do a full sync
+        }
+
+        $stats = ['synced' => 0, 'errors' => 0];
+
+        try {
+            $companyId = $this->resolveCompanyId();
+
+            // Fetch history records since last known historyId
+            $response = $this->gmail->users_history->listUsersHistory('me', [
+                'startHistoryId' => $startHistoryId,
+                'labelId' => 'INBOX',
+                'historyTypes' => ['messageAdded', 'messageDeleted'],
+            ]);
+
+            $historyRecords = $response->getHistory() ?? [];
+            $latestHistoryId = $response->getHistoryId();
+
+            // Collect unique thread IDs that changed
+            $changedThreadIds = [];
+            foreach ($historyRecords as $historyRecord) {
+                $messagesAdded = $historyRecord->getMessagesAdded() ?? [];
+                foreach ($messagesAdded as $addedMsg) {
+                    $msg = $addedMsg->getMessage();
+                    if ($msg && $msg->getThreadId()) {
+                        $changedThreadIds[$msg->getThreadId()] = true;
+                    }
+                }
+            }
+
+            // Re-sync only the threads that changed
+            foreach (array_keys($changedThreadIds) as $threadId) {
+                try {
+                    $thread = $this->getThread($threadId);
+                    if (!$thread) {
+                        $stats['errors']++;
+                        continue;
+                    }
+                    $this->syncSingleThread($thread, $companyId);
+                    $stats['synced']++;
+                } catch (\Exception $e) {
+                    Log::error('Failed to incrementally sync Gmail thread', [
+                        'thread_id' => $threadId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $stats['errors']++;
+                }
+            }
+
+            // Persist the new historyId
+            $this->account->update([
+                'last_sync_at' => now(),
+                'sync_status' => 'idle',
+                'sync_error' => null,
+                'last_history_id' => $latestHistoryId,
+            ]);
+
+            Log::info('Incremental Gmail sync completed', [
+                'gmail_account_id' => $this->account->id,
+                'threads_changed' => count($changedThreadIds),
+                'synced' => $stats['synced'],
+            ]);
+
+            return $stats;
+
+        } catch (\Google\Service\Exception $e) {
+            // historyId expired or invalid — fall back to full sync
+            if ($e->getCode() === 404) {
+                Log::warning('Gmail historyId expired, falling back to full sync', [
+                    'gmail_account_id' => $this->account->id,
+                    'start_history_id' => $startHistoryId,
+                ]);
+                return null; // Signal caller to use full sync
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Sync a single Gmail thread into the database.
+     */
+    private function syncSingleThread(Gmail\Thread $thread, int $companyId): void
+    {
+        $messages = $thread->getMessages() ?? [];
+        $firstMessage = $messages[0] ?? null;
+        $lastMessage = end($messages) ?: $firstMessage;
+
+        $subject = $this->extractHeader($firstMessage, 'Subject');
+        $participants = $this->extractParticipants($messages);
+
+        $emailThread = EmailThread::updateOrCreate(
+            [
+                'gmail_account_id' => $this->account->id,
+                'gmail_thread_id' => $thread->getId(),
+            ],
+            [
+                'subject' => $subject,
+                'snippet' => $thread->getSnippet() ?? '',
+                'participants' => $participants,
+                'message_count' => count($messages),
+                'last_message_at' => $lastMessage
+                    ? $this->parseMessageDate($lastMessage)
+                    : now(),
+                'is_read' => true,
+                'labels' => $this->extractThreadLabels($messages),
+                'created_by' => $companyId,
+            ]
+        );
+
+        foreach ($messages as $message) {
+            $this->upsertMessage($emailThread, $message, $companyId);
+        }
+
+        $this->autoLinkThread($emailThread, $companyId);
     }
 
     /**
@@ -255,8 +358,10 @@ class GmailService
     {
         try {
             // Priority: Database setting (Superadmin) > config/env
-            $superadmin = \App\Models\User::where('type', 'superadmin')->first();
-            $topicName = ($superadmin ? getSetting('google_gmail_pub_sub_topic', null, $superadmin->id) : null)
+            $superadminId = Cache::remember('superadmin_id', 3600, function () {
+                return \App\Models\User::where('type', 'superadmin')->value('id');
+            });
+            $topicName = ($superadminId ? getSetting('google_gmail_pub_sub_topic', null, $superadminId) : null)
                 ?? config('services.google.pubsub_topic') 
                 ?? env('GMAIL_PUB_SUB_TOPIC');
             
@@ -292,16 +397,29 @@ class GmailService
 
     /**
      * Send an email message or reply.
+     *
+     * @param string $to        Primary recipient
+     * @param string $subject   Email subject
+     * @param string $body      HTML body
+     * @param string|null $threadId   Gmail thread ID for threading
+     * @param string|null $inReplyTo  Message-ID of the message being replied to
+     * @param array  $cc        CC recipient email addresses
      */
-    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null): bool
+    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = []): bool
     {
         try {
             $this->refreshTokenIfNeeded();
 
             $message = new \Google\Service\Gmail\Message();
             
-            // Create raw RFC 2822 message
-            $rawMessage = "To: {$to}\r\n";
+            // Create raw RFC 2822 message with proper From header
+            $rawMessage = "From: {$this->account->gmail_address}\r\n";
+            $rawMessage .= "To: {$to}\r\n";
+            
+            if (!empty($cc)) {
+                $rawMessage .= "Cc: " . implode(', ', $cc) . "\r\n";
+            }
+            
             $rawMessage .= "Subject: {$subject}\r\n";
             $rawMessage .= "Content-Type: text/html; charset=utf-8\r\n";
             $rawMessage .= "MIME-Version: 1.0\r\n";
@@ -541,6 +659,10 @@ class GmailService
         $bodyText = $this->extractBody($message, 'text/plain');
         $bodyPreview = $message->getSnippet() ?? mb_substr(strip_tags($bodyHtml ?: $bodyText ?: ''), 0, 200);
 
+        // Extract the Message-ID header for proper email threading across clients
+        $messageIdHeader = $this->extractHeader($message, 'Message-ID')
+            ?? $this->extractHeader($message, 'Message-Id');
+
         EmailMessage::updateOrCreate(
             [
                 'email_thread_id' => $emailThread->id,
@@ -556,6 +678,7 @@ class GmailService
                 'body_html' => $bodyHtml ?: $bodyText,
                 'sent_at' => $this->parseMessageDate($message),
                 'gmail_labels' => $message->getLabelIds(),
+                'message_id_header' => $messageIdHeader,
                 'created_by' => $companyId,
             ]
         );
