@@ -42,12 +42,12 @@ class Lead extends BaseModel
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class , 'created_by');
     }
 
     public function assignedUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(User::class , 'assigned_to');
     }
 
     public function leadStatus(): BelongsTo
@@ -85,5 +85,16 @@ class Lead extends BaseModel
     public function comments()
     {
         return $this->hasMany(LeadComment::class)->with('user')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Email threads linked to this lead.
+     */
+    public function emailThreads()
+    {
+        return $this->morphToMany(EmailThread::class, 'email_threadable', 'email_threadables')
+            ->withPivot('matched_via')
+            ->withTimestamps()
+            ->orderByDesc('last_message_at');
     }
 }

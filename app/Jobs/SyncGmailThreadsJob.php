@@ -5,13 +5,14 @@ namespace App\Jobs;
 use App\Models\GmailAccount;
 use App\Services\GmailService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class SyncGmailThreadsJob implements ShouldQueue
+class SyncGmailThreadsJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -26,11 +27,24 @@ class SyncGmailThreadsJob implements ShouldQueue
     public int $backoff = 30;
 
     /**
+     * The number of seconds after which the job's unique lock will be released.
+     */
+    public int $uniqueFor = 120;
+
+    /**
      * Create a new job instance.
      */
     public function __construct(
         public int $gmailAccountId
     ) {}
+
+    /**
+     * The unique ID of the job (prevents duplicate jobs for the same account).
+     */
+    public function uniqueId(): string
+    {
+        return 'gmail_sync_' . $this->gmailAccountId;
+    }
 
     /**
      * Execute the job.
@@ -61,8 +75,19 @@ class SyncGmailThreadsJob implements ShouldQueue
                 return;
             }
 
-            // Perform the sync
-            $stats = $service->syncThreads(50);
+            // Try incremental sync first (much faster, fewer API calls)
+            // Falls back to full sync if no historyId baseline exists or it expired
+            $stats = $service->incrementalSync();
+
+            if ($stats === null) {
+                Log::info('No historyId baseline, performing full sync', [
+                    'gmail_account_id' => $this->gmailAccountId,
+                ]);
+                $stats = $service->syncThreads(50);
+            }
+
+            // Broadcast completion for real-time UI updates to the Company/Owner channel
+            \App\Events\GmailSyncCompleted::dispatch($this->gmailAccountId, $account->user->creatorId());
 
             Log::info('Gmail sync completed', [
                 'gmail_account_id' => $this->gmailAccountId,

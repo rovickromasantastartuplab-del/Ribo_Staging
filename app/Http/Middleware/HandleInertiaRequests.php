@@ -172,6 +172,8 @@ class HandleInertiaRequests extends Middleware
             $globalSettings['is_demo'] = config('app.is_demo', false);
             $globalSettings['availableLanguages'] = $availableLanguages;
             $globalSettings['enableLogging'] = $superAdminEnableLogging;
+            $globalSettings['pusher_app_key'] = $globalSettings['pusher_app_key'] ?? config('broadcasting.connections.pusher.key');
+            $globalSettings['pusher_app_cluster'] = $globalSettings['pusher_app_cluster'] ?? config('broadcasting.connections.pusher.options.cluster');
 
             //     // Add cookie consent setting
             //     $cookieSetting = Setting::where('key', 'strictlyNecessaryCookies')->first();

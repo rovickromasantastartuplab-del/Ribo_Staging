@@ -93,6 +93,11 @@ if (!function_exists('settings')) {
                     'sidebarStyle',
                     'layoutDirection',
                     'themeMode',
+                    'pusher_app_key',
+                    'pusher_app_id',
+                    'pusher_app_secret',
+                    'pusher_app_cluster',
+                    'google_gmail_pub_sub_topic',
                 ];
                 $superAdminSettings = Setting::where('user_id', $superAdmin->id)
                     ->whereIn('key', $superAdminKeys)
@@ -101,6 +106,18 @@ if (!function_exists('settings')) {
 
                 // Allow superAdminSettings to overwrite userSettings for these global keys
                 $userSettings = array_merge($userSettings, $superAdminSettings);
+            }
+        }
+
+        // Auto-decrypt sensitive keys safely
+        $sensitiveKeys = ['google_client_secret', 'pusher_app_secret'];
+        foreach ($sensitiveKeys as $key) {
+            if (isset($userSettings[$key]) && !empty($userSettings[$key])) {
+                try {
+                    $userSettings[$key] = \Illuminate\Support\Facades\Crypt::decrypt($userSettings[$key]);
+                } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                    // Ignore error, it was likely stored as plaintext before the encryption update
+                }
             }
         }
 

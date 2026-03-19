@@ -122,8 +122,8 @@ class GmailController extends Controller
             return redirect()->back()->with('info', 'A sync is already in progress.');
         }
 
-        SyncGmailThreadsJob::dispatch($gmailAccount->id);
+        SyncGmailThreadsJob::dispatchSync($gmailAccount->id);
 
-        return redirect()->back()->with('success', 'Gmail sync started. This may take a moment.');
+        return redirect()->back()->with('success', 'Gmail sync completed successfully.');
     }
 }

@@ -316,6 +316,7 @@ class RoleSeeder extends Seeder
             'edit-notification-templates',
             'delete-notification-templates',
             'view-wedding-suppliers',
+            'manage-conversations',
         ])->get();
 
         $adminRole->syncPermissions($adminPermissions);

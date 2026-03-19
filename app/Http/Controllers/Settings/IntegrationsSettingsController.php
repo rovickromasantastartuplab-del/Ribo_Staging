@@ -21,19 +21,35 @@ class IntegrationsSettingsController extends Controller
                 'google_client_id' => 'nullable|string',
                 'google_client_secret' => 'nullable|string',
                 'google_redirect_uri' => 'nullable|string',
+                'google_gmail_pub_sub_topic' => 'nullable|string',
+                'pusher_app_id' => 'nullable|string',
+                'pusher_app_key' => 'nullable|string',
+                'pusher_app_secret' => 'nullable|string',
+                'pusher_app_cluster' => 'nullable|string',
             ]);
 
-            // Only superadmins may update Google OAuth credentials
+            // Only superadmins may update Google OAuth and Pusher credentials
             $user = auth()->user();
-            $googleFields = ['google_client_id', 'google_client_secret', 'google_redirect_uri'];
+            $restrictedFields = [
+                'google_client_id', 'google_client_secret', 'google_redirect_uri', 'google_gmail_pub_sub_topic',
+                'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
+            ];
             if (!in_array($user->type, ['superadmin', 'super admin'])) {
-                $validated = array_diff_key($validated, array_flip($googleFields));
+                $validated = array_diff_key($validated, array_flip($restrictedFields));
             }
+
+            $sensitiveKeys = ['google_client_secret', 'pusher_app_secret'];
 
             foreach ($validated as $key => $value) {
                 if (is_bool($value)) {
                     $value = $value ? 'true' : 'false';
                 }
+
+                // Encrypt sensitive secrets so they don't sit in plaintext DB
+                if (in_array($key, $sensitiveKeys) && !empty($value)) {
+                    $value = encrypt($value);
+                }
+
                 updateSetting($key, $value);
             }
 

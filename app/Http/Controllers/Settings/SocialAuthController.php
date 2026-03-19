@@ -33,6 +33,7 @@ class SocialAuthController extends Controller
             return Socialite::driver('google')
                 ->scopes([
                     'https://www.googleapis.com/auth/gmail.readonly',
+                    'https://www.googleapis.com/auth/gmail.send',
                     'openid',
                     'email',
                     'profile',
@@ -132,6 +133,14 @@ class SocialAuthController extends Controller
                         'sync_error' => null,
                     ]
                 );
+
+                // Initiate real-time Pub/Sub Webhooks
+                try {
+                    $gmailService = new \App\Services\GmailService($gmailAccount);
+                    $gmailService->watchInbox();
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to initiate watch inbox on connect', ['error' => $e->getMessage()]);
+                }
 
                 // Dispatch initial sync in the background
                 SyncGmailThreadsJob::dispatch($gmailAccount->id);

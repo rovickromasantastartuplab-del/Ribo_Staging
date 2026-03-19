@@ -98,6 +98,7 @@ use App\Http\Controllers\LeadCommentController;
 use App\Http\Controllers\OpportunityCommentController;
 use App\Http\Controllers\InvoiceStripePaymentController;
 use App\Http\Controllers\InvoicePayPalPaymentController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\InvoiceBankPaymentController;
 use App\Http\Controllers\InvoiceBenefitPaymentController;
 use App\Http\Controllers\InvoiceCommentController;
@@ -155,6 +156,7 @@ $webhookExcludedMiddleware = [
 ];
 Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhooks\FacebookWebhookController::class, 'handle'])->name('webhooks.facebook')->withoutMiddleware($webhookExcludedMiddleware);
 Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware($webhookExcludedMiddleware);
+Route::match(['GET', 'POST'], 'api/webhooks/gmail', [\App\Http\Controllers\GmailWebhookController::class, 'handle'])->name('webhooks.gmail')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 
 // Health check endpoint for external plugins to verify connection
@@ -604,6 +606,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('contacts/bulk-delete', [\App\Http\Controllers\ContactController::class, 'bulkDelete'])->middleware('permission:delete-contacts')->name('contacts.bulk-delete');
             Route::delete('contacts/{contact}', [ContactController::class, 'destroy'])->middleware('permission:delete-contacts')->name('contacts.destroy');
             Route::put('contacts/{contact}/toggle-status', [ContactController::class, 'toggleStatus'])->middleware('permission:toggle-status-contacts')->name('contacts.toggle-status');
+        });
+
+        // Conversations Hub routes
+        Route::middleware('permission:manage-conversations')->group(function () {
+            Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
+            Route::get('api/conversations/threads', [ConversationController::class, 'threads'])->name('api.conversations.threads');
+            Route::get('api/conversations/threads/{thread}', [ConversationController::class, 'show'])->name('api.conversations.show');
+            Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])->name('api.conversations.reply');
         });
 
         Route::middleware('permission:manage-lead-statuses')->group(function () {

@@ -21,6 +21,7 @@ class EmailMessage extends BaseModel
         'body_html',
         'sent_at',
         'gmail_labels',
+        'message_id_header',
         'created_by',
     ];
 

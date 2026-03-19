@@ -25,6 +25,7 @@ class VerifyCsrfToken extends Middleware
         'payments/hitpay/webhook',
         'invoices/payment/hitpay/webhook',
         'webhooks/*', // Allow external omnichannel lead routing
+        'api/webhooks/*', // Allow external webhooks like Google Pub/Sub
         'api/inbound/*', // WordPress inbound lead endpoint
     ];
 }
