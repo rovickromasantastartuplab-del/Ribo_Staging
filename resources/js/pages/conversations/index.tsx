@@ -189,11 +189,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
             <div className="flex h-[calc(100vh-180px)] overflow-hidden border rounded-xl bg-background shadow-sm relative">
                 
-                {/* Pane 1: Folders (Left Sidebar) */}
-                <div className="hidden lg:flex w-[240px] border-r flex-col bg-muted/30 shrink-0">
-                    <div className="p-4 flex-1">
+                {/* Pane 1: Folders (Left Sidebar) — hidden below xl to save space */}
+                <div className="hidden xl:flex w-[180px] border-r flex-col bg-muted/30 shrink-0">
+                    <div className="p-3 flex-1">
                         <div className="flex items-center justify-between mb-4 px-2">
-                            <h2 className="text-lg font-semibold">{t('Conversations')}</h2>
+                            <h2 className="text-sm font-semibold">{t('Conversations')}</h2>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSync} disabled={isSyncing}>
                                 <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
                             </Button>
@@ -223,7 +223,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 </div>
 
                 {/* Pane 2: Thread List */}
-                <div className={`w-full md:w-[320px] xl:w-[380px] border-r flex-col bg-background shrink-0 transition-none ${selectedThread ? 'hidden md:flex' : 'flex'}`}>
+                <div className={`w-full md:w-[280px] lg:w-[300px] xl:w-[320px] border-r flex-col bg-background shrink-0 overflow-hidden ${selectedThread ? 'hidden md:flex' : 'flex'}`}>
                     <div className="p-4 border-b">
                         <div className="relative">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -348,7 +348,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 </div>
 
                 {/* Pane 3: Thread Details & Reply */}
-                <div className={`flex-1 flex flex-col min-w-0 bg-muted/5 relative ${!selectedThread ? 'hidden md:flex' : 'flex'}`}>
+                <div className={`flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/5 ${!selectedThread ? 'hidden md:flex' : 'flex'}`}>
                     {selectedThread ? (
                         <>
                             {/* Header */}
@@ -457,7 +457,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                 {/* Pane 4: Contact/Lead Details (Right Drawer) */}
                 {selectedThread && showContactSidebar && (
-                    <div className="absolute right-0 top-0 bottom-0 z-10 w-[300px] border-l flex flex-col bg-background animate-in slide-in-from-right-1 md:relative md:z-auto shadow-2xl md:shadow-none shrink-0">
+                    <div className="absolute right-0 top-0 bottom-0 z-20 w-[280px] border-l flex flex-col bg-background shadow-2xl animate-in slide-in-from-right-1 overflow-y-auto">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="font-semibold">{t('Contact Details')}</h3>
