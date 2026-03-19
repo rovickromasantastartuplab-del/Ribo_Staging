@@ -324,7 +324,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         <button
                                             key={thread.id}
                                             onClick={() => handleSelectThread(thread)}
-                                            className={`w-full text-left p-3 hover:bg-muted/50 transition-colors flex items-start gap-2.5 ${
+                                            className={`w-full text-left py-3 pl-3 pr-5 md:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 ${
                                                 selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
                                             }`}
                                         >
