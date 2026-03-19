@@ -16,7 +16,8 @@ return [
         'coupons',
         'appointments',
         'businesses',
-        'settings'
+        'settings',
+        'conversations'
     ],
 
     'company' => [
@@ -63,5 +64,6 @@ return [
         'documents',
         // 'notification_templates',
         'reports',
+        'conversations',
     ]
 ];

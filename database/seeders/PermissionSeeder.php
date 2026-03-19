@@ -468,7 +468,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'import-wedding-suppliers', 'module' => 'wedding_suppliers', 'label' => 'Import Wedding Suppliers', 'description' => 'Can import wedding suppliers'],
 
             // Conversations Hub permissions
-            ['name' => 'manage-conversations', 'module' => 'conversations', 'label' => 'Manage Conversations', 'description' => 'Can access the Conversations Hub and link threads to CRM records'],
+            ['name' => 'view-conversations', 'module' => 'conversations', 'label' => 'View Conversations', 'description' => 'Can view the Conversations Hub and read threads'],
+            ['name' => 'manage-conversations', 'module' => 'conversations', 'label' => 'Manage Conversations', 'description' => 'Can access the Conversations Hub, reply to messages, and link threads to CRM records'],
         ];
 
         foreach ($permissions as $permission) {
