@@ -143,7 +143,7 @@ export function AppSidebar() {
         }
 
         // 1.5 Conversations
-        if (hasPermission(permissions, 'manage-conversations')) {
+        if (hasPermission(permissions, 'view-conversations')) {
             items.push({
                 title: t('Conversations'),
                 href: route('conversations.index'),
