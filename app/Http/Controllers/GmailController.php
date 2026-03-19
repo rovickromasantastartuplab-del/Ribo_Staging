@@ -15,7 +15,11 @@ class GmailController extends Controller
      */
     public function threads(Request $request)
     {
+        $user = auth()->user();
+        $companyId = $user->creatorId();
         $isOwner = $user->type === 'company' || $user->id === $companyId;
+
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
 
         if (!$gmailAccount) {
             return Inertia::render('gmail/index', [

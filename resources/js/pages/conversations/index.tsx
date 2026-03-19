@@ -50,7 +50,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
     </button>
 );
 
-export default function ConversationsIndex({ gmailAccount, companyId, isOwner }: { gmailAccount: any, companyId: number, isOwner: boolean }) {
+export default function ConversationsIndex({ gmailAccount, companyId, isOwner, unreadCount: initialUnreadCount }: { gmailAccount: any, companyId: number, isOwner: boolean, unreadCount?: number }) {
     const { t } = useTranslation();
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
@@ -60,6 +60,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
     const [showContactSidebar, setShowContactSidebar] = useState(true);
     const [replyBody, setReplyBody] = useState('');
     const [submittingReply, setSubmittingReply] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(initialUnreadCount || 0);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const { post: inertiaPost } = useForm({});
 
@@ -102,8 +104,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
     const fetchThreads = async (silent = false) => {
         if (!silent) setLoading(true);
         try {
-            const response = await axios.get(route('api.conversations.threads', { folder: selectedFolder }));
-            setThreads(response.data.data);
+            const params: any = { folder: selectedFolder };
+            if (searchQuery.trim()) params.search = searchQuery.trim();
+            const response = await axios.get(route('api.conversations.threads', params));
+            const fetchedThreads = response.data.data;
+            setThreads(fetchedThreads);
+            // BUG-13: Update unread count from fetched data
+            const unread = fetchedThreads.filter((t: any) => !t.is_read).length;
+            setUnreadCount(unread);
         } catch (error) {
             console.error('Failed to fetch threads:', error);
             if (!silent) toast.error(t('Failed to fetch threads'));
@@ -190,7 +198,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                                 label={t('Inbox')} 
                                 active={selectedFolder === 'inbox'} 
                                 onClick={() => setSelectedFolder('inbox')}
-                                count={5} // Demo count
+                                count={unreadCount}
                             />
                             <SidebarItem 
                                 icon={Archive} 
@@ -205,24 +213,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                                 onClick={() => setSelectedFolder('sent')}
                             />
                         </div>
-
-                        <div className="mt-8">
-                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
-                                {t('Lead Sources')}
-                            </h3>
-                            <div className="space-y-1">
-                                <SidebarItem 
-                                    icon={Clock} 
-                                    label={t('Hot Leads')} 
-                                    onClick={() => {}}
-                                />
-                                <SidebarItem 
-                                    icon={UserPlus} 
-                                    label={t('New Leads')} 
-                                    onClick={() => {}}
-                                />
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -234,6 +224,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                             <Input 
                                 placeholder={t('Search threads...')} 
                                 className="pl-9 bg-muted/50 border-none h-9 focus-visible:ring-1"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
                             />
                         </div>
                     </div>
@@ -282,21 +275,23 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                                     >
                                         <Avatar className="h-10 w-10 border border-primary/10 shadow-sm">
                                             <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                                                {thread.participants?.[0]?.charAt(0).toUpperCase() || 'U'}
+                                                {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex justify-between items-center mb-0.5">
-                                                <span className={`text-sm truncate font-bold transition-colors ${
+                                                <span className={`text-sm truncate transition-colors ${
+                                                    !thread.is_read ? 'font-extrabold' : 'font-bold'
+                                                } ${
                                                     selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'
                                                 }`}>
-                                                    {thread.participants?.[0] || 'Unknown'}
+                                                    {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
                                                 </span>
                                                 <span className="text-[10px] text-muted-foreground/80 font-medium">
                                                     {thread.last_message_at ? formatDistanceToNow(new Date(thread.last_message_at), { addSuffix: false }) : ''}
                                                 </span>
                                             </div>
-                                            <div className="text-sm font-semibold truncate mb-1 text-foreground/90">
+                                            <div className={`text-sm truncate mb-1 text-foreground/90 ${!thread.is_read ? 'font-bold' : 'font-semibold'}`}>
                                                 {thread.subject || t('(No Subject)')}
                                             </div>
                                             <div className="text-xs text-muted-foreground/80 truncate line-clamp-1">
@@ -464,11 +459,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                             <div className="flex flex-col items-center text-center mb-8">
                                 <Avatar className="h-20 w-20 mb-4 border-2 border-primary/10">
                                     <AvatarFallback className="text-xl font-bold bg-primary/5 text-primary">
-                                        {selectedThread.participants?.[0]?.charAt(0).toUpperCase()}
+                                        {(selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || selectedThread.participants?.[0])?.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
-                                <h4 className="font-bold text-lg">{selectedThread.participants?.[0]}</h4>
-                                <p className="text-xs text-muted-foreground">{selectedThread.participants?.[1]}</p>
+                                <h4 className="font-bold text-lg">{selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || selectedThread.participants?.[0]}</h4>
+                                <p className="text-xs text-muted-foreground">{selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0]}</p>
                             </div>
 
                             {/* CRM Context */}
@@ -477,7 +472,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                                     <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
                                         <div className="flex items-center gap-2 mb-3">
                                             <Badge className="bg-blue-600 font-bold">{t('LEAD')}</Badge>
-                                            <span className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">{selectedThread.leads[0].type || t('Active')}</span>
+                                            <span className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">{selectedThread.leads[0].lead_status?.name || selectedThread.leads[0].status || t('Active')}</span>
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between text-xs">
@@ -486,7 +481,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                                             </div>
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-muted-foreground">{t('Status')}:</span>
-                                                <Badge variant="outline" className="h-5 text-[10px]">{selectedThread.leads[0].status || t('New')}</Badge>
+                                                <Badge variant="outline" className="h-5 text-[10px]">{selectedThread.leads[0].lead_status?.name || selectedThread.leads[0].status || t('New')}</Badge>
                                             </div>
                                         </div>
                                         <a href={route('leads.show', selectedThread.leads[0].id)}>
@@ -515,13 +510,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner }:
                                         <div className="flex gap-3">
                                             <div className="h-2 w-2 rounded-full bg-green-500 mt-1.5 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
                                             <p className="text-xs">
-                                                <span className="font-semibold">{t('Last Contact')}:</span> Today
+                                                <span className="font-semibold">{t('Last Contact')}:</span> {selectedThread.last_message_at ? formatDistanceToNow(new Date(selectedThread.last_message_at), { addSuffix: true }) : t('N/A')}
                                             </p>
                                         </div>
                                         <div className="flex gap-3">
                                             <div className="h-2 w-2 rounded-full bg-muted mt-1.5" />
                                             <p className="text-xs">
-                                                <span className="font-semibold">{t('Created')}:</span> 2 days ago
+                                                <span className="font-semibold">{t('Created')}:</span> {selectedThread.created_at ? formatDistanceToNow(new Date(selectedThread.created_at), { addSuffix: true }) : t('N/A')}
                                             </p>
                                         </div>
                                     </div>

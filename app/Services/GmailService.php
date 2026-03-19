@@ -322,7 +322,7 @@ class GmailService
                 'last_message_at' => $lastMessage
                     ? $this->parseMessageDate($lastMessage)
                     : now(),
-                'is_read' => true,
+                'is_read' => !in_array('UNREAD', $this->extractThreadLabels($messages)),
                 'labels' => $this->extractThreadLabels($messages),
                 'created_by' => $companyId,
             ]

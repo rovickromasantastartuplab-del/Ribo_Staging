@@ -58,15 +58,25 @@ class ConversationController extends Controller
     {
         $companyId = auth()->user()->creatorId();
         $folder = $request->get('folder', 'inbox');
+        $search = $request->get('search');
 
         $query = EmailThread::with(['leads', 'contacts', 'latestMessage'])
             ->where('created_by', $companyId)
             ->orderByDesc('last_message_at');
 
-        // Apply folder filtering by Gmail labels
+        // BUG-09: Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                  ->orWhere('snippet', 'like', "%{$search}%")
+                  ->orWhereJsonContains('participants', $search);
+            });
+        }
+
+        // Apply folder filtering
         if ($folder === 'sent') {
-            $query->whereHas('latestMessage', function ($q) use ($companyId) {
-                // Find the Gmail account for this company (could be owner's or staff's)
+            // BUG-11: Check if ANY message in the thread is from the connected account
+            $query->whereHas('messages', function ($q) use ($companyId) {
                 $gmailAccount = GmailAccount::whereHas('user', function($qu) use ($companyId) {
                     $qu->where('id', $companyId)->orWhere('created_by', $companyId);
                 })->first();
@@ -75,6 +85,9 @@ class ConversationController extends Controller
                     $q->where('from_email', strtolower($gmailAccount->gmail_address));
                 }
             });
+        } elseif ($folder === 'unassigned') {
+            // BUG-10: Unassigned = threads not linked to any Lead or Contact
+            $query->whereDoesntHave('leads')->whereDoesntHave('contacts');
         }
 
         return response()->json($query->paginate(20));
@@ -90,7 +103,12 @@ class ConversationController extends Controller
             abort(403);
         }
 
-        $thread->load(['messages', 'leads', 'contacts']);
+        $thread->load(['messages', 'leads.leadStatus', 'contacts']);
+
+        // Mark as read when user opens the thread
+        if (!$thread->is_read) {
+            $thread->update(['is_read' => true]);
+        }
         
         return response()->json($thread);
     }
