@@ -203,7 +203,7 @@ if (!function_exists('defaultRoleAndSetting')) {
         }
 
         // Create default settings for the user
-        if ($user->type === 'superadmin') {
+        if ($user->isSuperAdmin()) {
             createDefaultSettings($user->id);
             createDefaultEmailTemplateSettings($user->id);
             createDefaultNotificationTemplateSettings($user->id);

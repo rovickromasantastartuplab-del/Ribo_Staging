@@ -28,7 +28,7 @@ class UserObserver
     public function created(User $user): void
     {
         // Generate a unique referral code if not already set
-        if ($user->type === 'company' && empty($user->referral_code)) {
+        if (auth()->user()->isSuperAdmin()) {
             do {
                 $code = rand(100000, 999999);
             } while (User::where('referral_code', $code)->exists());
@@ -38,7 +38,7 @@ class UserObserver
         }
         
         // Create default settings for new users
-        if ($user->type === 'superadmin') {
+        if ($user->isSuperAdmin()) {
             createDefaultSettings($user->id);
         } elseif ($user->type === 'company') {
             copySettingsFromSuperAdmin($user->id);

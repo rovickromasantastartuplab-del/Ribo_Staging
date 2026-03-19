@@ -105,13 +105,11 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
      */
     public function creatorId()
     {
-        if ($this->type == 'superadmin' || $this->type == 'super admin' || $this->type == 'admin') {
+        if ($this->type == 'superadmin' || $this->type == 'super admin' || $this->type == 'company') {
             return $this->id;
-        } elseif ($this->type == 'company') {
-            return $this->id;
-        } else {
-            return $this->created_by;
         }
+
+        return $this->created_by;
     }
 
     /**
@@ -168,13 +166,7 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
         return $this->type === 'superadmin' || $this->type === 'super admin';
     }
 
-    /**
-     * Check if user is admin
-     */
-    public function isAdmin()
-    {
-        return $this->type === 'admin';
-    }
+
 
     // Businesses relationship removed
 

@@ -65,7 +65,7 @@ class UserController extends BaseController
         # Roles listing - Get roles based on user type
         if ($authUser->type === 'company') {
             $roles = Role::where('created_by', $authUser->id)->get();
-        } elseif ($authUser->type === 'superadmin') {
+        } elseif ($authUser->isSuperAdmin()) {
             $roles = Role::get();
         } else {
             // Staff users see roles from their company
@@ -278,7 +278,7 @@ class UserController extends BaseController
     {
         $authUser = Auth::user();
 
-        if ($authUser->type === 'superadmin') {
+        if ($authUser->isSuperAdmin()) {
             // For superadmin: show superadmin logs and company type logs created by superadmin
             $loginHistoriesQuery = \App\Models\LoginHistory::whereHas('user', function ($q) {
                 $q->where('type', 'superadmin')

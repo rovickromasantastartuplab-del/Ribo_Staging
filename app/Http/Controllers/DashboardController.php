@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         // Super admin always gets dashboard
-        if ($user->type === 'superadmin' || $user->type === 'super admin') {
+        if ($user->isSuperAdmin()) {
             return $this->renderDashboard();
         }
 
@@ -71,7 +71,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->type === 'superadmin' || $user->type === 'super admin') {
+        if ($user->isSuperAdmin()) {
             return $this->renderSuperAdminDashboard();
         } else {
             return $this->renderCompanyDashboard();

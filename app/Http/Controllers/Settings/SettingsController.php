@@ -126,7 +126,7 @@ class SettingsController extends Controller
 
         // Fetch Google app credentials for superadmin
         $googleSettings = [];
-        if ($user->type === 'superadmin') {
+        if ($user->isSuperAdmin()) {
             $googleSettings = [
                 'google_client_id' => getSetting('google_client_id', null, $user->id) ?? '',
                 'google_client_secret' => getSetting('google_client_secret', null, $user->id) ?? '',
