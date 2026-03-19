@@ -39,13 +39,15 @@ class GmailWebhookController extends Controller
 
         Log::info("Gmail webhook received for: {$emailAddress} (HistoryId: {$historyId})");
 
-        // Find the connected Gmail account for this email
-        $gmailAccount = GmailAccount::where('gmail_address', $emailAddress)->first();
+        // Find all connected Gmail accounts for this email (to support multi-company if it exists)
+        $gmailAccounts = GmailAccount::where('gmail_address', $emailAddress)->get();
 
-        if ($gmailAccount) {
-            // Immediately dispatch the sync job to the background queue
-            SyncGmailThreadsJob::dispatch($gmailAccount->id);
-            Log::info("Dispatched SyncGmailThreadsJob for {$emailAddress} via Webhook");
+        if ($gmailAccounts->isNotEmpty()) {
+            foreach ($gmailAccounts as $gmailAccount) {
+                // Immediately dispatch the sync job to the background queue
+                SyncGmailThreadsJob::dispatch($gmailAccount->id);
+                Log::info("Dispatched SyncGmailThreadsJob for account ID {$gmailAccount->id} ({$emailAddress}) via Webhook");
+            }
         } else {
             Log::warning("Gmail webhook received for {$emailAddress} but no matching GmailAccount found in DB.");
         }

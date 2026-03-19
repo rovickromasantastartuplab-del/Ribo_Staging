@@ -115,11 +115,30 @@ class SocialAuthController extends Controller
 
             // Handle Google/Gmail OAuth callback
             if ($provider === 'google') {
-                $companyId = auth()->user()->creatorId();
+                $user = auth()->user();
+                $companyId = $user->creatorId();
+
+                // RESTRICT: Only Company Owners can connect Gmail
+                if ($user->type !== 'company') {
+                    Log::warning("OAuth Callback: Non-company user (ID: {$user->id}, Type: {$user->type}) attempted to connect Gmail.");
+                    return redirect()->route('settings', ['#integrations-settings'])
+                        ->with('error', 'Only Company Owners are authorized to connect the company Gmail account.');
+                }
+
+                $email = $socialUser->getEmail();
+
+                // RESTRICT: Ensure the Gmail address is unique system-wide (One account per company)
+                $existingAccount = GmailAccount::where('gmail_address', $email)->first();
+                if ($existingAccount && $existingAccount->user_id !== $companyId) {
+                    Log::warning("OAuth Callback: Gmail address {$email} is already linked to another company (Owner ID: {$existingAccount->user_id}).");
+                    return redirect()->route('settings', ['#integrations-settings'])
+                        ->with('error', "The Gmail account ({$email}) is already connected to another company in the system.");
+                }
+
                 $gmailAccount = GmailAccount::updateOrCreate(
                     [
                         'user_id' => $companyId,
-                        'gmail_address' => $socialUser->getEmail(),
+                        'gmail_address' => $email,
                     ],
                     [
                         'google_id' => $socialUser->getId(),
