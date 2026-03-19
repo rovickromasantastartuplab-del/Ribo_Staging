@@ -19,6 +19,13 @@ class SocialAuthController extends Controller
      */
     public function redirect($provider)
     {
+        $user = auth()->user();
+
+        // RESTRICT: Only Company Owners can connect social/gmail accounts
+        if (!$user->hasRole('company')) {
+            return redirect()->back()->with('error', 'Only Company Owners are authorized to manage integrations.');
+        }
+
         // For Facebook, we specifically ask for Pages access
         if ($provider === 'facebook') {
             return Socialite::driver('facebook')

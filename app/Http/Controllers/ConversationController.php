@@ -19,11 +19,17 @@ class ConversationController extends Controller
     {
         $user = auth()->user();
         $companyId = $user->creatorId();
+        $isOwner = $user->type === 'company' || $user->id === $companyId;
         
-        // Find any Gmail account belonging to this company (either the owner's or a staff member's)
-        $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
-            $q->where('id', $companyId)->orWhere('created_by', $companyId);
-        })->first();
+        // Find any Gmail account belonging to this company (shared account)
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+
+        // If not found on owner, check if any staff has one (legacy support)
+        if (!$gmailAccount) {
+            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })->first();
+        }
 
         // Compute actual unread count
         $unreadCount = $gmailAccount
@@ -34,6 +40,7 @@ class ConversationController extends Controller
             'initialFolder' => 'inbox',
             'unreadCount' => $unreadCount,
             'companyId' => $companyId,
+            'isOwner' => $isOwner,
             'gmailAccount' => $gmailAccount ? [
                 'id' => $gmailAccount->id,
                 'email' => $gmailAccount->gmail_address,

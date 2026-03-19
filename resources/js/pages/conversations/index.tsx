@@ -50,7 +50,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
     </button>
 );
 
-export default function ConversationsIndex({ gmailAccount, companyId }: { gmailAccount: any, companyId: number }) {
+export default function ConversationsIndex({ gmailAccount, companyId, isOwner }: { gmailAccount: any, companyId: number, isOwner: boolean }) {
     const { t } = useTranslation();
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
@@ -245,11 +245,15 @@ export default function ConversationsIndex({ gmailAccount, companyId }: { gmailA
                                 </div>
                                 <h3 className="text-lg font-semibold mb-2">{t('Email Not Connected')}</h3>
                                 <p className="text-sm text-muted-foreground mb-6 max-w-[240px]">
-                                    {t('Connect your Gmail account in settings to start managing conversations.')}
+                                    {isOwner 
+                                        ? t('Connect your Gmail account in settings to start managing conversations.')
+                                        : t('Please ask your Company Owner to connect a Gmail account in settings.')}
                                 </p>
-                                <Button onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
-                                    {t('Connect Gmail')}
-                                </Button>
+                                {isOwner && (
+                                    <Button onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
+                                        {t('Connect Gmail')}
+                                    </Button>
+                                )}
                             </div>
                         ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">

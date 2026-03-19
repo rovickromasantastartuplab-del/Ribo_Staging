@@ -229,11 +229,13 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                                     {showFieldMapping ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                                                 </Button>
                                             )}
-                                            <a href={route('social.redirect', { provider: 'facebook' })}>
-                                                <Button variant={facebookAccount ? 'ghost' : 'outline'} size="sm" type="button">
-                                                    {facebookAccount ? t('Reconnect') : t('Connect Meta')}
-                                                </Button>
-                                            </a>
+                                            {auth.user?.type === 'company' && (
+                                                <a href={route('social.redirect', { provider: 'facebook' })}>
+                                                    <Button variant={facebookAccount ? 'ghost' : 'outline'} size="sm" type="button">
+                                                        {facebookAccount ? t('Reconnect') : t('Connect Meta')}
+                                                    </Button>
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -264,9 +266,11 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                         ) : (
                                             <span className="text-sm font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded">Not Connected</span>
                                         )}
-                                        <Button variant={whatsappAccount ? 'ghost' : 'outline'} size="sm" type="button" onClick={() => alert('WhatsApp Cloud API connection coming soon.')}>
-                                            {whatsappAccount ? t('Reconnect') : t('Connect Number')}
-                                        </Button>
+                                        {auth.user?.type === 'company' && (
+                                            <Button variant={whatsappAccount ? 'ghost' : 'outline'} size="sm" type="button" onClick={() => alert('WhatsApp Cloud API connection coming soon.')}>
+                                                {whatsappAccount ? t('Reconnect') : t('Connect Number')}
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
 
