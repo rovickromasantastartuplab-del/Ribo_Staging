@@ -14,6 +14,8 @@ class GmailWebhookController extends Controller
      */
     public function handle(Request $request)
     {
+        Log::info('Gmail webhook entry point hit', ['payload' => $request->all()]);
+        
         // 2. Process the message payload
         $message = $request->input('message');
 
