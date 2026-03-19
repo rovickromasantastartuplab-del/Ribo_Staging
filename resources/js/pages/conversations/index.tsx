@@ -15,7 +15,8 @@ import {
     UserPlus,
     X,
     RefreshCw,
-    AlertCircle
+    AlertCircle,
+    ArrowLeft
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,11 @@ import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { getEcho } from '@/utils/echo';
 import { sanitizeHtml } from '@/utils/sanitize-html';
+
+const parseUTC = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    return dateStr.endsWith('Z') ? new Date(dateStr) : new Date(dateStr + 'Z');
+};
 
 // Sub-components
 const SidebarItem = ({ icon: Icon, label, active, onClick, count }: any) => (
@@ -181,10 +187,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         >
             <Head title={t('Conversations Hub')} />
 
-            <div className="flex h-[calc(100vh-180px)] overflow-hidden border rounded-xl bg-background shadow-sm">
+            <div className="flex h-[calc(100vh-180px)] overflow-hidden border rounded-xl bg-background shadow-sm relative">
                 
                 {/* Pane 1: Folders (Left Sidebar) */}
-                <div className="w-[240px] border-r flex flex-col bg-muted/30">
+                <div className="hidden lg:flex w-[240px] border-r flex-col bg-muted/30 shrink-0">
                     <div className="p-4 flex-1">
                         <div className="flex items-center justify-between mb-4 px-2">
                             <h2 className="text-lg font-semibold">{t('Conversations')}</h2>
@@ -217,7 +223,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 </div>
 
                 {/* Pane 2: Thread List */}
-                <div className="w-[380px] border-r flex flex-col bg-background">
+                <div className={`w-full md:w-[320px] xl:w-[380px] border-r flex-col bg-background shrink-0 transition-none ${selectedThread ? 'hidden md:flex' : 'flex'}`}>
                     <div className="p-4 border-b">
                         <div className="relative">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -287,8 +293,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 }`}>
                                                     {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
                                                 </span>
-                                                <span className="text-[10px] text-muted-foreground/80 font-medium">
-                                                    {thread.last_message_at ? formatDistanceToNow(new Date(thread.last_message_at), { addSuffix: false }) : ''}
+                                                <span className="text-[10px] text-muted-foreground/80 font-medium shrink-0 ms-2">
+                                                    {thread.last_message_at ? formatDistanceToNow(parseUTC(thread.last_message_at), { addSuffix: false }) : ''}
                                                 </span>
                                             </div>
                                             <div className={`text-sm truncate mb-1 text-foreground/90 ${!thread.is_read ? 'font-bold' : 'font-semibold'}`}>
@@ -342,19 +348,24 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 </div>
 
                 {/* Pane 3: Thread Details & Reply */}
-                <div className="flex-1 flex flex-col min-w-0 bg-muted/5">
+                <div className={`flex-1 flex flex-col min-w-0 bg-muted/5 relative ${!selectedThread ? 'hidden md:flex' : 'flex'}`}>
                     {selectedThread ? (
                         <>
                             {/* Header */}
-                            <div className="h-16 border-b flex items-center justify-between px-6 bg-background">
-                                <div className="min-w-0 flex-1">
-                                    <h2 className="text-base font-semibold truncate text-foreground/90">
-                                        {selectedThread.subject || t('(No Subject)')}
-                                    </h2>
-                                    <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                        <span>{selectedThread.participants?.join(', ')}</span>
-                                        <span>•</span>
-                                        <span>{selectedThread.message_count} {t('messages')}</span>
+                            <div className="h-16 border-b flex items-center justify-between px-4 md:px-6 bg-background">
+                                <div className="min-w-0 flex-1 flex items-center gap-2">
+                                    <Button variant="ghost" size="icon" className="md:hidden shrink-0" onClick={() => setSelectedThread(null)}>
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                    <div className="min-w-0">
+                                        <h2 className="text-base font-semibold truncate text-foreground/90">
+                                            {selectedThread.subject || t('(No Subject)')}
+                                        </h2>
+                                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                            <span className="truncate">{selectedThread.participants?.join(', ')}</span>
+                                            <span>•</span>
+                                            <span className="shrink-0">{selectedThread.message_count} {t('messages')}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 ml-4">
@@ -383,11 +394,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             <div className="flex-1 space-y-2">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-sm font-semibold">{msg.from_email}</span>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {msg.sent_at ? formatDistanceToNow(new Date(msg.sent_at), { addSuffix: true }) : ''}
+                                                    <span className="text-xs text-muted-foreground shrink-0 ms-4">
+                                                        {msg.sent_at ? formatDistanceToNow(parseUTC(msg.sent_at), { addSuffix: true }) : ''}
                                                     </span>
                                                 </div>
-                                                <div className="bg-background border rounded-lg p-4 shadow-sm text-sm leading-relaxed whitespace-pre-wrap">
+                                                <div className="bg-background border rounded-lg p-4 shadow-sm text-sm leading-relaxed whitespace-pre-wrap overflow-hidden break-words">
                                                     {msg.body_html ? (
                                                         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
                                                     ) : (
@@ -446,7 +457,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                 {/* Pane 4: Contact/Lead Details (Right Drawer) */}
                 {selectedThread && showContactSidebar && (
-                    <div className="w-[300px] border-l flex flex-col bg-background animate-in slide-in-from-right-1 transition-all duration-300">
+                    <div className="absolute right-0 top-0 bottom-0 z-10 w-[300px] border-l flex flex-col bg-background animate-in slide-in-from-right-1 md:relative md:z-auto shadow-2xl md:shadow-none shrink-0">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="font-semibold">{t('Contact Details')}</h3>
@@ -508,15 +519,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </h4>
                                     <div className="space-y-3">
                                         <div className="flex gap-3">
-                                            <div className="h-2 w-2 rounded-full bg-green-500 mt-1.5 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                                            <p className="text-xs">
-                                                <span className="font-semibold">{t('Last Contact')}:</span> {selectedThread.last_message_at ? formatDistanceToNow(new Date(selectedThread.last_message_at), { addSuffix: true }) : t('N/A')}
+                                            <div className="h-2 w-2 rounded-full bg-green-500 mt-1.5 shadow-[0_0_8px_rgba(34,197,94,0.4)] shrink-0" />
+                                            <p className="text-xs truncate">
+                                                <span className="font-semibold">{t('Last Contact')}:</span> {selectedThread.last_message_at ? formatDistanceToNow(parseUTC(selectedThread.last_message_at), { addSuffix: true }) : t('N/A')}
                                             </p>
                                         </div>
                                         <div className="flex gap-3">
-                                            <div className="h-2 w-2 rounded-full bg-muted mt-1.5" />
-                                            <p className="text-xs">
-                                                <span className="font-semibold">{t('Created')}:</span> {selectedThread.created_at ? formatDistanceToNow(new Date(selectedThread.created_at), { addSuffix: true }) : t('N/A')}
+                                            <div className="h-2 w-2 rounded-full bg-muted mt-1.5 shrink-0" />
+                                            <p className="text-xs truncate">
+                                                <span className="font-semibold">{t('Created')}:</span> {selectedThread.created_at ? formatDistanceToNow(parseUTC(selectedThread.created_at), { addSuffix: true }) : t('N/A')}
                                             </p>
                                         </div>
                                     </div>
