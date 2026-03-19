@@ -489,8 +489,16 @@ class SalesOrderController extends Controller
             ->where('created_by', createdBy())
             ->first();
 
-        if (!$salesOrder) {
-            return redirect()->back()->with('error', __('Sales order not found.'));
+        if ($salesOrder->purchaseOrders()->count() > 0) {
+            return redirect()->back()->with('error', __('Cannot delete sales order that is currently assigned to one or more purchase orders.'));
+        }
+
+        if ($salesOrder->deliveryOrders()->count() > 0) {
+            return redirect()->back()->with('error', __('Cannot delete sales order that is currently assigned to one or more delivery orders.'));
+        }
+
+        if ($salesOrder->returnOrders()->count() > 0) {
+            return redirect()->back()->with('error', __('Cannot delete sales order that is currently assigned to one or more return orders.'));
         }
 
         $salesOrder->products()->detach();
@@ -720,15 +728,31 @@ class SalesOrderController extends Controller
         ]);
 
         try {
-            $query = \App\Models\SalesOrder::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $salesOrders = \App\Models\SalesOrder::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
 
-            if ($count === 0) {
+            if ($salesOrders->isEmpty()) {
                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
 
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUsePOs = $salesOrders->filter(fn($so) => $so->purchaseOrders()->count() > 0);
+            $inUseDOs = $salesOrders->filter(fn($so) => $so->deliveryOrders()->count() > 0);
+            $inUseROs = $salesOrders->filter(fn($so) => $so->returnOrders()->count() > 0);
+            
+            $inUse = $salesOrders->filter(fn($so) => $so->purchaseOrders()->count() > 0 || $so->deliveryOrders()->count() > 0 || $so->returnOrders()->count() > 0);
+            $deletable = $salesOrders->filter(fn($so) => $so->purchaseOrders()->count() === 0 && $so->deliveryOrders()->count() === 0 && $so->returnOrders()->count() === 0);
+
+            $deletable->each(function($salesOrder) {
+                $salesOrder->products()->detach();
+                $salesOrder->delete();
+            });
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to purchase, delivery, or return orders.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected sales orders because they are currently assigned to purchase, delivery, or return orders.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         }
         catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));

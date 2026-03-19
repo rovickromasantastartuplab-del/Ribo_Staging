@@ -8,7 +8,7 @@ interface AppContentProps extends React.ComponentProps<'main'> {
 
 export function AppContent({ variant = 'header', children, ...props }: AppContentProps) {
     const { position } = useLayout();
-    
+
     if (variant === 'sidebar') {
         return (
             <SidebarInset {...props}>

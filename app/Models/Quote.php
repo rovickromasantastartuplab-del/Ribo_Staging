@@ -111,6 +111,16 @@ class Quote extends BaseModel
             ->withTimestamps();
     }
 
+    public function salesOrders(): HasMany
+    {
+        return $this->hasMany(SalesOrder::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function activities(): HasMany
     {
         return $this->hasMany(QuoteActivity::class)->with('user')->orderBy('created_at', 'desc');

@@ -93,6 +93,10 @@ class CategoryController extends Controller
 
         if ($category) {
             try {
+                if ($category->products()->count() > 0) {
+                    return redirect()->back()->with('error', __('Cannot delete category that is currently assigned to one or more products.'));
+                }
+
                 $category->delete();
                 return redirect()->back()->with('success', __('Category deleted successfully.'));
             } catch (\Exception $e) {
@@ -135,15 +139,24 @@ class CategoryController extends Controller
         ]);
 
         try {
-            $query = \App\Models\Category::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $categories = \App\Models\Category::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
             
-            if ($count === 0) {
+            if ($categories->isEmpty()) {
                  return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
             
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUse = $categories->filter(fn($c) => $c->products()->count() > 0);
+            $deletable = $categories->filter(fn($c) => $c->products()->count() === 0);
+
+            $deletable->each->delete();
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to products.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected categories because they are currently assigned to products.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }

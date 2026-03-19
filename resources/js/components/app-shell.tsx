@@ -3,6 +3,7 @@ import { useLayout } from '@/contexts/LayoutContext';
 import { FloatingChatGpt } from '@/components/FloatingChatGpt';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
 import { CustomToast } from '@/components/custom-toast';
+import { ChatWidgetToggle } from '@/components/ChatWidgetToggle';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -28,6 +29,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
                 {children}
                 <FloatingChatGpt />
                 <CookieConsentBanner />
+                <ChatWidgetToggle />
                 <CustomToast />
             </div>
         );
@@ -41,6 +43,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
                 {children}
                 <FloatingChatGpt />
                 <CookieConsentBanner />
+                <ChatWidgetToggle />
                 <CustomToast />
             </div>
         </SidebarProvider>

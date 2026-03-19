@@ -298,12 +298,21 @@ class OnboardingController extends Controller
             ->where('id', '!=', $user->id)
             ->count();
 
-        $request->validate([
-            'members' => 'required|array|min:1',
-            'members.*.name' => 'required|string|max:255',
-            'members.*.email' => 'required|email|max:255|unique:users,email',
-            'members.*.role_id' => 'required|integer|exists:roles,id',
-        ]);
+        $request->validate(
+            [
+                'members' => 'required|array|min:1',
+                'members.*.name' => 'required|string|max:255',
+                'members.*.email' => 'required|email:filter|max:255|unique:users,email',
+                'members.*.role_id' => 'required|integer|exists:roles,id',
+            ],
+            [
+                'members.*.name.required' => __('The member name field is required.'),
+                'members.*.email.required' => __('The member email field is required.'),
+                'members.*.email.email' => __('The member email must be a valid email address.'),
+                'members.*.email.unique' => __('The member email is already in use.'),
+                'members.*.role_id.required' => __('The member role field is required.'),
+            ]
+        );
 
         $members = $request->members;
 

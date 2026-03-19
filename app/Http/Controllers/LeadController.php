@@ -251,7 +251,7 @@ class LeadController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
+            'email' => 'nullable|email:filter|max:255',
             'phone' => 'nullable|string|max:255',
             'company' => 'nullable|string|max:255',
             'account_name' => 'nullable|string|max:255',
@@ -318,7 +318,7 @@ class LeadController extends Controller
             try {
                 $validated = $request->validate([
                     'name' => 'required|string|max:255',
-                    'email' => 'nullable|email|max:255',
+                    'email' => 'nullable|email:filter|max:255',
                     'phone' => 'nullable|string|max:255',
                     'company' => 'nullable|string|max:255',
                     'account_name' => 'nullable|string|max:255',

@@ -155,4 +155,19 @@ class SalesOrder extends BaseModel
     {
         return $this->hasMany(SalesOrderActivity::class)->with('user')->orderBy('created_at', 'desc');
     }
+
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
+
+    public function deliveryOrders(): HasMany
+    {
+        return $this->hasMany(DeliveryOrder::class);
+    }
+
+    public function returnOrders(): HasMany
+    {
+        return $this->hasMany(ReturnOrder::class);
+    }
 }
