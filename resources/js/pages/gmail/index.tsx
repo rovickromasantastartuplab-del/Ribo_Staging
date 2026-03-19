@@ -41,9 +41,10 @@ interface Props {
     filters: {
         search: string | null;
     };
+    isOwner: boolean;
 }
 
-export default function GmailIndex({ threads, gmailAccount, filters }: Props) {
+export default function GmailIndex({ threads, gmailAccount, filters, isOwner }: Props) {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
 
@@ -102,7 +103,7 @@ export default function GmailIndex({ threads, gmailAccount, filters }: Props) {
                                 {t('Sync Now')}
                             </Button>
                         </>
-                    ) : (
+                    ) : isOwner && (
                         <Link href="/settings#integrations-settings">
                             <Button>{t('Connect Gmail')}</Button>
                         </Link>
@@ -150,9 +151,11 @@ export default function GmailIndex({ threads, gmailAccount, filters }: Props) {
                             <p className="text-muted-foreground max-w-md mt-2 mb-6">
                                 {t('Connect your Gmail account to sync emails, view them alongside your leads, and keep your communication in one place.')}
                             </p>
-                            <Link href="/settings#integrations-settings">
-                                <Button>{t('Go to Settings')}</Button>
-                            </Link>
+                            {isOwner && (
+                                <Link href="/settings#integrations-settings">
+                                    <Button>{t('Go to Settings')}</Button>
+                                </Link>
+                            )}
                         </div>
                     ) : (threads.data && threads.data.length > 0) ? (
                         <div className="divide-y">
