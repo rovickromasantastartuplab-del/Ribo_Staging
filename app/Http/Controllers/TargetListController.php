@@ -87,6 +87,10 @@ class TargetListController extends Controller
 
         if ($targetList) {
             try {
+                if ($targetList->campaigns()->count() > 0) {
+                    return redirect()->back()->with('error', __('Cannot delete target list that is currently assigned to one or more campaigns.'));
+                }
+                
                 $targetList->delete();
                 return redirect()->back()->with('success', __('Target list deleted successfully.'));
             } catch (\Exception $e) {
@@ -129,15 +133,26 @@ class TargetListController extends Controller
         ]);
 
         try {
-            $query = \App\Models\TargetList::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $targetLists = \App\Models\TargetList::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
             
-            if ($count === 0) {
+            if ($targetLists->isEmpty()) {
                  return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
             
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUse = $targetLists->filter(fn($tl) => $tl->campaigns()->count() > 0);
+            $deletable = $targetLists->filter(fn($tl) => $tl->campaigns()->count() === 0);
+
+            $deletable->each(function($targetList) {
+                $targetList->delete();
+            });
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to campaigns.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected target lists because they are currently assigned to campaigns.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }

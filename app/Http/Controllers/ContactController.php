@@ -105,7 +105,7 @@ class ContactController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
+            'email' => 'nullable|email:filter|max:255',
             'phone' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
             'address' => 'nullable|string',
@@ -158,7 +158,7 @@ class ContactController extends Controller
             try {
                 $validated = $request->validate([
                     'name' => 'required|string|max:255',
-                    'email' => 'nullable|email|max:255',
+                    'email' => 'nullable|email:filter|max:255',
                     'phone' => 'nullable|string|max:255',
                     'position' => 'nullable|string|max:255',
                     'address' => 'nullable|string',

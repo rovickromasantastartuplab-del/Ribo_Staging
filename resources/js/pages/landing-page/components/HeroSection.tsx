@@ -35,7 +35,7 @@ export default function HeroSection({ settings, sectionData, brandColor = '#3b82
   const heroImage = getImageUrl(sectionData.image);
 
   return (
-    <section id="hero" className="pt-16 pb-20 sm:pb-28 lg:pb-32 bg-gray-50 flex items-center">
+    <section id="hero" className="pt-16 bg-gray-50 flex items-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Content */}

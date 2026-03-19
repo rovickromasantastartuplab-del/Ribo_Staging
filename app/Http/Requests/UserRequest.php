@@ -26,7 +26,7 @@ class UserRequest extends FormRequest
         
         return [
             'name'             => 'required|string',
-            'email'            => 'required|email|unique:users,email' . ($userId ? ',' . $userId : ''),
+            'email'            => 'required|email:filter|unique:users,email' . ($userId ? ',' . $userId : ''),
             'password'         => $this->isMethod('POST') ? 'required|string|min:6' : 'nullable|string|min:6',
             'password_confirmation' => $this->isMethod('POST') ? 'required|same:password' : 'nullable|same:password',
             'roles'            => 'required'

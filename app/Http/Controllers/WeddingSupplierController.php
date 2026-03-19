@@ -63,23 +63,29 @@ class WeddingSupplierController extends Controller
     {
         $this->authorize('create', WeddingSupplier::class);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:wedding_supplier_categories,id',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'telephone' => 'nullable|string|max:50',
-            'website' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'facebook' => 'nullable|string|max:255',
-            'tiktok' => 'nullable|string|max:255',
-            'available_contact_time' => 'nullable|string|max:255',
-            'contacts' => 'nullable|array',
-            'contacts.*.name' => 'required|string|max:255',
-            'contacts.*.position' => 'nullable|string|max:255',
-            'contacts.*.phone' => 'nullable|string|max:50',
-            'contacts.*.email' => 'nullable|email|max:255',
-        ]);
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'category_id' => 'required|exists:wedding_supplier_categories,id',
+                'email' => 'nullable|email:filter|max:255',
+                'phone' => 'nullable|string|max:50',
+                'telephone' => 'nullable|string|max:50',
+                'website' => 'nullable|string|max:255',
+                'address' => 'nullable|string',
+                'facebook' => 'nullable|string|max:255',
+                'tiktok' => 'nullable|string|max:255',
+                'available_contact_time' => 'nullable|string|max:255',
+                'contacts' => 'nullable|array',
+                'contacts.*.name' => 'required|string|max:255',
+                'contacts.*.position' => 'nullable|string|max:255',
+                'contacts.*.phone' => 'nullable|string|max:50',
+                'contacts.*.email' => 'nullable|email:filter|max:255',
+            ],
+            [
+                'contacts.*.name.required' => __('The contact name field is required.'),
+                'contacts.*.email.email' => __('The contact email must be a valid email address.'),
+            ]
+        );
 
         DB::transaction(function () use ($validated) {
             $supplier = WeddingSupplier::create($validated);
@@ -113,24 +119,30 @@ class WeddingSupplierController extends Controller
     {
         $this->authorize('update', $weddingSupplier);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:wedding_supplier_categories,id',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'telephone' => 'nullable|string|max:50',
-            'website' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'facebook' => 'nullable|string|max:255',
-            'tiktok' => 'nullable|string|max:255',
-            'available_contact_time' => 'nullable|string|max:255',
-            'contacts' => 'nullable|array',
-            'contacts.*.id' => 'nullable|integer|exists:wedding_supplier_contacts,id',
-            'contacts.*.name' => 'required|string|max:255',
-            'contacts.*.position' => 'nullable|string|max:255',
-            'contacts.*.phone' => 'nullable|string|max:50',
-            'contacts.*.email' => 'nullable|email|max:255',
-        ]);
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'category_id' => 'required|exists:wedding_supplier_categories,id',
+                'email' => 'nullable|email:filter|max:255',
+                'phone' => 'nullable|string|max:50',
+                'telephone' => 'nullable|string|max:50',
+                'website' => 'nullable|string|max:255',
+                'address' => 'nullable|string',
+                'facebook' => 'nullable|string|max:255',
+                'tiktok' => 'nullable|string|max:255',
+                'available_contact_time' => 'nullable|string|max:255',
+                'contacts' => 'nullable|array',
+                'contacts.*.id' => 'nullable|integer|exists:wedding_supplier_contacts,id',
+                'contacts.*.name' => 'required|string|max:255',
+                'contacts.*.position' => 'nullable|string|max:255',
+                'contacts.*.phone' => 'nullable|string|max:50',
+                'contacts.*.email' => 'nullable|email:filter|max:255',
+            ],
+            [
+                'contacts.*.name.required' => __('The contact name field is required.'),
+                'contacts.*.email.email' => __('The contact email must be a valid email address.'),
+            ]
+        );
 
         DB::transaction(function () use ($validated, $weddingSupplier) {
             $weddingSupplier->update($validated);
