@@ -16,5 +16,8 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 Broadcast::channel('company.{companyId}', function ($user, $companyId) {
+    if ($user->type === 'superadmin' || $user->type === 'super admin') {
+        return true;
+    }
     return (int) $user->creatorId() === (int) $companyId;
 });

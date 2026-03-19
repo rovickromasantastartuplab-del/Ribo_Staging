@@ -86,8 +86,8 @@ class SyncGmailThreadsJob implements ShouldQueue, ShouldBeUnique
                 $stats = $service->syncThreads(50);
             }
 
-            // Broadcast completion for real-time UI updates
-            \App\Events\GmailSyncCompleted::dispatch($this->gmailAccountId, $account->user_id);
+            // Broadcast completion for real-time UI updates to the Company/Owner channel
+            \App\Events\GmailSyncCompleted::dispatch($this->gmailAccountId, $account->user->creatorId());
 
             Log::info('Gmail sync completed', [
                 'gmail_account_id' => $this->gmailAccountId,

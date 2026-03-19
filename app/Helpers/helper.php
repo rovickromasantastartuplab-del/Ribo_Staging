@@ -94,6 +94,8 @@ if (!function_exists('settings')) {
                     'layoutDirection',
                     'themeMode',
                     'pusher_app_key',
+                    'pusher_app_id',
+                    'pusher_app_secret',
                     'pusher_app_cluster',
                     'google_gmail_pub_sub_topic',
                 ];

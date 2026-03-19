@@ -20,7 +20,10 @@ class ConversationController extends Controller
         $user = auth()->user();
         $companyId = $user->creatorId();
         
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        // Find any Gmail account belonging to this company (either the owner's or a staff member's)
+        $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+            $q->where('id', $companyId)->orWhere('created_by', $companyId);
+        })->first();
 
         // Compute actual unread count
         $unreadCount = $gmailAccount
@@ -55,8 +58,12 @@ class ConversationController extends Controller
 
         // Apply folder filtering by Gmail labels
         if ($folder === 'sent') {
-            $query->whereHas('latestMessage', function ($q) {
-                $gmailAccount = GmailAccount::where('user_id', auth()->user()->creatorId())->first();
+            $query->whereHas('latestMessage', function ($q) use ($companyId) {
+                // Find the Gmail account for this company (could be owner's or staff's)
+                $gmailAccount = GmailAccount::whereHas('user', function($qu) use ($companyId) {
+                    $qu->where('id', $companyId)->orWhere('created_by', $companyId);
+                })->first();
+
                 if ($gmailAccount) {
                     $q->where('from_email', strtolower($gmailAccount->gmail_address));
                 }
