@@ -318,33 +318,39 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                         <div className="flex items-center gap-2">
                                             {gmailAccount ? (
                                                 <>
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
-                                                        type="button" 
-                                                        onClick={handleGmailSync}
-                                                        disabled={gmailAccount.sync_status === 'syncing' || processing}
-                                                    >
-                                                        {gmailAccount.sync_status === 'syncing' ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
-                                                        {t('Sync Now')}
-                                                    </Button>
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="sm" 
-                                                        type="button" 
-                                                        onClick={handleGmailDisconnect}
-                                                        disabled={processing}
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                    >
-                                                        {t('Disconnect')}
-                                                    </Button>
+                                                    {auth.user?.type === 'company' && (
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            type="button" 
+                                                            onClick={handleGmailSync}
+                                                            disabled={gmailAccount.sync_status === 'syncing' || processing}
+                                                        >
+                                                            {gmailAccount.sync_status === 'syncing' ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                                                            {t('Sync Now')}
+                                                        </Button>
+                                                    )}
+                                                    {auth.user?.type === 'company' && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            type="button" 
+                                                            onClick={handleGmailDisconnect}
+                                                            disabled={processing}
+                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                        >
+                                                            {t('Disconnect')}
+                                                        </Button>
+                                                    )}
                                                 </>
                                             ) : (
-                                                <a href={route('social.redirect', { provider: 'google' })}>
-                                                    <Button variant="outline" size="sm" type="button">
-                                                        {t('Connect Gmail')}
-                                                    </Button>
-                                                </a>
+                                                auth.user?.type === 'company' && (
+                                                    <a href={route('social.redirect', { provider: 'google' })}>
+                                                        <Button variant="outline" size="sm" type="button">
+                                                            {t('Connect Gmail')}
+                                                        </Button>
+                                                    </a>
+                                                )
                                             )}
                                         </div>
                                     </div>
