@@ -382,7 +382,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             </div>
 
                             {/* Messages Scroll Area */}
-                            <ScrollArea className="flex-1 p-6">
+                            <ScrollArea className="flex-1 min-h-0 p-4 md:p-6">
                                 <div className="max-w-4xl mx-auto space-y-8">
                                     {selectedThread.messages?.map((msg: any) => (
                                         <div key={msg.id} className="flex gap-4">
@@ -391,9 +391,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     {msg.from_email?.charAt(0).toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            <div className="flex-1 space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-semibold">{msg.from_email}</span>
+                                            <div className="flex-1 space-y-2 min-w-0">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <span className="text-sm font-semibold truncate">{msg.from_email}</span>
                                                     <span className="text-xs text-muted-foreground shrink-0 ms-4">
                                                         {msg.sent_at ? formatDistanceToNow(parseUTC(msg.sent_at), { addSuffix: true }) : ''}
                                                     </span>
@@ -412,10 +412,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             </ScrollArea>
 
                             {/* Reply Box */}
-                            <div className="p-4 border-t bg-background">
+                            <div className="p-3 md:p-4 border-t bg-background shrink-0">
                                 <div className="max-w-4xl mx-auto border rounded-xl shadow-sm focus-within:ring-1 focus-within:ring-primary/30 transition-shadow overflow-hidden">
                                     <textarea 
-                                        className="w-full min-h-[120px] p-4 text-sm bg-transparent border-none focus:ring-0 resize-none"
+                                        className="w-full min-h-[80px] p-3 text-sm bg-transparent border-none focus:ring-0 resize-none"
                                         placeholder={t('Write your reply here...')}
                                         value={replyBody}
                                         onChange={(e) => setReplyBody(e.target.value)}
