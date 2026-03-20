@@ -327,8 +327,19 @@ class GmailService
             ]
         );
 
+        // Collect all live Gmail message IDs from this thread
+        $liveGmailMessageIds = [];
         foreach ($messages as $message) {
+            $liveGmailMessageIds[] = $message->getId();
             $this->upsertMessage($emailThread, $message, $companyId);
+        }
+
+        // Garbage collection: delete any local messages that Google has removed
+        // (e.g. temporary drafts that were replaced by the final sent message)
+        if (!empty($liveGmailMessageIds)) {
+            $emailThread->messages()
+                ->whereNotIn('gmail_message_id', $liveGmailMessageIds)
+                ->delete();
         }
 
         $this->autoLinkThread($emailThread, $companyId);
