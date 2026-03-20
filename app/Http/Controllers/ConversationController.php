@@ -182,7 +182,7 @@ class ConversationController extends Controller
 
             if ($success) {
                 // Dispatch async sync to fetch the newly sent message into the DB
-                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
+                \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
                 
                 return response()->json(['message' => 'Email sent successfully.']);
             }
@@ -254,7 +254,7 @@ class ConversationController extends Controller
 
             if ($success) {
                 // Dispatch async sync — the GmailSyncCompleted event will refresh the UI in real time
-                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
+                \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
                 
                 return response()->json(['message' => 'Reply sent successfully.']);
             }

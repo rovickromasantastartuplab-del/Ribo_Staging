@@ -169,7 +169,7 @@ class SocialAuthController extends Controller
                 }
 
                 // Dispatch initial sync in the background
-                SyncGmailThreadsJob::dispatch($gmailAccount->id);
+                SyncGmailThreadsJob::dispatchSync($gmailAccount->id);
 
                 return redirect()->route('settings', ['#integrations-settings'])
                     ->with('success', "Gmail connected successfully: {$socialUser->getEmail()}");
