@@ -415,14 +415,24 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         </Button>
                                     </div>
                                     <div className="flex-1 min-h-0 overflow-y-auto">
-                                        <ActivityStream
-                                            title={t('Activity Timeline')}
-                                            emptyMessage={t('No activities found for this contact.')}
-                                            activities={historyActivities}
-                                            isCompany={isOwner}
-                                            auth={{ user: auth?.user }}
-                                            maxHeight="max-h-full"
-                                        />
+                                        {loadingHistory ? (
+                                            <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                                                <div className="relative">
+                                                    <div className="h-12 w-12 rounded-full border-t-2 border-b-2 border-primary animate-spin"></div>
+                                                    <HistoryIcon className="h-4 w-4 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                                                </div>
+                                                <p className="text-sm font-medium text-muted-foreground animate-pulse">{t('Loading activity timeline...')}</p>
+                                            </div>
+                                        ) : (
+                                            <ActivityStream
+                                                title={t('Activity Timeline')}
+                                                emptyMessage={t('No activities found for this contact.')}
+                                                activities={historyActivities}
+                                                isCompany={isOwner}
+                                                auth={{ user: auth?.user }}
+                                                maxHeight="max-h-full"
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             ) : (
