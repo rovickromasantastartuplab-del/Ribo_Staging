@@ -286,7 +286,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         </div>
 
                         {/* Thread list scroll area */}
-                        <ScrollArea className="flex-1 min-h-0">
+                        <ScrollArea className="flex-1 min-h-0 [&_[data-radix-scroll-area-viewport]>div]:!block">
                             {!gmailAccount ? (
                                 /* No Gmail account */
                                 <div className="flex flex-col items-center justify-center text-center px-4 py-10">
