@@ -114,7 +114,8 @@ class ConversationController extends Controller
 
         if ($email) {
             // CONSOLIDATED ACTIVITY VIEW FOR A SPECIFIC PERSON
-            $email = strtolower($email);
+            $email = trim(strtolower($email));
+            $companyEmail = strtolower($gmailAccount->gmail_address);
             
             // 1. Gmail Account Activity (system logs)
             $systemActivities = \App\Models\GmailAccountActivity::where('gmail_account_id', $gmailAccount->id)
@@ -123,19 +124,21 @@ class ConversationController extends Controller
                 ->get();
 
             // 2. Email Messages (Sent/Received)
-            $emailActivities = \App\Models\EmailMessage::whereHas('thread', function($q) use ($companyId) {
-                    $q->where('created_by', $companyId);
-                })
+            $emailActivities = \App\Models\EmailMessage::where('created_by', $companyId)
                 ->where(function($q) use ($email) {
                     $q->where('from_email', $email)
-                      ->orWhere('to_email', $email);
+                      ->orWhereJsonContains('to_emails', $email)
+                      ->orWhereJsonContains('cc_emails', $email);
                 })
                 ->get()
-                ->map(function($msg) {
+                ->map(function($msg) use ($companyEmail) {
+                    $isOutbound = strtolower($msg->from_email) === $companyEmail;
+                    $to = is_array($msg->to_emails) ? implode(', ', $msg->to_emails) : $msg->to_emails;
+                    
                     return [
                         'id' => 'msg_' . $msg->id,
-                        'activity_type' => $msg->direction === 'outbound' ? 'email_sent' : 'email_received',
-                        'title' => $msg->direction === 'outbound' ? "Email sent to {$msg->to_email}" : "Email received from {$msg->from_email}",
+                        'activity_type' => $isOutbound ? 'email_sent' : 'email_received',
+                        'title' => $isOutbound ? "Email sent to {$to}" : "Email received from {$msg->from_email}",
                         'description' => '<b>' . $msg->subject . '</b><br/><br/>' . $msg->body_preview,
                         'created_at' => $msg->sent_at,
                         'user' => null, 
