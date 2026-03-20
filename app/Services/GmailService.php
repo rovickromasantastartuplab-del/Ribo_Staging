@@ -157,6 +157,8 @@ class GmailService
             $result = $this->listThreads($maxResults);
             $companyId = $this->resolveCompanyId();
 
+            $this->logActivity('sync_started', 'Gmail synchronization started', 'Starting full synchronization of inbox and sent items.');
+
             // Track the latest historyId from any thread for incremental sync baseline
             $latestHistoryId = null;
 
@@ -193,6 +195,8 @@ class GmailService
                 'last_history_id' => $latestHistoryId ?? $this->account->last_history_id,
             ]);
 
+            $this->logActivity('sync_completed', 'Gmail synchronization completed', "Successfully synced {$stats['synced']} threads.");
+
         } catch (\Exception $e) {
             Log::error('Gmail sync failed', [
                 'gmail_account_id' => $this->account->id,
@@ -203,6 +207,8 @@ class GmailService
                 'sync_status' => 'error',
                 'sync_error' => $e->getMessage(),
             ]);
+
+            $this->logActivity('sync_error', 'Gmail synchronization failed', "Error: " . $e->getMessage());
 
             throw $e;
         }
@@ -226,6 +232,8 @@ class GmailService
 
         try {
             $companyId = $this->resolveCompanyId();
+
+            $this->logActivity('sync_started', 'Incremental sync started', 'Checking for recent changes in Gmail since last sync.');
 
             // Fetch history records since last known historyId
             $response = $this->gmail->users_history->listUsersHistory('me', [
@@ -274,6 +282,8 @@ class GmailService
                 'sync_error' => null,
                 'last_history_id' => $latestHistoryId,
             ]);
+
+            $this->logActivity('sync_completed', 'Incremental sync completed', "Updated " . count($changedThreadIds) . " threads based on recent Gmail activity.");
 
             Log::info('Incremental Gmail sync completed', [
                 'gmail_account_id' => $this->account->id,
@@ -439,6 +449,8 @@ class GmailService
 
             $this->gmail->users_messages->send('me', $message);
 
+            $this->logActivity('email_sent', 'Email sent to ' . $to, "Subject: {$subject}" . (count($attachments) > 0 ? " (" . count($attachments) . " attachments)" : ""));
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send Gmail message', [
@@ -590,6 +602,18 @@ class GmailService
         }
 
         if ($matchingLeads->count() > 0 || $matchingContacts->count() > 0) {
+            $description = "Auto-linked thread <b>\"{$emailThread->subject}\"</b> to ";
+            $links = [];
+            if ($matchingLeads->count() > 0) $links[] = "{$matchingLeads->count()} lead(s)";
+            if ($matchingContacts->count() > 0) $links[] = "{$matchingContacts->count()} contact(s)";
+            $description .= implode(' and ', $links) . ".";
+
+            $this->logActivity('auto_link', 'Thread auto-linked to CRM', $description, [], [
+                'leads_count' => $matchingLeads->count(),
+                'contacts_count' => $matchingContacts->count(),
+                'thread_id' => $emailThread->id
+            ]);
+
             Log::info('Auto-linked email thread to CRM records', [
                 'thread_id' => $emailThread->id,
                 'subject' => $emailThread->subject,
@@ -901,5 +925,28 @@ class GmailService
         }
 
         return $this->account->user_id;
+    }
+
+    /**
+     * Log an activity for the current Gmail account.
+     */
+    private function logActivity(string $type, string $title, ?string $description = null, array $old = [], array $new = [])
+    {
+        try {
+            \App\Models\GmailAccountActivity::create([
+                'gmail_account_id' => $this->account->id,
+                'user_id' => auth()->id() ?? $this->account->user_id,
+                'activity_type' => $type,
+                'title' => $title,
+                'description' => $description,
+                'old_values' => $old,
+                'new_values' => $new,
+                'created_by' => $this->account->user_id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log Gmail activity', [
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

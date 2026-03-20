@@ -74,6 +74,14 @@ class GmailAccount extends BaseModel
     }
 
     /**
+     * Activity history for this Gmail account.
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(GmailAccountActivity::class);
+    }
+
+    /**
      * Check if the access token has expired.
      */
     public function isTokenExpired(): bool

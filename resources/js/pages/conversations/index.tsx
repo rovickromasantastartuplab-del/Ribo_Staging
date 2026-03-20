@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageTemplate } from '@/components/page-template';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { 
     Inbox, 
@@ -23,8 +23,11 @@ import {
     Smile,
     Link,
     Type,
-    Trash2
+    Trash2,
+    Calendar,
+    History as HistoryIcon
 } from 'lucide-react';
+import { ActivityStream } from '@/components/ActivityStream/ActivityStream';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -59,9 +62,10 @@ const timeAgoShort = (dateStr: string) => {
 /* ── Folder tab selector (works on all sizes) ──────────────── */
 const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any) => {
     const folders = [
-        { key: 'inbox',      icon: Inbox,   label: t('Inbox'),      count: unreadCount },
-        { key: 'unassigned', icon: Archive, label: t('Unassigned'), count: 0 },
-        { key: 'sent',       icon: Send,    label: t('Sent'),       count: 0 },
+        { key: 'inbox',      icon: Inbox,       label: t('Inbox'),      count: unreadCount },
+        { key: 'unassigned', icon: Archive,     label: t('Unassigned'), count: 0 },
+        { key: 'sent',       icon: Send,        label: t('Sent'),       count: 0 },
+        { key: 'history',    icon: HistoryIcon, label: t('History'),    count: 0 },
     ];
     return (
         <div className="flex gap-1 p-2 overflow-x-auto items-center">
@@ -110,9 +114,10 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
 
             <div className="space-y-0.5">
                 {[
-                    { key: 'inbox',      icon: Inbox,   label: t('Inbox'),      count: unreadCount },
-                    { key: 'unassigned', icon: Archive, label: t('Unassigned'), count: 0 },
-                    { key: 'sent',       icon: Send,    label: t('Sent'),       count: 0 },
+                    { key: 'inbox',      icon: Inbox,       label: t('Inbox'),      count: unreadCount },
+                    { key: 'unassigned', icon: Archive,     label: t('Unassigned'), count: 0 },
+                    { key: 'sent',       icon: Send,        label: t('Sent'),       count: 0 },
+                    { key: 'history',    icon: HistoryIcon, label: t('History'),    count: 0 },
                 ].map(f => (
                     <button
                         key={f.key}
@@ -140,6 +145,7 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
 /* ── Main component ────────────────────────────────────────── */
 export default function ConversationsIndex({ gmailAccount, companyId, isOwner, unreadCount: initialUnreadCount }: { gmailAccount: any, companyId: number, isOwner: boolean, unreadCount?: number }) {
     const { t } = useTranslation();
+    const { auth } = usePage<any>().props;
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
     const [selectedThread, setSelectedThread] = useState<any>(null);
@@ -150,6 +156,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [submittingReply, setSubmittingReply] = useState(false);
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount || 0);
     const [searchQuery, setSearchQuery] = useState('');
+    const [historyActivities, setHistoryActivities] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [showCompose, setShowCompose] = useState(false);
     const [composeTo, setComposeTo] = useState('');
@@ -168,13 +176,22 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     useEffect(() => { selectedThreadIdRef.current = selectedThread?.id || null; }, [selectedThread?.id]);
 
     useEffect(() => {
-        fetchThreads(false);
+        if (selectedFolder === 'history') {
+            fetchHistory();
+        } else {
+            fetchThreads(false);
+        }
+        
         if (!companyId) return;
 
         const channel = getEcho().private(`company.${companyId}`)
             .listen('.gmail.sync.completed', (data: any) => {
                 if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
-                    fetchThreads(true);
+                    if (selectedFolder === 'history') {
+                        fetchHistory(true);
+                    } else {
+                        fetchThreads(true);
+                    }
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
                             .then(r => setSelectedThread(r.data))
@@ -184,6 +201,19 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
     }, [selectedFolder, gmailAccount?.id, companyId]);
+
+    const fetchHistory = async (silent = false) => {
+        if (!silent) setLoadingHistory(true);
+        try {
+            const response = await axios.get(route('api.conversations.activities'));
+            setHistoryActivities(response.data.data);
+        } catch (error) {
+            console.error('Failed to fetch history:', error);
+            if (!silent) toast.error(t('Failed to fetch account history'));
+        } finally {
+            if (!silent) setLoadingHistory(false);
+        }
+    };
 
     const fetchThreads = async (silent = false) => {
         if (!silent) setLoading(true);
@@ -326,7 +356,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         onCompose={() => setShowCompose(true)}
                     />
 
-                    {/* Pane 2: Thread list */}
+                    {selectedFolder === 'history' ? (
+                        <div className="flex-1 min-h-0 overflow-hidden bg-muted/5 p-4 lg:p-6 overflow-y-auto">
+                            <ActivityStream
+                                title={t('Account Activity')}
+                                emptyMessage={t('No history entries for this Gmail account.')}
+                                activities={historyActivities}
+                                isCompany={isOwner}
+                                auth={{ user: auth?.user }}
+                                maxHeight="max-h-full"
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Pane 2: Thread list */}
                     <div className={`
                         border-r flex flex-col bg-background overflow-hidden min-w-0
                         w-full
@@ -621,6 +664,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             </div>
                         )}
                     </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Pane 4: Contact details — ALWAYS an absolute overlay */}

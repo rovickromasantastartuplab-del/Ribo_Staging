@@ -94,6 +94,33 @@ class ConversationController extends Controller
     }
 
     /**
+     * Fetch activities/history for the Gmail account.
+     */
+    public function activities(Request $request)
+    {
+        $companyId = auth()->user()->creatorId();
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+
+        // If not found on owner, check if any staff has one
+        if (!$gmailAccount) {
+            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })->first();
+        }
+
+        if (!$gmailAccount) {
+            return response()->json(['data' => []]);
+        }
+
+        $activities = $gmailAccount->activities()
+            ->with('user:id,name,avatar')
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return response()->json($activities);
+    }
+
+    /**
      * Display a specific thread's full history.
      */
     public function show(EmailThread $thread)
