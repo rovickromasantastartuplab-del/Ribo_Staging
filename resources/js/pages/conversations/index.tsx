@@ -213,7 +213,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 }
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
-    }, [selectedFolder, gmailAccount?.id, companyId]);
+    }, [selectedFolder, gmailAccount?.id, companyId, selectedParticipant?.email]);
 
     const fetchHistoryParticipants = async (silent = false) => {
         if (!silent) setLoadingHistory(true);
@@ -231,7 +231,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     };
 
     const fetchParticipantActivities = async (email: string, silent = false) => {
-        if (!silent) setLoadingHistory(true);
+        if (!silent) {
+            setLoadingHistory(true);
+            setHistoryActivities([]); // Clear previous to prevent mismatch
+        }
         try {
             const response = await axios.get(route('api.conversations.activities', { email }));
             setHistoryActivities(response.data.data);

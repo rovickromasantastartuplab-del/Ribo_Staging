@@ -86,7 +86,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
             <div className="flex-1 min-w-0 pb-2">
                 <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-gray-400">
-                        {activity.user?.name || t('System')}
+                        {activity.user?.name || (activity.activity_type?.startsWith('email') ? t('Email') : t('System'))}
                     </span>
                     <span className="text-xs text-gray-500 font-medium">
                         {formatRelativeTime(activity.created_at)}
