@@ -13,13 +13,16 @@ import {
     X,
     RefreshCw,
     AlertCircle,
-    ArrowLeft
+    ArrowLeft,
+    PenBox
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/custom-toast';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
@@ -45,14 +48,18 @@ const timeAgoShort = (dateStr: string) => {
 };
 
 /* ── Folder tab selector (works on all sizes) ──────────────── */
-const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t }: any) => {
+const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any) => {
     const folders = [
         { key: 'inbox',      icon: Inbox,   label: t('Inbox'),      count: unreadCount },
         { key: 'unassigned', icon: Archive, label: t('Unassigned'), count: 0 },
         { key: 'sent',       icon: Send,    label: t('Sent'),       count: 0 },
     ];
     return (
-        <div className="flex gap-1 p-2 overflow-x-auto">
+        <div className="flex gap-1 p-2 overflow-x-auto items-center">
+            <Button size="sm" onClick={onCompose} className="h-7 px-3 text-xs gap-1.5 shrink-0 mr-1.5 text-primary-foreground">
+                <PenBox className="h-3.5 w-3.5" />
+                {t('Compose')}
+            </Button>
             {folders.map(f => (
                 <button
                     key={f.key}
@@ -77,7 +84,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t }: any) => {
 };
 
 /* ── Full sidebar for xl+ screens ──────────────────────────── */
-const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync }: any) => (
+const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose }: any) => (
     <div className="hidden xl:flex w-[180px] border-r flex-col bg-muted/30 shrink-0">
         <div className="p-3 flex-1">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -86,6 +93,12 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                     <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
                 </Button>
             </div>
+
+            <Button className="w-full mb-4 h-8 text-xs font-semibold gap-1.5 shadow-sm" onClick={onCompose}>
+                <PenBox className="h-3.5 w-3.5" />
+                {t('Compose')}
+            </Button>
+
             <div className="space-y-0.5">
                 {[
                     { key: 'inbox',      icon: Inbox,   label: t('Inbox'),      count: unreadCount },
@@ -128,6 +141,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [submittingReply, setSubmittingReply] = useState(false);
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount || 0);
     const [searchQuery, setSearchQuery] = useState('');
+
+    const [showCompose, setShowCompose] = useState(false);
+    const [composeTo, setComposeTo] = useState('');
+    const [composeSubject, setComposeSubject] = useState('');
+    const [composeBody, setComposeBody] = useState('');
+    const [isComposing, setIsComposing] = useState(false);
 
     const { post: inertiaPost } = useForm({});
 
@@ -206,6 +225,31 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         }
     };
 
+    const handleSendNewEmail = async () => {
+        if (!composeTo.trim() || !composeSubject.trim() || !composeBody.trim()) {
+            toast.error(t('Please fill in all fields'));
+            return;
+        }
+        setIsComposing(true);
+        try {
+            await axios.post(route('api.conversations.compose'), {
+                to: composeTo,
+                subject: composeSubject,
+                body: composeBody,
+            });
+            toast.success(t('Email sent successfully'));
+            setShowCompose(false);
+            setComposeTo('');
+            setComposeSubject('');
+            setComposeBody('');
+            // The SyncGmailThreadsJob running on the backend will push the new thread via Websockets shortly
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || t('Failed to send email'));
+        } finally {
+            setIsComposing(false);
+        }
+    };
+
     const handleBack = () => {
         setSelectedThread(null);
         setShowContactSidebar(false);
@@ -242,6 +286,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         onSelect={setSelectedFolder} 
                         unreadCount={unreadCount} 
                         t={t} 
+                        onCompose={() => setShowCompose(true)}
                     />
                 </div>
 
@@ -256,6 +301,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         t={t}
                         isSyncing={isSyncing}
                         onSync={handleSync}
+                        onCompose={() => setShowCompose(true)}
                     />
 
                     {/* Pane 2: Thread list */}
@@ -605,6 +651,55 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     </>
                 )}
             </div>
+
+            {/* Compose Dialog */}
+            <Dialog open={showCompose} onOpenChange={setShowCompose}>
+                <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden gap-0">
+                    <DialogHeader className="px-5 py-4 border-b bg-muted/40">
+                        <DialogTitle className="text-lg font-semibold">{t('New Message')}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col">
+                        <div className="flex items-center px-4 py-2.5 border-b focus-within:bg-muted/10 transition-colors">
+                            <Label htmlFor="compose-to" className="w-16 text-xs font-medium text-muted-foreground">{t('To:')}</Label>
+                            <Input 
+                                id="compose-to"
+                                value={composeTo}
+                                onChange={(e) => setComposeTo(e.target.value)}
+                                placeholder="recipient@example.com"
+                                className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto break-all"
+                            />
+                        </div>
+                        <div className="flex items-center px-4 py-2.5 border-b focus-within:bg-muted/10 transition-colors">
+                            <Label htmlFor="compose-subject" className="w-16 text-xs font-medium text-muted-foreground">{t('Subject:')}</Label>
+                            <Input 
+                                id="compose-subject"
+                                value={composeSubject}
+                                onChange={(e) => setComposeSubject(e.target.value)}
+                                placeholder={t('Enter subject...')}
+                                className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto font-medium"
+                            />
+                        </div>
+                        <div className="p-4">
+                            <textarea 
+                                value={composeBody}
+                                onChange={(e) => setComposeBody(e.target.value)}
+                                placeholder={t('Write your message here...')}
+                                className="w-full min-h-[200px] text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none leading-relaxed"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="px-4 py-3 border-t bg-muted/30 sm:justify-between items-center">
+                        <Button variant="ghost" size="sm" onClick={() => setShowCompose(false)} disabled={isComposing}>
+                            {t('Cancel')}
+                        </Button>
+                        <Button size="sm" onClick={handleSendNewEmail} disabled={isComposing || !composeTo.trim() || !composeSubject.trim() || !composeBody.trim()} className="gap-2 px-6">
+                            {isComposing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            {t('Send')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </PageTemplate>
     );
 }

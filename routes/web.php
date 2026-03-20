@@ -613,6 +613,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
             Route::get('api/conversations/threads', [ConversationController::class, 'threads'])->name('api.conversations.threads');
             Route::get('api/conversations/threads/{thread}', [ConversationController::class, 'show'])->name('api.conversations.show');
+            Route::post('api/conversations/compose', [ConversationController::class, 'compose'])
+                ->middleware('permission:manage-conversations')
+                ->name('api.conversations.compose');
             Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])
                 ->middleware('permission:manage-conversations')
                 ->name('api.conversations.reply');

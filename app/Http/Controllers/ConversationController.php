@@ -114,6 +114,58 @@ class ConversationController extends Controller
     }
 
     /**
+     * Compose a new email thread.
+     */
+    public function compose(Request $request)
+    {
+        $request->validate([
+            'to' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string',
+        ]);
+
+        try {
+            $user = auth()->user();
+            $companyId = $user->creatorId();
+            
+            $account = \App\Models\GmailAccount::where('user_id', $companyId)->first();
+            if (!$account) {
+                $account = \App\Models\GmailAccount::whereHas('user', function($q) use ($companyId) {
+                    $q->where('created_by', $companyId);
+                })->first();
+            }
+
+            if (!$account) {
+                return response()->json(['error' => 'No connected Gmail account found.'], 422);
+            }
+
+            $service = new \App\Services\GmailService($account);
+            
+            $success = $service->sendMessage(
+                $request->to,
+                $request->subject,
+                $request->body
+            );
+
+            if ($success) {
+                // Dispatch async sync to fetch the newly sent message into the DB
+                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
+                
+                return response()->json(['message' => 'Email sent successfully.']);
+            }
+
+            return response()->json(['error' => 'Failed to send email via Gmail API.'], 500);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to compose email', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Send a reply to a thread.
      */
     public function reply(Request $request, EmailThread $thread)
