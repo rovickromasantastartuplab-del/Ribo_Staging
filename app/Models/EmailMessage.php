@@ -4,10 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Services\StorageConfigService;
 
-class EmailMessage extends BaseModel
+class EmailMessage extends BaseModel implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'email_thread_id',
@@ -41,5 +45,29 @@ class EmailMessage extends BaseModel
     public function thread(): BelongsTo
     {
         return $this->belongsTo(EmailThread::class, 'email_thread_id');
+    }
+
+    /**
+     * Register media collections for email attachments.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('attachments')
+            ->useDisk(StorageConfigService::getActiveDisk());
+    }
+
+    /**
+     * Register media conversions (thumbnails for images).
+     */
+    public function registerMediaConversions(Media $media = null): void
+    {
+        if ($media && str_starts_with($media->mime_type ?? '', 'image/')) {
+            $this->addMediaConversion('thumb')
+                ->width(300)
+                ->height(300)
+                ->sharpen(10)
+                ->performOnCollections('attachments')
+                ->nonQueued();
+        }
     }
 }

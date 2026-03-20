@@ -406,7 +406,7 @@ class GmailService
     }
 
     /**
-     * Send an email message or reply.
+     * Send an email message or reply, optionally with file attachments.
      *
      * @param string $to        Primary recipient
      * @param string $subject   Email subject
@@ -414,33 +414,21 @@ class GmailService
      * @param string|null $threadId   Gmail thread ID for threading
      * @param string|null $inReplyTo  Message-ID of the message being replied to
      * @param array  $cc        CC recipient email addresses
+     * @param array  $attachments  Array of UploadedFile instances
      */
-    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = []): bool
+    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = [], array $attachments = []): bool
     {
         try {
             $this->refreshTokenIfNeeded();
 
             $message = new \Google\Service\Gmail\Message();
-            
-            // Create raw RFC 2822 message with proper From header
-            $rawMessage = "From: {$this->account->gmail_address}\r\n";
-            $rawMessage .= "To: {$to}\r\n";
-            
-            if (!empty($cc)) {
-                $rawMessage .= "Cc: " . implode(', ', $cc) . "\r\n";
+
+            if (!empty($attachments)) {
+                $rawMessage = $this->buildMultipartMessage($to, $subject, $body, $inReplyTo, $cc, $attachments);
+            } else {
+                $rawMessage = $this->buildSimpleMessage($to, $subject, $body, $inReplyTo, $cc);
             }
-            
-            $rawMessage .= "Subject: {$subject}\r\n";
-            $rawMessage .= "Content-Type: text/html; charset=utf-8\r\n";
-            $rawMessage .= "MIME-Version: 1.0\r\n";
-            
-            if ($inReplyTo) {
-                $rawMessage .= "In-Reply-To: {$inReplyTo}\r\n";
-                $rawMessage .= "References: {$inReplyTo}\r\n";
-            }
-            
-            $rawMessage .= "\r\n{$body}";
-            
+
             // Base64Url encode
             $encodedMessage = strtr(base64_encode($rawMessage), '+/', '-_');
             $message->setRaw($encodedMessage);
@@ -460,6 +448,86 @@ class GmailService
             ]);
             return false;
         }
+    }
+
+    /**
+     * Build a simple text/html RFC 2822 message (no attachments).
+     */
+    private function buildSimpleMessage(string $to, string $subject, string $body, ?string $inReplyTo, array $cc): string
+    {
+        $rawMessage = "From: {$this->account->gmail_address}\r\n";
+        $rawMessage .= "To: {$to}\r\n";
+
+        if (!empty($cc)) {
+            $rawMessage .= "Cc: " . implode(', ', $cc) . "\r\n";
+        }
+
+        $rawMessage .= "Subject: {$subject}\r\n";
+        $rawMessage .= "Content-Type: text/html; charset=utf-8\r\n";
+        $rawMessage .= "MIME-Version: 1.0\r\n";
+
+        if ($inReplyTo) {
+            $rawMessage .= "In-Reply-To: {$inReplyTo}\r\n";
+            $rawMessage .= "References: {$inReplyTo}\r\n";
+        }
+
+        $rawMessage .= "\r\n{$body}";
+
+        return $rawMessage;
+    }
+
+    /**
+     * Build a multipart/mixed RFC 2822 message with file attachments.
+     */
+    private function buildMultipartMessage(string $to, string $subject, string $body, ?string $inReplyTo, array $cc, array $attachments): string
+    {
+        $boundary = 'boundary_' . md5(uniqid(mt_rand(), true));
+
+        $rawMessage = "From: {$this->account->gmail_address}\r\n";
+        $rawMessage .= "To: {$to}\r\n";
+
+        if (!empty($cc)) {
+            $rawMessage .= "Cc: " . implode(', ', $cc) . "\r\n";
+        }
+
+        $rawMessage .= "Subject: {$subject}\r\n";
+        $rawMessage .= "MIME-Version: 1.0\r\n";
+
+        if ($inReplyTo) {
+            $rawMessage .= "In-Reply-To: {$inReplyTo}\r\n";
+            $rawMessage .= "References: {$inReplyTo}\r\n";
+        }
+
+        $rawMessage .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n";
+        $rawMessage .= "\r\n";
+
+        // HTML body part
+        $rawMessage .= "--{$boundary}\r\n";
+        $rawMessage .= "Content-Type: text/html; charset=utf-8\r\n";
+        $rawMessage .= "Content-Transfer-Encoding: base64\r\n";
+        $rawMessage .= "\r\n";
+        $rawMessage .= chunk_split(base64_encode($body));
+        $rawMessage .= "\r\n";
+
+        // Attachment parts
+        foreach ($attachments as $file) {
+            $filename = $file->getClientOriginalName();
+            $mimeType = $file->getMimeType() ?: 'application/octet-stream';
+            $fileData = file_get_contents($file->getRealPath());
+
+            $rawMessage .= "--{$boundary}\r\n";
+            $rawMessage .= "Content-Type: {$mimeType}; name=\"{$filename}\"\r\n";
+            $rawMessage .= "Content-Disposition: attachment; filename=\"{$filename}\"\r\n";
+            $rawMessage .= "Content-Transfer-Encoding: base64\r\n";
+            $rawMessage .= "\r\n";
+            $rawMessage .= chunk_split(base64_encode($fileData));
+            $rawMessage .= "\r\n";
+        }
+
+        // Closing boundary
+        $rawMessage .= "--{$boundary}--\r\n";
+
+        return $rawMessage;
     }
 
     /**
@@ -673,7 +741,7 @@ class GmailService
         $messageIdHeader = $this->extractHeader($message, 'Message-ID')
             ?? $this->extractHeader($message, 'Message-Id');
 
-        EmailMessage::updateOrCreate(
+        $emailMessage = EmailMessage::updateOrCreate(
             [
                 'email_thread_id' => $emailThread->id,
                 'gmail_message_id' => $message->getId(),
@@ -692,6 +760,84 @@ class GmailService
                 'created_by' => $companyId,
             ]
         );
+
+        // Sync attachments from Gmail
+        $this->syncAttachments($emailMessage, $message);
+    }
+
+    /**
+     * Download and store attachments from a Gmail message using Spatie Media Library.
+     */
+    private function syncAttachments(EmailMessage $emailMessage, $gmailMessage): void
+    {
+        // Skip if this message already has attachments synced
+        if ($emailMessage->getMedia('attachments')->count() > 0) {
+            return;
+        }
+
+        $payload = $gmailMessage->getPayload();
+        if (!$payload) {
+            return;
+        }
+
+        $parts = $this->collectAttachmentParts($payload->getParts() ?? []);
+
+        foreach ($parts as $part) {
+            try {
+                $attachmentId = $part->getBody()?->getAttachmentId();
+                $filename = $part->getFilename();
+
+                if (!$attachmentId || !$filename) {
+                    continue;
+                }
+
+                // Download the attachment data from Gmail
+                $attachmentData = $this->gmail->users_messages_attachments->get(
+                    'me',
+                    $gmailMessage->getId(),
+                    $attachmentId
+                );
+
+                $rawData = $this->decodeBody($attachmentData->getData());
+
+                // Save to a temp file and add to Spatie Media Library
+                $tempPath = tempnam(sys_get_temp_dir(), 'gmail_attach_');
+                file_put_contents($tempPath, $rawData);
+
+                $emailMessage->addMedia($tempPath)
+                    ->usingFileName($filename)
+                    ->usingName(pathinfo($filename, PATHINFO_FILENAME))
+                    ->toMediaCollection('attachments');
+
+            } catch (\Exception $e) {
+                Log::warning('Failed to sync attachment', [
+                    'gmail_message_id' => $gmailMessage->getId(),
+                    'filename' => $filename ?? 'unknown',
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Recursively collect all MIME parts that have a filename (attachments).
+     */
+    private function collectAttachmentParts(array $parts): array
+    {
+        $attachments = [];
+
+        foreach ($parts as $part) {
+            if ($part->getFilename()) {
+                $attachments[] = $part;
+            }
+
+            $subParts = $part->getParts() ?? [];
+            if (!empty($subParts)) {
+                $attachments = array_merge($attachments, $this->collectAttachmentParts($subParts));
+            }
+        }
+
+        return $attachments;
     }
 
     /**

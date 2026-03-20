@@ -17,6 +17,8 @@ import {
     PenBox,
     Mail,
     Paperclip,
+    FileText,
+    Download,
     Image as ImageIcon,
     Smile,
     Link,
@@ -154,6 +156,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [composeSubject, setComposeSubject] = useState('');
     const [composeBody, setComposeBody] = useState('');
     const [isComposing, setIsComposing] = useState(false);
+    const [composeFiles, setComposeFiles] = useState<File[]>([]);
+    const [replyFiles, setReplyFiles] = useState<File[]>([]);
+    const composeFileRef = React.useRef<HTMLInputElement>(null);
+    const replyFileRef = React.useRef<HTMLInputElement>(null);
 
     const { post: inertiaPost } = useForm({});
 
@@ -221,9 +227,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         if (!replyBody.trim()) return;
         setSubmittingReply(true);
         try {
-            await axios.post(route('api.conversations.reply', selectedThread.id), { body: replyBody });
+            const formData = new FormData();
+            formData.append('body', replyBody);
+            replyFiles.forEach((file) => formData.append('attachments[]', file));
+            await axios.post(route('api.conversations.reply', selectedThread.id), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             toast.success(t('Reply sent successfully'));
             setReplyBody('');
+            setReplyFiles([]);
             handleSelectThread(selectedThread);
         } catch (error: any) {
             toast.error(error.response?.data?.error || t('Failed to send reply'));
@@ -239,17 +251,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         }
         setIsComposing(true);
         try {
-            await axios.post(route('api.conversations.compose'), {
-                to: composeTo,
-                subject: composeSubject,
-                body: composeBody,
+            const formData = new FormData();
+            formData.append('to', composeTo);
+            formData.append('subject', composeSubject);
+            formData.append('body', composeBody);
+            composeFiles.forEach((file) => formData.append('attachments[]', file));
+            await axios.post(route('api.conversations.compose'), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success(t('Email sent successfully'));
             setShowCompose(false);
             setComposeTo('');
             setComposeSubject('');
             setComposeBody('');
-            // The SyncGmailThreadsJob running on the backend will push the new thread via Websockets shortly
+            setComposeFiles([]);
         } catch (error: any) {
             toast.error(error.response?.data?.error || t('Failed to send email'));
         } finally {
@@ -507,6 +522,38 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             <span className="whitespace-pre-wrap">{msg.body_preview}</span>
                                                         )}
                                                     </div>
+                                                    {/* Attachments */}
+                                                    {msg.media && msg.media.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {msg.media.map((file: any) => {
+                                                                const isImage = file.mime_type?.startsWith('image/');
+                                                                const thumbUrl = file.generated_conversions?.thumb
+                                                                    ? (file.original_url?.replace(/\/[^\/]+$/, '/conversions/' + file.name + '-thumb.' + file.file_name?.split('.').pop()))
+                                                                    : null;
+                                                                return isImage ? (
+                                                                    <a key={file.id} href={file.original_url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                        <img
+                                                                            src={thumbUrl || file.original_url}
+                                                                            alt={file.name}
+                                                                            className="max-w-[180px] max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity"
+                                                                        />
+                                                                    </a>
+                                                                ) : (
+                                                                    <a
+                                                                        key={file.id}
+                                                                        href={file.original_url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors max-w-[220px]"
+                                                                    >
+                                                                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                                                                        <span className="text-xs truncate flex-1 min-w-0">{file.file_name}</span>
+                                                                        <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                                    </a>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -523,7 +570,27 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             onChange={(e) => setReplyBody(e.target.value)}
                                             disabled={submittingReply}
                                         />
-                                        <div className="flex items-center justify-end px-2.5 py-1.5 bg-muted/20 border-t">
+                                        {/* Reply attachment previews */}
+                                        {replyFiles.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
+                                                {replyFiles.map((file, idx) => (
+                                                    <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
+                                                        <Paperclip className="h-3 w-3 text-muted-foreground" />
+                                                        <span className="truncate max-w-[120px]">{file.name}</span>
+                                                        <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
+                                            <div className="flex items-center gap-1">
+                                                <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply}>
+                                                    <Paperclip className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </div>
                                             <Button 
                                                 size="sm" 
                                                 className="gap-1.5 px-4 h-7 text-xs" 
@@ -694,15 +761,34 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 value={composeBody}
                                 onChange={(e) => setComposeBody(e.target.value)}
                                 placeholder={t('Write your message here...')}
-                                className="w-full min-h-[300px] p-6 text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none leading-relaxed"
+                                className="w-full min-h-[250px] p-6 text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none leading-relaxed"
                             />
-                            {/* Fake Toolbar */}
+                            {/* Compose attachment previews */}
+                            {composeFiles.length > 0 && (
+                                <div className="flex flex-wrap gap-2 px-5 py-3 border-t bg-muted/10">
+                                    {composeFiles.map((file, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 bg-background border rounded-lg px-3 py-2 text-xs shadow-sm">
+                                            {file.type.startsWith('image/') ? (
+                                                <img src={URL.createObjectURL(file)} alt={file.name} className="h-8 w-8 rounded object-cover" />
+                                            ) : (
+                                                <FileText className="h-4 w-4 text-primary shrink-0" />
+                                            )}
+                                            <span className="truncate max-w-[140px]">{file.name}</span>
+                                            <button onClick={() => setComposeFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {/* Toolbar */}
                             <div className="flex items-center gap-1 px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Type className="h-4 w-4" /></Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Link className="h-4 w-4" /></Button>
                                 <div className="w-px h-5 bg-border mx-2" />
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Paperclip className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><ImageIcon className="h-4 w-4" /></Button>
+                                <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Smile className="h-4 w-4" /></Button>
                             </div>
                         </div>

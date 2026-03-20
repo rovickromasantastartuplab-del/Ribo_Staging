@@ -103,7 +103,7 @@ class ConversationController extends Controller
             abort(403);
         }
 
-        $thread->load(['messages', 'leads.leadStatus', 'contacts']);
+        $thread->load(['messages.media', 'leads.leadStatus', 'contacts']);
 
         // Mark as read when user opens the thread
         if (!$thread->is_read) {
@@ -141,10 +141,16 @@ class ConversationController extends Controller
 
             $service = new \App\Services\GmailService($account);
             
+            $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
+
             $success = $service->sendMessage(
                 $request->to,
                 $request->subject,
-                $request->body
+                $request->body,
+                null,
+                null,
+                [],
+                $attachments
             );
 
             if ($success) {
@@ -207,13 +213,16 @@ class ConversationController extends Controller
             $latestMessage = $thread->latestMessage;
             $inReplyTo = $latestMessage?->message_id_header;
 
+            $replyAttachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
+
             $success = $service->sendMessage(
                 $primaryRecipient,
                 "Re: " . $thread->subject,
                 $request->body,
                 $thread->gmail_thread_id,
                 $inReplyTo,
-                $ccRecipients
+                $ccRecipients,
+                $replyAttachments
             );
 
             if ($success) {
