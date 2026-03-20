@@ -604,7 +604,7 @@ class GmailService
         $dateHeader = $this->extractHeader($message, 'Date');
         if ($dateHeader) {
             try {
-                return \Carbon\Carbon::parse($dateHeader);
+                return \Carbon\Carbon::parse($dateHeader)->setTimezone(config('app.timezone', 'UTC'));
             } catch (\Exception $e) {
                 // Fallback to internalDate
             }
@@ -613,7 +613,7 @@ class GmailService
         // Gmail internalDate is in milliseconds
         $internalDate = $message->getInternalDate();
         if ($internalDate) {
-            return \Carbon\Carbon::createFromTimestampMs($internalDate);
+            return \Carbon\Carbon::createFromTimestampMs($internalDate)->setTimezone(config('app.timezone', 'UTC'));
         }
 
         return now();
