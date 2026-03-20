@@ -7,6 +7,7 @@ use App\Models\EmailThread;
 use App\Models\EmailMessage;
 use App\Models\Lead;
 use App\Models\Contact;
+use App\Models\GmailAccountActivity;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Illuminate\Support\Facades\Cache;

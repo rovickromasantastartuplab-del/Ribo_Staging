@@ -62,7 +62,6 @@ class SyncGmailThreadsJob implements ShouldQueue, ShouldBeUnique
 
         Log::info('SyncGmailThreadsJob: Starting sync', [
             'gmail_account_id' => $this->gmailAccountId,
-            'is_sync' => $this->isSync ?? 'unknown'
         ]);
 
         // Update sync status
