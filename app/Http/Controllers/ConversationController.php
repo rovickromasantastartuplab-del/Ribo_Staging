@@ -170,6 +170,12 @@ class ConversationController extends Controller
             
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
+            \Illuminate\Support\Facades\Log::info('Attempting to send Gmail message', [
+                'to' => $request->to,
+                'subject' => $request->subject,
+                'company_id' => $companyId
+            ]);
+
             $success = $service->sendMessage(
                 $request->to,
                 $request->subject,
@@ -181,8 +187,12 @@ class ConversationController extends Controller
             );
 
             if ($success) {
+                \Illuminate\Support\Facades\Log::info('Email sent successfully, starting synchronous sync', ['account_id' => $account->id]);
+                
                 // Dispatch async sync to fetch the newly sent message into the DB
                 \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
+                
+                \Illuminate\Support\Facades\Log::info('Synchronous sync completed after email send');
                 
                 return response()->json(['message' => 'Email sent successfully.']);
             }
@@ -242,6 +252,12 @@ class ConversationController extends Controller
 
             $replyAttachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
+            \Illuminate\Support\Facades\Log::info('Attempting to send Gmail reply', [
+                'thread_id' => $thread->id,
+                'gmail_thread_id' => $thread->gmail_thread_id,
+                'company_id' => auth()->user()->creatorId()
+            ]);
+
             $success = $service->sendMessage(
                 $primaryRecipient,
                 "Re: " . $thread->subject,
@@ -253,9 +269,13 @@ class ConversationController extends Controller
             );
 
             if ($success) {
-                // Dispatch async sync — the GmailSyncCompleted event will refresh the UI in real time
+                \Illuminate\Support\Facades\Log::info('Reply sent successfully, starting synchronous sync', ['account_id' => $account->id]);
+
+                // Dispatch async sync ΓÇö the GmailSyncCompleted event will refresh the UI in real time
                 \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
                 
+                \Illuminate\Support\Facades\Log::info('Synchronous sync completed after reply send');
+
                 return response()->json(['message' => 'Reply sent successfully.']);
             }
 
