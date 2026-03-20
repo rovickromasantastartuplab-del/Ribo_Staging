@@ -260,10 +260,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                     {/* Pane 2: Thread list */}
                     <div className={`
-                        border-r flex flex-col bg-background shrink-0 overflow-hidden
+                        border-r flex flex-col bg-background overflow-hidden min-w-0
                         w-full
-                        md:w-[280px] lg:w-[300px] xl:w-[280px] 2xl:w-[320px]
-                        ${selectedThread ? 'hidden md:flex' : 'flex'}
+                        lg:w-[280px] lg:max-w-[280px] xl:w-[280px] xl:max-w-[280px] 2xl:w-[320px] 2xl:max-w-[320px]
+                        lg:shrink-0
+                        ${selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
                         {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}
                         <div className="p-3 border-b shrink-0">
@@ -324,7 +325,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         <button
                                             key={thread.id}
                                             onClick={() => handleSelectThread(thread)}
-                                            className={`w-full text-left py-3 pl-3 pr-5 md:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 ${
+                                            className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${
                                                 selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
                                             }`}
                                         >
@@ -398,14 +399,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     {/* Pane 3: Thread detail + reply */}
                     <div className={`
                         flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/5
-                        ${!selectedThread ? 'hidden md:flex' : 'flex'}
+                        ${!selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
                         {selectedThread ? (
                             <>
                                 {/* Thread header */}
-                                <div className="h-12 md:h-14 border-b flex items-center justify-between px-3 md:px-4 bg-background shrink-0">
+                                <div className="h-12 lg:h-14 border-b flex items-center justify-between px-3 lg:px-4 bg-background shrink-0">
                                     <div className="min-w-0 flex-1 flex items-center gap-2">
-                                        <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 shrink-0" onClick={handleBack}>
+                                        <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 shrink-0" onClick={handleBack}>
                                             <ArrowLeft className="h-4 w-4" />
                                         </Button>
                                         <div className="min-w-0">
@@ -431,22 +432,22 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                 {/* Messages */}
                                 <ScrollArea className="flex-1 min-h-0">
-                                    <div className="p-3 md:p-4 lg:p-6 space-y-4 md:space-y-6 max-w-4xl mx-auto">
+                                    <div className="p-3 lg:p-4 lg:p-6 space-y-4 lg:space-y-6 max-w-4xl mx-auto">
                                         {selectedThread.messages?.map((msg: any) => (
-                                            <div key={msg.id} className="flex gap-2 md:gap-3">
-                                                <Avatar className="h-7 w-7 md:h-8 md:w-8 shrink-0 border">
+                                            <div key={msg.id} className="flex gap-2 lg:gap-3">
+                                                <Avatar className="h-7 w-7 lg:h-8 lg:w-8 shrink-0 border">
                                                     <AvatarFallback className="bg-muted text-[10px]">
                                                         {msg.from_email?.charAt(0).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex-1 min-w-0 space-y-1.5">
-                                                    <div className="flex items-start justify-between gap-2 overflow-hidden">
+                                                    <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
                                                         <span className="text-xs font-semibold truncate flex-1 min-w-0">{msg.from_name || msg.from_email}</span>
                                                         <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px] text-right">
                                                             {timeAgo(msg.sent_at)}
                                                         </span>
                                                     </div>
-                                                    <div className="bg-background border rounded-lg p-3 shadow-sm text-xs md:text-sm leading-relaxed overflow-hidden break-words [overflow-wrap:anywhere]">
+                                                    <div className="bg-background border rounded-lg p-3 shadow-sm text-xs lg:text-sm leading-relaxed overflow-hidden break-words [overflow-wrap:anywhere]">
                                                         {msg.body_html ? (
                                                             <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
                                                         ) : (
@@ -460,10 +461,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 </ScrollArea>
 
                                 {/* Reply box */}
-                                <div className="border-t bg-background shrink-0 p-2 md:p-3">
+                                <div className="border-t bg-background shrink-0 p-2 lg:p-3">
                                     <div className="max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden">
                                         <textarea 
-                                            className="w-full min-h-[60px] md:min-h-[80px] p-2.5 text-xs md:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none"
+                                            className="w-full min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none"
                                             placeholder={t('Write your reply here...')}
                                             value={replyBody}
                                             onChange={(e) => setReplyBody(e.target.value)}
@@ -507,7 +508,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     <>
                         {/* Backdrop for mobile */}
                         <div 
-                            className="absolute inset-0 z-20 bg-black/20 md:bg-transparent md:pointer-events-none" 
+                            className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none" 
                             onClick={() => setShowContactSidebar(false)} 
                         />
                         <div className="absolute right-0 top-0 bottom-0 z-30 w-[280px] max-w-[85vw] border-l flex flex-col bg-background shadow-2xl overflow-y-auto">
