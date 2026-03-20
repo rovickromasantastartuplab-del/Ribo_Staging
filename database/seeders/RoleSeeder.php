@@ -316,6 +316,7 @@ class RoleSeeder extends Seeder
             'edit-notification-templates',
             'delete-notification-templates',
             'view-wedding-suppliers',
+            'view-conversations',
             'manage-conversations',
         ])->get();
 
