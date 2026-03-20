@@ -117,6 +117,12 @@ class ConversationController extends Controller
             $email = trim(strtolower($email));
             $companyEmail = strtolower($gmailAccount->gmail_address);
             
+            \Illuminate\Support\Facades\Log::info('Fetching history activities for contact', [
+                'email' => $email,
+                'company_email' => $companyEmail,
+                'company_id' => $companyId
+            ]);
+            
             // 1. Gmail Account Activity (system logs)
             $systemActivities = \App\Models\GmailAccountActivity::where('gmail_account_id', $gmailAccount->id)
                 ->where('description', 'like', "%{$email}%")
@@ -124,13 +130,19 @@ class ConversationController extends Controller
                 ->get();
 
             // 2. Email Messages (Sent/Received)
-            $emailActivities = \App\Models\EmailMessage::where('created_by', $companyId)
+            $emailQuery = \App\Models\EmailMessage::where('created_by', $companyId)
                 ->where(function($q) use ($email) {
                     $q->where('from_email', $email)
                       ->orWhereJsonContains('to_emails', $email)
                       ->orWhereJsonContains('cc_emails', $email);
-                })
-                ->get()
+                });
+
+            \Illuminate\Support\Facades\Log::info('History email query debug', [
+                'sql' => $emailQuery->toSql(),
+                'bindings' => $emailQuery->getBindings()
+            ]);
+
+            $emailActivities = $emailQuery->get()
                 ->map(function($msg) use ($companyEmail) {
                     $isOutbound = strtolower($msg->from_email) === $companyEmail;
                     $to = is_array($msg->to_emails) ? implode(', ', $msg->to_emails) : $msg->to_emails;
@@ -162,6 +174,13 @@ class ConversationController extends Controller
                 ->concat($crmActivities)
                 ->sortByDesc('created_at')
                 ->values();
+
+            \Illuminate\Support\Facades\Log::info('History activities fetched', [
+                'system_count' => count($systemActivities),
+                'email_count' => count($emailActivities),
+                'crm_count' => count($crmActivities),
+                'total_merged' => count($merged)
+            ]);
 
             return response()->json(['data' => $merged->take(50)]);
         }
