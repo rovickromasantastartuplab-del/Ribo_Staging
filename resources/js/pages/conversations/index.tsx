@@ -504,7 +504,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         {msg.body_html ? (
                                                             <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
                                                         ) : (
-                                                            <span className="whitespace-pre-wrap">{msg.snippet}</span>
+                                                            <span className="whitespace-pre-wrap">{msg.body_preview}</span>
                                                         )}
                                                     </div>
                                                 </div>
