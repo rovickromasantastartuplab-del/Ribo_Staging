@@ -14,7 +14,14 @@ import {
     RefreshCw,
     AlertCircle,
     ArrowLeft,
-    PenBox
+    PenBox,
+    Mail,
+    Paperclip,
+    Image as ImageIcon,
+    Smile,
+    Link,
+    Type,
+    Trash2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -654,48 +661,65 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
             {/* Compose Dialog */}
             <Dialog open={showCompose} onOpenChange={setShowCompose}>
-                <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden gap-0">
-                    <DialogHeader className="px-5 py-4 border-b bg-muted/40">
-                        <DialogTitle className="text-lg font-semibold">{t('New Message')}</DialogTitle>
+                <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden gap-0 border-none shadow-2xl rounded-xl">
+                    <DialogHeader className="px-6 py-4 bg-primary/5 border-b">
+                        <DialogTitle className="text-lg font-semibold flex items-center text-primary">
+                            <Mail className="w-5 h-5 mr-2" />
+                            {t('New Message')}
+                        </DialogTitle>
                     </DialogHeader>
-                    <div className="flex flex-col">
-                        <div className="flex items-center px-4 py-2.5 border-b focus-within:bg-muted/10 transition-colors">
-                            <Label htmlFor="compose-to" className="w-16 text-xs font-medium text-muted-foreground">{t('To:')}</Label>
+                    <div className="flex flex-col bg-background">
+                        <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
+                            <Label htmlFor="compose-to" className="w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('To')}</Label>
                             <Input 
                                 id="compose-to"
                                 value={composeTo}
                                 onChange={(e) => setComposeTo(e.target.value)}
                                 placeholder="recipient@example.com"
-                                className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto break-all"
+                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto break-all bg-transparent text-sm"
                             />
                         </div>
-                        <div className="flex items-center px-4 py-2.5 border-b focus-within:bg-muted/10 transition-colors">
-                            <Label htmlFor="compose-subject" className="w-16 text-xs font-medium text-muted-foreground">{t('Subject:')}</Label>
+                        <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
+                            <Label htmlFor="compose-subject" className="w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('Subject')}</Label>
                             <Input 
                                 id="compose-subject"
                                 value={composeSubject}
                                 onChange={(e) => setComposeSubject(e.target.value)}
-                                placeholder={t('Enter subject...')}
-                                className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto font-medium"
+                                placeholder={t('Enter subject here...')}
+                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto font-semibold bg-transparent text-sm"
                             />
                         </div>
-                        <div className="p-4">
+                        <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
                             <textarea 
                                 value={composeBody}
                                 onChange={(e) => setComposeBody(e.target.value)}
                                 placeholder={t('Write your message here...')}
-                                className="w-full min-h-[200px] text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none leading-relaxed"
+                                className="w-full min-h-[300px] p-6 text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none leading-relaxed"
                             />
+                            {/* Fake Toolbar */}
+                            <div className="flex items-center gap-1 px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Type className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Link className="h-4 w-4" /></Button>
+                                <div className="w-px h-5 bg-border mx-2" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Paperclip className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><ImageIcon className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Smile className="h-4 w-4" /></Button>
+                            </div>
                         </div>
                     </div>
-                    <DialogFooter className="px-4 py-3 border-t bg-muted/30 sm:justify-between items-center">
-                        <Button variant="ghost" size="sm" onClick={() => setShowCompose(false)} disabled={isComposing}>
-                            {t('Cancel')}
+                    <DialogFooter className="px-5 py-4 bg-muted/10 sm:justify-between items-center rounded-b-xl">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors" onClick={() => setShowCompose(false)} disabled={isComposing}>
+                            <Trash2 className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" onClick={handleSendNewEmail} disabled={isComposing || !composeTo.trim() || !composeSubject.trim() || !composeBody.trim()} className="gap-2 px-6">
-                            {isComposing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                            {t('Send')}
-                        </Button>
+                        <div className="flex items-center gap-3">
+                            <Button variant="ghost" size="sm" onClick={() => setShowCompose(false)} disabled={isComposing} className="text-xs font-semibold px-4 h-9">
+                                {t('Cancel')}
+                            </Button>
+                            <Button size="sm" onClick={handleSendNewEmail} disabled={isComposing || !composeTo.trim() || !composeSubject.trim() || !composeBody.trim()} className="gap-2 px-6 h-9 shadow-md rounded-full font-bold tracking-wide">
+                                {isComposing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                {t('Send Message')}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

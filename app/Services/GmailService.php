@@ -112,7 +112,7 @@ class GmailService
     {
         $params = [
             'maxResults' => $maxResults,
-            'labelIds' => ['INBOX'],
+            'q' => 'in:inbox OR in:sent',
         ];
 
         if ($pageToken) {
@@ -230,7 +230,6 @@ class GmailService
             // Fetch history records since last known historyId
             $response = $this->gmail->users_history->listUsersHistory('me', [
                 'startHistoryId' => $startHistoryId,
-                'labelId' => 'INBOX',
                 'historyTypes' => ['messageAdded', 'messageDeleted'],
             ]);
 
@@ -374,7 +373,7 @@ class GmailService
 
             $watchRequest = new \Google\Service\Gmail\WatchRequest();
             $watchRequest->setTopicName($topicName);
-            $watchRequest->setLabelIds(['INBOX']);
+            $watchRequest->setLabelIds(['INBOX', 'SENT']);
 
             $response = $this->gmail->users->watch('me', $watchRequest);
 
