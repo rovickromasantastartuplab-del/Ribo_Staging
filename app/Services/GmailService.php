@@ -941,7 +941,7 @@ class GmailService
                 'description' => $description,
                 'old_values' => $old,
                 'new_values' => $new,
-                'created_by' => $this->account->user_id,
+                'created_by' => $this->resolveCompanyId(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to log Gmail activity', [
