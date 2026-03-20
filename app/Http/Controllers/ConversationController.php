@@ -98,6 +98,11 @@ class ConversationController extends Controller
      */
     public function activities(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('Activities method called', [
+            'folder' => $request->get('folder'),
+            'email' => $request->get('email'),
+            'user_id' => auth()->id()
+        ]);
         $companyId = auth()->user()->creatorId();
         $email = $request->get('email');
         
