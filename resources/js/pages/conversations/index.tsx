@@ -334,13 +334,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </AvatarFallback>
                                             </Avatar>
                                             <div className="min-w-0 flex-1">
-                                                <div className="flex justify-between items-center gap-1 mb-0.5">
-                                                    <span className={`text-xs truncate ${
+                                                <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
+                                                    <span className={`text-xs truncate flex-1 min-w-0 ${
                                                         !thread.is_read ? 'font-extrabold' : 'font-semibold'
                                                     } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
                                                         {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground/80 shrink-0">
+                                                    <span className="text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
                                                         {timeAgoShort(thread.last_message_at)}
                                                     </span>
                                                 </div>
@@ -440,9 +440,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex-1 min-w-0 space-y-1.5">
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <span className="text-xs font-semibold truncate">{msg.from_name || msg.from_email}</span>
-                                                        <span className="text-[10px] text-muted-foreground shrink-0">
+                                                    <div className="flex items-start justify-between gap-2 overflow-hidden">
+                                                        <span className="text-xs font-semibold truncate flex-1 min-w-0">{msg.from_name || msg.from_email}</span>
+                                                        <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px] text-right">
                                                             {timeAgo(msg.sent_at)}
                                                         </span>
                                                     </div>
