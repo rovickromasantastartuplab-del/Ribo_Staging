@@ -450,10 +450,6 @@ class GmailService
 
             $sentMessage = $this->gmail->users_messages->send('me', $message);
 
-            \Illuminate\Support\Facades\Log::info('Gmail message sent via API', [
-                'message_id' => $sentMessage->getId(),
-                'thread_id' => $sentMessage->getThreadId(),
-            ]);
 
             $this->logActivity('email_sent', 'Email sent to ' . $to, "Subject: {$subject}" . (count($attachments) > 0 ? " (" . count($attachments) . " attachments)" : ""));
 

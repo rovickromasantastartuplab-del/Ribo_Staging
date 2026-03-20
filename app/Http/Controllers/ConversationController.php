@@ -94,14 +94,14 @@ class ConversationController extends Controller
     }
 
     /**
-     * Fetch activities/history for the Gmail account.
+     * Fetch activities/history for the Gmail account, optionally filtered by email.
      */
     public function activities(Request $request)
     {
         $companyId = auth()->user()->creatorId();
+        $email = $request->get('email');
+        
         $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
-
-        // If not found on owner, check if any staff has one
         if (!$gmailAccount) {
             $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
                 $q->where('created_by', $companyId);
@@ -112,12 +112,116 @@ class ConversationController extends Controller
             return response()->json(['data' => []]);
         }
 
+        if ($email) {
+            // CONSOLIDATED ACTIVITY VIEW FOR A SPECIFIC PERSON
+            $email = strtolower($email);
+            
+            // 1. Gmail Account Activity (system logs)
+            $systemActivities = \App\Models\GmailAccountActivity::where('gmail_account_id', $gmailAccount->id)
+                ->where('description', 'like', "%{$email}%")
+                ->with('user:id,name,avatar')
+                ->get();
+
+            // 2. Email Messages (Sent/Received)
+            $emailActivities = \App\Models\EmailMessage::whereHas('thread', function($q) use ($companyId) {
+                    $q->where('created_by', $companyId);
+                })
+                ->where(function($q) use ($email) {
+                    $q->where('from_email', $email)
+                      ->orWhere('to_email', $email);
+                })
+                ->get()
+                ->map(function($msg) {
+                    return [
+                        'id' => 'msg_' . $msg->id,
+                        'activity_type' => $msg->direction === 'outbound' ? 'email_sent' : 'email_received',
+                        'title' => $msg->direction === 'outbound' ? "Email sent to {$msg->to_email}" : "Email received from {$msg->from_email}",
+                        'description' => '<b>' . $msg->subject . '</b><br/><br/>' . $msg->body_preview,
+                        'created_at' => $msg->sent_at,
+                        'user' => null, 
+                    ];
+                });
+
+            // 3. CRM Activities (if Lead exists)
+            $crmActivities = collect();
+            
+            $lead = \App\Models\Lead::where('created_by', $companyId)->where('email', $email)->first();
+            if ($lead) {
+                $activities = \App\Models\LeadActivity::where('lead_id', $lead->id)
+                    ->with('user:id,name,avatar')
+                    ->get();
+                $crmActivities = $crmActivities->concat($activities);
+            }
+
+            // Merge and sort
+            $merged = collect($systemActivities)
+                ->concat($emailActivities)
+                ->concat($crmActivities)
+                ->sortByDesc('created_at')
+                ->values();
+
+            return response()->json(['data' => $merged->take(50)]);
+        }
+
         $activities = $gmailAccount->activities()
             ->with('user:id,name,avatar')
             ->orderByDesc('created_at')
             ->paginate(20);
 
         return response()->json($activities);
+    }
+
+    /**
+     * Fetch unique participants who have emailed the company.
+     */
+    public function historyParticipants(Request $request)
+    {
+        $companyId = auth()->user()->creatorId();
+        $search = $request->get('search');
+
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        if (!$gmailAccount) {
+            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })->first();
+        }
+        
+        $companyEmail = $gmailAccount ? strtolower($gmailAccount->gmail_address) : null;
+
+        $threads = EmailThread::where('created_by', $companyId)
+            ->with(['leads', 'contacts'])
+            ->orderByDesc('last_message_at')
+            ->get();
+
+        $participants = [];
+
+        foreach ($threads as $thread) {
+            $threadParticipants = $thread->participants ?? [];
+            foreach ($threadParticipants as $pEmail) {
+                $pEmail = strtolower($pEmail);
+                if ($pEmail === $companyEmail) continue;
+                if ($search && !str_contains($pEmail, strtolower($search))) continue;
+
+                if (!isset($participants[$pEmail])) {
+                    $name = $thread->leads->first()?->name 
+                        ?? $thread->contacts->first()?->name 
+                        ?? explode('@', $pEmail)[0];
+
+                    $participants[$pEmail] = [
+                        'email' => $pEmail,
+                        'name' => $name,
+                        'avatar' => null,
+                        'last_activity_at' => $thread->last_message_at,
+                    ];
+                } else {
+                    if ($thread->last_message_at > $participants[$pEmail]['last_activity_at']) {
+                        $participants[$pEmail]['last_activity_at'] = $thread->last_message_at;
+                    }
+                }
+            }
+        }
+
+        return response()->json(['data' => array_values($participants)]);
     }
 
     /**
@@ -170,11 +274,6 @@ class ConversationController extends Controller
             
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
-            \Illuminate\Support\Facades\Log::info('Attempting to send Gmail message', [
-                'to' => $request->to,
-                'subject' => $request->subject,
-                'company_id' => $companyId
-            ]);
 
             $success = $service->sendMessage(
                 $request->to,
@@ -252,11 +351,6 @@ class ConversationController extends Controller
 
             $replyAttachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
-            \Illuminate\Support\Facades\Log::info('Attempting to send Gmail reply', [
-                'thread_id' => $thread->id,
-                'gmail_thread_id' => $thread->gmail_thread_id,
-                'company_id' => auth()->user()->creatorId()
-            ]);
 
             $success = $service->sendMessage(
                 $primaryRecipient,

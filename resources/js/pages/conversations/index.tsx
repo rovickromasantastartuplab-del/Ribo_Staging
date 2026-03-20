@@ -25,7 +25,9 @@ import {
     Type,
     Trash2,
     Calendar,
-    History as HistoryIcon
+    History as HistoryIcon,
+    ChevronRight,
+    Clock
 } from 'lucide-react';
 import { ActivityStream } from '@/components/ActivityStream/ActivityStream';
 import { Input } from '@/components/ui/input';
@@ -158,6 +160,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [searchQuery, setSearchQuery] = useState('');
     const [historyActivities, setHistoryActivities] = useState<any[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [historyParticipants, setHistoryParticipants] = useState<any[]>([]);
+    const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
+    const [searchParticipants, setSearchParticipants] = useState('');
 
     const [showCompose, setShowCompose] = useState(false);
     const [composeTo, setComposeTo] = useState('');
@@ -177,7 +182,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     useEffect(() => {
         if (selectedFolder === 'history') {
-            fetchHistory();
+            if (selectedParticipant) {
+                fetchParticipantActivities(selectedParticipant.email);
+            } else {
+                fetchHistoryParticipants();
+            }
         } else {
             fetchThreads(false);
         }
@@ -187,11 +196,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         const channel = getEcho().private(`company.${companyId}`)
             .listen('.gmail.sync.completed', (data: any) => {
                 if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
-                    if (selectedFolder === 'history') {
-                        fetchHistory(true);
+                if (selectedFolder === 'history') {
+                    if (selectedParticipant) {
+                        fetchParticipantActivities(selectedParticipant.email, true);
                     } else {
-                        fetchThreads(true);
+                        fetchHistoryParticipants(true);
                     }
+                } else {
+                    fetchThreads(true);
+                }
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
                             .then(r => setSelectedThread(r.data))
@@ -202,14 +215,29 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         return () => { channel.stopListening('.gmail.sync.completed'); };
     }, [selectedFolder, gmailAccount?.id, companyId]);
 
-    const fetchHistory = async (silent = false) => {
+    const fetchHistoryParticipants = async (silent = false) => {
         if (!silent) setLoadingHistory(true);
         try {
-            const response = await axios.get(route('api.conversations.activities'));
+            const params: any = {};
+            if (searchParticipants.trim()) params.search = searchParticipants.trim();
+            const response = await axios.get(route('api.conversations.history.participants', params));
+            setHistoryParticipants(response.data.data);
+        } catch (error) {
+            console.error('Failed to fetch participants:', error);
+            if (!silent) toast.error(t('Failed to fetch contact list'));
+        } finally {
+            if (!silent) setLoadingHistory(false);
+        }
+    };
+
+    const fetchParticipantActivities = async (email: string, silent = false) => {
+        if (!silent) setLoadingHistory(true);
+        try {
+            const response = await axios.get(route('api.conversations.activities', { email }));
             setHistoryActivities(response.data.data);
         } catch (error) {
-            console.error('Failed to fetch history:', error);
-            if (!silent) toast.error(t('Failed to fetch account history'));
+            console.error('Failed to fetch participant history:', error);
+            if (!silent) toast.error(t('Failed to load activity timeline'));
         } finally {
             if (!silent) setLoadingHistory(false);
         }
@@ -357,15 +385,113 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     />
 
                     {selectedFolder === 'history' ? (
-                        <div className="flex-1 min-h-0 overflow-hidden bg-muted/5 p-4 lg:p-6 overflow-y-auto">
-                            <ActivityStream
-                                title={t('Account Activity')}
-                                emptyMessage={t('No history entries for this Gmail account.')}
-                                activities={historyActivities}
-                                isCompany={isOwner}
-                                auth={{ user: auth?.user }}
-                                maxHeight="max-h-full"
-                            />
+                        <div className="flex-1 min-h-0 overflow-hidden bg-muted/5 p-4 lg:p-6 flex flex-col">
+                            {selectedParticipant ? (
+                                <div className="flex flex-col h-full">
+                                    <div className="flex items-center justify-between mb-4 bg-background p-3 rounded-lg border shadow-sm">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedParticipant(null)}>
+                                                <ArrowLeft className="h-4 w-4" />
+                                            </Button>
+                                            <Avatar className="h-8 w-8 border">
+                                                <AvatarFallback className="text-[10px] font-bold bg-primary/5 text-primary">
+                                                    {selectedParticipant.name?.charAt(0).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="min-w-0">
+                                                <h3 className="text-sm font-bold truncate">{selectedParticipant.name}</h3>
+                                                <p className="text-[10px] text-muted-foreground truncate">{selectedParticipant.email}</p>
+                                            </div>
+                                        </div>
+                                        <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" onClick={() => {
+                                            setComposeTo(selectedParticipant.email);
+                                            setShowCompose(true);
+                                        }}>
+                                            <Mail className="h-3.5 w-3.5 mr-1.5" />
+                                            {t('Email')}
+                                        </Button>
+                                    </div>
+                                    <div className="flex-1 min-h-0 overflow-y-auto">
+                                        <ActivityStream
+                                            title={t('Activity Timeline')}
+                                            emptyMessage={t('No activities found for this contact.')}
+                                            activities={historyActivities}
+                                            isCompany={isOwner}
+                                            auth={{ user: auth?.user }}
+                                            maxHeight="max-h-full"
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col h-full">
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div>
+                                            <h2 className="text-lg font-bold tracking-tight">{t('Communication History')}</h2>
+                                            <p className="text-xs text-muted-foreground">{t('Browse activities by contact')}</p>
+                                        </div>
+                                        <div className="relative w-64">
+                                            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                            <Input
+                                                placeholder={t('Search contacts...')}
+                                                className="pl-8 h-8 text-xs bg-background"
+                                                value={searchParticipants}
+                                                onChange={(e) => setSearchParticipants(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') fetchHistoryParticipants(); }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {loadingHistory && historyParticipants.length === 0 ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center space-y-3">
+                                            <RefreshCw className="h-8 w-8 animate-spin text-primary/30" />
+                                            <p className="text-xs text-muted-foreground">{t('Loading contacts...')}</p>
+                                        </div>
+                                    ) : historyParticipants.length > 0 ? (
+                                        <ScrollArea className="flex-1 min-h-0">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-2">
+                                                {historyParticipants.map((p: any) => (
+                                                    <button
+                                                        key={p.email}
+                                                        onClick={() => setSelectedParticipant(p)}
+                                                        className="flex items-start gap-4 p-4 rounded-xl border bg-background hover:border-primary/50 hover:shadow-md transition-all text-left group overflow-hidden"
+                                                    >
+                                                        <Avatar className="h-10 w-10 border group-hover:scale-105 transition-transform">
+                                                            <AvatarFallback className="bg-primary/5 text-primary text-sm font-bold">
+                                                                {p.name?.charAt(0).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h4 className="font-bold text-sm truncate mb-0.5 group-hover:text-primary transition-colors">
+                                                                {p.name}
+                                                            </h4>
+                                                            <p className="text-[11px] text-muted-foreground truncate mb-2">
+                                                                {p.email}
+                                                            </p>
+                                                            <div className="flex items-center justify-between mt-auto pt-2 border-t">
+                                                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                                                    <Clock className="h-3 w-3" />
+                                                                    {timeAgoShort(p.last_activity_at)}
+                                                                </div>
+                                                                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </ScrollArea>
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-background border rounded-2xl border-dashed">
+                                            <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                                                <HistoryIcon className="h-8 w-8 text-muted-foreground/30" />
+                                            </div>
+                                            <h3 className="text-base font-bold mb-1">{t('No contacts with history')}</h3>
+                                            <p className="text-xs text-muted-foreground max-w-xs mb-6">
+                                                {t('Your communication history will appear here once you start receiving or sending emails.')}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <>
