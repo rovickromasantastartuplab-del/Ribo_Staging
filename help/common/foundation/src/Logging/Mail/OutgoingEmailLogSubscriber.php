@@ -40,7 +40,7 @@ class OutgoingEmailLogSubscriber
                 'from' => $headers->get('From')->getBodyAsString(),
                 'to' => $headers->get('To')->getBodyAsString(),
                 'subject' => $headers->get('Subject')->getBodyAsString(),
-                'mime' => utf8_encode((string) $parsedMessage),
+                'mime' => mb_convert_encoding((string) $parsedMessage, 'UTF-8', 'ISO-8859-1'),
                 'status' => 'not-sent',
             ]);
         } catch (Throwable $e) {
