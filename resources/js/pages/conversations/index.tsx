@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageTemplate } from '@/components/page-template';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { 
     Inbox, 
@@ -40,6 +40,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/custom-toast';
+import { CrudFormModal } from '@/components/CrudFormModal';
+import { hasPermission } from '@/utils/authorization';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { getEcho } from '@/utils/echo';
@@ -166,7 +168,8 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
 /* ── Main component ────────────────────────────────────────── */
 export default function ConversationsIndex({ gmailAccount, companyId, isOwner, unreadCount: initialUnreadCount }: { gmailAccount: any, companyId: number, isOwner: boolean, unreadCount?: number }) {
     const { t } = useTranslation();
-    const { auth } = usePage<any>().props;
+    const { auth, leadStatuses = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
+    const permissions = auth?.permissions || [];
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
     const [selectedThread, setSelectedThread] = useState<any>(null);
@@ -211,6 +214,65 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const participantObserverTarget = React.useRef<HTMLDivElement>(null);
 
     const { post: inertiaPost } = useForm({});
+
+    const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+    const [leadInitialData, setLeadInitialData] = useState<any>(null);
+
+    const handleAddAsLead = () => {
+        if (!selectedThread) return;
+        
+        // Find the external participant (not the synced Gmail account)
+        const me = gmailAccount?.email;
+        const externalParticipant = selectedThread.participants?.find((p: string) => !p.includes(me)) || selectedThread.participants?.[0];
+        
+        let name = '';
+        let email = '';
+        
+        if (externalParticipant) {
+            // Check if format is "Name <email@example.com>"
+            const match = externalParticipant.match(/(.*)<(.*)>/);
+            if (match) {
+                name = match[1].trim();
+                email = match[2].trim();
+            } else {
+                email = externalParticipant.trim();
+                // If it's just an email, use the part before @ as a fallback name if needed, 
+                // but usually better to leave Name blank for the user to fill or use email.
+                name = email.split('@')[0];
+            }
+        }
+        
+        setLeadInitialData({
+            name: name,
+            email: email,
+            email_thread_id: selectedThread.id
+        });
+        setIsLeadModalOpen(true);
+    };
+
+    const handleLeadFormSubmit = (formData: any) => {
+        toast.loading(t('Creating lead and linking thread...'));
+        
+        router.post(route('leads.store'), {
+            ...formData,
+            email_thread_id: selectedThread?.id
+        }, {
+            onSuccess: (page: any) => {
+                setIsLeadModalOpen(false);
+                toast.dismiss();
+                if (page.props.flash.success) {
+                    toast.success(t(page.props.flash.success));
+                }
+                // Refresh threads to show the new Lead badge
+                fetchThreads(false);
+            },
+            onError: (errors: any) => {
+                toast.dismiss();
+                toast.error(t('Failed to create lead'));
+                console.error(errors);
+            }
+        });
+    };
 
     // Ref for real-time refresh
     const selectedThreadIdRef = React.useRef<number | null>(null);
@@ -1238,7 +1300,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 <p className="text-[11px] text-muted-foreground mb-3 text-center">
                                                     {t('This contact is not yet linked to a Lead or Contact record.')}
                                                 </p>
-                                                <Button size="sm" variant="outline" className="w-full text-[11px] h-7">
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="outline" 
+                                                    className="w-full text-[11px] h-7"
+                                                    onClick={() => handleAddAsLead()}
+                                                >
                                                     {t('Add as Lead')}
                                                 </Button>
                                             </div>
@@ -1357,6 +1424,79 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <CrudFormModal
+                isOpen={isLeadModalOpen}
+                onClose={() => setIsLeadModalOpen(false)}
+                onSubmit={handleLeadFormSubmit}
+                formConfig={{
+                    fields: [
+                        { name: 'name', label: t('Lead Name'), type: 'text', required: true },
+                        { name: 'email', label: t('Email'), type: 'email' },
+                        { name: 'phone', label: t('Phone'), type: 'tel' },
+                        { name: 'company', label: t('Company'), type: 'text' },
+                        { name: 'account_name', label: t('Account Name'), type: 'text' },
+                        {
+                            name: 'account_industry_id',
+                            label: t('Account Industry'),
+                            type: 'select',
+                            options: accountIndustries.map((industry: any) => ({ value: industry.id, label: industry.name }))
+                        },
+                        { name: 'website', label: t('Website'), type: 'text' },
+                        { name: 'position', label: t('Position'), type: 'text' },
+                        { name: 'value', label: t('Lead Value'), type: 'number', step: '0.01', min: '0' },
+                        {
+                            name: 'lead_status_id',
+                            label: t('Lead Status'),
+                            type: 'select',
+                            required: true,
+                            options: leadStatuses.map((status: any) => ({
+                                value: status.id,
+                                label: status.name
+                            }))
+                        },
+                        {
+                            name: 'lead_source_id',
+                            label: t('Lead Source'),
+                            type: 'select',
+                            required: true,
+                            options: leadSources.map((source: any) => ({
+                                value: source.id,
+                                label: source.name
+                            }))
+                        },
+                        { name: 'address', label: t('Address'), type: 'textarea' },
+                        {
+                            name: 'campaign_id',
+                            label: t('Campaign'),
+                            type: 'select',
+                            options: campaigns.map((campaign: any) => ({ value: campaign.id, label: campaign.name }))
+                        },
+                        { name: 'notes', label: t('Notes'), type: 'textarea' },
+                        {
+                            name: 'assigned_to',
+                            label: t('Assign To'),
+                            type: 'select',
+                            options: users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` })),
+                            hidden: !isOwner
+                        },
+                        {
+                            name: 'status',
+                            label: t('Status'),
+                            type: 'select',
+                            options: [
+                                { value: 'active', label: t('Active') },
+                                { value: 'inactive', label: t('Inactive') }
+                            ],
+                            defaultValue: 'active'
+                        }
+                    ],
+                    modalSize: 'xl'
+                }}
+                initialData={leadInitialData}
+                title={t('Add New Lead')}
+                mode="create"
+            />
 
         </PageTemplate>
     );

@@ -266,6 +266,7 @@ class LeadController extends Controller
             'campaign_id' => 'nullable|exists:campaigns,id',
             'status' => 'nullable|in:active,inactive',
             'assigned_to' => 'nullable|exists:users,id',
+            'email_thread_id' => 'nullable|exists:email_threads,id',
         ]);
 
         $validated['created_by'] = createdBy();
@@ -277,6 +278,16 @@ class LeadController extends Controller
         }
 
         $lead = Lead::create($validated);
+
+        if ($lead && $request->has('email_thread_id')) {
+            $thread = \App\Models\EmailThread::where('id', $request->email_thread_id)
+                ->where('created_by', createdBy())
+                ->first();
+            if ($thread) {
+                $thread->leads()->syncWithoutDetaching([$lead->id => ['matched_via' => 'manual_add_as_lead']]);
+            }
+        }
+
         if ($lead && !IsDemo()) {
             event(new \App\Events\LeadAssigned($lead));
         }

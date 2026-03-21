@@ -6,6 +6,11 @@ use App\Models\GmailAccount;
 use App\Models\EmailThread;
 use App\Models\EmailMessage;
 use App\Services\GmailService;
+use App\Models\LeadStatus;
+use App\Models\LeadSource;
+use App\Models\AccountIndustry;
+use App\Models\Campaign;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
@@ -67,7 +72,16 @@ class ConversationController extends Controller
                 'last_sync_at' => $gmailAccount->last_sync_at?->toIso8601String(),
                 'sync_status' => $gmailAccount->sync_status,
                 'sync_error' => $gmailAccount->sync_error,
-            ] : null
+            ] : null,
+            'leadStatuses' => LeadStatus::where('created_by', createdBy())->where('status', 'active')
+                ->orderBy('order', 'asc')->orderBy('id', 'asc')
+                ->get(['id', 'name', 'color']),
+            'leadSources' => LeadSource::where('created_by', createdBy())->where('status', 'active')
+                ->get(['id', 'name']),
+            'accountIndustries' => AccountIndustry::where('created_by', createdBy())->where('status', 'active')->get(['id', 'name']),
+            'campaigns' => Campaign::where('created_by', createdBy())->where('status', 'active')
+                ->get(['id', 'name']),
+            'users' => User::where('created_by', createdBy())->where('status', 'active')->get(['id', 'name', 'email']),
         ]);
     }
 
