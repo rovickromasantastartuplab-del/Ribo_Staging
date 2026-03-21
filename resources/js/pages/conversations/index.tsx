@@ -27,7 +27,9 @@ import {
     Calendar,
     History as HistoryIcon,
     ChevronRight,
-    Clock
+    Clock,
+    UserCheck,
+    CheckCircle,
 } from 'lucide-react';
 import { ActivityStream } from '@/components/ActivityStream/ActivityStream';
 import { Input } from '@/components/ui/input';
@@ -42,6 +44,18 @@ import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { getEcho } from '@/utils/echo';
 import { sanitizeHtml } from '@/utils/sanitize-html';
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
+    DropdownMenuCheckboxItem,
+} from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 /* ── helpers ───────────────────────────────────────────────── */
 const parseUTC = (dateStr: string) => {
@@ -64,10 +78,12 @@ const timeAgoShort = (dateStr: string) => {
 /* ── Folder tab selector (works on all sizes) ──────────────── */
 const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any) => {
     const folders = [
-        { key: 'inbox',      icon: Inbox,       label: t('Inbox'),      count: unreadCount },
-        { key: 'unassigned', icon: Archive,     label: t('Unassigned'), count: 0 },
-        { key: 'sent',       icon: Send,        label: t('Sent'),       count: 0 },
-        { key: 'history',    icon: HistoryIcon, label: t('History'),    count: 0 },
+        { key: 'inbox',      icon: Inbox,           label: t('Inbox'),      count: unreadCount },
+        { key: 'my_assignments', icon: UserCheck,   label: t('My Assignments'), count: 0 },
+        { key: 'unassigned', icon: Archive,         label: t('Unassigned'), count: 0 },
+        { key: 'sent',       icon: Send,            label: t('Sent'),       count: 0 },
+        { key: 'closed',     icon: CheckCircle,     label: t('Closed'),     count: 0 },
+        { key: 'history',    icon: HistoryIcon,     label: t('History'),    count: 0 },
     ];
     return (
         <div className="flex gap-1 p-2 overflow-x-auto items-center">
@@ -116,10 +132,13 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
 
             <div className="space-y-0.5">
                 {[
-                    { key: 'inbox',      icon: Inbox,       label: t('Inbox'),      count: unreadCount },
-                    { key: 'unassigned', icon: Archive,     label: t('Unassigned'), count: 0 },
-                    { key: 'sent',       icon: Send,        label: t('Sent'),       count: 0 },
-                    { key: 'history',    icon: HistoryIcon, label: t('History'),    count: 0 },
+                    { key: 'inbox',      icon: Inbox,           label: t('Inbox'),      count: unreadCount },
+                    { key: 'my_assignments', icon: UserCheck,   label: t('My Assignments'), count: 0 },
+                    { key: 'unassigned', icon: Archive,         label: t('Unassigned'), count: 0 },
+                    { key: 'unassigned_staff', icon: UserPlus,  label: t('Unassigned Staff'), count: 0 },
+                    { key: 'sent',       icon: Send,            label: t('Sent'),       count: 0 },
+                    { key: 'closed',     icon: CheckCircle,     label: t('Closed'),     count: 0 },
+                    { key: 'history',    icon: HistoryIcon,     label: t('History'),    count: 0 },
                 ].map(f => (
                     <button
                         key={f.key}
@@ -174,6 +193,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [gmailPageToken, setGmailPageToken] = useState<string | null>(undefined); // undefined = haven't checked Gmail yet
     const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
     const [searchParticipants, setSearchParticipants] = useState('');
+    
+    // Feature states
+    const [companyUsers, setCompanyUsers] = useState<any[]>([]);
+    const [updatingMetadata, setUpdatingMetadata] = useState(false);
 
     const [showCompose, setShowCompose] = useState(false);
     const [composeTo, setComposeTo] = useState('');
@@ -231,6 +254,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
     }, [selectedFolder, gmailAccount?.id, companyId, selectedParticipant?.email, searchQuery, searchParticipants]);
+
+    useEffect(() => {
+        if (!companyId) return;
+        
+        // Fetch users for assignment dropdown
+        axios.get(route('users.index', { api: true }))
+            .then(r => setCompanyUsers(r.data.data || []))
+            .catch(err => console.error('Failed to fetch users:', err));
+    }, [companyId]);
     // Thread Infinite Scroll Observer
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -468,6 +500,36 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const handleBack = () => {
         setSelectedThread(null);
         setShowContactSidebar(false);
+    };
+
+    const handleUpdateMetadata = async (updates: any) => {
+        if (!selectedThread) return;
+        setUpdatingMetadata(true);
+        try {
+            const response = await axios.post(route('api.conversations.update', selectedThread.id), updates);
+            setSelectedThread(response.data.thread);
+            // Refresh thread list to show new metadata (like closed)
+            fetchThreads(false, true);
+            toast.success(t('Conversation updated'));
+        } catch (error) {
+            toast.error(t('Failed to update conversation'));
+        } finally {
+            setUpdatingMetadata(false);
+        }
+    };
+
+    const handleAssignUsers = async (userIds: number[]) => {
+        if (!selectedThread) return;
+        setUpdatingMetadata(true);
+        try {
+            const response = await axios.post(route('api.conversations.assign', selectedThread.id), { user_ids: userIds });
+            setSelectedThread(response.data.thread);
+            toast.success(t('Assignments updated'));
+        } catch (error) {
+            toast.error(t('Failed to update assignments'));
+        } finally {
+            setUpdatingMetadata(false);
+        }
     };
 
     /* ─── Determine which view to show on mobile ─── */
@@ -763,20 +825,47 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 <div className="text-[11px] text-muted-foreground/70 truncate">
                                                     {thread.snippet}
                                                 </div>
-                                                {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
-                                                    <div className="mt-1.5 flex gap-1">
-                                                        {thread.leads?.length > 0 && (
-                                                            <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
-                                                                {t('Lead')}
-                                                            </Badge>
-                                                        )}
-                                                        {thread.contacts?.length > 0 && (
-                                                            <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
-                                                                {t('Contact')}
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                                                    {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
+                                                        <>
+                                                            {thread.leads?.length > 0 && (
+                                                                <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
+                                                                    {t('Lead')}
+                                                                </Badge>
+                                                            )}
+                                                            {thread.contacts?.length > 0 && (
+                                                                <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
+                                                                    {t('Contact')}
+                                                                </Badge>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                    
+                                                    {thread.priority && (
+                                                        <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${
+                                                            thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                                            thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                                            'bg-blue-50 text-blue-600 border-blue-100'
+                                                        }`}>
+                                                            {t(thread.priority)}
+                                                        </Badge>
+                                                    )}
+
+                                                    {thread.assignments?.length > 0 && (
+                                                        <div className="flex items-center gap-0.5 ml-auto">
+                                                            <div className="flex -space-x-1.5 overflow-hidden">
+                                                                {thread.assignments.slice(0, 2).map((a: any) => (
+                                                                    <Avatar key={a.id} className="h-4 w-4 border-background border">
+                                                                        <AvatarFallback className="text-[6px] bg-muted">{a.name.charAt(0)}</AvatarFallback>
+                                                                    </Avatar>
+                                                                ))}
+                                                            </div>
+                                                            {thread.assignments.length > 2 && (
+                                                                <span className="text-[8px] text-muted-foreground font-bold">+{thread.assignments.length - 2}</span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </button>
                                     ))}
@@ -849,11 +938,98 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1 ml-2 shrink-0">
+                                        {/* Status Picker */}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-1.5 px-2.5">
+                                                    <Badge className={`w-2 h-2 rounded-full p-0 ${selectedThread.status === 'Closed' ? 'bg-gray-400' : 'bg-green-500'}`} />
+                                                    {selectedThread.status || t('Open')}
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-32">
+                                                <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })}>
+                                                    <Badge className="w-2 h-2 rounded-full p-0 bg-green-500 mr-2" />
+                                                    {t('Open')}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Closed' })}>
+                                                    <Badge className="w-2 h-2 rounded-full p-0 bg-gray-400 mr-2" />
+                                                    {t('Closed')}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+
+                                        {/* Assignment Picker */}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" size="icon" className="h-8 w-8 relative">
+                                                    <UserCheck className="h-4 w-4" />
+                                                    {selectedThread.assignments?.length > 0 && (
+                                                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                                                            {selectedThread.assignments.length}
+                                                        </span>
+                                                    )}
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden">
+                                                <div className="p-2 border-b bg-muted/30">
+                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('Assign Staff')}</p>
+                                                </div>
+                                                <ScrollArea className="h-48">
+                                                    <div className="p-1">
+                                                        {companyUsers.map((u: any) => (
+                                                            <DropdownMenuCheckboxItem
+                                                                key={u.id}
+                                                                checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
+                                                                onCheckedChange={(checked) => {
+                                                                    const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];
+                                                                    const nextIds = checked 
+                                                                        ? [...currentIds, u.id]
+                                                                        : currentIds.filter((id: number) => id !== u.id);
+                                                                    handleAssignUsers(nextIds);
+                                                                }}
+                                                                className="flex items-center gap-2 text-xs py-2"
+                                                            >
+                                                                <Avatar className="h-5 w-5">
+                                                                    <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                                {u.name}
+                                                            </DropdownMenuCheckboxItem>
+                                                        ))}
+                                                    </div>
+                                                </ScrollArea>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
+                                                {['Low', 'Medium', 'High'].map(p => (
+                                                    <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
+                                                        <div className={`w-2.5 h-2.5 rounded-full mr-2 ${
+                                                            p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'
+                                                        }`} />
+                                                        {t(p)}
+                                                        {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
+                                                    </DropdownMenuItem>
+                                                ))}
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Follow-up Date')}</DropdownMenuLabel>
+                                                <div className="px-2 py-1.5">
+                                                    <DatePicker
+                                                        selected={selectedThread.follow_up_at ? new Date(selectedThread.follow_up_at) : undefined}
+                                                        onChange={(date: Date | undefined) => handleUpdateMetadata({ follow_up_at: date ? date.toISOString() : null })}
+                                                    />
+                                                </div>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowContactSidebar(!showContactSidebar)}>
                                             <User className={`h-4 w-4 ${showContactSidebar ? 'text-primary' : ''}`} />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreVertical className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>

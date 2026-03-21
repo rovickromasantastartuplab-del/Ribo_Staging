@@ -1,0 +1,665 @@
+A	HitPay_Payment_Gateway_Documentation.md
+A	app/Console/Commands/RenewGmailWatch.php
+A	app/Events/GmailSyncCompleted.php
+M	app/Exports/InvoiceExport.php
+M	app/Exports/LeadExport.php
+M	app/Exports/ProductExport.php
+M	app/Exports/QuoteExport.php
+M	app/Exports/SalesOrderExport.php
+M	app/Helpers/helper.php
+M	app/Http/Controllers/AccountController.php
+M	app/Http/Controllers/Auth/RegisteredUserController.php
+M	app/Http/Controllers/BrandController.php
+M	app/Http/Controllers/CampaignTypeController.php
+M	app/Http/Controllers/CategoryController.php
+M	app/Http/Controllers/CompanyController.php
+M	app/Http/Controllers/ContactController.php
+A	app/Http/Controllers/ConversationController.php
+M	app/Http/Controllers/DashboardController.php
+M	app/Http/Controllers/DocumentController.php
+A	app/Http/Controllers/GmailController.php
+A	app/Http/Controllers/GmailWebhookController.php
+M	app/Http/Controllers/InvitationController.php
+M	app/Http/Controllers/InvoiceController.php
+M	app/Http/Controllers/LeadController.php
+M	app/Http/Controllers/LeadSourceController.php
+M	app/Http/Controllers/LeadStatusController.php
+M	app/Http/Controllers/MediaController.php
+M	app/Http/Controllers/OnboardingController.php
+M	app/Http/Controllers/OpportunityController.php
+M	app/Http/Controllers/OpportunitySourceController.php
+M	app/Http/Controllers/OpportunityStageController.php
+M	app/Http/Controllers/ProductController.php
+M	app/Http/Controllers/QuoteController.php
+M	app/Http/Controllers/SalesOrderController.php
+A	app/Http/Controllers/Settings/IntegrationsSettingsController.php
+M	app/Http/Controllers/Settings/SettingsController.php
+A	app/Http/Controllers/Settings/SocialAuthController.php
+M	app/Http/Controllers/Settings/SystemSettingsController.php
+M	app/Http/Controllers/TargetListController.php
+M	app/Http/Controllers/TaxController.php
+M	app/Http/Controllers/UserController.php
+A	app/Http/Controllers/Webhooks/FacebookWebhookController.php
+A	app/Http/Controllers/Webhooks/WhatsAppWebhookController.php
+A	app/Http/Controllers/Webhooks/WordPressWebhookController.php
+M	app/Http/Controllers/WeddingSupplierController.php
+M	app/Http/Middleware/CheckInstallation.php
+M	app/Http/Middleware/CheckPermission.php
+M	app/Http/Middleware/HandleInertiaRequests.php
+M	app/Http/Middleware/VerifyCsrfToken.php
+M	app/Http/Requests/Auth/LoginRequest.php
+M	app/Http/Requests/UserRequest.php
+A	app/Jobs/ClassifyLeadIntentJob.php
+A	app/Jobs/SyncGmailThreadsJob.php
+M	app/Listeners/SendAssignLeadEmail.php
+M	app/Models/Account.php
+A	app/Models/AiClassificationResult.php
+M	app/Models/Brand.php
+M	app/Models/Contact.php
+A	app/Models/EmailMessage.php
+A	app/Models/EmailThread.php
+A	app/Models/FieldMapping.php
+A	app/Models/GmailAccount.php
+A	app/Models/GmailAccountActivity.php
+M	app/Models/Lead.php
+A	app/Models/LeadEvent.php
+M	app/Models/LeadSource.php
+M	app/Models/LeadStatus.php
+M	app/Models/OpportunitySource.php
+M	app/Models/OpportunityStage.php
+M	app/Models/Quote.php
+M	app/Models/SalesOrder.php
+A	app/Models/SocialAccount.php
+M	app/Models/Tax.php
+M	app/Models/User.php
+M	app/Observers/UserObserver.php
+M	app/Providers/AppServiceProvider.php
+M	app/Providers/EventServiceProvider.php
+A	app/Services/GmailService.php
+M	app/Services/MailConfigService.php
+A	app/Services/Omnichannel/ContactMatcherService.php
+A	app/Services/Omnichannel/FacebookLeadAdsService.php
+A	app/Services/Omnichannel/LeadEventTrackerService.php
+M	bootstrap/app.php
+M	bootstrap/providers.php
+A	build_error.txt
+M	composer.json
+M	composer.lock
+A	config/broadcasting.php
+M	config/role-permissions.php
+M	config/services.php
+A	database/migrations/2026_03_04_230716_add_social_fields_to_contacts_table.php
+A	database/migrations/2026_03_04_230720_create_lead_events_table.php
+A	database/migrations/2026_03_04_230722_create_ai_classification_results_table.php
+A	database/migrations/2026_03_04_230737_add_ai_fields_to_leads_table.php
+A	database/migrations/2026_03_06_023747_create_social_accounts_table.php
+A	database/migrations/2026_03_06_063000_create_field_mappings_table.php
+A	database/migrations/2026_03_11_135235_add_order_to_lead_statuses_and_opportunity_stages.php
+A	database/migrations/2026_03_17_000001_create_gmail_accounts_table.php
+A	database/migrations/2026_03_17_000002_create_email_threads_table.php
+A	database/migrations/2026_03_17_000003_create_email_messages_table.php
+A	database/migrations/2026_03_18_053319_create_email_threadables_table.php
+A	database/migrations/2026_03_18_120000_add_message_id_to_email_messages_table.php
+A	database/migrations/2026_03_19_031447_grant_manage_conversations_to_company_roles.php
+A	database/migrations/2026_03_20_101946_create_gmail_account_activities_table.php
+A	database/migrations/2026_03_20_141739_add_indexes_to_email_messages_table.php
+A	database/migrations/2026_03_21_140000_add_next_page_token_to_gmail_accounts_table.php
+M	database/seeders/PermissionSeeder.php
+M	database/seeders/RoleSeeder.php
+M	database/seeders/StaffRoleSeeder.php
+A	debug_update.php
+A	docs/Founder Direction Document - Conversation Modules (V1.0).md
+A	docs/gmail_crm_feature_overview.pdf
+A	docs/gmail_crm_feature_overview.txt
+D	docs/laravel.log.5
+A	docs/oauth_webhook_routing_flow.md
+A	docs/omnichannel_implementation_summary.md
+M	package-lock.json
+M	package.json
+R092	public/build/assets/AboutUs-_YUlCggI.js	public/build/assets/AboutUs-vewxcgJx.js
+A	public/build/assets/BarChart-BAuBcQlg.js
+D	public/build/assets/BarChart-C5VLSiZY.js
+A	public/build/assets/CartesianChart-B1PjKq1y.js
+D	public/build/assets/CartesianChart-ClwbL7Uw.js
+D	public/build/assets/ContactSection-B8ABcbfN.js
+A	public/build/assets/ContactSection-C81U36Wt.js
+A	public/build/assets/CrudDeleteModal-DX-573gH.js
+D	public/build/assets/CrudDeleteModal-pK5gG7Ih.js
+D	public/build/assets/CrudFormModal-BDI4DQMf.js
+A	public/build/assets/CrudFormModal-BtaJsbPS.js
+R056	public/build/assets/CrudTable-LtL8sD8p.js	public/build/assets/CrudTable-FrENHMEl.js
+R095	public/build/assets/Error-aSuoLLl8.js	public/build/assets/Error-C5tsHWGd.js
+R096	public/build/assets/FaqSection-CurVmOph.js	public/build/assets/FaqSection-BI_mbVac.js
+R086	public/build/assets/FeaturesSection-DwAYWg9t.js	public/build/assets/FeaturesSection-CFm712O8.js
+R092	public/build/assets/Footer-BE6FBI1g.js	public/build/assets/Footer-DcUTVGEz.js
+R097	public/build/assets/Header-0fcrg_vN.js	public/build/assets/Header-CRgsT5KC.js
+A	public/build/assets/HeroSection-D4Ls2gFc.js
+D	public/build/assets/HeroSection-Lsx9BO7t.js
+D	public/build/assets/ImportModal-CI1ENEME.js
+A	public/build/assets/ImportModal-D4IKh6q_.js
+R099	public/build/assets/LineChart-t3pOwC1x.js	public/build/assets/LineChart-Cij6jpms.js
+R096	public/build/assets/LivePreview-A-P1UdS_.js	public/build/assets/LivePreview-CbJLkqZK.js
+D	public/build/assets/NewsletterSection-C_-Zg7Rz.js
+A	public/build/assets/NewsletterSection-Ty-3G_qn.js
+A	public/build/assets/PageCrudWrapper-BoDdL30i.js
+D	public/build/assets/PageCrudWrapper-b7UxB41M.js
+R078	public/build/assets/PageWrapper-Cxw21fgD.js	public/build/assets/PageWrapper-BYUcHkAq.js
+R099	public/build/assets/PieChart-C1XXZFSP.js	public/build/assets/PieChart-CJZ6AZKm.js
+R097	public/build/assets/PlansSection-CzC7rHLG.js	public/build/assets/PlansSection-BMiJdeYM.js
+R097	public/build/assets/ScreenshotsSection-B8IQVP0O.js	public/build/assets/ScreenshotsSection-BkmPYgbv.js
+R065	public/build/assets/SectionNavigation-CnMLWmq7.js	public/build/assets/SectionNavigation-BwOWzlmT.js
+A	public/build/assets/TeamSection-C7nah2dD.js
+D	public/build/assets/TeamSection-w-qx8cpB.js
+R099	public/build/assets/Template1-BvkpSQ--.js	public/build/assets/Template1-4_I177os.js
+R099	public/build/assets/Template1-QGNi2-B2.js	public/build/assets/Template1-jSjBrzOl.js
+R099	public/build/assets/Template1-DV5hZq6A.js	public/build/assets/Template1-wKsxg4sN.js
+R099	public/build/assets/Template10-DfXc5szN.js	public/build/assets/Template10-BuAiXDua.js
+R099	public/build/assets/Template10-6rkaU3SW.js	public/build/assets/Template10-RkpP3uPx.js
+R099	public/build/assets/Template10-B8J6fYCU.js	public/build/assets/Template10-pvSxJQ0i.js
+R099	public/build/assets/Template2-DFfRCUVQ.js	public/build/assets/Template2-Brw4LXLK.js
+R099	public/build/assets/Template2-cIRDPxmB.js	public/build/assets/Template2-C3LycNPt.js
+R099	public/build/assets/Template2-DYnfzQtK.js	public/build/assets/Template2-CZVHBU5N.js
+R099	public/build/assets/Template3-CXqauqwy.js	public/build/assets/Template3-BFQPz12j.js
+R099	public/build/assets/Template3-WirU6but.js	public/build/assets/Template3-Bmac1phn.js
+R099	public/build/assets/Template3-DaeFNJig.js	public/build/assets/Template3-DXZZ2xt0.js
+R099	public/build/assets/Template4-Bq-_V6rg.js	public/build/assets/Template4-Bey0ZuUA.js
+R099	public/build/assets/Template4-B_hagR5Y.js	public/build/assets/Template4-DDfYl8PZ.js
+R099	public/build/assets/Template4-DZTgFKlO.js	public/build/assets/Template4-DqXpX0r8.js
+R099	public/build/assets/Template5-CCQmv8nc.js	public/build/assets/Template5-Bm5sNTMf.js
+R099	public/build/assets/Template5-CyCpSTEM.js	public/build/assets/Template5-BrhG9AV2.js
+R099	public/build/assets/Template5-Ghf33zRq.js	public/build/assets/Template5-oBmB27er.js
+R099	public/build/assets/Template6-CJSHS31Z.js	public/build/assets/Template6-Bryc64cE.js
+R099	public/build/assets/Template6-CJLqG1XL.js	public/build/assets/Template6-Ca7_WvEw.js
+R099	public/build/assets/Template6-6mgXJOLQ.js	public/build/assets/Template6-YfgN8v7U.js
+R099	public/build/assets/Template7-B9tp5cYL.js	public/build/assets/Template7-Bk_QEhaG.js
+R099	public/build/assets/Template7-RzeWTJds.js	public/build/assets/Template7-D_WGufvR.js
+R099	public/build/assets/Template7-B4nX_j4i.js	public/build/assets/Template7-kHOlYMFU.js
+R099	public/build/assets/Template8-CFzk_jk9.js	public/build/assets/Template8-B6qQvF8o.js
+R099	public/build/assets/Template8-DmtG6VBi.js	public/build/assets/Template8-Cesn1tId.js
+R099	public/build/assets/Template8-RdJOLHet.js	public/build/assets/Template8-JHQYX35p.js
+R099	public/build/assets/Template9-D300MbQY.js	public/build/assets/Template9-BUpy9lJ2.js
+R099	public/build/assets/Template9-Dq1wyet7.js	public/build/assets/Template9-Bc7lAEfo.js
+R099	public/build/assets/Template9-BC-vAqSM.js	public/build/assets/Template9-DctfsBTQ.js
+R086	public/build/assets/TemplateListItem-DxetTMww.js	public/build/assets/TemplateListItem-B4Ya_8v3.js
+R097	public/build/assets/TemplatePreview-Bl_OxroW.js	public/build/assets/TemplatePreview-CVy6sqNU.js
+R094	public/build/assets/TemplatePreviewCard-C2mB7Etp.js	public/build/assets/TemplatePreviewCard-CnD4dxH5.js
+R097	public/build/assets/TemplatesSection-CIMJFC1o.js	public/build/assets/TemplatesSection-Brf269Wg.js
+R095	public/build/assets/TestimonialsSection-C2gzuFz9.js	public/build/assets/TestimonialsSection-BcMNYWAi.js
+A	public/build/assets/UpgradePlanModal-CadWOMEc.js
+D	public/build/assets/UpgradePlanModal-y9J-hmfs.js
+R089	public/build/assets/WhyChooseUs-DFvxM98d.js	public/build/assets/WhyChooseUs-B09TsHXB.js
+A	public/build/assets/accept-invitation-9WCpcwYh.js
+D	public/build/assets/accept-invitation-BptdOGGk.js
+R071	public/build/assets/alert-Ch670GJy.js	public/build/assets/alert-CbX6fZ9k.js
+A	public/build/assets/all-logs-8eyQ2JY7.js
+D	public/build/assets/all-logs-BLN2Jv-R.js
+A	public/build/assets/app-BKZ09dUb.css
+A	public/build/assets/app-BkcNiHMV.css
+D	public/build/assets/app-C_AKKp5n.js
+D	public/build/assets/app-D7UmTQq1.css
+D	public/build/assets/app-ISpBBMC8.css
+A	public/build/assets/app-eHgWW0yT.js
+R090	public/build/assets/archive-BGw4s4X6.js	public/build/assets/archive-CdPYZaHw.js
+R087	public/build/assets/arrow-right-CKDwPt61.js	public/build/assets/arrow-right-Hnt8IqAm.js
+R077	public/build/assets/auth-button-CkbwiMZh.js	public/build/assets/auth-button-CE1dsCEU.js
+D	public/build/assets/auth-layout-Bjt5OlJP.js
+A	public/build/assets/auth-layout-Bp42oFCc.js
+R090	public/build/assets/award-CFGHFQwg.js	public/build/assets/award-23KAKt4c.js
+A	public/build/assets/banknote-DqdrdRWl.js
+R093	public/build/assets/building-2-BRBOUP3u.js	public/build/assets/building-2-CWvK2vEo.js
+R094	public/build/assets/building-Bm8pLFUa.js	public/build/assets/building-DOda1KI_.js
+A	public/build/assets/cache-settings-B7JkxAtu.js
+D	public/build/assets/cache-settings-DiMNzRNn.js
+R090	public/build/assets/calendar-BLxnEQqj.js	public/build/assets/calendar-BfAPkePL.js
+R089	public/build/assets/camera-0t6uNG9O.js	public/build/assets/camera-CmMNH0Bq.js
+D	public/build/assets/cashfree-modal-fix-DBBxDuBV.js
+A	public/build/assets/cashfree-modal-fix-HYdE-0lA.js
+R096	public/build/assets/chart-card-InIPdZhR.js	public/build/assets/chart-card-Be8IV8af.js
+R090	public/build/assets/chart-column-L-EmJjZr.js	public/build/assets/chart-column-z1t4wT2Z.js
+R090	public/build/assets/chart-pie-96MQfVFg.js	public/build/assets/chart-pie-CSGIveav.js
+R063	public/build/assets/chatgpt-demo-DpPI_SUK.js	public/build/assets/chatgpt-demo-B4_i8EwV.js
+A	public/build/assets/chatgpt-settings-sU4Qwj1i.js
+D	public/build/assets/chatgpt-settings-tgCZFfjW.js
+R097	public/build/assets/checkbox-9VgM4whZ.js	public/build/assets/checkbox-BPFEB91p.js
+R086	public/build/assets/chevron-left-BUmrL4Vt.js	public/build/assets/chevron-left-D97pSzyy.js
+R086	public/build/assets/chevron-right-CWr1BPTC.js	public/build/assets/chevron-right-TJg4vAYu.js
+R092	public/build/assets/chevron-up-DiYrUY9m.js	public/build/assets/chevron-up-D3e1gTi5.js
+R086	public/build/assets/circle-CrJjrxm2.js	public/build/assets/circle-9koG61H4.js
+R090	public/build/assets/circle-alert-B4d5enm4.js	public/build/assets/circle-alert-DLN_2Jf-.js
+A	public/build/assets/circle-check-BxQy_yo2.js
+R088	public/build/assets/circle-check-big-BLF55rJp.js	public/build/assets/circle-check-big-qeFJ00pi.js
+R094	public/build/assets/circle-help-BbI0Elvj.js	public/build/assets/circle-help-CFuWOLeA.js
+R088	public/build/assets/clock-CXrT20oC.js	public/build/assets/clock-B23gPjmu.js
+R088	public/build/assets/code-E_JQVMsw.js	public/build/assets/code-DHdV0GiW.js
+R094	public/build/assets/columnRenderers-bkb6t92f.js	public/build/assets/columnRenderers-TOk4HfI4.js
+D	public/build/assets/company-system-settings-CX4HWvRc.js
+A	public/build/assets/company-system-settings-Cm3mXBDZ.js
+R080	public/build/assets/company-D_enXism.js	public/build/assets/company-wvVacHpE.js
+A	public/build/assets/confirm-password-CJzSRY_u.js
+D	public/build/assets/confirm-password-Dq0jWz_z.js
+A	public/build/assets/cookie-settings-BFBFsWlU.js
+D	public/build/assets/cookie-settings-CV6Zqktu.js
+R089	public/build/assets/copy-uYd81cmg.js	public/build/assets/copy-YZIuFClK.js
+D	public/build/assets/create-CClYdABo.js
+A	public/build/assets/create-CUjxouEv.js
+A	public/build/assets/create-CfvOwd2a.js
+D	public/build/assets/create-DAeZXLtB.js
+R088	public/build/assets/credit-card-DOSr9c0n.js	public/build/assets/credit-card-BnAKNZai.js
+R092	public/build/assets/crown-C-ziXdHG.js	public/build/assets/crown-jy7eZU3N.js
+A	public/build/assets/currency-settings-C8WteflO.js
+D	public/build/assets/currency-settings-ZF_MLb2r.js
+R090	public/build/assets/custom-page-VBWlGtnv.js	public/build/assets/custom-page-CeSz_Fuq.js
+A	public/build/assets/custom-toast-Diuwge2k.js
+A	public/build/assets/customer-reports-B4HrQUDp.js
+D	public/build/assets/customer-reports-BSOzs21a.js
+A	public/build/assets/dashboard-BisiPX2Y.js
+R095	public/build/assets/dashboard-DM_I6J1K.js	public/build/assets/dashboard-Dvj2aGXO.js
+D	public/build/assets/dashboard-GpD6jkR7.js
+R089	public/build/assets/dollar-sign-_p9UaksB.js	public/build/assets/dollar-sign-FcNwPdJA.js
+R090	public/build/assets/download-C2-oQcRl.js	public/build/assets/download-C9PW-6VS.js
+A	public/build/assets/edit-BhR0vogD.js
+A	public/build/assets/edit-DJ8zQF-c.js
+D	public/build/assets/edit-DnKWhXJu.js
+D	public/build/assets/edit-Dyzb6o4N.js
+R089	public/build/assets/ellipsis-DrNjoqDo.js	public/build/assets/ellipsis-Dfvqd8m0.js
+A	public/build/assets/email-notification-settings-CB8UdqAY.js
+D	public/build/assets/email-notification-settings-a2IPu_6s.js
+A	public/build/assets/email-settings-Btz1xCLt.js
+D	public/build/assets/email-settings-EuzdQIWa.js
+R090	public/build/assets/eye-DRwxSvHu.js	public/build/assets/eye-SKm4TvHQ.js
+R093	public/build/assets/eye-off-Dq6aNNTP.js	public/build/assets/eye-off-5T7IpIj0.js
+R087	public/build/assets/facebook-C0OsW2nS.js	public/build/assets/facebook-CzmYimtf.js
+R090	public/build/assets/folder-open-D-YSh-QF.js	public/build/assets/folder-open-Cf-ZqsII.js
+D	public/build/assets/forgot-password-8ph7FXto.js
+A	public/build/assets/forgot-password-DGs6tsRI.js
+A	public/build/assets/form-5A9c7Fkb.js
+D	public/build/assets/form-CsJ2hoUP.js
+D	public/build/assets/gantt-BFzTYMP7.js
+A	public/build/assets/gantt-BMzNHBWJ.js
+R089	public/build/assets/globe-DtBQDB7h.js	public/build/assets/globe-D2G-f5oq.js
+D	public/build/assets/google-calendar-settings-DXWkuRE7.js
+A	public/build/assets/google-calendar-settings-Dy3vJOml.js
+R096	public/build/assets/grid-3x3-BC60-tDw.js	public/build/assets/grid-3x3-D3WjftX9.js
+R092	public/build/assets/grip-vertical-LMCNilme.js	public/build/assets/grip-vertical-DWd7XzqD.js
+R092	public/build/assets/hard-drive-BFpbcQlQ.js	public/build/assets/hard-drive-Bw-gPXMA.js
+R089	public/build/assets/heart-BZLKZoCX.js	public/build/assets/heart-DKWqROVk.js
+D	public/build/assets/i18n-BoHj0Zty.js
+A	public/build/assets/i18n-JmfV6DSQ.js
+A	public/build/assets/inbox-2ZwJEEqK.js
+A	public/build/assets/index-1mcAEtjq.js
+A	public/build/assets/index-4GsrNX0x.js
+D	public/build/assets/index-6vKmrM72.js
+D	public/build/assets/index-7mxzwmUu.js
+A	public/build/assets/index-ABcdFoQH.js
+D	public/build/assets/index-Atrce-aE.js
+D	public/build/assets/index-B5CmUp2e.js
+D	public/build/assets/index-B60LTcSp.js
+A	public/build/assets/index-B9WShOwO.js
+A	public/build/assets/index-BANq0AQZ.js
+R051	public/build/assets/index-CE3fwqby.js	public/build/assets/index-BCtv20iK.js
+A	public/build/assets/index-BN1aRThj.js
+A	public/build/assets/index-BOZpYKka.js
+A	public/build/assets/index-BP4GUdWW.js
+D	public/build/assets/index-BPSIgkmO.js
+A	public/build/assets/index-BU1HrV30.js
+D	public/build/assets/index-BUFMwVEP.js
+A	public/build/assets/index-BXhm0xrI.js
+D	public/build/assets/index-BgTCA8Cz.js
+D	public/build/assets/index-BiUHQalu.js
+D	public/build/assets/index-BjMbCgdq.js
+D	public/build/assets/index-BjlnnQbK.js
+D	public/build/assets/index-BlsShYx3.js
+D	public/build/assets/index-Bms4Qmej.js
+D	public/build/assets/index-Bo54lAKT.js
+D	public/build/assets/index-Bq0NuPu5.js
+A	public/build/assets/index-BsmHog1S.js
+A	public/build/assets/index-BuWx8--e.js
+D	public/build/assets/index-BvVf1xp0.js
+D	public/build/assets/index-BvWLBuUq.js
+A	public/build/assets/index-BwGpIe1_.js
+D	public/build/assets/index-BxobWt8p.js
+A	public/build/assets/index-BzOCcQJZ.js
+A	public/build/assets/index-C0FnptYZ.js
+D	public/build/assets/index-C1veSweS.js
+A	public/build/assets/index-C58nw-4z.js
+A	public/build/assets/index-C5kf7caz.js
+D	public/build/assets/index-C6In0-nX.js
+D	public/build/assets/index-C9i3ZIqN.js
+A	public/build/assets/index-CCFK9w2c.js
+A	public/build/assets/index-CMZTe8c0.js
+D	public/build/assets/index-CMrjwuZ0.js
+D	public/build/assets/index-CPJ7QaiO.js
+A	public/build/assets/index-CTolWK9C.js
+A	public/build/assets/index-CY1RJV2S.js
+D	public/build/assets/index-Can4OAm1.js
+A	public/build/assets/index-CbEqAMhu.js
+A	public/build/assets/index-CbzNRViS.js
+D	public/build/assets/index-CdyEB1eK.js
+D	public/build/assets/index-Ch7aoF5d.js
+D	public/build/assets/index-ChX7BBoJ.js
+A	public/build/assets/index-ChdJZQ6n.js
+A	public/build/assets/index-CjYBtOzY.js
+D	public/build/assets/index-Cm5yHvtB.js
+D	public/build/assets/index-Cp6FWcXq.js
+D	public/build/assets/index-CrebSmAk.js
+D	public/build/assets/index-CxoefC2H.js
+A	public/build/assets/index-D0PJrYrM.js
+A	public/build/assets/index-D2ScArsK.js
+A	public/build/assets/index-D2Tl9jUe.js
+A	public/build/assets/index-D2ep6hou.js
+D	public/build/assets/index-D6EVAozX.js
+A	public/build/assets/index-D7RULwIG.js
+A	public/build/assets/index-D9qp8ZZI.js
+D	public/build/assets/index-DAsuW7RQ.js
+A	public/build/assets/index-DAt2Fp97.js
+A	public/build/assets/index-DBnsa_lS.js
+A	public/build/assets/index-DFUQ22Pw.js
+D	public/build/assets/index-DIBxFo9A.js
+A	public/build/assets/index-DPY6VODg.js
+A	public/build/assets/index-DPr8bp4a.js
+D	public/build/assets/index-DSIvm8h-.js
+A	public/build/assets/index-DV4T_FDZ.js
+D	public/build/assets/index-DZGfpJ8t.js
+D	public/build/assets/index-DgnDOW79.js
+A	public/build/assets/index-Djvzo3rl.js
+A	public/build/assets/index-DnAC1Ah6.js
+D	public/build/assets/index-DnDF8JtV.js
+D	public/build/assets/index-DnWKCVT5.js
+D	public/build/assets/index-Dp4qs7JA.js
+A	public/build/assets/index-Du--IDb7.js
+A	public/build/assets/index-Dvrqk3Ku.js
+A	public/build/assets/index-DwvIORkG.js
+A	public/build/assets/index-Dx-8KZ6h.js
+D	public/build/assets/index-DxwDbNNX.js
+A	public/build/assets/index-Dy8Je41j.js
+A	public/build/assets/index-HrJ6t0eh.js
+A	public/build/assets/index-K-dZUwaZ.js
+D	public/build/assets/index-Lfg8k7G6.js
+D	public/build/assets/index-N-3kHdov.js
+D	public/build/assets/index-Vr5SNqPG.js
+A	public/build/assets/index-WNYmL9I-.js
+A	public/build/assets/index-Wvoh0I6b.js
+D	public/build/assets/index-X-WyrMLF.js
+D	public/build/assets/index-Y3OEKI46.js
+A	public/build/assets/index-crxQlbMJ.js
+A	public/build/assets/index-guaKLZ2i.js
+A	public/build/assets/index-jYKAO6Tk.js
+A	public/build/assets/index-kz1jEf6x.js
+A	public/build/assets/index-oCorAaU2.js
+A	public/build/assets/index-pNVbBD4M.js
+D	public/build/assets/index-r8LpYwE0.js
+D	public/build/assets/index-vY1PjzZQ.js
+D	public/build/assets/index-wXGuuG-4.js
+D	public/build/assets/index-yk9BzWAU.js
+D	public/build/assets/index-zIBhezWr.js
+D	public/build/assets/index-zKONy12w.js
+R090	public/build/assets/indian-rupee-Bvup99Ec.js	public/build/assets/indian-rupee-WDjPQyWM.js
+R088	public/build/assets/info-WxyChuyd.js	public/build/assets/info-ChVtyPft.js
+D	public/build/assets/input-error-BiW0j3ff.js
+A	public/build/assets/input-error-Cq4i703a.js
+R091	public/build/assets/instagram-B7Fse93p.js	public/build/assets/instagram-BcU6fKYn.js
+A	public/build/assets/integrations-settings-Bz--xNqX.js
+D	public/build/assets/invoice-template-settings-CxrdGxwk.js
+A	public/build/assets/invoice-template-settings-q2Qqk3sV.js
+D	public/build/assets/kanban-CSgAzUFJ.js
+A	public/build/assets/kanban-Cc6VZz66.js
+R095	public/build/assets/key-JsYqWF3S.js	public/build/assets/key-DjHar2Iq.js
+A	public/build/assets/language-switcher-D8FqnDz1.js
+D	public/build/assets/language-switcher-DJugwT94.js
+A	public/build/assets/lead-reports-BJnaMxS0.js
+D	public/build/assets/lead-reports-IEcRD2cP.js
+R090	public/build/assets/lightbulb-DvJK_c54.js	public/build/assets/lightbulb-BgUxrErI.js
+R089	public/build/assets/link-2-rdEyXH8z.js	public/build/assets/link-2-Dfe5u9By.js
+A	public/build/assets/link-Cd35_f4Z.js
+R091	public/build/assets/list-DoZ2NfZc.js	public/build/assets/list-CMzq4D55.js
+R088	public/build/assets/lock-BhXAfRSe.js	public/build/assets/lock-BaW6NX8N.js
+R096	public/build/assets/lock-open-NYl1A33a.js	public/build/assets/lock-open-DnpOnBiz.js
+A	public/build/assets/login-CF7pxour.js
+D	public/build/assets/login-aAZef0ku.js
+R089	public/build/assets/mail-D2o0Ed6Z.js	public/build/assets/mail-DAEkqOoc.js
+A	public/build/assets/manage-language-DSKUfq-J.js
+D	public/build/assets/manage-language-ZlfTrRrE.js
+R090	public/build/assets/map-pin-CB2D_bsM.js	public/build/assets/map-pin-A0OYz1X1.js
+A	public/build/assets/media-library-DOxeRBX7.js
+D	public/build/assets/media-library-DbcC-RQS.js
+D	public/build/assets/members-BsUYs7nJ.js
+A	public/build/assets/members-D8tU22_L.js
+R058	public/build/assets/menu-Bm8cusWL.js	public/build/assets/menu-CAEy5b5_.js
+R087	public/build/assets/message-square-D26MOyxP.js	public/build/assets/message-square-Z2MhcxPO.js
+R090	public/build/assets/monitor-CPJk0Ilp.js	public/build/assets/monitor-B9qj-bP7.js
+R091	public/build/assets/onboarding-layout-BpuCzd9h.js	public/build/assets/onboarding-layout-DC0vquDk.js
+R092	public/build/assets/package-Cfke7-VO.js	public/build/assets/package-3Qn6spOd.js
+D	public/build/assets/page-template-Ba6saEma.js
+A	public/build/assets/page-template-D8nBIA9E.js
+R096	public/build/assets/pagination-D4WfG01M.js	public/build/assets/pagination-cgGWbNfD.js
+D	public/build/assets/payment-BxP_x_-g.js
+A	public/build/assets/payment-ClsBAolG.js
+A	public/build/assets/payment-methods-BKGdZzhp.js
+D	public/build/assets/payment-methods-C1T2dvj2.js
+R057	public/build/assets/payment-settings-CVbpJFTR.js	public/build/assets/payment-settings-C17-6AWj.js
+A	public/build/assets/payout-requests-D21vcOME.js
+D	public/build/assets/payout-requests-Dj1yRNku.js
+R089	public/build/assets/percent-CTjAfXO2.js	public/build/assets/percent-BlORvpER.js
+R092	public/build/assets/phone-B5Kpd6Ci.js	public/build/assets/phone-DIeweo_G.js
+R089	public/build/assets/plan-BzXbphRg.js	public/build/assets/plan-C8Mjh7H9.js
+A	public/build/assets/plan-orders-1FJiM7d9.js
+D	public/build/assets/plan-orders-Un3q13Dl.js
+A	public/build/assets/plan-request-BzicEL2x.js
+D	public/build/assets/plan-request-CjStBRdH.js
+R086	public/build/assets/play-BngRSlZ4.js	public/build/assets/play-C7cWMUQD.js
+R087	public/build/assets/power-DZVXCbQL.js	public/build/assets/power-Jcho_sLk.js
+R091	public/build/assets/printer-oiRifcIo.js	public/build/assets/printer-C8EOcb4F.js
+A	public/build/assets/product-reports-BUleawae.js
+D	public/build/assets/product-reports-S4P3j-MJ.js
+R077	public/build/assets/profile-settings-CVJkLWAT.js	public/build/assets/profile-settings-mVrLwzoZ.js
+D	public/build/assets/project-reports-Dy9EA9i1.js
+A	public/build/assets/project-reports-IVRFKRBd.js
+A	public/build/assets/public-CHm3wM6s.js
+D	public/build/assets/public-CReoPocO.js
+A	public/build/assets/public-CgJ2jLid.js
+A	public/build/assets/public-D9UiBtyA.js
+D	public/build/assets/public-N5AywGcP.js
+D	public/build/assets/public-ccyXhggF.js
+R092	public/build/assets/quote-CDzhPjix.js	public/build/assets/quote-CY13qsnb.js
+A	public/build/assets/quote-template-settings-2zIjNTmJ.js
+D	public/build/assets/quote-template-settings-CHd_Svq0.js
+R099	public/build/assets/radio-group-CVTZIE6W.js	public/build/assets/radio-group-zN1cWgS3.js
+A	public/build/assets/react-redux-P07UbBOy.js
+R096	public/build/assets/recaptcha-sDOndVqn.js	public/build/assets/recaptcha-Cn0JKSTV.js
+D	public/build/assets/recaptcha-settings-BUkyvfcu.js
+A	public/build/assets/recaptcha-settings-BeJ7igM1.js
+R094	public/build/assets/receipt-DLRyPDs6.js	public/build/assets/receipt-BoMmTiCR.js
+A	public/build/assets/referral-dashboard-1V3cdoPM.js
+D	public/build/assets/referral-dashboard-CP2ARiPf.js
+A	public/build/assets/referral-settings-CJsInRXA.js
+D	public/build/assets/referral-settings-DG2QznOJ.js
+A	public/build/assets/referred-users-b7M177Hv.js
+D	public/build/assets/referred-users-pgk9zq-n.js
+R091	public/build/assets/refresh-cw-CFSDgP5-.js	public/build/assets/refresh-cw-CxWY9xMt.js
+D	public/build/assets/register-BgSsLejr.js
+A	public/build/assets/register-BoYN_3nK.js
+A	public/build/assets/reply-DXT3FJ1w.js
+D	public/build/assets/reset-password-4rd1qwPf.js
+A	public/build/assets/reset-password-DHURZ2lZ.js
+R093	public/build/assets/rich-text-editor-aijNmfFG.js	public/build/assets/rich-text-editor-BSrIItMr.js
+A	public/build/assets/roles-BkrHD3jR.js
+D	public/build/assets/roles-DDX5aU6k.js
+A	public/build/assets/sales-order-template-settings-C0tjm751.js
+D	public/build/assets/sales-order-template-settings-DnGYcBsY.js
+A	public/build/assets/sales-reports-5G4BJnWo.js
+D	public/build/assets/sales-reports-DSjm4w5r.js
+R099	public/build/assets/scroll-area-BkH0c3Fi.js	public/build/assets/scroll-area-CTpAbi0t.js
+A	public/build/assets/search-and-filter-bar-BN8q6DF7.js
+D	public/build/assets/search-and-filter-bar-DRe1pTbn.js
+R099	public/build/assets/select-hkEWHH9F.js	public/build/assets/select-CZ4LsTLK.js
+R090	public/build/assets/send-DLc6GJ_x.js	public/build/assets/send-DCD7EF61.js
+A	public/build/assets/seo-settings-70j47vCT.js
+D	public/build/assets/seo-settings-DMvP9k_O.js
+R091	public/build/assets/server-Dss2HL3t.js	public/build/assets/server-CUrpygvP.js
+A	public/build/assets/settings-2-Dx1R9BbN.js
+R095	public/build/assets/settings-CTHF00rT.js	public/build/assets/settings-BBpR20ay.js
+D	public/build/assets/settings-BVjsjwcQ.js
+A	public/build/assets/settings-Z7FGxBqi.js
+R097	public/build/assets/settings-about-DJRqADto.js	public/build/assets/settings-about-Dgd_XkRT.js
+R093	public/build/assets/settings-contact-CL_WwvaF.js	public/build/assets/settings-contact-CJ4p8eP_.js
+R093	public/build/assets/settings-features-OPZM4Sxt.js	public/build/assets/settings-features-DS3Qy7Pm.js
+A	public/build/assets/settings-templates-BkV5wdqg.js
+D	public/build/assets/settings-templates-CxSWfuQi.js
+R090	public/build/assets/shield-CMb4xKPZ.js	public/build/assets/shield-Bj_2C7D_.js
+R097	public/build/assets/shield-alert-C3RuiF2Q.js	public/build/assets/shield-alert-BUoPYJ19.js
+R090	public/build/assets/shopping-cart-CVi05iVq.js	public/build/assets/shopping-cart-DCpExn3P.js
+A	public/build/assets/show-6QACvUrh.js
+A	public/build/assets/show-B-ORpIYu.js
+A	public/build/assets/show-B-WCvuw8.js
+D	public/build/assets/show-B0VY621Q.js
+A	public/build/assets/show-B9MJyKK8.js
+D	public/build/assets/show-BDw6oX1K.js
+D	public/build/assets/show-BKioUwiw.js
+A	public/build/assets/show-BLTYCIG_.js
+D	public/build/assets/show-BOT9mmgv.js
+A	public/build/assets/show-BbHpLuQO.js
+D	public/build/assets/show-BsObJAWY.js
+A	public/build/assets/show-Bt0MdgAN.js
+A	public/build/assets/show-By4rxOEH.js
+D	public/build/assets/show-ByW4U7Rf.js
+A	public/build/assets/show-C01sOHR2.js
+D	public/build/assets/show-C4UeU1zL.js
+A	public/build/assets/show-C6pGohIS.js
+D	public/build/assets/show-CCdb60Nd.js
+A	public/build/assets/show-CLUumuW9.js
+A	public/build/assets/show-CMV4_hmQ.js
+A	public/build/assets/show-CO2NpCXW.js
+D	public/build/assets/show-COy5yOXT.js
+D	public/build/assets/show-CQsCxMFw.js
+D	public/build/assets/show-CSnVZco2.js
+D	public/build/assets/show-CleC3W1F.js
+D	public/build/assets/show-Cli4MQNh.js
+A	public/build/assets/show-Cq2f2qPf.js
+A	public/build/assets/show-CqxKyIXi.js
+A	public/build/assets/show-D4hOUWDj.js
+A	public/build/assets/show-DG-fVFXb.js
+D	public/build/assets/show-DKjLuUs6.js
+D	public/build/assets/show-DKrfKK1l.js
+A	public/build/assets/show-DQ7Q0xKx.js
+A	public/build/assets/show-DVj3wG0b.js
+A	public/build/assets/show-DVtvBmLo.js
+D	public/build/assets/show-Da1mH4M4.js
+D	public/build/assets/show-DbQB4UTi.js
+D	public/build/assets/show-Dc0Sb7Pu.js
+A	public/build/assets/show-Ddk4BIVK.js
+A	public/build/assets/show-DencYvzC.js
+A	public/build/assets/show-DpklzR1c.js
+A	public/build/assets/show-DqYnaHRt.js
+D	public/build/assets/show-DyUHa1yf.js
+A	public/build/assets/show-DzGWWWrC.js
+D	public/build/assets/show-EYO0Rdp9.js
+A	public/build/assets/show-HuQSA6IV.js
+D	public/build/assets/show-PjWDBlyi.js
+D	public/build/assets/show-REyFoPi6.js
+D	public/build/assets/show-Vbod8Uww.js
+D	public/build/assets/show-aaXjz7at.js
+D	public/build/assets/show-bUW3XhSi.js
+D	public/build/assets/show-iTVaJYoF.js
+A	public/build/assets/show-n6pa7Kfd.js
+D	public/build/assets/show-vFTboTqx.js
+A	public/build/assets/show-wPi20WcR.js
+A	public/build/assets/smile-C_H59D8I.js
+R093	public/build/assets/sparkles-CUdEBEij.js	public/build/assets/sparkles-Dv4kBQQt.js
+R089	public/build/assets/square-check-big-Booh9B5H.js	public/build/assets/square-check-big-C6xesbKj.js
+R091	public/build/assets/square-pen-B1iosa8u.js	public/build/assets/square-pen-C6DZVPX-.js
+R093	public/build/assets/star-BABjZ9FK.js	public/build/assets/star-COeT3sAI.js
+D	public/build/assets/storage-settings-CA3H5hae.js
+A	public/build/assets/storage-settings-CQtQW2E8.js
+R062	public/build/assets/store-BYy43-ku.js	public/build/assets/store-cD_NyiRb.js
+R092	public/build/assets/stripe-settings-BbI9BUMO.js	public/build/assets/stripe-settings-C5e5Fqhh.js
+R099	public/build/assets/switch-3Kln-sCz.js	public/build/assets/switch-D9hdaAKj.js
+D	public/build/assets/system-settings-D5wa1EzN.js
+A	public/build/assets/system-settings-DXotBzhR.js
+R096	public/build/assets/table-tqluyjow.js	public/build/assets/table-MjMoJdgY.js
+R099	public/build/assets/tabs-Bov7upHV.js	public/build/assets/tabs-DcxdKYeH.js
+R091	public/build/assets/tag-BotyXpWj.js	public/build/assets/tag-BJ49B1fY.js
+R089	public/build/assets/target-DFaDf82d.js	public/build/assets/target-CdcIjYv4.js
+R082	public/build/assets/text-link-HQ7X3Ruo.js	public/build/assets/text-link-OIfHH--t.js
+R087	public/build/assets/textarea-DKj9n7TG.js	public/build/assets/textarea-D1xqODSD.js
+A	public/build/assets/tiny-invariant-BaFNuDhB.js
+R099	public/build/assets/tooltipContext-0dJu8SSl.js	public/build/assets/tooltipContext-Bq5VFqUM.js
+R088	public/build/assets/trending-up-BcNT6Q_K.js	public/build/assets/trending-up-HHmRwtYR.js
+R090	public/build/assets/triangle-alert-CT7dJx0F.js	public/build/assets/triangle-alert-CDnBNRWT.js
+R092	public/build/assets/truck-CJakLAuV.js	public/build/assets/truck-CI71KQU-.js
+D	public/build/assets/twilio-notification-settings-5v0qgFY8.js
+A	public/build/assets/twilio-notification-settings-CXOOJf2Q.js
+R094	public/build/assets/twitter-BOwtReht.js	public/build/assets/twitter-DXh0JU0s.js
+R055	public/build/assets/type-CyLxNtID.js	public/build/assets/type-CaM9DvDx.js
+R067	public/build/assets/unlink-BuQ7HboI.js	public/build/assets/unlink-CkNgCUSM.js
+R070	public/build/assets/use-favicon-D_tQuq1Q.js	public/build/assets/use-favicon-BVAXA1qR.js
+R088	public/build/assets/user-DqrwCpWa.js	public/build/assets/user-CXMBmKcY.js
+R090	public/build/assets/user-check-D_PT89vz.js	public/build/assets/user-check-Ce4HGeoJ.js
+R091	public/build/assets/user-plus-Odklg7x5.js	public/build/assets/user-plus-CAwB4yFT.js
+R091	public/build/assets/users-E2eDOXum.js	public/build/assets/users-B-oPhNd-.js
+A	public/build/assets/verify-email-CjH1VvZd.js
+D	public/build/assets/verify-email-tuhY8qXp.js
+R089	public/build/assets/video-B-FO2nNH.js	public/build/assets/video-CMxb79DD.js
+A	public/build/assets/wallet-CkgVD61o.js
+D	public/build/assets/wallet-D7XX-aU5.js
+R092	public/build/assets/webhook-Ci5GpxgW.js	public/build/assets/webhook-D8-IM7J1.js
+D	public/build/assets/webhook-settings-B7xCE30h.js
+A	public/build/assets/webhook-settings-Cq-mGxWH.js
+R090	public/build/assets/weight-ClI7cgde.js	public/build/assets/weight-DrI-XGKz.js
+R099	public/build/assets/welcome-Do02a_pv.js	public/build/assets/welcome-DM96tvuG.js
+R088	public/build/assets/wifi-DaMZXgeM.js	public/build/assets/wifi-Bp0BGFYm.js
+R090	public/build/assets/zap-DFi6q7mU.js	public/build/assets/zap-DuVGnMTc.js
+M	public/build/manifest.json
+M	resources/js/app.tsx
+A	resources/js/components/ActivityStream/ActivityItem.tsx
+A	resources/js/components/ActivityStream/ActivityStream.tsx
+A	resources/js/components/ChatWidgetToggle.tsx
+M	resources/js/components/CrudFormModal.tsx
+M	resources/js/components/CrudTable.tsx
+M	resources/js/components/PageCrudWrapper.tsx
+M	resources/js/components/WeddingSupplierFormModal.tsx
+M	resources/js/components/app-content.tsx
+M	resources/js/components/app-shell.tsx
+M	resources/js/components/app-sidebar.tsx
+M	resources/js/components/custom-toast.tsx
+M	resources/js/layouts/auth-layout.tsx
+M	resources/js/pages/accounts/index.tsx
+M	resources/js/pages/contacts/index.tsx
+A	resources/js/pages/conversations/index.tsx
+A	resources/js/pages/gmail/index.tsx
+A	resources/js/pages/gmail/show.tsx
+M	resources/js/pages/invoices/index.tsx
+M	resources/js/pages/invoices/public.tsx
+M	resources/js/pages/landing-page/components/HeroSection.tsx
+M	resources/js/pages/landing-page/components/TeamSection.tsx
+M	resources/js/pages/lead-statuses/index.tsx
+M	resources/js/pages/leads/index.tsx
+M	resources/js/pages/onboarding/members.tsx
+M	resources/js/pages/onboarding/roles.tsx
+M	resources/js/pages/opportunities/index.tsx
+M	resources/js/pages/opportunity-stages/index.tsx
+M	resources/js/pages/products/index.tsx
+M	resources/js/pages/projects/kanban.tsx
+M	resources/js/pages/quotes/index.tsx
+M	resources/js/pages/quotes/public.tsx
+M	resources/js/pages/receipt-orders/show.tsx
+M	resources/js/pages/referral/components/referral-dashboard.tsx
+M	resources/js/pages/referral/components/referral-settings.tsx
+M	resources/js/pages/sales-orders/index.tsx
+M	resources/js/pages/sales-orders/public.tsx
+A	resources/js/pages/settings/components/integrations-settings.tsx
+M	resources/js/pages/settings/index.tsx
+A	resources/js/types/conversations.ts
+M	resources/js/types/crud.ts
+A	resources/js/utils/echo.ts
+A	resources/js/utils/sanitize-html.ts
+M	resources/views/app.blade.php
+M	resources/views/pdf/invoice.blade.php
+M	resources/views/pdf/quote.blade.php
+M	resources/views/pdf/sales_order.blade.php
+A	routes/channels.php
+M	routes/console.php
+M	routes/settings.php
+M	routes/web.php
+M	storage/installed
+A	tests/Feature/GmailOAuthTest.php
+A	update_conversations_permissions.php

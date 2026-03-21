@@ -515,6 +515,10 @@ class GmailService
     public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = [], array $attachments = []): bool
     {
         try {
+            // Minimal sanitization to prevent CRLF injection
+            $to = str_replace(["\r", "\n"], '', $to);
+            $subject = str_replace(["\r", "\n"], '', $subject);
+            
             $this->refreshTokenIfNeeded();
 
             $message = new \Google\Service\Gmail\Message();

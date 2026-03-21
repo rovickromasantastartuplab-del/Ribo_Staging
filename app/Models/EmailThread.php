@@ -21,6 +21,9 @@ class EmailThread extends BaseModel
         'is_read',
         'labels',
         'created_by',
+        'status',
+        'priority',
+        'follow_up_at',
     ];
 
     protected function casts(): array
@@ -30,6 +33,7 @@ class EmailThread extends BaseModel
             'labels' => 'array',
             'last_message_at' => 'datetime',
             'is_read' => 'boolean',
+            'follow_up_at' => 'datetime',
         ];
     }
 
@@ -47,6 +51,15 @@ class EmailThread extends BaseModel
     public function messages(): HasMany
     {
         return $this->hasMany(EmailMessage::class)->orderBy('sent_at', 'asc');
+    }
+
+    /**
+     * Users assigned to this thread.
+     */
+    public function assignments()
+    {
+        return $this->belongsToMany(User::class, 'email_thread_assignments', 'email_thread_id', 'user_id')
+            ->withTimestamps();
     }
 
     /**

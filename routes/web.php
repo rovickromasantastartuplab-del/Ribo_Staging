@@ -617,6 +617,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('api/conversations/history/participants', [ConversationController::class, 'historyParticipants'])->name('api.conversations.history.participants');
             Route::post('api/conversations/history/sync', [ConversationController::class, 'syncContactHistory'])->name('api.conversations.history.sync');
             Route::get('api/conversations/threads/{thread}', [ConversationController::class, 'show'])->name('api.conversations.show');
+            Route::post('api/conversations/threads/{thread}/update', [ConversationController::class, 'update'])
+                ->middleware('permission:manage-conversations')
+                ->name('api.conversations.update');
+            Route::post('api/conversations/threads/{thread}/assign', [ConversationController::class, 'assign'])
+                ->middleware('permission:manage-conversations')
+                ->name('api.conversations.assign');
             Route::post('api/conversations/compose', [ConversationController::class, 'compose'])
                 ->middleware('permission:manage-conversations')
                 ->name('api.conversations.compose');

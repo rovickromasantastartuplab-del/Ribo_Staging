@@ -56,15 +56,16 @@ class ConversationController extends Controller
      */
     public function threads(Request $request)
     {
-        $companyId = auth()->user()->creatorId();
+        $user = auth()->user();
+        $companyId = $user->creatorId();
         $folder = $request->get('folder', 'inbox');
         $search = $request->get('search');
 
-        $query = EmailThread::with(['leads', 'contacts', 'latestMessage'])
+        $query = EmailThread::with(['leads', 'contacts', 'latestMessage', 'assignments:id,name,avatar'])
             ->where('created_by', $companyId)
             ->orderByDesc('last_message_at');
 
-        // BUG-09: Apply search filter
+        // Apply search filter
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
@@ -73,9 +74,8 @@ class ConversationController extends Controller
             });
         }
 
-        // Apply folder filtering
+        // Apply folder/status filtering
         if ($folder === 'sent') {
-            // BUG-11: Check if ANY message in the thread is from the connected account
             $query->whereHas('messages', function ($q) use ($companyId) {
                 $gmailAccount = GmailAccount::whereHas('user', function($qu) use ($companyId) {
                     $qu->where('id', $companyId)->orWhere('created_by', $companyId);
@@ -86,11 +86,76 @@ class ConversationController extends Controller
                 }
             });
         } elseif ($folder === 'unassigned') {
-            // BUG-10: Unassigned = threads not linked to any Lead or Contact
             $query->whereDoesntHave('leads')->whereDoesntHave('contacts');
+        } elseif ($folder === 'unassigned_staff') {
+            // New folder: threads not assigned to any staff member
+            $query->whereDoesntHave('assignments');
+        } elseif ($folder === 'my_assignments') {
+            // New folder: threads assigned to the current user
+            $query->whereHas('assignments', function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        } elseif ($folder === 'history') {
+            // In history view, we might want to show everything, including closed
+        }
+
+        // Default to "Open" status unless explicitly requesting history or a specific status
+        if (!in_array($folder, ['history', 'closed']) && !$request->has('status')) {
+            $query->where(function($q) {
+                $q->where('status', 'Open')->orWhereNull('status');
+            });
+        } elseif ($folder === 'closed') {
+            $query->where('status', 'Closed');
         }
 
         return response()->json($query->paginate(20));
+    }
+
+    /**
+     * Update thread metadata (status, priority, follow_up_at).
+     */
+    public function update(Request $request, EmailThread $thread)
+    {
+        if ($thread->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'nullable|string|in:Open,Closed',
+            'priority' => 'nullable|string|in:Low,Medium,High',
+            'follow_up_at' => 'nullable|date',
+        ]);
+
+        $thread->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thread updated successfully.',
+            'thread' => $thread->load('assignments')
+        ]);
+    }
+
+    /**
+     * Assign staff to a thread.
+     */
+    public function assign(Request $request, EmailThread $thread)
+    {
+        if ($thread->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id'
+        ]);
+
+        $thread->assignments()->sync($request->user_ids);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thread assignments updated.',
+            'thread' => $thread->load('assignments')
+        ]);
     }
 
     /**
