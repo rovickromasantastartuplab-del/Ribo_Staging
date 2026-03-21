@@ -131,7 +131,7 @@ class ConversationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thread updated successfully.',
-            'thread' => $thread->load('assignments')
+            'thread' => $thread->load(['messages.media', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
         ]);
     }
 
@@ -154,7 +154,7 @@ class ConversationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thread assignments updated.',
-            'thread' => $thread->load('assignments')
+            'thread' => $thread->load(['messages.media', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
         ]);
     }
 
