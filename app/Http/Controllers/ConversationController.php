@@ -163,7 +163,18 @@ class ConversationController extends Controller
                 ->sortByDesc('created_at')
                 ->values();
 
-            return response()->json(['data' => $merged->take(50)]);
+            $perPage = 20;
+            $page = $request->get('page', 1);
+            $offset = ($page - 1) * $perPage;
+            
+            $paginated = $merged->slice($offset, $perPage)->values();
+            
+            return response()->json([
+                'data' => $paginated,
+                'current_page' => (int)$page,
+                'last_page' => ceil($merged->count() / $perPage),
+                'total' => $merged->count()
+            ]);
         }
 
         $activities = $gmailAccount->activities()
@@ -172,6 +183,47 @@ class ConversationController extends Controller
             ->paginate(20);
 
         return response()->json($activities);
+    }
+
+    /**
+     * Perform a deep sync for a specific contact's historical emails.
+     */
+    public function syncContactHistory(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $companyId = auth()->user()->creatorId();
+        $email = $request->get('email');
+
+        // Find the Gmail account for this company
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        if (!$gmailAccount) {
+            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })->first();
+        }
+
+        if (!$gmailAccount) {
+            return response()->json(['error' => 'No Gmail account connected'], 400);
+        }
+
+        try {
+            $service = new GmailService($gmailAccount);
+            $stats = $service->syncContactHistory($email);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully imported {$stats['synced']} conversations for {$email}.",
+                'stats' => $stats
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -224,7 +276,19 @@ class ConversationController extends Controller
             }
         }
 
-        return response()->json(['data' => array_values($participants)]);
+        $perPage = 20;
+        $page = $request->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+        
+        $sorted = collect($participants)->sortByDesc('last_activity_at')->values();
+        $paginated = $sorted->slice($offset, $perPage)->values();
+        
+        return response()->json([
+            'data' => $paginated,
+            'current_page' => (int)$page,
+            'last_page' => ceil($sorted->count() / $perPage),
+            'total' => $sorted->count()
+        ]);
     }
 
     /**

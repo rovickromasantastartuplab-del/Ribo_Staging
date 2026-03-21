@@ -160,7 +160,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [searchQuery, setSearchQuery] = useState('');
     const [historyActivities, setHistoryActivities] = useState<any[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [loadingParticipants, setLoadingParticipants] = useState(false);
     const [historyParticipants, setHistoryParticipants] = useState<any[]>([]);
+
+    // Pagination states
+    const [threadPage, setThreadPage] = useState(1);
+    const [hasMoreThreads, setHasMoreThreads] = useState(false);
+    const [historyPage, setHistoryPage] = useState(1);
+    const [hasMoreHistory, setHasMoreHistory] = useState(false);
+    const [participantsPage, setParticipantsPage] = useState(1);
+    const [hasMoreParticipants, setHasMoreParticipants] = useState(false);
+    const [isSyncingHistory, setIsSyncingHistory] = useState(false);
     const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
     const [searchParticipants, setSearchParticipants] = useState('');
 
@@ -183,11 +193,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     useEffect(() => {
         if (selectedFolder === 'history') {
             if (selectedParticipant) {
-                fetchParticipantActivities(selectedParticipant.email);
+                setHistoryPage(1);
+                fetchParticipantActivities(selectedParticipant.email, false);
             } else {
-                fetchHistoryParticipants();
+                setParticipantsPage(1);
+                fetchHistoryParticipants(false);
             }
         } else {
+            setThreadPage(1);
             fetchThreads(false);
         }
         
@@ -198,12 +211,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
                 if (selectedFolder === 'history') {
                     if (selectedParticipant) {
-                        fetchParticipantActivities(selectedParticipant.email, true);
+                        fetchParticipantActivities(selectedParticipant.email, false, true);
                     } else {
-                        fetchHistoryParticipants(true);
+                        fetchHistoryParticipants(false, true);
                     }
                 } else {
-                    fetchThreads(true);
+                    fetchThreads(false, true);
                 }
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
@@ -213,31 +226,45 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 }
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
-    }, [selectedFolder, gmailAccount?.id, companyId, selectedParticipant?.email]);
+    }, [selectedFolder, gmailAccount?.id, companyId, selectedParticipant?.email, searchQuery, searchParticipants]);
 
-    const fetchHistoryParticipants = async (silent = false) => {
-        if (!silent) setLoadingHistory(true);
+    const fetchHistoryParticipants = async (append = false, silent = false) => {
+        if (!silent && !append) {
+            setLoadingParticipants(true);
+            setHistoryParticipants([]); // Clear previous to prevent mismatch
+        }
         try {
-            const params: any = {};
+            const page = append ? participantsPage + 1 : 1;
+            const params: any = { page };
             if (searchParticipants.trim()) params.search = searchParticipants.trim();
+            
             const response = await axios.get(route('api.conversations.history.participants', params));
-            setHistoryParticipants(response.data.data);
+            const { data, current_page, last_page } = response.data;
+            
+            setHistoryParticipants(prev => append ? [...prev, ...data] : data);
+            setParticipantsPage(current_page);
+            setHasMoreParticipants(current_page < last_page);
         } catch (error) {
-            console.error('Failed to fetch participants:', error);
-            if (!silent) toast.error(t('Failed to fetch contact list'));
+            console.error('Failed to fetch history participants:', error);
+            if (!silent) toast.error(t('Failed to load history list'));
         } finally {
-            if (!silent) setLoadingHistory(false);
+            if (!silent) setLoadingParticipants(false);
         }
     };
 
-    const fetchParticipantActivities = async (email: string, silent = false) => {
-        if (!silent) {
+    const fetchParticipantActivities = async (email: string, append = false, silent = false) => {
+        if (!silent && !append) {
             setLoadingHistory(true);
             setHistoryActivities([]); // Clear previous to prevent mismatch
         }
         try {
-            const response = await axios.get(route('api.conversations.activities', { email }));
-            setHistoryActivities(response.data.data);
+            const page = append ? historyPage + 1 : 1;
+            const response = await axios.get(route('api.conversations.activities', { email, page }));
+            const { data, current_page, last_page } = response.data;
+
+            setHistoryActivities(prev => append ? [...prev, ...data] : data);
+            setHistoryPage(current_page);
+            setHasMoreHistory(current_page < last_page);
         } catch (error) {
             console.error('Failed to fetch participant history:', error);
             if (!silent) toast.error(t('Failed to load activity timeline'));
@@ -246,15 +273,25 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         }
     };
 
-    const fetchThreads = async (silent = false) => {
-        if (!silent) setLoading(true);
+    const fetchThreads = async (append = false, silent = false) => {
+        if (!silent && !append) setLoading(true);
         try {
-            const params: any = { folder: selectedFolder };
+            const page = append ? threadPage + 1 : 1;
+            const params: any = { folder: selectedFolder, page };
             if (searchQuery.trim()) params.search = searchQuery.trim();
+            
             const response = await axios.get(route('api.conversations.threads', params));
-            const fetched = response.data.data;
-            setThreads(fetched);
-            setUnreadCount(fetched.filter((t: any) => !t.is_read).length);
+            const { data, current_page, last_page } = response.data;
+
+            if (append) {
+                setThreads(prev => [...prev, ...data]);
+            } else {
+                setThreads(data);
+                setUnreadCount(data.filter((t: any) => !t.is_read).length);
+            }
+            
+            setThreadPage(current_page);
+            setHasMoreThreads(current_page < last_page);
         } catch (error) {
             console.error('Failed to fetch threads:', error);
             if (!silent) toast.error(t('Failed to fetch threads'));
@@ -270,6 +307,25 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             onSuccess: () => { setIsSyncing(false); fetchThreads(); },
             onError: () => { setIsSyncing(false); toast.error(t('Failed to synchronize inbox')); }
         });
+    };
+
+    const handleSyncHistory = async () => {
+        if (!selectedParticipant?.email) return;
+        
+        setIsSyncingHistory(true);
+        try {
+            const response = await axios.post(route('api.conversations.history.sync'), {
+                email: selectedParticipant.email
+            });
+            toast.success(response.data.message || t('History synchronization started'));
+            // Refresh activity timeline
+            fetchParticipantActivities(selectedParticipant.email, false, true);
+        } catch (error: any) {
+            console.error('Failed to sync history:', error);
+            toast.error(error.response?.data?.error || t('Failed to synchronize history'));
+        } finally {
+            setIsSyncingHistory(false);
+        }
     };
 
     const handleSelectThread = async (thread: any) => {
@@ -392,27 +448,45 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             {selectedParticipant ? (
                                 <div className="flex flex-col h-full">
                                     <div className="flex items-center justify-between mb-4 bg-background p-3 rounded-lg border shadow-sm">
-                                        <div className="flex items-center gap-3 min-w-0">
+                                        <div className="flex items-center gap-3 shadow-sm p-1 rounded-md">
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedParticipant(null)}>
                                                 <ArrowLeft className="h-4 w-4" />
                                             </Button>
-                                            <Avatar className="h-8 w-8 border">
-                                                <AvatarFallback className="text-[10px] font-bold bg-primary/5 text-primary">
-                                                    {selectedParticipant.name?.charAt(0).toUpperCase()}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="min-w-0">
-                                                <h3 className="text-sm font-bold truncate">{selectedParticipant.name}</h3>
-                                                <p className="text-[10px] text-muted-foreground truncate">{selectedParticipant.email}</p>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-10 w-10 border shadow-sm">
+                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                                                        {selectedParticipant.name?.charAt(0).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="min-w-0">
+                                                    <h3 className="text-sm font-bold truncate max-w-[120px] lg:max-w-none">{selectedParticipant.name}</h3>
+                                                    <p className="text-[10px] text-muted-foreground truncate max-w-[120px] lg:max-w-none">{selectedParticipant.email}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" onClick={() => {
-                                            setComposeTo(selectedParticipant.email);
-                                            setShowCompose(true);
-                                        }}>
-                                            <Mail className="h-3.5 w-3.5 mr-1.5" />
-                                            {t('Email')}
-                                        </Button>
+                                        
+                                        <div className="flex items-center gap-2">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-8 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 group"
+                                                onClick={handleSyncHistory}
+                                                disabled={isSyncingHistory}
+                                            >
+                                                <RefreshCw className={`h-3.5 w-3.5 text-primary ${isSyncingHistory ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                                                <span className="hidden sm:inline text-xs font-semibold text-primary/80 group-hover:text-primary">
+                                                    {isSyncingHistory ? t('Syncing...') : t('Deep Sync History')}
+                                                </span>
+                                            </Button>
+
+                                            <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" onClick={() => {
+                                                setComposeTo(selectedParticipant.email);
+                                                setShowCompose(true);
+                                            }}>
+                                                <Mail className="h-3.5 w-3.5 mr-1.5" />
+                                                {t('Email')}
+                                            </Button>
+                                        </div>
                                     </div>
                                     <div className="flex-1 min-h-0 overflow-y-auto">
                                         {loadingHistory ? (
@@ -431,6 +505,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 isCompany={isOwner}
                                                 auth={{ user: auth?.user }}
                                                 maxHeight="max-h-full"
+                                                hasMore={hasMoreHistory}
+                                                onLoadMore={() => selectedParticipant && fetchParticipantActivities(selectedParticipant.email, true)}
+                                                isLoadingMore={loadingHistory}
                                             />
                                         )}
                                     </div>
@@ -454,12 +531,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         </div>
                                     </div>
 
-                                    {loadingHistory && historyParticipants.length === 0 ? (
-                                        <div className="flex-1 flex flex-col items-center justify-center space-y-3">
-                                            <RefreshCw className="h-8 w-8 animate-spin text-primary/30" />
-                                            <p className="text-xs text-muted-foreground">{t('Loading contacts...')}</p>
-                                        </div>
-                                    ) : historyParticipants.length > 0 ? (
+                                    {loadingParticipants && !historyParticipants.length ? (
+                                            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                                                <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
+                                                <p className="text-sm text-muted-foreground">{t('Loading contacts...')}</p>
+                                            </div>
+                                        ) : historyParticipants.length > 0 ? (
                                         <ScrollArea className="flex-1 min-h-0">
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-2">
                                                 {historyParticipants.map((p: any) => (
@@ -490,6 +567,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </div>
                                                     </button>
                                                 ))}
+                                                {hasMoreParticipants && (
+                                                    <div className="p-4 pt-0">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className="w-full text-xs h-8 text-primary/70 hover:text-primary hover:bg-primary/5"
+                                                            onClick={() => fetchHistoryParticipants(true)}
+                                                            disabled={loadingParticipants}
+                                                        >
+                                                            {loadingParticipants ? <RefreshCw className="h-3 w-3 animate-spin mr-2" /> : null}
+                                                            {t('Load more contacts')}
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </ScrollArea>
                                     ) : (

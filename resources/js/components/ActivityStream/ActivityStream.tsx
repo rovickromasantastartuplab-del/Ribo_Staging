@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar } from 'lucide-react';
+import { Calendar, RefreshCw, History as HistoryIcon } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ActivityItem } from './ActivityItem';
 
@@ -22,6 +22,9 @@ interface ActivityStreamProps {
     setEditCommentText?: (text: string) => void;
     updateCommentRoute?: string;
     updateCommentParams?: any;
+    hasMore?: boolean;
+    onLoadMore?: () => void;
+    isLoadingMore?: boolean;
 }
 
 export const ActivityStream: React.FC<ActivityStreamProps> = ({
@@ -38,7 +41,10 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
     setEditingComment,
     setEditCommentText,
     updateCommentRoute,
-    updateCommentParams
+    updateCommentParams,
+    hasMore,
+    onLoadMore,
+    isLoadingMore
 }) => {
     const { t } = useTranslation();
 
@@ -77,6 +83,23 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
                                 updateCommentParams={updateCommentParams}
                             />
                         ))}
+                        
+                        {hasMore && (
+                            <div className="pt-4 pb-2 flex justify-center">
+                                <button
+                                    onClick={onLoadMore}
+                                    disabled={isLoadingMore}
+                                    className="px-6 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/10 hover:border-primary/30 transition-all flex items-center gap-2 group disabled:opacity-50"
+                                >
+                                    {isLoadingMore ? (
+                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                        <HistoryIcon className="h-3 w-3 group-hover:rotate-12 transition-transform" />
+                                    )}
+                                    {t('Load older activities')}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="text-center py-12 text-gray-500">

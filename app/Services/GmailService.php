@@ -218,6 +218,69 @@ class GmailService
     }
 
     /**
+     * Perform a deep sync for a specific contact's email address.
+     * Fetches ALL history related to this email from Gmail.
+     */
+    public function syncContactHistory(string $email): array
+    {
+        $stats = ['synced' => 0, 'errors' => 0];
+        $companyId = $this->resolveCompanyId();
+        
+        $email = trim(strtolower($email));
+        $this->logActivity('deep_sync_started', "Deep sync started for {$email}", "Fetching all historical conversations for {$email} directly from Gmail.");
+
+        try {
+            $pageToken = null;
+            do {
+                $params = [
+                    'q' => "from:{$email} OR to:{$email} OR cc:{$email}",
+                    'maxResults' => 100,
+                ];
+                
+                if ($pageToken) {
+                    $params['pageToken'] = $pageToken;
+                }
+
+                $response = $this->gmail->users_threads->listUsersThreads('me', $params);
+                $threads = $response->getThreads();
+
+                if ($threads) {
+                    foreach ($threads as $threadMeta) {
+                        try {
+                            $thread = $this->getThread($threadMeta->getId());
+                            if ($thread) {
+                                $this->syncSingleThread($thread, $companyId);
+                                $stats['synced']++;
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to sync contact thread during deep sync', [
+                                'email' => $email,
+                                'thread_id' => $threadMeta->getId(),
+                                'error' => $e->getMessage(),
+                            ]);
+                            $stats['errors']++;
+                        }
+                    }
+                }
+
+                $pageToken = $response->getNextPageToken();
+            } while ($pageToken);
+
+            $this->logActivity('deep_sync_completed', "Deep sync completed for {$email}", "Successfully imported {$stats['synced']} conversations for {$email}.");
+
+        } catch (\Exception $e) {
+            Log::error('Deep sync failed for contact', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+            $this->logActivity('deep_sync_error', "Deep sync failed for {$email}", "Error: " . $e->getMessage());
+            throw $e;
+        }
+
+        return $stats;
+    }
+
+    /**
      * Perform incremental sync using Gmail history.list API.
      * Only fetches changes since the last known historyId.
      * Returns ['synced' => N, 'errors' => N] or null if fallback to full sync is needed.
