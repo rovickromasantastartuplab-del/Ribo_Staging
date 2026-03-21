@@ -340,7 +340,7 @@ class CaseController extends Controller
         ]);
 
         try {
-            $query = \App\Models\CaseModel::whereIn('id', $validated['ids'])->where('created_by', createdBy());
+            $query = \App\Models\Case::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
             
             if ($count === 0) {
