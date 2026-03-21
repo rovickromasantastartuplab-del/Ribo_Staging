@@ -41,6 +41,8 @@ class GmailAccount extends BaseModel
         'sync_status',
         'sync_error',
         'next_page_token',
+        'sync_categories',
+        'sync_strategy',
     ];
 
     protected $hidden = [
@@ -55,6 +57,7 @@ class GmailAccount extends BaseModel
             'refresh_token' => 'encrypted',
             'token_expires_at' => 'datetime',
             'last_sync_at' => 'datetime',
+            'sync_categories' => 'array',
         ];
     }
 

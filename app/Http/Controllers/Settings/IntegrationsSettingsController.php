@@ -26,6 +26,9 @@ class IntegrationsSettingsController extends Controller
                 'pusher_app_key' => 'nullable|string',
                 'pusher_app_secret' => 'nullable|string',
                 'pusher_app_cluster' => 'nullable|string',
+                'gmail_sync_strategy' => 'nullable|in:all,categories,contacts',
+                'gmail_sync_categories' => 'array_if:gmail_sync_strategy,categories',
+                'gmail_sync_categories.*' => 'string|in:PRIMARY,SOCIAL,PROMOTIONS,UPDATES,FORUMS',
             ]);
 
             // Only superadmins may update Google OAuth and Pusher credentials
@@ -51,6 +54,27 @@ class IntegrationsSettingsController extends Controller
                 }
 
                 updateSetting($key, $value);
+            }
+
+            // Handle Gmail sync settings
+            if (isset($validated['gmail_sync_strategy']) || isset($validated['gmail_sync_categories'])) {
+                $gmailAccount = \App\Models\GmailAccount::where('user_id', $user->creatorId())->first();
+                if ($gmailAccount) {
+                    $gmailAccount->update([
+                        'sync_strategy' => $validated['gmail_sync_strategy'] ?? $gmailAccount->sync_strategy,
+                        'sync_categories' => $validated['gmail_sync_categories'] ?? $gmailAccount->sync_categories,
+                    ]);
+                }
+                
+                if (isset($validated['gmail_sync_strategy'])) {
+                    updateSetting('gmail_sync_strategy', $validated['gmail_sync_strategy']);
+                    unset($validated['gmail_sync_strategy']);
+                }
+
+                if (isset($validated['gmail_sync_categories'])) {
+                    updateSetting('gmail_sync_categories', json_encode($validated['gmail_sync_categories']));
+                    unset($validated['gmail_sync_categories']);
+                }
             }
 
             return redirect()->back()->with('success', __('Integrations settings updated successfully.'));

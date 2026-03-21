@@ -113,8 +113,20 @@ class GmailService
     {
         $params = [
             'maxResults' => $maxResults,
-            'q' => 'in:inbox OR in:sent',
         ];
+
+        // Build query based on sync strategy
+        $baseQuery = 'in:inbox OR in:sent';
+        
+        if ($this->account->sync_strategy === 'categories' && !empty($this->account->sync_categories)) {
+            $categoryQueries = array_map(function($category) {
+                return 'category:' . strtolower($category);
+            }, $this->account->sync_categories);
+            
+            $params['q'] = '(' . implode(' OR ', $categoryQueries) . ') AND (' . $baseQuery . ')';
+        } else {
+            $params['q'] = $baseQuery;
+        }
 
         if ($pageToken) {
             $params['pageToken'] = $pageToken;

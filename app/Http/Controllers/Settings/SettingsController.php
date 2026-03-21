@@ -109,6 +109,8 @@ class SettingsController extends Controller
                 'last_sync_at' => $gmailAccountConfig->last_sync_at,
                 'sync_status' => $gmailAccountConfig->sync_status,
                 'sync_error' => $gmailAccountConfig->sync_error,
+                'sync_strategy' => $gmailAccountConfig->sync_strategy,
+                'sync_categories' => $gmailAccountConfig->sync_categories,
             ];
         }
 

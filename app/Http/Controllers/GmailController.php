@@ -128,4 +128,32 @@ class GmailController extends Controller
 
         return redirect()->back()->with('success', 'Gmail sync completed successfully.');
     }
+
+    /**
+     * Update Gmail sync settings (strategy and categories).
+     */
+    public function updateSyncSettings(Request $request)
+    {
+        $user = auth()->user();
+        $companyId = $user->creatorId();
+
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+
+        if (!$gmailAccount) {
+            return redirect()->back()->with('error', 'No Gmail account connected.');
+        }
+
+        $validated = $request->validate([
+            'gmail_sync_strategy' => 'required|in:all,categories,contacts',
+            'gmail_sync_categories' => 'array_if:gmail_sync_strategy,categories',
+            'gmail_sync_categories.*' => 'string|in:PRIMARY,SOCIAL,PROMOTIONS,UPDATES,FORUMS',
+        ]);
+
+        $gmailAccount->update([
+            'sync_strategy' => $validated['gmail_sync_strategy'],
+            'sync_categories' => $validated['gmail_sync_categories'] ?? null,
+        ]);
+
+        return redirect()->back()->with('success', 'Gmail sync settings updated successfully.');
+    }
 }

@@ -126,6 +126,7 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     // Gmail Integration routes
     Route::post('settings/gmail/disconnect', [\App\Http\Controllers\GmailController::class, 'disconnect'])->name('settings.gmail.disconnect');
     Route::post('settings/gmail/sync', [\App\Http\Controllers\GmailController::class, 'syncNow'])->name('settings.gmail.sync');
+    Route::post('settings/gmail/categories', [\App\Http\Controllers\GmailController::class, 'updateSyncSettings'])->name('settings.gmail.categories.update');
     Route::get('gmail/threads', [\App\Http\Controllers\GmailController::class, 'threads'])->name('gmail.threads');
     Route::get('gmail/threads/{threadId}', [\App\Http\Controllers\GmailController::class, 'showThread'])->name('gmail.thread.show');
 

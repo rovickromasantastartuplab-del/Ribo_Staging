@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from 'react-i18next';
 import { Link2, LayoutTemplate, MessageSquare, Loader2, CheckCircle2, Plus, Trash2, Settings2, ChevronDown, ChevronUp, Mail, Eye, EyeOff } from 'lucide-react';
 import { useForm, usePage, router } from '@inertiajs/react';
@@ -22,7 +23,17 @@ interface GmailAccount {
     last_sync_at: string | null;
     sync_status: string;
     sync_error: string | null;
+    sync_strategy?: string;
+    sync_categories?: string[];
 }
+
+const GMAIL_CATEGORIES = [
+    { value: 'PRIMARY', label: 'Primary' },
+    { value: 'SOCIAL', label: 'Social' },
+    { value: 'PROMOTIONS', label: 'Promotions' },
+    { value: 'UPDATES', label: 'Updates' },
+    { value: 'FORUMS', label: 'Forums' },
+];
 
 interface FieldMappingRow {
     external_field: string;
@@ -99,6 +110,8 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
         pusher_app_key: googleSettings?.pusher_app_key || '',
         pusher_app_secret: googleSettings?.pusher_app_secret || '',
         pusher_app_cluster: googleSettings?.pusher_app_cluster || '',
+        gmail_sync_strategy: gmailAccount?.sync_strategy || 'all',
+        gmail_sync_categories: gmailAccount?.sync_categories || [],
     });
 
     const handleSave = (e: React.FormEvent) => {
@@ -295,6 +308,68 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                         {gmailAccount && gmailAccount.sync_status === 'error' && (
                                             <div className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded">
                                                 {t('Sync Error')}: {gmailAccount.sync_error || t('Authentication failed. Please reconnect.')}
+                                            </div>
+                                        )}
+
+                                        {gmailAccount && (
+                                            <div className="mt-4 pt-4 border-t space-y-4">
+                                                <div>
+                                                    <h4 className="text-sm font-medium mb-2">{t('Sync Settings')}</h4>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center space-x-2">
+                                                            <input
+                                                                type="radio"
+                                                                id="sync_all"
+                                                                name="sync_strategy"
+                                                                value="all"
+                                                                checked={data.gmail_sync_strategy === 'all'}
+                                                                onChange={(e) => setData('gmail_sync_strategy', e.target.value)}
+                                                                className="h-4 w-4 text-primary"
+                                                            />
+                                                            <Label htmlFor="sync_all" className="text-sm">All new emails</Label>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center space-x-2">
+                                                            <input
+                                                                type="radio"
+                                                                id="sync_categories"
+                                                                name="sync_strategy"
+                                                                value="categories"
+                                                                checked={data.gmail_sync_strategy === 'categories'}
+                                                                onChange={(e) => setData('gmail_sync_strategy', e.target.value)}
+                                                                className="h-4 w-4 text-primary"
+                                                            />
+                                                            <Label htmlFor="sync_categories" className="text-sm">From selected categories</Label>
+                                                        </div>
+                                                        
+                                                        {data.gmail_sync_strategy === 'categories' && (
+                                                            <div className="ml-6 space-y-2">
+                                                                <p className="text-xs text-muted-foreground">Select Gmail categories to sync:</p>
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    {GMAIL_CATEGORIES.map((category) => (
+                                                                        <div key={category.value} className="flex items-center space-x-2">
+                                                                            <Checkbox
+                                                                                id={`category_${category.value}`}
+                                                                                checked={data.gmail_sync_categories?.includes(category.value) || false}
+                                                                                onCheckedChange={(checked) => {
+                                                                                    const current = data.gmail_sync_categories || [];
+                                                                                    if (checked) {
+                                                                                        setData('gmail_sync_categories', [...current, category.value]);
+                                                                                    } else {
+                                                                                        setData('gmail_sync_categories', current.filter((c: string) => c !== category.value));
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                            <Label htmlFor={`category_${category.value}`} className="text-sm">
+                                                                                {category.label}
+                                                                            </Label>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
