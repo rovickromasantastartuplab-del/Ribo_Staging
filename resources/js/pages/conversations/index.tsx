@@ -260,9 +260,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     }, [hasMoreParticipants, loadingParticipants]);
 
     const fetchHistoryParticipants = async (append = false, silent = false) => {
-        if (!silent && !append) {
+        if (!silent) {
             setLoadingParticipants(true);
-            setHistoryParticipants([]); // Clear previous to prevent mismatch
+            if (!append) setHistoryParticipants([]); // Clear previous on fresh load
         }
         try {
             const page = append ? participantsPage + 1 : 1;
@@ -272,7 +272,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             const response = await axios.get(route('api.conversations.history.participants', params));
             const { data, current_page, last_page } = response.data;
             
-            setHistoryParticipants(prev => append ? [...prev, ...data] : data);
+            setHistoryParticipants(prev => {
+                const combined = append ? [...prev, ...data] : data;
+                // Unique by email
+                const unique = Array.from(new Map(combined.map(item => [item.email, item])).values());
+                return unique;
+            });
             setParticipantsPage(current_page);
             setHasMoreParticipants(current_page < last_page);
         } catch (error) {
@@ -284,16 +289,21 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     };
 
     const fetchParticipantActivities = async (email: string, append = false, silent = false) => {
-        if (!silent && !append) {
+        if (!silent) {
             setLoadingHistory(true);
-            setHistoryActivities([]); // Clear previous to prevent mismatch
+            if (!append) setHistoryActivities([]); // Clear previous on fresh load
         }
         try {
             const page = append ? historyPage + 1 : 1;
             const response = await axios.get(route('api.conversations.activities', { email, page }));
             const { data, current_page, last_page } = response.data;
 
-            setHistoryActivities(prev => append ? [...prev, ...data] : data);
+            setHistoryActivities(prev => {
+                const combined = append ? [...prev, ...data] : data;
+                // Unique by ID
+                const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                return unique;
+            });
             setHistoryPage(current_page);
             setHasMoreHistory(current_page < last_page);
         } catch (error) {
@@ -305,7 +315,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     };
 
     const fetchThreads = async (append = false, silent = false) => {
-        if (!silent && !append) setLoading(true);
+        if (!silent) setLoading(true);
         try {
             const page = append ? threadPage + 1 : 1;
             const params: any = { folder: selectedFolder, page };
@@ -315,7 +325,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             const { data, current_page, last_page } = response.data;
 
             if (append) {
-                setThreads(prev => [...prev, ...data]);
+                setThreads(prev => {
+                    const combined = [...prev, ...data];
+                    // Unique by ID
+                    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                    return unique;
+                });
             } else {
                 setThreads(data);
                 setUnreadCount(data.filter((t: any) => !t.is_read).length);
