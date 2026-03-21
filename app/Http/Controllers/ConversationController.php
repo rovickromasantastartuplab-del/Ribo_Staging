@@ -145,7 +145,7 @@ class ConversationController extends Controller
         }
 
         $request->validate([
-            'user_ids' => 'required|array',
+            'user_ids' => 'present|array',
             'user_ids.*' => 'exists:users,id'
         ]);
 
