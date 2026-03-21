@@ -29,8 +29,32 @@ class GmailController extends Controller
             ]);
         }
 
-        $query = EmailThread::where('gmail_account_id', $gmailAccount->id)
-            ->orderBy('last_message_at', 'desc');
+        $query = EmailThread::where('gmail_account_id', $gmailAccount->id);
+
+        // Apply sync strategy filtering
+        if ($gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
+            $syncCategories = $gmailAccount->sync_categories;
+            $hasPrimary = in_array('PRIMARY', $syncCategories);
+
+            $query->where(function($q) use ($syncCategories, $hasPrimary) {
+                foreach ($syncCategories as $category) {
+                    if ($category !== 'PRIMARY') {
+                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
+                    }
+                }
+                
+                if ($hasPrimary) {
+                    $q->orWhere(function($sq) {
+                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
+                        foreach ($otherCategories as $other) {
+                            $sq->whereJsonDoesntContain('labels', $other);
+                        }
+                    });
+                }
+            });
+        }
+
+        $query->orderBy('last_message_at', 'desc');
 
         // Search filter
         if ($search = $request->get('search')) {

@@ -31,10 +31,30 @@ class ConversationController extends Controller
             })->first();
         }
 
-        // Compute actual unread count
-        $unreadCount = $gmailAccount
-            ? EmailThread::where('created_by', $companyId)->where('is_read', false)->count()
-            : 0;
+        // Compute actual unread count with sync filtering
+        $unreadCountQuery = EmailThread::where('created_by', $companyId)->where('is_read', false);
+        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
+            $syncCategories = $gmailAccount->sync_categories;
+            $hasPrimary = in_array('PRIMARY', $syncCategories);
+            
+            $unreadCountQuery->where(function($q) use ($syncCategories, $hasPrimary) {
+                foreach ($syncCategories as $category) {
+                    if ($category !== 'PRIMARY') {
+                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
+                    }
+                }
+                
+                if ($hasPrimary) {
+                    $q->orWhere(function($sq) {
+                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
+                        foreach ($otherCategories as $other) {
+                            $sq->whereJsonDoesntContain('labels', $other);
+                        }
+                    });
+                }
+            });
+        }
+        $unreadCount = $unreadCountQuery->count();
 
         return Inertia::render('conversations/index', [
             'initialFolder' => 'inbox',
@@ -64,6 +84,36 @@ class ConversationController extends Controller
         $query = EmailThread::with(['leads', 'contacts', 'latestMessage', 'assignments:id,name,avatar'])
             ->where('created_by', $companyId)
             ->orderByDesc('last_message_at');
+
+        // Apply sync strategy filtering if in category mode
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        if (!$gmailAccount) {
+            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })->first();
+        }
+
+        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
+            $syncCategories = $gmailAccount->sync_categories;
+            $hasPrimary = in_array('PRIMARY', $syncCategories);
+
+            $query->where(function($q) use ($syncCategories, $hasPrimary) {
+                foreach ($syncCategories as $category) {
+                    if ($category !== 'PRIMARY') {
+                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
+                    }
+                }
+                
+                if ($hasPrimary) {
+                    $q->orWhere(function($sq) {
+                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
+                        foreach ($otherCategories as $other) {
+                            $sq->whereJsonDoesntContain('labels', $other);
+                        }
+                    });
+                }
+            });
+        }
 
         // Apply search filter
         if ($search) {
