@@ -979,6 +979,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         {companyUsers.map((u: any) => (
                                                             <DropdownMenuCheckboxItem
                                                                 key={u.id}
+                                                                onSelect={(e) => e.preventDefault()}
                                                                 checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
                                                                 onCheckedChange={(checked) => {
                                                                     const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];

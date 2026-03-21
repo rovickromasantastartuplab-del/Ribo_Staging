@@ -405,7 +405,7 @@ class ConversationController extends Controller
             abort(403);
         }
 
-        $thread->load(['messages.media', 'leads.leadStatus', 'contacts']);
+        $thread->load(['messages.media', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar']);
 
         // Mark as read when user opens the thread
         if (!$thread->is_read) {
