@@ -41,22 +41,7 @@ class IntegrationsSettingsController extends Controller
                 $validated = array_diff_key($validated, array_flip($restrictedFields));
             }
 
-            $sensitiveKeys = ['google_client_secret', 'pusher_app_secret'];
-
-            foreach ($validated as $key => $value) {
-                if (is_bool($value)) {
-                    $value = $value ? 'true' : 'false';
-                }
-
-                // Encrypt sensitive secrets so they don't sit in plaintext DB
-                if (in_array($key, $sensitiveKeys) && !empty($value)) {
-                    $value = encrypt($value);
-                }
-
-                updateSetting($key, $value);
-            }
-
-            // Handle Gmail sync settings
+            // Handle Gmail sync settings before the general loop to avoid array-to-string conversion error
             if (isset($validated['gmail_sync_strategy']) || isset($validated['gmail_sync_categories'])) {
                 $gmailAccount = \App\Models\GmailAccount::where('user_id', $user->creatorId())->first();
                 if ($gmailAccount) {
@@ -75,6 +60,21 @@ class IntegrationsSettingsController extends Controller
                     updateSetting('gmail_sync_categories', json_encode($validated['gmail_sync_categories']));
                     unset($validated['gmail_sync_categories']);
                 }
+            }
+
+            $sensitiveKeys = ['google_client_secret', 'pusher_app_secret'];
+
+            foreach ($validated as $key => $value) {
+                if (is_bool($value)) {
+                    $value = $value ? 'true' : 'false';
+                }
+
+                // Encrypt sensitive secrets so they don't sit in plaintext DB
+                if (in_array($key, $sensitiveKeys) && !empty($value)) {
+                    $value = encrypt($value);
+                }
+
+                updateSetting($key, $value);
             }
 
             return redirect()->back()->with('success', __('Integrations settings updated successfully.'));
