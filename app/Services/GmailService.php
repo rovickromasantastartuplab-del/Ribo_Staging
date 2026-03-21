@@ -159,8 +159,6 @@ class GmailService
             $result = $this->listThreads($maxResults, $pageToken);
             $companyId = $this->resolveCompanyId();
 
-            $this->logActivity('sync_started', 'Gmail synchronization started', 'Starting full synchronization of inbox and sent items.');
-
             // Track the latest historyId from any thread for incremental sync baseline
             $latestHistoryId = null;
 
@@ -198,8 +196,6 @@ class GmailService
                 'next_page_token' => $result['nextPageToken'], // Store for infinite scroll
             ]);
 
-            $this->logActivity('sync_completed', 'Gmail synchronization completed', "Successfully synced {$stats['synced']} threads.");
-
         } catch (\Exception $e) {
             Log::error('Gmail sync failed', [
                 'gmail_account_id' => $this->account->id,
@@ -210,8 +206,6 @@ class GmailService
                 'sync_status' => 'error',
                 'sync_error' => $e->getMessage(),
             ]);
-
-            $this->logActivity('sync_error', 'Gmail synchronization failed', "Error: " . $e->getMessage());
 
             throw $e;
         }
@@ -229,7 +223,6 @@ class GmailService
         $companyId = $this->resolveCompanyId();
         
         $email = trim(strtolower($email));
-        $this->logActivity('deep_sync_paged', "Deep sync page requested for {$email}", "Fetching next page of history for {$email}.");
 
         try {
             $params = [
@@ -341,8 +334,6 @@ class GmailService
                 'sync_error' => null,
                 'last_history_id' => $latestHistoryId,
             ]);
-
-            $this->logActivity('sync_completed', 'Incremental sync completed', "Updated " . count($changedThreadIds) . " threads based on recent Gmail activity.");
 
             Log::info('Incremental Gmail sync completed', [
                 'gmail_account_id' => $this->account->id,
