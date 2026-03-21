@@ -283,10 +283,13 @@ class ConversationController extends Controller
         
         $companyEmail = $gmailAccount ? strtolower($gmailAccount->gmail_address) : null;
 
+        // OPTIMIZATION: Use cursor to iterate through threads to avoid memory exhaustion (Fix 2.1)
+        // Select only necessary columns and eager load names only
         $threads = EmailThread::where('created_by', $companyId)
-            ->with(['leads', 'contacts'])
+            ->select(['id', 'participants', 'last_message_at'])
+            ->with(['leads:id,name', 'contacts:id,name'])
             ->orderByDesc('last_message_at')
-            ->get();
+            ->cursor();
 
         $participants = [];
 
@@ -308,10 +311,6 @@ class ConversationController extends Controller
                         'avatar' => null,
                         'last_activity_at' => $thread->last_message_at,
                     ];
-                } else {
-                    if ($thread->last_message_at > $participants[$pEmail]['last_activity_at']) {
-                        $participants[$pEmail]['last_activity_at'] = $thread->last_message_at;
-                    }
                 }
             }
         }
@@ -393,12 +392,8 @@ class ConversationController extends Controller
             );
 
             if ($success) {
-                \Illuminate\Support\Facades\Log::info('Email sent successfully, starting synchronous sync', ['account_id' => $account->id]);
-                
-                // Dispatch async sync to fetch the newly sent message into the DB
-                \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
-                
-                \Illuminate\Support\Facades\Log::info('Synchronous sync completed after email send');
+                // Dispatch async sync so the user doesn't wait for Gmail sync (Fix 2.2)
+                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
                 
                 return response()->json(['message' => 'Email sent successfully.']);
             }
@@ -470,12 +465,8 @@ class ConversationController extends Controller
             );
 
             if ($success) {
-                \Illuminate\Support\Facades\Log::info('Reply sent successfully, starting synchronous sync', ['account_id' => $account->id]);
-
-                // Dispatch async sync ΓÇö the GmailSyncCompleted event will refresh the UI in real time
-                \App\Jobs\SyncGmailThreadsJob::dispatchSync($account->id);
-                
-                \Illuminate\Support\Facades\Log::info('Synchronous sync completed after reply send');
+                // Dispatch async sync so the user doesn't wait for Gmail sync (Fix 2.2)
+                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
 
                 return response()->json(['message' => 'Reply sent successfully.']);
             }

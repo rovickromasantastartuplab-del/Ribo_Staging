@@ -164,6 +164,17 @@ class GmailService
 
             foreach ($result['threads'] as $threadMeta) {
                 try {
+                    // OPTIMIZATION: Check if the thread already exists with the same snippet to avoid expensive full fetch (Fix 2.3)
+                    // This avoids over-engineering with new schema columns while significantly reducing API calls.
+                    $existingThread = EmailThread::where('gmail_thread_id', $threadMeta->getId())
+                        ->select('snippet')
+                        ->first();
+                        
+                    if ($existingThread && $existingThread->snippet === $threadMeta->getSnippet()) {
+                        $stats['synced']++;
+                        continue;
+                    }
+
                     $thread = $this->getThread($threadMeta->getId());
                     if (!$thread) {
                         $stats['errors']++;
@@ -241,6 +252,13 @@ class GmailService
             if ($threads) {
                 foreach ($threads as $threadMeta) {
                     try {
+                        // OPTIMIZATION: Skip full fetch if snippet hasn't changed (Fix 2.3)
+                        $existingSnippet = EmailThread::where('gmail_thread_id', $threadMeta->getId())->value('snippet');
+                        if ($existingSnippet === $threadMeta->getSnippet()) {
+                            $stats['synced']++;
+                            continue;
+                        }
+
                         $thread = $this->getThread($threadMeta->getId());
                         if ($thread) {
                             $this->syncSingleThread($thread, $companyId);
@@ -290,18 +308,36 @@ class GmailService
             // Fetch history records since last known historyId
             $response = $this->gmail->users_history->listUsersHistory('me', [
                 'startHistoryId' => $startHistoryId,
-                'historyTypes' => ['messageAdded', 'messageDeleted'],
+                'historyTypes' => ['messageAdded', 'messageDeleted', 'labelAdded', 'labelRemoved'],
             ]);
 
             $historyRecords = $response->getHistory() ?? [];
             $latestHistoryId = $response->getHistoryId();
 
-            // Collect unique thread IDs that changed
+            // Collect unique thread IDs that changed (messages or labels)
             $changedThreadIds = [];
             foreach ($historyRecords as $historyRecord) {
+                // Check messages
                 $messagesAdded = $historyRecord->getMessagesAdded() ?? [];
                 foreach ($messagesAdded as $addedMsg) {
                     $msg = $addedMsg->getMessage();
+                    if ($msg && $msg->getThreadId()) {
+                        $changedThreadIds[$msg->getThreadId()] = true;
+                    }
+                }
+                
+                // Check label changes (e.g. read/unread status)
+                $labelsAdded = $historyRecord->getLabelsAdded() ?? [];
+                foreach ($labelsAdded as $labelAdded) {
+                    $msg = $labelAdded->getMessage();
+                    if ($msg && $msg->getThreadId()) {
+                        $changedThreadIds[$msg->getThreadId()] = true;
+                    }
+                }
+
+                $labelsRemoved = $historyRecord->getLabelsRemoved() ?? [];
+                foreach ($labelsRemoved as $labelRemoved) {
+                    $msg = $labelRemoved->getMessage();
                     if ($msg && $msg->getThreadId()) {
                         $changedThreadIds[$msg->getThreadId()] = true;
                     }
