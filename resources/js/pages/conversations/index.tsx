@@ -1005,17 +1005,26 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                     {/* Profile */}
                                     <div className="flex flex-col items-center text-center mb-6 w-full px-2 overflow-hidden">
-                                        <Avatar className="h-16 w-16 mb-3 border-2 border-primary/10 shrink-0">
-                                            <AvatarFallback className="text-lg font-bold bg-primary/5 text-primary">
-                                                {(selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || selectedThread.participants?.[0])?.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <h4 className="font-bold text-sm truncate w-full">
-                                            {selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || selectedThread.participants?.[0]}
-                                        </h4>
-                                        <p className="text-[11px] text-muted-foreground truncate w-full">
-                                            {selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0]}
-                                        </p>
+                                        {(() => {
+                                            const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
+                                            const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant;
+                                            
+                                            return (
+                                                <>
+                                                    <Avatar className="h-16 w-16 mb-3 border-2 border-primary/10 shrink-0">
+                                                        <AvatarFallback className="text-lg font-bold bg-primary/5 text-primary">
+                                                            {contactName?.charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <h4 className="font-bold text-sm truncate w-full">
+                                                        {contactName}
+                                                    </h4>
+                                                    <p className="text-[11px] text-muted-foreground truncate w-full">
+                                                        {externalParticipant}
+                                                    </p>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
 
                                     {/* CRM context */}
