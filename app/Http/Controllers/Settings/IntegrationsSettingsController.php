@@ -27,7 +27,7 @@ class IntegrationsSettingsController extends Controller
                 'pusher_app_secret' => 'nullable|string',
                 'pusher_app_cluster' => 'nullable|string',
                 'gmail_sync_strategy' => 'nullable|in:all,categories,contacts',
-                'gmail_sync_categories' => 'array_if:gmail_sync_strategy,categories',
+                'gmail_sync_categories' => 'required_if:gmail_sync_strategy,categories|array',
                 'gmail_sync_categories.*' => 'string|in:PRIMARY,SOCIAL,PROMOTIONS,UPDATES,FORUMS',
             ]);
 

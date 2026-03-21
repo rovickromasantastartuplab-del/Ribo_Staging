@@ -145,7 +145,7 @@ class GmailController extends Controller
 
         $validated = $request->validate([
             'gmail_sync_strategy' => 'required|in:all,categories,contacts',
-            'gmail_sync_categories' => 'array_if:gmail_sync_strategy,categories',
+            'gmail_sync_categories' => 'required_if:gmail_sync_strategy,categories|array',
             'gmail_sync_categories.*' => 'string|in:PRIMARY,SOCIAL,PROMOTIONS,UPDATES,FORUMS',
         ]);
 
