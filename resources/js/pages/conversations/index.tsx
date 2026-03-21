@@ -171,6 +171,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [participantsPage, setParticipantsPage] = useState(1);
     const [hasMoreParticipants, setHasMoreParticipants] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
+    const [gmailPageToken, setGmailPageToken] = useState<string | null>(undefined); // undefined = haven't checked Gmail yet
     const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
     const [searchParticipants, setSearchParticipants] = useState('');
 
@@ -194,6 +195,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         if (selectedFolder === 'history') {
             if (selectedParticipant) {
                 setHistoryPage(1);
+                setGmailPageToken(undefined); // Reset token for new participant
                 fetchParticipantActivities(selectedParticipant.email, false);
             } else {
                 setParticipantsPage(1);
@@ -309,20 +311,25 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         });
     };
 
-    const handleSyncHistory = async () => {
-        if (!selectedParticipant?.email) return;
+    const handleSeamlessSync = async () => {
+        if (!selectedParticipant?.email || isSyncingHistory) return;
         
         setIsSyncingHistory(true);
         try {
             const response = await axios.post(route('api.conversations.history.sync'), {
-                email: selectedParticipant.email
+                email: selectedParticipant.email,
+                pageToken: gmailPageToken === undefined ? null : gmailPageToken
             });
-            toast.success(response.data.message || t('History synchronization started'));
-            // Refresh activity timeline
-            fetchParticipantActivities(selectedParticipant.email, false, true);
+            
+            setGmailPageToken(response.data.nextPageToken || null);
+            
+            // Re-fetch local activities to show the newly synced ones
+            // We append to the current view
+            fetchParticipantActivities(selectedParticipant.email, true, true);
         } catch (error: any) {
-            console.error('Failed to sync history:', error);
-            toast.error(error.response?.data?.error || t('Failed to synchronize history'));
+            console.error('Seamless sync failed:', error);
+            // Silent failure, but stop trying if 401 persists
+            setGmailPageToken(null); 
         } finally {
             setIsSyncingHistory(false);
         }
@@ -466,19 +473,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         </div>
                                         
                                         <div className="flex items-center gap-2">
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                className="h-8 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 group"
-                                                onClick={handleSyncHistory}
-                                                disabled={isSyncingHistory}
-                                            >
-                                                <RefreshCw className={`h-3.5 w-3.5 text-primary ${isSyncingHistory ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                                                <span className="hidden sm:inline text-xs font-semibold text-primary/80 group-hover:text-primary">
-                                                    {isSyncingHistory ? t('Syncing...') : t('Deep Sync History')}
-                                                </span>
-                                            </Button>
-
                                             <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" onClick={() => {
                                                 setComposeTo(selectedParticipant.email);
                                                 setShowCompose(true);
@@ -505,9 +499,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 isCompany={isOwner}
                                                 auth={{ user: auth?.user }}
                                                 maxHeight="max-h-full"
-                                                hasMore={hasMoreHistory}
-                                                onLoadMore={() => selectedParticipant && fetchParticipantActivities(selectedParticipant.email, true)}
-                                                isLoadingMore={loadingHistory}
+                                                hasMore={hasMoreHistory || (gmailPageToken !== null)}
+                                                onLoadMore={() => {
+                                                    if (hasMoreHistory) {
+                                                        fetchParticipantActivities(selectedParticipant.email, true);
+                                                    } else if (gmailPageToken !== null) {
+                                                        handleSeamlessSync();
+                                                    }
+                                                }}
+                                                isLoadingMore={loadingHistory || isSyncingHistory}
                                             />
                                         )}
                                     </div>

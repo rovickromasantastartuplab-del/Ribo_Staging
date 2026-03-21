@@ -218,66 +218,59 @@ class GmailService
     }
 
     /**
-     * Perform a deep sync for a specific contact's email address.
-     * Fetches ALL history related to this email from Gmail.
+     * Perform a deep sync for a specific contact's historical emails (paged).
+     * Fetches ONE page of results and returns the nextPageToken if available.
      */
-    public function syncContactHistory(string $email): array
+    public function syncContactHistory(string $email, ?string $pageToken = null, int $maxResults = 20): array
     {
-        $stats = ['synced' => 0, 'errors' => 0];
+        $stats = ['synced' => 0, 'errors' => 0, 'nextPageToken' => null];
         $companyId = $this->resolveCompanyId();
         
         $email = trim(strtolower($email));
-        $this->logActivity('deep_sync_started', "Deep sync started for {$email}", "Fetching all historical conversations for {$email} directly from Gmail.");
+        $this->logActivity('deep_sync_paged', "Deep sync page requested for {$email}", "Fetching next page of history for {$email}.");
 
         try {
-            $pageToken = null;
-            do {
-                $params = [
-                    'q' => "from:{$email} OR to:{$email} OR cc:{$email}",
-                    'maxResults' => 100,
-                ];
-                
-                if ($pageToken) {
-                    $params['pageToken'] = $pageToken;
-                }
+            $params = [
+                'q' => "from:{$email} OR to:{$email} OR cc:{$email}",
+                'maxResults' => $maxResults,
+            ];
+            
+            if ($pageToken) {
+                $params['pageToken'] = $pageToken;
+            }
 
-                $response = $this->gmail->users_threads->listUsersThreads('me', $params);
-                $threads = $response->getThreads();
+            $response = $this->gmail->users_threads->listUsersThreads('me', $params);
+            $threads = $response->getThreads();
+            $stats['nextPageToken'] = $response->getNextPageToken();
 
-                if ($threads) {
-                    foreach ($threads as $threadMeta) {
-                        try {
-                            $thread = $this->getThread($threadMeta->getId());
-                            if ($thread) {
-                                $this->syncSingleThread($thread, $companyId);
-                                $stats['synced']++;
-                            }
-                        } catch (\Exception $e) {
-                            Log::error('Failed to sync contact thread during deep sync', [
-                                'email' => $email,
-                                'thread_id' => $threadMeta->getId(),
-                                'error' => $e->getMessage(),
-                            ]);
-                            $stats['errors']++;
+            if ($threads) {
+                foreach ($threads as $threadMeta) {
+                    try {
+                        $thread = $this->getThread($threadMeta->getId());
+                        if ($thread) {
+                            $this->syncSingleThread($thread, $companyId);
+                            $stats['synced']++;
                         }
+                    } catch (\Exception $e) {
+                        Log::error('Failed to sync contact thread during deep sync', [
+                            'email' => $email,
+                            'thread_id' => $threadMeta->getId(),
+                            'error' => $e->getMessage(),
+                        ]);
+                        $stats['errors']++;
                     }
                 }
+            }
 
-                $pageToken = $response->getNextPageToken();
-            } while ($pageToken);
-
-            $this->logActivity('deep_sync_completed', "Deep sync completed for {$email}", "Successfully imported {$stats['synced']} conversations for {$email}.");
+            return $stats;
 
         } catch (\Exception $e) {
-            Log::error('Deep sync failed for contact', [
+            Log::error('Deep sync page failed for contact', [
                 'email' => $email,
                 'error' => $e->getMessage(),
             ]);
-            $this->logActivity('deep_sync_error', "Deep sync failed for {$email}", "Error: " . $e->getMessage());
             throw $e;
         }
-
-        return $stats;
     }
 
     /**

@@ -196,6 +196,7 @@ class ConversationController extends Controller
 
         $companyId = auth()->user()->creatorId();
         $email = $request->get('email');
+        $pageToken = $request->get('pageToken');
 
         // Find the Gmail account for this company
         $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
@@ -211,12 +212,17 @@ class ConversationController extends Controller
 
         try {
             $service = new GmailService($gmailAccount);
-            $stats = $service->syncContactHistory($email);
+            
+            // BUG-FIX: Ensure token is fresh before deep sync (solves 401)
+            $service->refreshTokenIfNeeded();
+            
+            $stats = $service->syncContactHistory($email, $pageToken);
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully imported {$stats['synced']} conversations for {$email}.",
-                'stats' => $stats
+                'message' => "Successfully updated history for {$email}.",
+                'stats' => $stats,
+                'nextPageToken' => $stats['nextPageToken'] ?? null
             ]);
         } catch (\Exception $e) {
             return response()->json([
