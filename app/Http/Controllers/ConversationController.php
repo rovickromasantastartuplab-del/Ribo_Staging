@@ -233,6 +233,40 @@ class ConversationController extends Controller
     }
 
     /**
+     * Paged background sync for the general inbox (Infinite Scroll).
+     */
+    public function syncInboxHistory(Request $request)
+    {
+        $companyId = auth()->user()->creatorId();
+        
+        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        if (!$gmailAccount) {
+            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })->first();
+        }
+
+        if (!$gmailAccount) {
+            return response()->json(['error' => 'No Gmail account connected'], 400);
+        }
+
+        try {
+            $service = new GmailService($gmailAccount);
+            $service->refreshTokenIfNeeded();
+
+            $stats = $service->syncThreads(20, $gmailAccount->next_page_token);
+
+            return response()->json([
+                'success' => true,
+                'stats' => $stats,
+                'next_page_token' => $gmailAccount->fresh()->next_page_token
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Fetch unique participants who have emailed the company.
      */
     public function historyParticipants(Request $request)

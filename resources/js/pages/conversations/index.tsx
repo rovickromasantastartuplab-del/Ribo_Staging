@@ -275,7 +275,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             setHistoryParticipants(prev => {
                 const combined = append ? [...prev, ...data] : data;
                 // Unique by email
-                const unique = Array.from(new Map(combined.map(item => [item.email, item])).values());
+                const unique = Array.from(new Map<string, any>(combined.map((item: any) => [item.email, item])).values());
                 return unique;
             });
             setParticipantsPage(current_page);
@@ -301,7 +301,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             setHistoryActivities(prev => {
                 const combined = append ? [...prev, ...data] : data;
                 // Unique by ID
-                const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                const unique = Array.from(new Map<number, any>(combined.map((item: any) => [item.id, item])).values());
                 return unique;
             });
             setHistoryPage(current_page);
@@ -328,7 +328,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 setThreads(prev => {
                     const combined = [...prev, ...data];
                     // Unique by ID
-                    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                    const unique = Array.from(new Map<number, any>(combined.map((item: any) => [item.id, item])).values());
                     return unique;
                 });
             } else {
@@ -338,6 +338,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             
             setThreadPage(current_page);
             setHasMoreThreads(current_page < last_page);
+
+            // If we reached the end of local threads in inbox/sent, try syncing more from Gmail
+            if (append && current_page >= last_page && (selectedFolder === 'inbox' || selectedFolder === 'sent')) {
+                handleSeamlessInboxSync();
+            }
         } catch (error) {
             console.error('Failed to fetch threads:', error);
             if (!silent) toast.error(t('Failed to fetch threads'));
@@ -353,6 +358,26 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             onSuccess: () => { setIsSyncing(false); fetchThreads(); },
             onError: () => { setIsSyncing(false); toast.error(t('Failed to synchronize inbox')); }
         });
+    };
+
+    const handleSeamlessInboxSync = async () => {
+        if (loading || isSyncing) return;
+        
+        setLoading(true);
+        try {
+            const response = await axios.post(route('api.conversations.sync_inbox_more'));
+            if (response.data.success && response.data.stats.synced > 0) {
+                // We fetched new threads! Now pull them from the database
+                await fetchThreads(true, true);
+            } else {
+                // No more threads in Gmail either
+                setHasMoreThreads(false);
+            }
+        } catch (error) {
+            console.error('Failed to sync more inbox threads:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSeamlessSync = async () => {

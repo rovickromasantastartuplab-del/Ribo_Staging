@@ -40,6 +40,7 @@ class GmailAccount extends BaseModel
         'last_history_id',
         'sync_status',
         'sync_error',
+        'next_page_token',
     ];
 
     protected $hidden = [

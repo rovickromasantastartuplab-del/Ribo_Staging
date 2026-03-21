@@ -148,14 +148,15 @@ class GmailService
     }
 
     /**
-     * Sync threads from Gmail into the CRM database (full sync).
+     * Sync threads from Gmail into the CRM database (paged).
+     * Now accepts an optional pageToken for infinite scrolling.
      */
-    public function syncThreads(int $maxResults = 50): array
+    public function syncThreads(int $maxResults = 50, ?string $pageToken = null): array
     {
         $stats = ['synced' => 0, 'errors' => 0];
 
         try {
-            $result = $this->listThreads($maxResults);
+            $result = $this->listThreads($maxResults, $pageToken);
             $companyId = $this->resolveCompanyId();
 
             $this->logActivity('sync_started', 'Gmail synchronization started', 'Starting full synchronization of inbox and sent items.');
@@ -194,6 +195,7 @@ class GmailService
                 'sync_status' => 'idle',
                 'sync_error' => null,
                 'last_history_id' => $latestHistoryId ?? $this->account->last_history_id,
+                'next_page_token' => $result['nextPageToken'], // Store for infinite scroll
             ]);
 
             $this->logActivity('sync_completed', 'Gmail synchronization completed', "Successfully synced {$stats['synced']} threads.");

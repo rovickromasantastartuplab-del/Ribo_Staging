@@ -612,6 +612,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::middleware('permission:view-conversations')->group(function () {
             Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
             Route::get('api/conversations/threads', [ConversationController::class, 'threads'])->name('api.conversations.threads');
+            Route::post('api/conversations/sync-inbox-more', [ConversationController::class, 'syncInboxHistory'])->name('api.conversations.sync_inbox_more');
             Route::get('api/conversations/activities', [ConversationController::class, 'activities'])->name('api.conversations.activities');
             Route::get('api/conversations/history/participants', [ConversationController::class, 'historyParticipants'])->name('api.conversations.history.participants');
             Route::post('api/conversations/history/sync', [ConversationController::class, 'syncContactHistory'])->name('api.conversations.history.sync');
