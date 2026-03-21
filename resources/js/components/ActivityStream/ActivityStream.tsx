@@ -47,6 +47,24 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
     isLoadingMore
 }) => {
     const { t } = useTranslation();
+    const observerTarget = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && hasMore && !isLoadingMore && onLoadMore) {
+                    onLoadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, isLoadingMore, onLoadMore]);
 
     return (
         <Card className="shadow-sm overflow-hidden border-none">
@@ -84,20 +102,20 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
                             />
                         ))}
                         
-                        {hasMore && (
-                            <div className="pt-4 pb-2 flex justify-center">
-                                <button
-                                    onClick={onLoadMore}
-                                    disabled={isLoadingMore}
-                                    className="px-6 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/10 hover:border-primary/30 transition-all flex items-center gap-2 group disabled:opacity-50"
-                                >
-                                    {isLoadingMore ? (
-                                        <RefreshCw className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                        <HistoryIcon className="h-3 w-3 group-hover:rotate-12 transition-transform" />
-                                    )}
-                                    {t('Load older activities')}
-                                </button>
+                        {/* Sentinel for IntersectionObserver */}
+                        <div ref={observerTarget} className="h-4 w-full" />
+
+                        {isLoadingMore && (
+                            <div className="pt-4 pb-2 flex justify-center items-center gap-2 text-primary/60 animate-pulse">
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                <span className="text-[10px] font-medium">{t('Loading older activities...')}</span>
+                            </div>
+                        )}
+
+                        {!hasMore && activities.length > 5 && (
+                            <div className="pt-8 pb-4 text-center">
+                                <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of history')}</p>
                             </div>
                         )}
                     </div>

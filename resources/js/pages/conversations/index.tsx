@@ -184,6 +184,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [replyFiles, setReplyFiles] = useState<File[]>([]);
     const composeFileRef = React.useRef<HTMLInputElement>(null);
     const replyFileRef = React.useRef<HTMLInputElement>(null);
+    const threadObserverTarget = React.useRef<HTMLDivElement>(null);
+    const participantObserverTarget = React.useRef<HTMLDivElement>(null);
 
     const { post: inertiaPost } = useForm({});
 
@@ -229,6 +231,33 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
     }, [selectedFolder, gmailAccount?.id, companyId, selectedParticipant?.email, searchQuery, searchParticipants]);
+    // Thread Infinite Scroll Observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && hasMoreThreads && !loading) {
+                    fetchThreads(true);
+                }
+            },
+            { threshold: 0.1 }
+        );
+        if (threadObserverTarget.current) observer.observe(threadObserverTarget.current);
+        return () => observer.disconnect();
+    }, [hasMoreThreads, loading]);
+
+    // Participant Infinite Scroll Observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && hasMoreParticipants && !loadingParticipants) {
+                    fetchHistoryParticipants(true);
+                }
+            },
+            { threshold: 0.1 }
+        );
+        if (participantObserverTarget.current) observer.observe(participantObserverTarget.current);
+        return () => observer.disconnect();
+    }, [hasMoreParticipants, loadingParticipants]);
 
     const fetchHistoryParticipants = async (append = false, silent = false) => {
         if (!silent && !append) {
@@ -567,18 +596,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </div>
                                                     </button>
                                                 ))}
-                                                {hasMoreParticipants && (
-                                                    <div className="p-4 pt-0">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="sm" 
-                                                            className="w-full text-xs h-8 text-primary/70 hover:text-primary hover:bg-primary/5"
-                                                            onClick={() => fetchHistoryParticipants(true)}
-                                                            disabled={loadingParticipants}
-                                                        >
-                                                            {loadingParticipants ? <RefreshCw className="h-3 w-3 animate-spin mr-2" /> : null}
-                                                            {t('Load more contacts')}
-                                                        </Button>
+                                                {/* Sentinel for IntersectionObserver */}
+                                                <div ref={participantObserverTarget} className="h-4 w-full" />
+
+                                                {loadingParticipants && (
+                                                    <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse">
+                                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                                        <span className="text-[10px] font-medium">{t('Loading more contacts...')}</span>
+                                                    </div>
+                                                )}
+
+                                                {!hasMoreParticipants && historyParticipants.length > 10 && (
+                                                    <div className="p-8 text-center">
+                                                        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of contacts')}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -709,6 +740,22 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             </div>
                                         </button>
                                     ))}
+                                    
+                                    {/* Sentinel for IntersectionObserver */}
+                                    <div ref={threadObserverTarget} className="h-4 w-full" />
+
+                                    {loading && (
+                                        <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
+                                            <RefreshCw className="h-4 w-4 animate-spin" />
+                                            <span className="text-[10px] font-medium">{t('Loading more...')}</span>
+                                        </div>
+                                    )}
+
+                                    {!hasMoreThreads && threads.length > 10 && (
+                                        <div className="p-6 text-center bg-muted/5">
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 /* Empty state */
