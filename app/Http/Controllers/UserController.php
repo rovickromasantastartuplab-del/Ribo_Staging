@@ -60,7 +60,18 @@ class UserController extends BaseController
 
         // Handle pagination
         $perPage = $request->has('per_page') ? (int) $request->per_page : 10;
+
+        // Optimization for API assignment dropdown
+        if ($request->has('api')) {
+            $perPage = 100; // Allow a larger set for the dropdown
+            $userQuery->select(['users.id', 'users.name', 'users.avatar', 'users.type', 'users.created_at']);
+        }
+
         $users = $userQuery->paginate($perPage)->withQueryString();
+
+        if ($request->has('api') || $request->wantsJson()) {
+            return response()->json($users);
+        }
 
         # Roles listing - Get roles based on user type
         if ($authUser->type === 'company') {
