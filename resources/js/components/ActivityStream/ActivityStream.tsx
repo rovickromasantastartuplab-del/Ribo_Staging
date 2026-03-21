@@ -112,7 +112,7 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
                             </div>
                         )}
 
-                        {!hasMore && activities.length > 5 && (
+                        {!hasMore && !isLoadingMore && activities.length > 5 && (
                             <div className="pt-8 pb-4 text-center">
                                 <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of history')}</p>

@@ -646,7 +646,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </div>
                                                 )}
 
-                                                {!hasMoreParticipants && historyParticipants.length > 10 && (
+                                                {!hasMoreParticipants && !loadingParticipants && historyParticipants.length > 10 && (
                                                     <div className="p-8 text-center">
                                                         <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
                                                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of contacts')}</p>
@@ -791,7 +791,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         </div>
                                     )}
 
-                                    {!hasMoreThreads && threads.length > 10 && (
+                                    {!hasMoreThreads && !loading && threads.length > 10 && (
                                         <div className="p-6 text-center bg-muted/5">
                                             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
                                         </div>
