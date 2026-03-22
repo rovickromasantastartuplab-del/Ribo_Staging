@@ -287,7 +287,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 if (page.props.flash.error) {
                     toast.error(t(page.props.flash.error));
                 }
-                // Refresh threads to show the new Lead badge
+                // Clear selection and refresh threads to show the new Lead badge/move out of unassigned
+                setSelectedThread(null);
                 fetchThreads(false);
             },
             onError: (errors: any) => {

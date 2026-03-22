@@ -330,7 +330,17 @@ class LeadController extends Controller
 
         $lead = Lead::create($validated);
 
-        if ($lead && $request->has('email_thread_id')) {
+        if ($lead && $lead->email) {
+            // Bulk link all existing threads from this email to the new lead
+            $matchingThreads = \App\Models\EmailThread::where('created_by', createdBy())
+                ->whereJsonContains('participants', $lead->email)
+                ->get();
+            
+            foreach ($matchingThreads as $t) {
+                $t->leads()->syncWithoutDetaching([$lead->id => ['matched_via' => 'manual_add_as_lead_bulk']]);
+            }
+        } elseif ($lead && $request->has('email_thread_id')) {
+            // Fallback for threads without an email (rare)
             $thread = \App\Models\EmailThread::where('id', $request->email_thread_id)
                 ->where('created_by', createdBy())
                 ->first();
