@@ -559,6 +559,7 @@ export default function LeadShow() {
                           case 'assigned': return <UserCheck className="h-4 w-4 text-purple-600" />;
                           case 'converted': return <Target className="h-4 w-4 text-orange-600" />;
                           case 'comment': return <MessageCircle className="h-4 w-4 text-indigo-600" />;
+                          case 'email': return <Mail className="h-4 w-4 text-sky-600" />;
                           default: return <FileText className="h-4 w-4 text-gray-600" />;
                         }
                       };
@@ -570,6 +571,7 @@ export default function LeadShow() {
                           case 'assigned': return 'border-purple-200 bg-purple-50';
                           case 'converted': return 'border-orange-200 bg-orange-50';
                           case 'comment': return 'border-indigo-200 bg-indigo-50';
+                          case 'email': return 'border-sky-200 bg-sky-50';
                           default: return 'border-gray-200 bg-gray-50';
                         }
                       };

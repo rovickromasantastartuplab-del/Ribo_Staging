@@ -110,7 +110,36 @@ class LeadController extends Controller
             ];
         });
 
-        $streamItems = collect($activities)->merge($leadEvents)->sortBy('created_at')->values();
+        $emailMessages = $lead->emailThreads()->with(['messages', 'gmailAccount'])->get()->flatMap(function ($thread) {
+            return $thread->messages->map(function ($message) use ($thread) {
+                $isIncoming = strtolower($message->from_email) !== strtolower($thread->gmailAccount->gmail_address);
+                return (object) [
+                    'id' => 'email_' . $message->id,
+                    'is_lead_event' => false,
+                    'activity_type' => 'email',
+                    'title' => $isIncoming 
+                        ? 'Email from ' . ($message->from_name ?: $message->from_email)
+                        : 'Email sent to ' . (implode(', ', $message->to_emails)),
+                    'description' => $message->body_preview,
+                    'created_at' => $message->sent_at ?? $message->created_at,
+                    'user' => (object) [
+                        'name' => $isIncoming ? ($message->from_name ?: $message->from_email) : 'System (Gmail)',
+                        'avatar' => null
+                    ],
+                    'metadata' => [
+                        'thread_id' => $thread->id,
+                        'message_id' => $message->id,
+                        'is_incoming' => $isIncoming
+                    ]
+                ];
+            });
+        });
+
+        $streamItems = collect($activities)
+            ->merge($leadEvents)
+            ->merge($emailMessages)
+            ->sortBy('created_at')
+            ->values();
 
         return Inertia::render('leads/show', [
             'lead' => $lead,
