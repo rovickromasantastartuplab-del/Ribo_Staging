@@ -788,14 +788,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 <div ref={participantObserverTarget} className="h-4 w-full" />
 
                                                 {loadingParticipants && (
-                                                    <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse">
+                                                    <div className="col-span-full p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse">
                                                         <RefreshCw className="h-4 w-4 animate-spin" />
                                                         <span className="text-[10px] font-medium">{t('Loading more contacts...')}</span>
                                                     </div>
                                                 )}
 
                                                 {!hasMoreParticipants && !loadingParticipants && historyParticipants.length > 10 && (
-                                                    <div className="p-8 text-center">
+                                                    <div className="col-span-full p-8 text-center">
                                                         <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
                                                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of contacts')}</p>
                                                     </div>
