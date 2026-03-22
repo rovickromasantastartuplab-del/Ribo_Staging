@@ -172,7 +172,44 @@ class ConversationController extends Controller
             $query->where('status', 'Closed');
         }
 
-        return response()->json($query->paginate(20));
+        $threads = $query->paginate(20);
+
+        // Pre-fetch matching leads for threads that aren't linked yet
+        $threads->getCollection()->transform(function ($thread) use ($companyId) {
+            $thread->suggested_leads = [];
+            if ($thread->leads->isEmpty()) {
+                $emails = [];
+                if (is_array($thread->participants)) {
+                    foreach ($thread->participants as $p) {
+                        $p = trim($p);
+                        // Extract email from "Name <email@example.com>"
+                        if (preg_match('/<([^>]+)>/', $p, $matches)) {
+                            $emails[] = strtolower(trim($matches[1]));
+                        } else {
+                            // Try to extract any email-like string from the participant
+                            if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $p, $matches)) {
+                                $emails[] = strtolower(trim($matches[0]));
+                            }
+                        }
+                    }
+                }
+                
+                $emails = array_unique(array_filter($emails));
+                
+                if (!empty($emails)) {
+                    $thread->suggested_leads = \App\Models\Lead::where('created_by', $companyId)
+                        ->where(function($q) use ($emails) {
+                            foreach ($emails as $email) {
+                                $q->orWhereRaw('LOWER(email) = ?', [$email]);
+                            }
+                        })
+                        ->get(['id', 'name', 'email']);
+                }
+            }
+            return $thread;
+        });
+
+        return response()->json($threads);
     }
 
     /**
@@ -312,6 +349,28 @@ class ConversationController extends Controller
             ->paginate(20);
 
         return response()->json($activities);
+    }
+
+    /**
+     * Link a thread to an existing lead.
+     */
+    public function linkToLead(Request $request, EmailThread $thread)
+    {
+        $validated = $request->validate([
+            'lead_id' => 'required|exists:leads,id',
+        ]);
+
+        $companyId = auth()->user()->creatorId();
+        
+        // Ensure the lead belongs to the user/company
+        $lead = \App\Models\Lead::where('id', $validated['lead_id'])
+            ->where('created_by', $companyId)
+            ->firstOrFail();
+
+        // Attach using pivot table
+        $thread->leads()->syncWithoutDetaching([$lead->id => ['matched_via' => 'manual_link']]);
+
+        return back()->with('success', 'Thread successfully linked to lead: ' . $lead->name);
     }
 
     /**

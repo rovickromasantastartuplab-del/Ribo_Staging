@@ -250,6 +250,27 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         setIsLeadModalOpen(true);
     };
 
+    const handleLinkToLead = (leadId: number) => {
+        toast.loading(t('Linking thread to lead...'));
+        router.post(route('api.conversations.link_to_lead', selectedThread.id), {
+            lead_id: leadId
+        }, {
+            onSuccess: (page: any) => {
+                toast.dismiss();
+                if (page.props.flash.success) {
+                    toast.success(t(page.props.flash.success));
+                }
+                // Refresh threads to show the new Lead badge
+                fetchThreads(false);
+            },
+            onError: (errors: any) => {
+                toast.dismiss();
+                toast.error(t('Failed to link lead'));
+                console.error(errors);
+            }
+        });
+    };
+
     const handleLeadFormSubmit = (formData: any) => {
         toast.loading(t('Creating lead and linking thread...'));
         
@@ -262,6 +283,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 toast.dismiss();
                 if (page.props.flash.success) {
                     toast.success(t(page.props.flash.success));
+                }
+                if (page.props.flash.error) {
+                    toast.error(t(page.props.flash.error));
                 }
                 // Refresh threads to show the new Lead badge
                 fetchThreads(false);
@@ -872,11 +896,18 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             </Avatar>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
-                                                    <span className={`text-xs truncate flex-1 min-w-0 ${
-                                                        !thread.is_read ? 'font-extrabold' : 'font-semibold'
-                                                    } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
-                                                        {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
-                                                    </span>
+                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                        <span className={`text-xs truncate ${
+                                                            !thread.is_read ? 'font-extrabold' : 'font-semibold'
+                                                        } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
+                                                            {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
+                                                        </span>
+                                                        {(thread.leads?.[0] || thread.contacts?.[0]) && (
+                                                            <span className="text-[9px] text-muted-foreground truncate opacity-70">
+                                                                {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <span className="text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
                                                         {timeAgoShort(thread.last_message_at)}
                                                     </span>
@@ -1295,19 +1326,58 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </a>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col items-center p-4 border border-dashed rounded-lg">
+                                            <div className="flex flex-col items-center p-4 border border-dashed rounded-lg bg-muted/5">
                                                 <UserPlus className="h-5 w-5 text-muted-foreground/30 mb-1.5" />
-                                                <p className="text-[11px] text-muted-foreground mb-3 text-center">
-                                                    {t('This contact is not yet linked to a Lead or Contact record.')}
-                                                </p>
-                                                <Button 
-                                                    size="sm" 
-                                                    variant="outline" 
-                                                    className="w-full text-[11px] h-7"
-                                                    onClick={() => handleAddAsLead()}
-                                                >
-                                                    {t('Add as Lead')}
-                                                </Button>
+                                                
+                                                {selectedThread.suggested_leads?.length > 0 ? (
+                                                    <div className="w-full space-y-3">
+                                                        <div className="bg-amber-50 border border-amber-100 p-2.5 rounded-md">
+                                                            <p className="text-[10px] text-amber-700 font-bold uppercase mb-1 flex items-center gap-1">
+                                                                <AlertCircle className="h-3 w-3" />
+                                                                {t('Existing Lead Found')}
+                                                            </p>
+                                                            <p className="text-[11px] text-amber-900 font-medium">
+                                                                {selectedThread.suggested_leads[0].name}
+                                                            </p>
+                                                            <p className="text-[10px] text-amber-600 truncate">
+                                                                {selectedThread.suggested_leads[0].email}
+                                                            </p>
+                                                        </div>
+                                                        <Button 
+                                                            size="sm" 
+                                                            className="w-full text-xs h-8 shadow-sm font-bold"
+                                                            onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)}
+                                                        >
+                                                            {t('Link to Existing Lead')}
+                                                        </Button>
+                                                        <div className="relative">
+                                                            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                                                            <div className="relative flex justify-center text-[10px] uppercase"><span className="bg-background px-2 text-muted-foreground font-bold">{t('Or')}</span></div>
+                                                        </div>
+                                                        <Button 
+                                                            size="sm" 
+                                                            variant="outline" 
+                                                            className="w-full text-[11px] h-7 border-dashed"
+                                                            onClick={() => handleAddAsLead()}
+                                                        >
+                                                            {t('Create New Lead Anyway')}
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-[11px] text-muted-foreground mb-3 text-center">
+                                                            {t('This contact is not yet linked to a Lead or Contact record.')}
+                                                        </p>
+                                                        <Button 
+                                                            size="sm" 
+                                                            variant="outline" 
+                                                            className="w-full text-[11px] h-7"
+                                                            onClick={() => handleAddAsLead()}
+                                                        >
+                                                            {t('Add as Lead')}
+                                                        </Button>
+                                                    </>
+                                                )}
                                             </div>
                                         )}
                                         

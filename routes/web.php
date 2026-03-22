@@ -629,6 +629,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])
                 ->middleware('permission:manage-conversations')
                 ->name('api.conversations.reply');
+            Route::post('api/conversations/threads/{thread}/link-to-lead', [ConversationController::class, 'linkToLead'])
+                ->middleware('permission:manage-conversations')
+                ->name('api.conversations.link_to_lead');
         });
 
         Route::middleware('permission:manage-lead-statuses')->group(function () {

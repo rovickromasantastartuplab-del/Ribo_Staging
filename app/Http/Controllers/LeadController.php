@@ -272,6 +272,28 @@ class LeadController extends Controller
         $validated['created_by'] = createdBy();
         $validated['status'] = $validated['status'] ?? 'active';
 
+        // Prevent duplicate creation if email already exists
+        if ($request->filled('email')) {
+            $existingLead = Lead::where('created_by', createdBy())
+                ->where('email', strtolower($validated['email']))
+                ->first();
+            
+            if ($existingLead) {
+                // If an existing lead is found, just link the thread to it instead of creating a new one
+                if ($request->has('email_thread_id')) {
+                    $thread = \App\Models\EmailThread::where('id', $request->email_thread_id)
+                        ->where('created_by', createdBy())
+                        ->first();
+                    if ($thread) {
+                        $thread->leads()->syncWithoutDetaching([$existingLead->id => ['matched_via' => 'manual_add_as_lead_duplicate_catch']]);
+                        return back()->with('success', 'Email already exists in Leads. Conversation linked to existing Lead: ' . $existingLead->name);
+                    }
+                }
+                
+                return back()->with('error', 'A Lead with this email address already exists: ' . $existingLead->name);
+            }
+        }
+
         // Auto-assign to current user if staff user
         if (auth()->user()->type !== 'company') {
             $validated['assigned_to'] = auth()->id();
