@@ -1212,9 +1212,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                 {/* Messages */}
                                 <ScrollArea className="flex-1 min-h-0">
-                                    <div className="flex flex-col-reverse p-3 lg:p-4 lg:p-6 space-y-reverse space-y-4 lg:space-y-6 max-w-4xl mx-auto">
+                                    <div className="flex flex-col-reverse pt-4 lg:pt-6 px-3 lg:px-4 pb-2 lg:pb-3 space-y-reverse space-y-4 lg:space-y-6 max-w-4xl mx-auto">
                                         {/* Scroll to bottom target (Native start) */}
-                                        <div ref={messagesEndRef} className="h-px shrink-0" />
+                                        <div ref={messagesEndRef} className="h-0 shrink-0 invisible pointer-events-none" />
 
                                         {selectedThread.messages?.map((msg: any) => (
                                             <div key={msg.id} className="flex gap-2 lg:gap-3">
