@@ -475,7 +475,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             if (searchQuery.trim()) params.search = searchQuery.trim();
             
             const response = await axios.get(route('api.conversations.threads', params));
-            const { data, current_page, last_page } = response.data;
+            const { threads: threadsData, unread_count } = response.data;
+            const data = threadsData.data;
+            const current_page = threadsData.current_page;
+            const last_page = threadsData.last_page;
 
             if (append) {
                 setThreads(prev => {
@@ -486,7 +489,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 });
             } else {
                 setThreads(data);
-                setUnreadCount(data.filter((t: any) => !t.is_read).length);
+            }
+
+            if (unread_count !== undefined) {
+                setUnreadCount(unread_count);
             }
             
             setThreadPage(current_page);
@@ -572,6 +578,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             
             const newThread = response.data.thread;
             const pagination = response.data.messages_pagination;
+            const unread_count = response.data.unread_count;
+
+            if (unread_count !== undefined) {
+                setUnreadCount(unread_count);
+            }
 
             if (page === 1) {
                 setSelectedThread((prev: any) => {

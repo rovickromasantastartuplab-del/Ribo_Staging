@@ -36,30 +36,7 @@ class ConversationController extends Controller
             })->first();
         }
 
-        // Compute actual unread count with sync filtering
-        $unreadCountQuery = EmailThread::where('created_by', $companyId)->where('is_read', false);
-        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
-            $syncCategories = $gmailAccount->sync_categories;
-            $hasPrimary = in_array('PRIMARY', $syncCategories);
-            
-            $unreadCountQuery->where(function($q) use ($syncCategories, $hasPrimary) {
-                foreach ($syncCategories as $category) {
-                    if ($category !== 'PRIMARY') {
-                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
-                    }
-                }
-                
-                if ($hasPrimary) {
-                    $q->orWhere(function($sq) {
-                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
-                        foreach ($otherCategories as $other) {
-                            $sq->whereJsonDoesntContain('labels', $other);
-                        }
-                    });
-                }
-            });
-        }
-        $unreadCount = $unreadCountQuery->count();
+        $unreadCount = $this->getGlobalUnreadCount($companyId, $gmailAccount);
 
         return Inertia::render('conversations/index', [
             'initialFolder' => 'inbox',
@@ -224,7 +201,12 @@ class ConversationController extends Controller
             return $thread;
         });
 
-        return response()->json($threads);
+        $unreadCount = $this->getGlobalUnreadCount($companyId, $gmailAccount);
+
+        return response()->json([
+            'threads' => $threads,
+            'unread_count' => $unreadCount,
+        ]);
     }
 
     /**
@@ -580,7 +562,8 @@ class ConversationController extends Controller
                 'last_page' => $messagesPaginated->lastPage(),
                 'has_more' => $messagesPaginated->hasMorePages(),
                 'total' => $messagesPaginated->total(),
-            ]
+            ],
+            'unread_count' => $this->getGlobalUnreadCount($thread->created_by, $thread->gmailAccount),
         ]);
     }
 
@@ -714,5 +697,41 @@ class ConversationController extends Controller
             ]);
             return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Calculate global unread count for the company's active inbox filters.
+     */
+    private function getGlobalUnreadCount(int $companyId, ?GmailAccount $gmailAccount): int
+    {
+        $unreadCountQuery = EmailThread::where('created_by', $companyId)
+            ->where('is_read', false)
+            ->where(function($q) {
+                $q->where('status', 'Open')->orWhereNull('status');
+            });
+
+        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
+            $syncCategories = $gmailAccount->sync_categories;
+            $hasPrimary = in_array('PRIMARY', $syncCategories);
+            
+            $unreadCountQuery->where(function($q) use ($syncCategories, $hasPrimary) {
+                foreach ($syncCategories as $category) {
+                    if ($category !== 'PRIMARY') {
+                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
+                    }
+                }
+                
+                if ($hasPrimary) {
+                    $q->orWhere(function($sq) {
+                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
+                        foreach ($otherCategories as $other) {
+                            $sq->whereJsonDoesntContain('labels', $other);
+                        }
+                    });
+                }
+            });
+        }
+
+        return $unreadCountQuery->count();
     }
 }
