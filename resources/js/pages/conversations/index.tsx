@@ -566,7 +566,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             const pagination = response.data.messages_pagination;
 
             if (page === 1) {
-                setSelectedThread(newThread);
+                setSelectedThread((prev: any) => {
+                    // 100% Fix: Merge with previous state to prevent blanking if relations or attributes flicker
+                    if (prev && prev.id === newThread.id) {
+                        return { ...prev, ...newThread };
+                    }
+                    return newThread;
+                });
                 setMessagesPage(1);
                 setHasMoreMessages(pagination.has_more);
                 // Re-add a small delay for the initial load to ensure flex-col-reverse layout is ready

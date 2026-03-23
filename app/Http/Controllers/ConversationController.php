@@ -243,11 +243,12 @@ class ConversationController extends Controller
         ]);
 
         $thread->update($validated);
+        $thread = $thread->fresh();
 
         return response()->json([
             'success' => true,
             'message' => 'Thread updated successfully.',
-            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
+            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount'])
         ]);
     }
 
@@ -266,11 +267,12 @@ class ConversationController extends Controller
         ]);
 
         $thread->assignments()->sync($request->user_ids);
+        $thread = $thread->fresh();
 
         return response()->json([
             'success' => true,
             'message' => 'Thread assignments updated.',
-            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
+            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount'])
         ]);
     }
 
@@ -548,6 +550,9 @@ class ConversationController extends Controller
             abort(403);
         }
 
+        // Refresh to ensure we have the very latest state (especially after an async sync/reply)
+        $thread = $thread->fresh();
+
         $perPage = $request->input('per_page', 30);
         
         $messagesPaginated = $thread->messages()
@@ -560,7 +565,7 @@ class ConversationController extends Controller
 
         $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
         
-        // Remove the default messages relation if it was loaded, and attach our paginated/sorted set
+        // Ensure relations are attached so they are serialized in the response
         $thread->setRelation('messages', $messages);
 
         // Mark as read when user opens the thread
