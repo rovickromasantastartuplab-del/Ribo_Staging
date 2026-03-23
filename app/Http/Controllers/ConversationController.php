@@ -602,6 +602,13 @@ class ConversationController extends Controller
      */
     public function compose(Request $request)
     {
+        $user = auth()->user();
+
+        // Company owners bypass; staff must have send-conversations permission
+        if ($user->type !== 'company' && !$user->can('send-conversations')) {
+            abort(403, 'You do not have permission to send emails.');
+        }
+
         $request->validate([
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
@@ -609,7 +616,6 @@ class ConversationController extends Controller
         ]);
 
         try {
-            $user = auth()->user();
             $companyId = $user->creatorId();
             
             $account = \App\Models\GmailAccount::where('user_id', $companyId)->first();
@@ -666,10 +672,16 @@ class ConversationController extends Controller
             abort(403);
         }
 
-        // Staff must be assigned to the thread to reply
         $user = auth()->user();
-        if ($user->type === 'staff' && !$thread->isAssignedTo($user)) {
-            return response()->json(['error' => 'You must be assigned to this thread to reply.'], 403);
+
+        // Company owners bypass; staff must have reply-conversations permission AND be assigned
+        if ($user->type !== 'company') {
+            if (!$user->can('reply-conversations')) {
+                return response()->json(['error' => 'You do not have permission to reply.'], 403);
+            }
+            if (!$thread->isAssignedTo($user)) {
+                return response()->json(['error' => 'You must be assigned to this thread to reply.'], 403);
+            }
         }
 
         $request->validate([

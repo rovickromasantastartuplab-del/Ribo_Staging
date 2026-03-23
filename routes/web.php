@@ -624,10 +624,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middleware('permission:manage-conversations')
                 ->name('api.conversations.assign');
             Route::post('api/conversations/compose', [ConversationController::class, 'compose'])
-                ->middleware('permission:send-conversations')
                 ->name('api.conversations.compose');
             Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])
-                ->middleware('permission:reply-conversations')
                 ->name('api.conversations.reply');
             Route::post('api/conversations/threads/{thread}/link-to-lead', [ConversationController::class, 'linkToLead'])
                 ->middleware('permission:manage-conversations')
