@@ -538,6 +538,30 @@ class GmailService
     }
 
     /**
+     * Move a thread out of the Trash in Gmail.
+     *
+     * @param string $threadId  Gmail thread ID
+     */
+    public function untrashThread(string $threadId): bool
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+            $this->gmail->users_threads->untrash('me', $threadId);
+
+            $this->logActivity('email_untrashed', 'Thread restored from Trash', "Gmail Thread ID: {$threadId}");
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to untrash Gmail thread', [
+                'gmail_account_id' => $this->account->id,
+                'thread_id' => $threadId,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Send an email message or reply, optionally with file attachments.
      *
      * @param string $to        Primary recipient

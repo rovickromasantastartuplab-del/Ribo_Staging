@@ -227,21 +227,31 @@ class ConversationController extends Controller
         ]);
 
         $statusChanged = isset($validated['status']) && $validated['status'] !== $thread->status;
+        $wasTrash = $thread->status === 'Trash';
 
         $thread->update($validated);
         $thread = $thread->fresh();
 
-        // If status changed to Trash, sync with Gmail (Fix 3.1)
-        if ($statusChanged && $thread->status === 'Trash') {
+        // Handle Gmail Sync (Trash/Untrash) (Fix 3.1)
+        if ($statusChanged) {
             try {
                 $account = $thread->gmailAccount;
                 if ($account) {
                     $service = new \App\Services\GmailService($account);
-                    $service->trashThread($thread->gmail_thread_id);
+                    
+                    if ($thread->status === 'Trash') {
+                        // Moving TO trash
+                        $service->trashThread($thread->gmail_thread_id);
+                    } elseif ($wasTrash && in_array($thread->status, ['Open', 'Closed'])) {
+                        // Restoring FROM trash
+                        $service->untrashThread($thread->gmail_thread_id);
+                    }
                 }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to sync Trash status to Gmail', [
+                \Illuminate\Support\Facades\Log::error('Failed to sync Trash/Untrash status to Gmail', [
                     'thread_id' => $thread->id,
+                    'new_status' => $thread->status,
+                    'was_trash' => $wasTrash,
                     'error' => $e->getMessage()
                 ]);
             }

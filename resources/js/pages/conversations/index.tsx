@@ -1153,10 +1153,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     {t('Closed')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Trash' })} className="text-destructive focus:text-destructive">
-                                                    <Trash2 className="w-3.5 h-3.5 mr-2" />
-                                                    {t('Move to Trash')}
-                                                </DropdownMenuItem>
+                                                {selectedThread.status === 'Trash' ? (
+                                                    <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })} className="text-primary focus:text-primary">
+                                                        <Inbox className="w-3.5 h-3.5 mr-2" />
+                                                        {t('Restore to Inbox')}
+                                                    </DropdownMenuItem>
+                                                ) : (
+                                                    <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Trash' })} className="text-destructive focus:text-destructive">
+                                                        <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                                        {t('Move to Trash')}
+                                                    </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
 
@@ -1324,50 +1331,74 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                 {/* Reply box */}
                                 <div className="border-t bg-background shrink-0 p-2 lg:p-3">
-                                    <div className="max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden">
-                                        <textarea 
-                                            className="w-full min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none"
-                                            placeholder={t('Write your reply here...')}
-                                            value={replyBody}
-                                            onChange={(e) => setReplyBody(e.target.value)}
-                                            disabled={submittingReply}
-                                        />
-                                        {/* Reply attachment previews */}
-                                        {replyFiles.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
-                                                {replyFiles.map((file, idx) => (
-                                                    <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
-                                                        <Paperclip className="h-3 w-3 text-muted-foreground" />
-                                                        <span className="truncate max-w-[120px]">{file.name}</span>
-                                                        <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
-                                                            <X className="h-3 w-3" />
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                {selectedThread.status === 'Trash' && (
+                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center border-t">
+                                        <div className="flex flex-col items-center gap-2 text-center p-4">
+                                            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
+                                                <AlertCircle className="w-5 h-5" />
                                             </div>
-                                        )}
-                                        <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
-                                            <div className="flex items-center gap-1">
-                                                <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply}>
-                                                    <Paperclip className="h-3.5 w-3.5" />
-                                                </Button>
-                                            </div>
+                                            <p className="text-sm font-medium text-foreground">
+                                                {t('This thread is in Trash')}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground max-w-[240px]">
+                                                {t('Restore it to inbox to reply or send messages.')}
+                                            </p>
                                             <Button 
+                                                variant="outline" 
                                                 size="sm" 
-                                                className="gap-1.5 px-4 h-7 text-xs" 
-                                                onClick={handleSendReply} 
-                                                disabled={submittingReply || !replyBody.trim()}
+                                                className="mt-1 h-8"
+                                                onClick={() => handleUpdateMetadata({ status: 'Open' })}
                                             >
-                                                {submittingReply ? (
-                                                    <RefreshCw className="h-3 w-3 animate-spin" />
-                                                ) : (
-                                                    <Send className="h-3 w-3" />
-                                                )}
-                                                {submittingReply ? t('Sending...') : t('Send Reply')}
+                                                <Inbox className="w-3.5 h-3.5 mr-2" />
+                                                {t('Restore to Inbox')}
                                             </Button>
                                         </div>
                                     </div>
+                                )}
+                                <div className="max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative">
+                                    <textarea 
+                                        className="w-full min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none disabled:opacity-20"
+                                        placeholder={t('Write your reply here...')}
+                                        value={replyBody}
+                                        onChange={(e) => setReplyBody(e.target.value)}
+                                        disabled={submittingReply || selectedThread.status === 'Trash'}
+                                    />
+                                    {/* Reply attachment previews */}
+                                    {replyFiles.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
+                                            {replyFiles.map((file, idx) => (
+                                                <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
+                                                    <Paperclip className="h-3 w-3 text-muted-foreground" />
+                                                    <span className="truncate max-w-[120px]">{file.name}</span>
+                                                    <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive" disabled={selectedThread.status === 'Trash'}>
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
+                                        <div className="flex items-center gap-1">
+                                            <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Trash'}>
+                                                <Paperclip className="h-3.5 h-3.5" />
+                                            </Button>
+                                        </div>
+                                        <Button 
+                                            size="sm" 
+                                            className="gap-1.5 px-4 h-7 text-xs" 
+                                            onClick={handleSendReply} 
+                                            disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Trash'}
+                                        >
+                                            {submittingReply ? (
+                                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                                <Send className="h-3 w-3" />
+                                            )}
+                                            {submittingReply ? t('Sending...') : t('Send Reply')}
+                                        </Button>
+                                    </div>
+                                </div>
                                 </div>
                             </>
                         ) : (
