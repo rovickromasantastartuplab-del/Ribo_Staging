@@ -162,6 +162,8 @@ class ConversationController extends Controller
             });
         } elseif ($folder === 'closed') {
             $query->where('status', 'Closed');
+        } elseif ($folder === 'trash') {
+            $query->where('status', 'Trash');
         }
 
         $threads = $query->paginate(20);
@@ -219,13 +221,31 @@ class ConversationController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'nullable|string|in:Open,Closed',
+            'status' => 'nullable|string|in:Open,Closed,Trash',
             'priority' => 'nullable|string|in:Low,Medium,High',
             'follow_up_at' => 'nullable|date',
         ]);
 
+        $statusChanged = isset($validated['status']) && $validated['status'] !== $thread->status;
+
         $thread->update($validated);
         $thread = $thread->fresh();
+
+        // If status changed to Trash, sync with Gmail (Fix 3.1)
+        if ($statusChanged && $thread->status === 'Trash') {
+            try {
+                $account = $thread->gmailAccount;
+                if ($account) {
+                    $service = new \App\Services\GmailService($account);
+                    $service->trashThread($thread->gmail_thread_id);
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to sync Trash status to Gmail', [
+                    'thread_id' => $thread->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,

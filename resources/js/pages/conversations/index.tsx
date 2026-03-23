@@ -86,6 +86,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any
         { key: 'sent',       icon: Send,            label: t('Sent'),       count: 0 },
         { key: 'closed',     icon: CheckCircle,     label: t('Closed'),     count: 0 },
         { key: 'history',    icon: HistoryIcon,     label: t('History'),    count: 0 },
+        { key: 'trash',      icon: Trash2,          label: t('Trash'),      count: 0 },
     ];
     return (
         <div className="flex gap-1 p-2 overflow-x-auto items-center">
@@ -141,6 +142,7 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                     { key: 'sent',       icon: Send,            label: t('Sent'),       count: 0 },
                     { key: 'closed',     icon: CheckCircle,     label: t('Closed'),     count: 0 },
                     { key: 'history',    icon: HistoryIcon,     label: t('History'),    count: 0 },
+                    { key: 'trash',      icon: Trash2,          label: t('Trash'),      count: 0 },
                 ].map(f => (
                     <button
                         key={f.key}
@@ -1149,6 +1151,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Closed' })}>
                                                     <Badge className="w-2 h-2 rounded-full p-0 bg-gray-400 mr-2" />
                                                     {t('Closed')}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Trash' })} className="text-destructive focus:text-destructive">
+                                                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                                    {t('Move to Trash')}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
