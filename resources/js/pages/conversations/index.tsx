@@ -1323,9 +1323,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                         {/* Reply box */}
                                         <div className="border-t bg-background shrink-0 p-2 lg:p-3">
-                                            <div className="max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative">
-                                                {selectedThread.status === 'Trash' && (
-                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center border-t">
+                                        <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Trash' ? 'min-h-[160px]' : ''}`}>
+                                            {selectedThread.status === 'Trash' && (
+                                                <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center">
                                                         <div className="flex flex-col items-center gap-2 text-center p-4">
                                                             <div className="p-2 rounded-full bg-amber-50 text-amber-600">
                                                                 <AlertCircle className="w-5 h-5" />
