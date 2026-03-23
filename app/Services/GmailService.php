@@ -1086,7 +1086,7 @@ class GmailService
             );
 
             // Auto-link the thread to lead/contact if it was just created or emails match
-            $this->autoLinkThread($emailThread);
+            $this->autoLinkThread($emailThread, $companyId);
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to record sent message locally', [
