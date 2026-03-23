@@ -569,7 +569,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 setSelectedThread(newThread);
                 setMessagesPage(1);
                 setHasMoreMessages(pagination.has_more);
-                // No manual scroll needed with flex-col-reverse
+                // Re-add a small delay for the initial load to ensure flex-col-reverse layout is ready
+                setTimeout(() => scrollToBottom('auto'), 50);
             } else {
                 // Infinite scroll up (logically at end of the array in col-reverse):
                 setSelectedThread((prev: any) => {
