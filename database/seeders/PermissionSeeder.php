@@ -469,7 +469,9 @@ class PermissionSeeder extends Seeder
 
             // Conversations Hub permissions
             ['name' => 'view-conversations', 'module' => 'conversations', 'label' => 'View Conversations', 'description' => 'Can view the Conversations Hub and read threads'],
-            ['name' => 'manage-conversations', 'module' => 'conversations', 'label' => 'Manage Conversations', 'description' => 'Can access the Conversations Hub, reply to messages, and link threads to CRM records'],
+            ['name' => 'manage-conversations', 'module' => 'conversations', 'label' => 'Manage Conversations', 'description' => 'Can manage thread status, priority, assignments, and link threads to CRM records'],
+            ['name' => 'send-conversations', 'module' => 'conversations', 'label' => 'Send New Email', 'description' => 'Can compose and send new emails from the Conversations Hub'],
+            ['name' => 'reply-conversations', 'module' => 'conversations', 'label' => 'Reply to Emails', 'description' => 'Can reply to existing email threads (staff must be assigned to the thread)'],
         ];
 
         foreach ($permissions as $permission) {

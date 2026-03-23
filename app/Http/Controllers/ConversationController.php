@@ -666,6 +666,12 @@ class ConversationController extends Controller
             abort(403);
         }
 
+        // Staff must be assigned to the thread to reply
+        $user = auth()->user();
+        if ($user->type === 'staff' && !$thread->isAssignedTo($user)) {
+            return response()->json(['error' => 'You must be assigned to this thread to reply.'], 403);
+        }
+
         $request->validate([
             'body' => 'required|string',
         ]);

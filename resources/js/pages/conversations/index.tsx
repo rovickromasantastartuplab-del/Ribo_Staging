@@ -86,7 +86,7 @@ const timeAgoShort = (dateStr: string) => {
 };
 
 /* ── Folder tab selector (works on all sizes) ──────────────── */
-const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any) => {
+const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCanCompose }: any) => {
     const folders = [
         { key: 'inbox', icon: Inbox, label: t('Inbox'), count: unreadCount },
         { key: 'my_assignments', icon: UserCheck, label: t('My Assignments'), count: 0 },
@@ -98,10 +98,12 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any
     ];
     return (
         <div className="flex gap-1 p-2 overflow-x-auto items-center">
+            {onCanCompose && (
             <Button size="sm" onClick={onCompose} className="h-7 px-3 text-xs gap-1.5 shrink-0 mr-1.5 text-primary-foreground">
                 <PenBox className="h-3.5 w-3.5" />
                 {t('Compose')}
             </Button>
+            )}
             {folders.map(f => (
                 <button
                     key={f.key}
@@ -124,7 +126,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any
 };
 
 /* ── Full sidebar for xl+ screens ──────────────────────────── */
-const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose }: any) => (
+const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose, onCanCompose }: any) => (
     <div className="hidden xl:flex w-[180px] border-r flex-col bg-muted/30 shrink-0">
         <div className="p-3 flex-1">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -134,10 +136,12 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                 </Button>
             </div>
 
+            {onCanCompose && (
             <Button className="w-full mb-4 h-8 text-xs font-semibold gap-1.5 shadow-sm" onClick={onCompose}>
                 <PenBox className="h-3.5 w-3.5" />
                 {t('Compose')}
             </Button>
+            )}
 
             <div className="space-y-0.5">
                 {[
@@ -176,6 +180,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const { t } = useTranslation();
     const { auth, leadStatuses = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
     const permissions = auth?.permissions || [];
+    const canCompose = hasPermission(permissions, 'send-conversations');
+    const isStaff = auth?.user?.type === 'staff';
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
     const [selectedThread, setSelectedThread] = useState<any>(null);
@@ -871,6 +877,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         unreadCount={unreadCount}
                         t={t}
                         onCompose={() => setShowCompose(true)}
+                        onCanCompose={canCompose}
                     />
                 </div>
 
@@ -886,6 +893,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         isSyncing={isSyncing}
                         onSync={handleSync}
                         onCompose={() => setShowCompose(true)}
+                        onCanCompose={canCompose}
                     />
 
                     {selectedFolder === 'history' ? (
@@ -1475,6 +1483,28 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </div>
                                                     </div>
                                                 )}
+                                                {/* Staff assignment/permission check overlay */}
+                                                {selectedThread.status !== 'Trash' && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
+                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[160px]">
+                                                        <div className="flex flex-col items-center gap-2 text-center p-4">
+                                                            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
+                                                                <AlertCircle className="w-5 h-5" />
+                                                            </div>
+                                                            <p className="text-sm font-medium text-foreground">
+                                                                {!hasPermission(permissions, 'reply-conversations')
+                                                                    ? t('You do not have permission to reply')
+                                                                    : t('You are not assigned to this thread')}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground max-w-[240px]">
+                                                                {!hasPermission(permissions, 'reply-conversations')
+                                                                    ? t('Contact your administrator to request reply access.')
+                                                                    : t('Ask a manager to assign you to this thread to reply.')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+
                                                 <div 
                                                     className="w-full min-h-[60px] lg:min-h-[80px] cursor-text"
                                                     onClick={() => replyEditor?.commands.focus()}

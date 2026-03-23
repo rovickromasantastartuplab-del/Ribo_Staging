@@ -63,6 +63,14 @@ class EmailThread extends BaseModel
     }
 
     /**
+     * Check if a user is assigned to this thread.
+     */
+    public function isAssignedTo(User $user): bool
+    {
+        return $this->assignments()->where('user_id', $user->id)->exists();
+    }
+
+    /**
      * The latest message in this thread.
      */
     public function latestMessage()
