@@ -1095,4 +1095,27 @@ class GmailService
             ]);
         }
     }
+
+    /**
+     * Log an activity for the current Gmail account.
+     */
+    private function logActivity(string $type, string $title, ?string $description = null, array $old = [], array $new = [])
+    {
+        try {
+            \App\Models\GmailAccountActivity::create([
+                'gmail_account_id' => $this->account->id,
+                'user_id' => auth()->id() ?? $this->account->user_id,
+                'activity_type' => $type,
+                'title' => $title,
+                'description' => $description,
+                'old_values' => $old,
+                'new_values' => $new,
+                'created_by' => $this->resolveCompanyId(),
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log Gmail activity', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }
