@@ -21,7 +21,7 @@ import {
     Download,
     Image as ImageIcon,
     Smile,
-    Link,
+    Link as LinkIcon,
     Type,
     Trash2,
     Calendar,
@@ -30,7 +30,16 @@ import {
     Clock,
     UserCheck,
     CheckCircle,
+    Star,
+    Bold,
+    Italic,
+    Underline,
+    MoreHorizontal
 } from 'lucide-react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import { cn } from '@/lib/utils';
 import { ActivityStream } from '@/components/ActivityStream/ActivityStream';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -43,7 +52,7 @@ import { toast } from '@/components/custom-toast';
 import { CrudFormModal } from '@/components/CrudFormModal';
 import { hasPermission } from '@/utils/authorization';
 import axios from 'axios';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { getEcho } from '@/utils/echo';
 import { sanitizeHtml } from '@/utils/sanitize-html';
 import {
@@ -57,7 +66,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
-import { format } from 'date-fns';
 
 /* ── helpers ───────────────────────────────────────────────── */
 const parseUTC = (dateStr: string) => {
@@ -191,7 +199,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [participantsPage, setParticipantsPage] = useState(1);
     const [hasMoreParticipants, setHasMoreParticipants] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
-    const [gmailPageToken, setGmailPageToken] = useState<string | null>(undefined); // undefined = haven't checked Gmail yet
+    const [gmailPageToken, setGmailPageToken] = useState<string | null | undefined>(undefined); // undefined = haven't checked Gmail yet
     const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
     const [searchParticipants, setSearchParticipants] = useState('');
 
@@ -209,6 +217,66 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [composeSubject, setComposeSubject] = useState('');
     const [composeBody, setComposeBody] = useState('');
     const [isComposing, setIsComposing] = useState(false);
+    const [showFormatting, setShowFormatting] = useState(false);
+
+    // Tiptap Editor for Compose Modal
+    const composeEditor = useEditor({
+        extensions: [
+            StarterKit,
+            Link.configure({
+                openOnClick: false,
+                HTMLAttributes: {
+                    class: 'text-primary underline'
+                }
+            }),
+        ],
+        content: composeBody,
+        editorProps: {
+            attributes: {
+                class: 'prose prose-sm focus:outline-none max-w-none min-h-[250px] p-6 text-sm leading-relaxed'
+            }
+        },
+        onUpdate: ({ editor }) => {
+            setComposeBody(editor.getHTML());
+        },
+    });
+
+    // Tiptap Editor for Main Reply Box
+    const replyEditor = useEditor({
+        extensions: [
+            StarterKit,
+            Link.configure({
+                openOnClick: false,
+                HTMLAttributes: {
+                    class: 'text-primary underline'
+                }
+            }),
+        ],
+        content: replyBody,
+        editorProps: {
+            attributes: {
+                class: 'prose prose-sm focus:outline-none max-w-none min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm leading-relaxed'
+            }
+        },
+        onUpdate: ({ editor }) => {
+            setReplyBody(editor.getHTML());
+        },
+    });
+
+    const [showReplyFormatting, setShowReplyFormatting] = useState(false);
+
+    // Sync external composeBody changes if any (though mostly we use editor)
+    useEffect(() => {
+        if (composeEditor && composeBody === '') {
+            composeEditor.commands.setContent('');
+        }
+    }, [composeBody, composeEditor]);
+
+    useEffect(() => {
+        if (replyEditor && replyBody === '') {
+            replyEditor.commands.setContent('');
+        }
+    }, [replyBody, replyEditor]);
     const [composeFiles, setComposeFiles] = useState<File[]>([]);
     const [replyFiles, setReplyFiles] = useState<File[]>([]);
     const composeFileRef = React.useRef<HTMLInputElement>(null);
@@ -638,6 +706,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             });
             toast.success(t('Reply sent successfully'));
             setReplyBody('');
+            replyEditor?.commands.setContent('');
             setReplyFiles([]);
             // Refresh list to show updated snippet/timestamp
             fetchThreads(false, true);
@@ -1348,13 +1417,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </div>
                                                     </div>
                                                 )}
-                                                <textarea
-                                                    className="w-full min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none disabled:opacity-20"
-                                                    placeholder={t('Write your reply here...')}
-                                                    value={replyBody}
-                                                    onChange={(e) => setReplyBody(e.target.value)}
-                                                    disabled={submittingReply || selectedThread.status === 'Trash'}
-                                                />
+                                                <div 
+                                                    className="w-full min-h-[60px] lg:min-h-[80px] cursor-text"
+                                                    onClick={() => replyEditor?.commands.focus()}
+                                                >
+                                                    <EditorContent editor={replyEditor} />
+                                                </div>
                                                 {/* Reply attachment preview */}
                                                 {replyFiles.length > 0 && (
                                                     <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
@@ -1369,11 +1437,89 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         ))}
                                                     </div>
                                                 )}
+                                                {/* Reply Formatting Toolbar */}
+                                                {showReplyFormatting && replyEditor && (
+                                                    <div className="flex items-center gap-0.5 px-2.5 py-1 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('bold') && "bg-muted text-primary")}
+                                                            onClick={() => replyEditor.chain().focus().toggleBold().run()}
+                                                            disabled={selectedThread.status === 'Trash'}
+                                                        >
+                                                            <Bold className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('italic') && "bg-muted text-primary")}
+                                                            onClick={() => replyEditor.chain().focus().toggleItalic().run()}
+                                                            disabled={selectedThread.status === 'Trash'}
+                                                        >
+                                                            <Italic className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('strike') && "bg-muted text-primary")}
+                                                            onClick={() => replyEditor.chain().focus().toggleStrike().run()}
+                                                            disabled={selectedThread.status === 'Trash'}
+                                                        >
+                                                            <X className="h-3.5 w-3.5 line-through" />
+                                                        </Button>
+                                                        <div className="w-px h-3 bg-border mx-1" />
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                                            onClick={() => replyEditor.chain().focus().unsetAllMarks().run()}
+                                                            disabled={selectedThread.status === 'Trash'}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
                                                     <div className="flex items-center gap-1">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className={cn("h-7 w-7 transition-colors rounded-full", showReplyFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                                            onClick={() => setShowReplyFormatting(!showReplyFormatting)}
+                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                                        >
+                                                            <Type className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className={cn("h-7 w-7 transition-colors rounded-full", replyEditor?.isActive('link') ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                                            onClick={() => {
+                                                                const url = window.prompt('URL:');
+                                                                if (url) replyEditor?.chain().focus().setLink({ href: url }).run();
+                                                                else if (url === '') replyEditor?.chain().focus().unsetLink().run();
+                                                            }}
+                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                                        >
+                                                            <LinkIcon className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <div className="w-px h-4 bg-border mx-1" />
                                                         <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
                                                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Trash'}>
-                                                            <Paperclip className="h-3.5 h-3.5" />
+                                                            <Paperclip className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
+                                                            onClick={() => {
+                                                                const emojis = ['😊', '👍', '🙏', '🔥', '❤️', '✅'];
+                                                                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                                                                replyEditor?.chain().focus().insertContent(emoji).run();
+                                                            }}
+                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                                        >
+                                                            <Smile className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
                                                     <Button
@@ -1597,12 +1743,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             />
                         </div>
                         <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
-                            <textarea
-                                value={composeBody}
-                                onChange={(e) => setComposeBody(e.target.value)}
-                                placeholder={t('Write your message here...')}
-                                className="w-full min-h-[250px] p-6 text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none leading-relaxed"
-                            />
+                            <div className="min-h-[250px] cursor-text" onClick={() => composeEditor?.commands.focus()}>
+                                <EditorContent editor={composeEditor} />
+                            </div>
                             {/* Compose attachment previews */}
                             {composeFiles.length > 0 && (
                                 <div className="flex flex-wrap gap-2 px-5 py-3 border-t bg-muted/10">
@@ -1621,22 +1764,88 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     ))}
                                 </div>
                             )}
-                            {/* Toolbar */}
-                            <div className="flex items-center gap-1 px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Type className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Link className="h-4 w-4" /></Button>
-                                <div className="w-px h-5 bg-border mx-2" />
-                                <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Smile className="h-4 w-4" /></Button>
+                            {/* Formatting Toolbar (Toggled by T button) */}
+                            {showFormatting && composeEditor && (
+                                <div className="flex items-center gap-0.5 px-5 py-1.5 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
+                                    <Button
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('bold') && "bg-muted text-primary")}
+                                        onClick={() => composeEditor.chain().focus().toggleBold().run()}
+                                    >
+                                        <Bold className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('italic') && "bg-muted text-primary")}
+                                        onClick={() => composeEditor.chain().focus().toggleItalic().run()}
+                                    >
+                                        <Italic className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('strike') && "bg-muted text-primary")}
+                                        onClick={() => composeEditor.chain().focus().toggleStrike().run()}
+                                    >
+                                        <X className="h-4 w-4 line-through" />
+                                    </Button>
+                                    <div className="w-px h-4 bg-border mx-1" />
+                                    <Button
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                        onClick={() => composeEditor.chain().focus().unsetAllMarks().run()}
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            )}
+                            {/* Main Toolbar */}
+                            <div className="flex items-center justify-between px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+                                <div className="flex items-center gap-1">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className={cn("h-8 w-8 transition-colors rounded-full", showFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                        onClick={() => setShowFormatting(!showFormatting)}
+                                    >
+                                        <Type className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className={cn("h-8 w-8 transition-colors rounded-full", composeEditor?.isActive('link') ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                        onClick={() => {
+                                            const url = window.prompt('URL:');
+                                            if (url) composeEditor?.chain().focus().setLink({ href: url }).run();
+                                            else if (url === '') composeEditor?.chain().focus().unsetLink().run();
+                                        }}
+                                    >
+                                        <LinkIcon className="h-4 w-4" />
+                                    </Button>
+                                    <div className="w-px h-5 bg-border mx-2" />
+                                    <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
+                                        onClick={() => {
+                                            const emojis = ['😊', '👍', '🙏', '🔥', '❤️', '✅'];
+                                            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                                            composeEditor?.chain().focus().insertContent(emoji).run();
+                                        }}
+                                    >
+                                        <Smile className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <DialogFooter className="px-5 py-4 bg-muted/10 sm:justify-between items-center rounded-b-xl">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors" onClick={() => setShowCompose(false)} disabled={isComposing}>
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                    <DialogFooter className="px-5 py-4 bg-muted/10 sm:justify-end items-center rounded-b-xl">
                         <div className="flex items-center gap-3">
                             <Button variant="ghost" size="sm" onClick={() => setShowCompose(false)} disabled={isComposing} className="text-xs font-semibold px-4 h-9">
                                 {t('Cancel')}
