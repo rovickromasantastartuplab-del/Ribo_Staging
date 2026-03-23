@@ -92,6 +92,23 @@ class LeadController extends Controller
 
         $meetings = $parentMeetings->merge($attendeeMeetings)->merge($parentCalls)->merge($attendeeCalls)->unique('id')->sortByDesc('start_date')->values();
 
+        $allStreamItems = $this->getStreamItemsCollection($lead);
+        $streamItems = $allStreamItems->slice(0, 20)->values();
+        $hasMoreStreamItems = $allStreamItems->count() > 20;
+
+        return Inertia::render('leads/show', [
+            'lead' => $lead,
+            'streamItems' => $streamItems,
+            'hasMoreStreamItems' => $hasMoreStreamItems,
+            'comments' => $lead->comments,
+            'relatedAccounts' => $relatedAccounts,
+            'relatedContacts' => $relatedContacts,
+            'meetings' => $meetings
+        ]);
+    }
+
+    private function getStreamItemsCollection(Lead $lead)
+    {
         $activities = $lead->activities()->orderBy('created_at', 'asc')->get()->map(function ($a) {
             $a->is_lead_event = false;
             return $a;
@@ -135,19 +152,28 @@ class LeadController extends Controller
             });
         });
 
-        $streamItems = collect($activities)
+        return collect($activities)
             ->merge($leadEvents)
             ->merge($emailMessages)
             ->sortBy('created_at')
             ->values();
+    }
 
-        return Inertia::render('leads/show', [
-            'lead' => $lead,
-            'streamItems' => $streamItems,
-            'comments' => $lead->comments,
-            'relatedAccounts' => $relatedAccounts,
-            'relatedContacts' => $relatedContacts,
-            'meetings' => $meetings
+    public function apiActivities(Lead $lead, Request $request)
+    {
+        $page = (int) $request->get('page', 1);
+        $perPage = 20;
+
+        $allStreamItems = $this->getStreamItemsCollection($lead);
+        
+        $total = $allStreamItems->count();
+        $items = $allStreamItems->forPage($page, $perPage)->values();
+
+        return response()->json([
+            'data' => $items,
+            'current_page' => $page,
+            'last_page' => ceil($total / $perPage),
+            'total' => $total,
         ]);
     }
 

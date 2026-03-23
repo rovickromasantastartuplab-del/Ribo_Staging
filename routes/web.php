@@ -669,6 +669,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::post('leads/{lead}/update-field', [LeadController::class, 'updateField'])->middleware('permission:edit-leads')->name('leads.update-field');
             Route::put('leads/{lead}/update-status', [LeadController::class, 'updateStatus'])->middleware('permission:edit-leads')->name('leads.update-status');
+            Route::get('leads/{lead}/activities-api', [LeadController::class, 'apiActivities'])->middleware('permission:view-leads')->name('leads.activities.api');
             Route::delete('leads/{lead}/activities', [LeadController::class, 'deleteActivities'])->middleware('permission:delete-leads')->name('leads.delete-activities');
             Route::delete('leads/{lead}/activities/{activity}', [LeadController::class, 'deleteActivity'])->middleware('permission:delete-leads')->name('leads.delete-activity');
 

@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { RefreshCw } from 'lucide-react';
 import { formatCurrency as formatCurrencyUtils } from '@/utils/currency';
 
 export default function LeadShow() {
   const { t } = useTranslation();
-  const { lead, streamItems, auth, relatedAccounts, relatedContacts, meetings } = usePage().props as any;
+  const { lead, streamItems: initialStreamItems, hasMoreStreamItems: initialHasMore, auth, relatedAccounts, relatedContacts, meetings } = usePage().props as any;
   const comments = lead.comments || [];
   const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const [showStream, setShowStream] = useState(true);
@@ -22,6 +24,61 @@ export default function LeadShow() {
   const [newComment, setNewComment] = useState('');
   const [editingComment, setEditingComment] = useState<number | null>(null);
   const [editCommentText, setEditCommentText] = useState('');
+
+  // Infinite Scroll State
+  const [streamItems, setStreamItems] = useState<any[]>(initialStreamItems || []);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialHasMore || false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const fetchMoreActivities = async () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const response = await axios.get(route('leads.activities.api', lead.id), {
+        params: { page: nextPage }
+      });
+
+      const { data, current_page, last_page } = response.data;
+      
+      setStreamItems(prev => [...prev, ...data]);
+      setPage(current_page);
+      setHasMore(current_page < last_page);
+    } catch (error) {
+      console.error('Failed to fetch more activities:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchMoreActivities();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, page]);
+
+  // Sync with initial load if props change (e.g. after a hard refresh or action)
+  useEffect(() => {
+    if (initialStreamItems) {
+      setStreamItems(initialStreamItems);
+      setPage(1);
+      setHasMore(initialHasMore);
+    }
+  }, [initialStreamItems, initialHasMore]);
 
   const breadcrumbs = [
     { title: t('Dashboard'), href: route('dashboard') },
@@ -719,6 +776,22 @@ export default function LeadShow() {
                         </div>
                       );
                     })}
+                    {/* Sentinel for infinite scroll */}
+                    <div ref={observerTarget} className="h-4 w-full" />
+
+                    {loadingMore && (
+                      <div className="py-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse">
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        <span className="text-[10px] font-medium">{t('Loading older activities...')}</span>
+                      </div>
+                    )}
+
+                    {!hasMore && streamItems.length > 5 && (
+                      <div className="pt-8 pb-4 text-center">
+                        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of history')}</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
