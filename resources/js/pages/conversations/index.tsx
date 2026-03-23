@@ -265,6 +265,64 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const [showReplyFormatting, setShowReplyFormatting] = useState(false);
 
+    // Dynamic Unicode Emoji Engine
+    const getEmojiRange = (start: number, end: number) => {
+        const emojis = [];
+        for (let i = start; i <= end; i++) {
+            emojis.push(String.fromCodePoint(i));
+        }
+        return emojis;
+    };
+
+    const emojiCategories = [
+        { name: 'Smileys', emojis: getEmojiRange(0x1F600, 0x1F64F) },
+        { name: 'Gestures', emojis: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏'] },
+        { name: 'Activities', emojis: getEmojiRange(0x1F3A0, 0x1F3C4) },
+        { name: 'Symbols', emojis: ['❤️', '✨', '🔥', '✅', '❌', '⚠️', '💯', '💢', '♻️', '📢', '🔔', '🔒', '🔓', '📍', '✉️', '📞'] },
+    ];
+
+    const EmojiPicker = ({ onSelect, disabled }: { onSelect: (emoji: string) => void, disabled?: boolean }) => (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
+                    disabled={disabled}
+                >
+                    <Smile className="h-3.5 w-3.5" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0 overflow-hidden border shadow-xl" align="start">
+                <div className="flex flex-col h-80">
+                    <div className="px-3 py-2 border-b bg-muted/5">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Select Emoji</span>
+                    </div>
+                    <ScrollArea className="flex-1 p-2">
+                        <div className="space-y-4">
+                            {emojiCategories.map(cat => (
+                                <div key={cat.name} className="space-y-1.5">
+                                    <h4 className="text-[10px] font-bold text-muted-foreground/70 uppercase px-1">{cat.name}</h4>
+                                    <div className="grid grid-cols-7 gap-1">
+                                        {cat.emojis.map(emoji => (
+                                            <button
+                                                key={emoji}
+                                                onClick={() => onSelect(emoji)}
+                                                className="h-8 w-8 flex items-center justify-center hover:bg-muted rounded text-lg transition-transform hover:scale-125 active:scale-95"
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+
     // Sync external composeBody changes if any (though mostly we use editor)
     useEffect(() => {
         if (composeEditor && composeBody === '') {
@@ -1458,15 +1516,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         >
                                                             <Italic className="h-3.5 w-3.5" />
                                                         </Button>
-                                                        <Button
-                                                            variant="ghost" 
-                                                            size="sm" 
-                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('strike') && "bg-muted text-primary")}
-                                                            onClick={() => replyEditor.chain().focus().toggleStrike().run()}
-                                                            disabled={selectedThread.status === 'Trash'}
-                                                        >
-                                                            <X className="h-3.5 w-3.5 line-through" />
-                                                        </Button>
                                                         <div className="w-px h-3 bg-border mx-1" />
                                                         <Button
                                                             variant="ghost" 
@@ -1490,37 +1539,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         >
                                                             <Type className="h-3.5 w-3.5" />
                                                         </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className={cn("h-7 w-7 transition-colors rounded-full", replyEditor?.isActive('link') ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
-                                                            onClick={() => {
-                                                                const url = window.prompt('URL:');
-                                                                if (url) replyEditor?.chain().focus().setLink({ href: url }).run();
-                                                                else if (url === '') replyEditor?.chain().focus().unsetLink().run();
-                                                            }}
-                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
-                                                        >
-                                                            <LinkIcon className="h-3.5 w-3.5" />
-                                                        </Button>
                                                         <div className="w-px h-4 bg-border mx-1" />
                                                         <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
                                                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Trash'}>
                                                             <Paperclip className="h-3.5 w-3.5" />
                                                         </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
-                                                            onClick={() => {
-                                                                const emojis = ['😊', '👍', '🙏', '🔥', '❤️', '✅'];
-                                                                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                                                                replyEditor?.chain().focus().insertContent(emoji).run();
-                                                            }}
+                                                        <EmojiPicker 
                                                             disabled={submittingReply || selectedThread.status === 'Trash'}
-                                                        >
-                                                            <Smile className="h-3.5 w-3.5" />
-                                                        </Button>
+                                                            onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()} 
+                                                        />
                                                     </div>
                                                     <Button
                                                         size="sm"
@@ -1783,14 +1810,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     >
                                         <Italic className="h-4 w-4" />
                                     </Button>
-                                    <Button
-                                        variant="ghost" 
-                                        size="sm" 
-                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('strike') && "bg-muted text-primary")}
-                                        onClick={() => composeEditor.chain().focus().toggleStrike().run()}
-                                    >
-                                        <X className="h-4 w-4 line-through" />
-                                    </Button>
                                     <div className="w-px h-4 bg-border mx-1" />
                                     <Button
                                         variant="ghost" 
@@ -1813,34 +1832,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     >
                                         <Type className="h-4 w-4" />
                                     </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className={cn("h-8 w-8 transition-colors rounded-full", composeEditor?.isActive('link') ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
-                                        onClick={() => {
-                                            const url = window.prompt('URL:');
-                                            if (url) composeEditor?.chain().focus().setLink({ href: url }).run();
-                                            else if (url === '') composeEditor?.chain().focus().unsetLink().run();
-                                        }}
-                                    >
-                                        <LinkIcon className="h-4 w-4" />
-                                    </Button>
                                     <div className="w-px h-5 bg-border mx-2" />
                                     <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
-                                        onClick={() => {
-                                            const emojis = ['😊', '👍', '🙏', '🔥', '❤️', '✅'];
-                                            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                                            composeEditor?.chain().focus().insertContent(emoji).run();
-                                        }}
-                                    >
-                                        <Smile className="h-4 w-4" />
-                                    </Button>
+                                    <EmojiPicker 
+                                        onSelect={(emoji) => composeEditor?.chain().focus().insertContent(emoji).run()} 
+                                    />
                                 </div>
                             </div>
                         </div>
