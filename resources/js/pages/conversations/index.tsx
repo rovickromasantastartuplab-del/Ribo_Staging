@@ -360,7 +360,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 }
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
-                            .then(r => setSelectedThread(r.data))
+                            .then(r => {
+                                const newThread = r.data.thread;
+                                setSelectedThread((prev: any) => {
+                                    if (prev && prev.id === newThread.id) {
+                                        return { ...prev, ...newThread };
+                                    }
+                                    return newThread;
+                                });
+                            })
                             .catch(err => console.error('Silent refresh failed:', err));
                     }
                 }
