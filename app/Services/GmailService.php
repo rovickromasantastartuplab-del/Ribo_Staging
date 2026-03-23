@@ -657,10 +657,18 @@ class GmailService
             return;
         }
 
-        // Filter out the connected Gmail address itself
-        $externalParticipants = array_filter($participants, function ($email) {
-            return strtolower($email) !== strtolower($this->account->gmail_address);
-        });
+        // Filter out the connected Gmail address and extract clean emails from strings like "Name <email@example.com>"
+        $externalParticipants = array_map(function ($participant) {
+            if (preg_match('/<(.+?)>/', $participant, $matches)) {
+                return strtolower(trim($matches[1]));
+            }
+            return strtolower(trim($participant));
+        }, $participants);
+
+        $selfEmail = strtolower($this->account->gmail_address);
+        $externalParticipants = array_unique(array_filter($externalParticipants, function ($email) use ($selfEmail) {
+            return !empty($email) && $email !== $selfEmail;
+        }));
 
         if (empty($externalParticipants)) {
             return;

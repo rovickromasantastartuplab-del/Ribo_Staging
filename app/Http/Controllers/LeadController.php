@@ -332,8 +332,9 @@ class LeadController extends Controller
 
         if ($lead && $lead->email) {
             // Bulk link all existing threads from this email to the new lead
+            // We use a LIKE query on the participants JSON to handle "Name <email>" formats
             $matchingThreads = \App\Models\EmailThread::where('created_by', createdBy())
-                ->whereJsonContains('participants', $lead->email)
+                ->where('participants', 'LIKE', '%' . $lead->email . '%')
                 ->get();
             
             foreach ($matchingThreads as $t) {
