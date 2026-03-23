@@ -541,21 +541,42 @@ class ConversationController extends Controller
     /**
      * Display a specific thread's full history.
      */
-    public function show(EmailThread $thread)
+    public function show(EmailThread $thread, Request $request)
     {
         // Ensure user has access to this company's threads
         if ($thread->created_by !== auth()->user()->creatorId()) {
             abort(403);
         }
 
-        $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar']);
+        $perPage = $request->input('per_page', 30);
+        
+        $messagesPaginated = $thread->messages()
+            ->with(['media', 'sender'])
+            ->reorder('sent_at', 'desc')
+            ->paginate($perPage);
+
+        // Reverse for chronological display
+        $messages = collect($messagesPaginated->items())->reverse()->values();
+
+        $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar']);
+        
+        // Remove the default messages relation if it was loaded, and attach our paginated/sorted set
+        $thread->setRelation('messages', $messages);
 
         // Mark as read when user opens the thread
         if (!$thread->is_read) {
             $thread->update(['is_read' => true]);
         }
         
-        return response()->json($thread);
+        return response()->json([
+            'thread' => $thread,
+            'messages_pagination' => [
+                'current_page' => $messagesPaginated->currentPage(),
+                'last_page' => $messagesPaginated->lastPage(),
+                'has_more' => $messagesPaginated->hasMorePages(),
+                'total' => $messagesPaginated->total(),
+            ]
+        ]);
     }
 
     /**

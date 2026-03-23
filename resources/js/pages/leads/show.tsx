@@ -98,6 +98,11 @@ export default function LeadShow() {
   };
 
   const formatCurrency = (amount: number) => formatCurrencyUtils(Number(amount || 0));
+  
+  const getInitialAvatar = (name: string) => {
+    const cleanName = (name || 'User').replace(/\s*\(.*?\)/, '').trim();
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=e5e7eb&color=374151&size=32`;
+  };
 
 
 
@@ -570,7 +575,7 @@ export default function LeadShow() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                        target.src = getInitialAvatar(auth?.user?.name);
                       }}
                     />
                   </div>
@@ -660,7 +665,7 @@ export default function LeadShow() {
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                                  target.src = getInitialAvatar(activity.user?.name);
                                 }}
                               />
                             </div>

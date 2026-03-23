@@ -200,6 +200,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     // Feature states
     const [companyUsers, setCompanyUsers] = useState<any[]>([]);
     const [updatingMetadata, setUpdatingMetadata] = useState(false);
+    
+    // Internal thread message pagination
+    const [messagesPage, setMessagesPage] = useState(1);
+    const [hasMoreMessages, setHasMoreMessages] = useState(false);
+    const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
 
     const [showCompose, setShowCompose] = useState(false);
     const [composeTo, setComposeTo] = useState('');
@@ -212,6 +217,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const replyFileRef = React.useRef<HTMLInputElement>(null);
     const threadObserverTarget = React.useRef<HTMLDivElement>(null);
     const participantObserverTarget = React.useRef<HTMLDivElement>(null);
+    const messagesEndRef = React.useRef<HTMLDivElement>(null);
+    const messagesTopObserverTarget = React.useRef<HTMLDivElement>(null);
+    const scrollViewportRef = React.useRef<HTMLDivElement>(null);
 
     const { post: inertiaPost } = useForm({});
 
@@ -249,6 +257,24 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         });
         setIsLeadModalOpen(true);
     };
+
+    // Observer for loading earlier messages (top of list)
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMoreMessages && !loadingMoreMessages && selectedThread) {
+                    fetchEarlierMessages();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (messagesTopObserverTarget.current) {
+            observer.observe(messagesTopObserverTarget.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMoreMessages, loadingMoreMessages, selectedThread, messagesPage]);
 
     const handleLinkToLead = (leadId: number) => {
         toast.loading(t('Linking thread to lead...'));
@@ -523,16 +549,51 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         }
     };
 
-    const handleSelectThread = async (thread: any) => {
-        setLoading(true);
+    const handleSelectThread = async (thread: any, page = 1) => {
+        if (page === 1) setLoading(true);
+        else setLoadingMoreMessages(true);
+
         try {
-            const response = await axios.get(route('api.conversations.show', thread.id));
-            setSelectedThread(response.data);
+            const response = await axios.get(route('api.conversations.show', thread.id), {
+                params: { page }
+            });
+            
+            const newThread = response.data.thread;
+            const pagination = response.data.messages_pagination;
+
+            if (page === 1) {
+                setSelectedThread(newThread);
+                setMessagesPage(1);
+                setHasMoreMessages(pagination.has_more);
+                // Initial load: scroll to bottom
+                setTimeout(scrollToBottom, 100);
+            } else {
+                // Infinite scroll up: prepend messages
+                setSelectedThread((prev: any) => {
+                    if (!prev || prev.id !== newThread.id) return prev;
+                    return {
+                        ...prev,
+                        messages: [...newThread.messages, ...prev.messages]
+                    };
+                });
+                setMessagesPage(page);
+                setHasMoreMessages(pagination.has_more);
+            }
         } catch {
             toast.error(t('Failed to load conversation details'));
         } finally {
             setLoading(false);
+            setLoadingMoreMessages(false);
         }
+    };
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const fetchEarlierMessages = () => {
+        if (!selectedThread || !hasMoreMessages || loadingMoreMessages) return;
+        handleSelectThread(selectedThread, messagesPage + 1);
     };
 
     const handleSendReply = async () => {
@@ -1132,6 +1193,16 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 {/* Messages */}
                                 <ScrollArea className="flex-1 min-h-0">
                                     <div className="p-3 lg:p-4 lg:p-6 space-y-4 lg:space-y-6 max-w-4xl mx-auto">
+                                        {/* Observer target for loading older history at the top */}
+                                        <div ref={messagesTopObserverTarget} className="h-1 w-full" />
+                                        
+                                        {loadingMoreMessages && (
+                                            <div className="flex justify-center items-center py-2 text-muted-foreground text-[10px] italic">
+                                                <RefreshCw className="h-3 w-3 animate-spin mr-2" />
+                                                {t('Loading earlier messages...')}
+                                            </div>
+                                        )}
+
                                         {selectedThread.messages?.map((msg: any) => (
                                             <div key={msg.id} className="flex gap-2 lg:gap-3">
                                                 <Avatar className="h-7 w-7 lg:h-8 lg:w-8 shrink-0 border">
@@ -1198,6 +1269,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </div>
                                             </div>
                                         ))}
+                                        {/* Scroll to bottom target */}
+                                        <div ref={messagesEndRef} className="h-px" />
                                     </div>
                                 </ScrollArea>
 

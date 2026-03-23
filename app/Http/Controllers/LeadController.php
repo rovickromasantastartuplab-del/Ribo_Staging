@@ -109,12 +109,12 @@ class LeadController extends Controller
 
     private function getStreamItemsCollection(Lead $lead)
     {
-        $activities = $lead->activities()->orderBy('created_at', 'asc')->get()->map(function ($a) {
+        $activities = $lead->activities()->orderBy('created_at', 'desc')->get()->map(function ($a) {
             $a->is_lead_event = false;
             return $a;
         });
 
-        $leadEvents = \App\Models\LeadEvent::where('lead_id', $lead->id)->get()->map(function ($e) {
+        $leadEvents = \App\Models\LeadEvent::where('lead_id', $lead->id)->orderBy('received_at', 'desc')->get()->map(function ($e) {
             return (object) [
                 'id' => 'evt_' . $e->id,
                 'created_at' => $e->received_at,
@@ -155,7 +155,7 @@ class LeadController extends Controller
         return collect($activities)
             ->merge($leadEvents)
             ->merge($emailMessages)
-            ->sortBy('created_at')
+            ->sortByDesc('created_at')
             ->values();
     }
 
