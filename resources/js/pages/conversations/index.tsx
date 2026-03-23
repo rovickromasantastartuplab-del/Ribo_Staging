@@ -173,7 +173,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
     const [selectedThread, setSelectedThread] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
     const [showContactSidebar, setShowContactSidebar] = useState(false);
     const [replyBody, setReplyBody] = useState('');
@@ -468,7 +468,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     };
 
     const fetchThreads = async (append = false, silent = false) => {
-        if (!silent) setLoading(true);
+        if (!silent) {
+            setLoading(true);
+            if (!append) setThreads([]);
+        }
         try {
             const page = append ? threadPage + 1 : 1;
             const params: any = { folder: selectedFolder, page };
@@ -1071,6 +1074,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
                                         </div>
                                     )}
+                                </div>
+                            ) : loading && threads.length === 0 ? (
+                                /* Initial Loading State */
+                                <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                                    <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
+                                    <p className="text-sm text-muted-foreground">{t('Loading conversations...')}</p>
                                 </div>
                             ) : (
                                 /* Empty state */
