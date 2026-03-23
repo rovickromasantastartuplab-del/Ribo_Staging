@@ -1331,38 +1331,38 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                 {/* Reply box */}
                                 <div className="border-t bg-background shrink-0 p-2 lg:p-3">
-                                {selectedThread.status === 'Trash' && (
-                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center border-t">
-                                        <div className="flex flex-col items-center gap-2 text-center p-4">
-                                            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
-                                                <AlertCircle className="w-5 h-5" />
+                                    <div className="max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative">
+                                        {selectedThread.status === 'Trash' && (
+                                            <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center border-t">
+                                                <div className="flex flex-col items-center gap-2 text-center p-4">
+                                                    <div className="p-2 rounded-full bg-amber-50 text-amber-600">
+                                                        <AlertCircle className="w-5 h-5" />
+                                                    </div>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {t('This thread is in Trash')}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground max-w-[240px]">
+                                                        {t('Restore it to inbox to reply or send messages.')}
+                                                    </p>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="mt-1 h-8"
+                                                        onClick={() => handleUpdateMetadata({ status: 'Open' })}
+                                                    >
+                                                        <Inbox className="w-3.5 h-3.5 mr-2" />
+                                                        {t('Restore to Inbox')}
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <p className="text-sm font-medium text-foreground">
-                                                {t('This thread is in Trash')}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground max-w-[240px]">
-                                                {t('Restore it to inbox to reply or send messages.')}
-                                            </p>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                className="mt-1 h-8"
-                                                onClick={() => handleUpdateMetadata({ status: 'Open' })}
-                                            >
-                                                <Inbox className="w-3.5 h-3.5 mr-2" />
-                                                {t('Restore to Inbox')}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative">
-                                    <textarea 
-                                        className="w-full min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none disabled:opacity-20"
-                                        placeholder={t('Write your reply here...')}
-                                        value={replyBody}
-                                        onChange={(e) => setReplyBody(e.target.value)}
-                                        disabled={submittingReply || selectedThread.status === 'Trash'}
-                                    />
+                                        )}
+                                        <textarea 
+                                            className="w-full min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none disabled:opacity-20"
+                                            placeholder={t('Write your reply here...')}
+                                            value={replyBody}
+                                            onChange={(e) => setReplyBody(e.target.value)}
+                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                        />
                                     {/* Reply attachment previews */}
                                     {replyFiles.length > 0 && (
                                         <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
