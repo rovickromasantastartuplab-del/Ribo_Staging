@@ -180,7 +180,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const { t } = useTranslation();
     const { auth, leadStatuses = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
     const permissions = auth?.permissions || [];
-    const canCompose = hasPermission(permissions, 'send-conversations');
+    const canCompose = isOwner || hasPermission(permissions, 'send-conversations');
     const isStaff = auth?.user?.type === 'staff';
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
@@ -1484,7 +1484,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </div>
                                                 )}
                                                 {/* Staff assignment/permission check overlay */}
-                                                {selectedThread.status !== 'Trash' && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
+                                                {selectedThread.status !== 'Trash' && !isOwner && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
                                                     <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[160px]">
                                                         <div className="flex flex-col items-center gap-2 text-center p-4">
                                                             <div className="p-2 rounded-full bg-amber-50 text-amber-600">
