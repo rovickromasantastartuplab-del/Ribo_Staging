@@ -555,10 +555,10 @@ class ConversationController extends Controller
             ->reorder('sent_at', 'desc')
             ->paginate($perPage);
 
-        // Reverse for chronological display
-        $messages = collect($messagesPaginated->items())->reverse()->values();
+        // Return newest to oldest for flex-col-reverse display
+        $messages = collect($messagesPaginated->items())->values();
 
-        $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar']);
+        $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
         
         // Remove the default messages relation if it was loaded, and attach our paginated/sorted set
         $thread->setRelation('messages', $messages);

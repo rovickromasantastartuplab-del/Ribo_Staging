@@ -550,8 +550,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     };
 
     const handleSelectThread = async (thread: any, page = 1) => {
-        if (page === 1) setLoading(true);
-        else setLoadingMoreMessages(true);
+        // Prevent clearing the UI if we're just refreshing the current thread (e.g., after reply)
+        if (page === 1 && (!selectedThread || selectedThread.id !== thread.id)) {
+            setLoading(true);
+        } else if (page > 1) {
+            setLoadingMoreMessages(true);
+        }
 
         try {
             const response = await axios.get(route('api.conversations.show', thread.id), {
@@ -565,15 +569,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 setSelectedThread(newThread);
                 setMessagesPage(1);
                 setHasMoreMessages(pagination.has_more);
-                // Initial load: scroll to bottom
-                setTimeout(scrollToBottom, 100);
+                // No manual scroll needed with flex-col-reverse
             } else {
-                // Infinite scroll up: prepend messages
+                // Infinite scroll up (logically at end of the array in col-reverse):
                 setSelectedThread((prev: any) => {
                     if (!prev || prev.id !== newThread.id) return prev;
                     return {
                         ...prev,
-                        messages: [...newThread.messages, ...prev.messages]
+                        messages: [...prev.messages, ...newThread.messages]
                     };
                 });
                 setMessagesPage(page);
@@ -587,8 +590,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         }
     };
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
     };
 
     const fetchEarlierMessages = () => {
@@ -609,6 +612,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             toast.success(t('Reply sent successfully'));
             setReplyBody('');
             setReplyFiles([]);
+            // Refresh list to show updated snippet/timestamp
+            fetchThreads(false, true);
             handleSelectThread(selectedThread);
         } catch (error: any) {
             toast.error(error.response?.data?.error || t('Failed to send reply'));
@@ -1192,16 +1197,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                 {/* Messages */}
                                 <ScrollArea className="flex-1 min-h-0">
-                                    <div className="p-3 lg:p-4 lg:p-6 space-y-4 lg:space-y-6 max-w-4xl mx-auto">
-                                        {/* Observer target for loading older history at the top */}
-                                        <div ref={messagesTopObserverTarget} className="h-1 w-full" />
-                                        
-                                        {loadingMoreMessages && (
-                                            <div className="flex justify-center items-center py-2 text-muted-foreground text-[10px] italic">
-                                                <RefreshCw className="h-3 w-3 animate-spin mr-2" />
-                                                {t('Loading earlier messages...')}
-                                            </div>
-                                        )}
+                                    <div className="flex flex-col-reverse p-3 lg:p-4 lg:p-6 space-y-reverse space-y-4 lg:space-y-6 max-w-4xl mx-auto">
+                                        {/* Scroll to bottom target (Native start) */}
+                                        <div ref={messagesEndRef} className="h-px shrink-0" />
 
                                         {selectedThread.messages?.map((msg: any) => (
                                             <div key={msg.id} className="flex gap-2 lg:gap-3">
@@ -1269,8 +1267,16 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </div>
                                             </div>
                                         ))}
-                                        {/* Scroll to bottom target */}
-                                        <div ref={messagesEndRef} className="h-px" />
+                                        
+                                        {loadingMoreMessages && (
+                                            <div className="flex justify-center items-center py-2 text-muted-foreground text-[10px] italic">
+                                                <RefreshCw className="h-3 w-3 animate-spin mr-2" />
+                                                {t('Loading earlier messages...')}
+                                            </div>
+                                        )}
+
+                                        {/* Observer target for loading older history (now logically at the end of the reversed list) */}
+                                        <div ref={messagesTopObserverTarget} className="h-1 w-full shrink-0" />
                                     </div>
                                 </ScrollArea>
 
