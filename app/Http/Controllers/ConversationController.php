@@ -155,8 +155,8 @@ class ConversationController extends Controller
             // In history view, we might want to show everything, including closed
         }
 
-        // Default to "Open" status unless explicitly requesting history or a specific status
-        if (!in_array($folder, ['history', 'closed']) && !$request->has('status')) {
+        // Default to "Open" status unless explicitly requesting history, trash, closed, or a specific status
+        if (!in_array($folder, ['history', 'closed', 'trash']) && !$request->has('status')) {
             $query->where(function($q) {
                 $q->where('status', 'Open')->orWhereNull('status');
             });
