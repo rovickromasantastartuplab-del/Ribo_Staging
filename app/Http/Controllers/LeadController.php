@@ -110,7 +110,7 @@ class LeadController extends Controller
             ];
         });
 
-        $emailMessages = $lead->emailThreads()->with(['messages', 'gmailAccount'])->get()->flatMap(function ($thread) {
+        $emailMessages = $lead->emailThreads()->with(['messages.sender', 'gmailAccount'])->get()->flatMap(function ($thread) {
             return $thread->messages->map(function ($message) use ($thread) {
                 $isIncoming = strtolower($message->from_email) !== strtolower($thread->gmailAccount->gmail_address);
                 return (object) [
@@ -123,8 +123,8 @@ class LeadController extends Controller
                     'description' => $message->body_preview,
                     'created_at' => $message->sent_at ?? $message->created_at,
                     'user' => (object) [
-                        'name' => $isIncoming ? ($message->from_name ?: $message->from_email) : 'System (Gmail)',
-                        'avatar' => null
+                        'name' => $isIncoming ? ($message->from_name ?: $message->from_email) : ($message->sender->name ?? 'System (Gmail)'),
+                        'avatar' => $isIncoming ? null : ($message->sender->avatar ?? null)
                     ],
                     'metadata' => [
                         'thread_id' => $thread->id,

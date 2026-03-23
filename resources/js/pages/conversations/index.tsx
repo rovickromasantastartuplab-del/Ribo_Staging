@@ -1135,13 +1135,23 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         {selectedThread.messages?.map((msg: any) => (
                                             <div key={msg.id} className="flex gap-2 lg:gap-3">
                                                 <Avatar className="h-7 w-7 lg:h-8 lg:w-8 shrink-0 border">
+                                                    {msg.sender?.avatar ? (
+                                                        <AvatarImage src={msg.sender.avatar} />
+                                                    ) : null}
                                                     <AvatarFallback className="bg-muted text-[10px]">
-                                                        {msg.from_email?.charAt(0).toUpperCase()}
+                                                        {(msg.sender?.name || msg.from_email)?.charAt(0).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex-1 min-w-0 space-y-1.5">
                                                     <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
-                                                        <span className="text-xs font-semibold truncate flex-1 min-w-0">{msg.from_name || msg.from_email}</span>
+                                                        <span className="text-xs font-semibold truncate flex-1 min-w-0">
+                                                            {msg.from_name || msg.from_email}
+                                                            {msg.sender && (
+                                                                <span className="ml-1 text-[10px] font-normal text-muted-foreground italic">
+                                                                    via {msg.sender.name}
+                                                                </span>
+                                                            )}
+                                                        </span>
                                                         <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px] text-right">
                                                             {timeAgo(msg.sent_at)}
                                                         </span>

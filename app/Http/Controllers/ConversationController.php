@@ -247,7 +247,7 @@ class ConversationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thread updated successfully.',
-            'thread' => $thread->load(['messages.media', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
+            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
         ]);
     }
 
@@ -270,7 +270,7 @@ class ConversationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thread assignments updated.',
-            'thread' => $thread->load(['messages.media', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
+            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
         ]);
     }
 
@@ -311,6 +311,7 @@ class ConversationController extends Controller
                       ->orWhereJsonContains('to_emails', $email)
                       ->orWhereJsonContains('cc_emails', $email);
                 })
+                ->with('sender:id,name,avatar')
                 ->get()
                 ->map(function($msg) use ($companyEmail) {
                     $isOutbound = strtolower($msg->from_email) === $companyEmail;
@@ -322,7 +323,11 @@ class ConversationController extends Controller
                         'title' => $isOutbound ? "Email sent to {$to}" : "Email received from {$msg->from_email}",
                         'description' => '<b>' . $msg->subject . '</b><br/><br/>' . $msg->body_preview,
                         'created_at' => $msg->sent_at,
-                        'user' => null, 
+                        'user' => $msg->sender ? [
+                            'id' => $msg->sender->id,
+                            'name' => $msg->sender->name,
+                            'avatar' => $msg->sender->avatar
+                        ] : null, 
                     ];
                 });
 

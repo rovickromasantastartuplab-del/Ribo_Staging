@@ -27,6 +27,7 @@ class EmailMessage extends BaseModel implements HasMedia
         'gmail_labels',
         'message_id_header',
         'created_by',
+        'user_id',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class EmailMessage extends BaseModel implements HasMedia
             'cc_emails' => 'array',
             'gmail_labels' => 'array',
             'sent_at' => 'datetime',
+            'user_id' => 'integer',
         ];
     }
 
@@ -45,6 +47,14 @@ class EmailMessage extends BaseModel implements HasMedia
     public function thread(): BelongsTo
     {
         return $this->belongsTo(EmailThread::class, 'email_thread_id');
+    }
+
+    /**
+     * The staff member who sent this message (if sent from the CRM).
+     */
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**

@@ -551,6 +551,8 @@ class GmailService
 
             $sentMessage = $this->gmail->users_messages->send('me', $message);
 
+            // Record the sent message locally with staff attribution
+            $this->recordSentMessage($sentMessage, $to, $subject, $body);
 
             $this->logActivity('email_sent', 'Email sent to ' . $to, "Subject: {$subject}" . (count($attachments) > 0 ? " (" . count($attachments) . " attachments)" : ""));
 
@@ -1041,22 +1043,55 @@ class GmailService
     /**
      * Log an activity for the current Gmail account.
      */
-    private function logActivity(string $type, string $title, ?string $description = null, array $old = [], array $new = [])
+    /**
+     * Record a sent message in the local database with staff member attribution.
+     */
+    private function recordSentMessage($sentMessage, $to, $subject, $body): void
     {
         try {
-            \App\Models\GmailAccountActivity::create([
-                'gmail_account_id' => $this->account->id,
-                'user_id' => auth()->id() ?? $this->account->user_id,
-                'activity_type' => $type,
-                'title' => $title,
-                'description' => $description,
-                'old_values' => $old,
-                'new_values' => $new,
-                'created_by' => $this->resolveCompanyId(),
-            ]);
+            $companyId = $this->resolveCompanyId();
+            
+            // Find or create the local thread
+            $emailThread = \App\Models\EmailThread::updateOrCreate(
+                [
+                    'gmail_thread_id' => $sentMessage->getThreadId(),
+                    'created_by' => $companyId,
+                ],
+                [
+                    'subject' => $subject,
+                    'is_read' => true,
+                    'last_message_at' => now(),
+                    'gmail_account_id' => $this->account->id,
+                ]
+            );
+
+            // Create the local message record with the authenticated user's ID
+            \App\Models\EmailMessage::updateOrCreate(
+                [
+                    'email_thread_id' => $emailThread->id,
+                    'gmail_message_id' => $sentMessage->getId(),
+                ],
+                [
+                    'from_email' => $this->account->gmail_address,
+                    'from_name' => $this->account->name,
+                    'to_emails' => [$to],
+                    'subject' => $subject,
+                    'body_preview' => mb_substr(strip_tags($body), 0, 200),
+                    'body_html' => $body,
+                    'sent_at' => now(),
+                    'gmail_labels' => $sentMessage->getLabelIds() ?: ['SENT'],
+                    'created_by' => $companyId,
+                    'user_id' => auth()->id(),
+                ]
+            );
+
+            // Auto-link the thread to lead/contact if it was just created or emails match
+            $this->autoLinkThread($emailThread);
+
         } catch (\Exception $e) {
-            Log::error('Failed to log Gmail activity', [
-                'error' => $e->getMessage()
+            \Illuminate\Support\Facades\Log::error('Failed to record sent message locally', [
+                'error' => $e->getMessage(),
+                'thread_id' => $sentMessage->getThreadId()
             ]);
         }
     }
