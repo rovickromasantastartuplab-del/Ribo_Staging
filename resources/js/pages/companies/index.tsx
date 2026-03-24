@@ -691,18 +691,18 @@ export default function Companies() {
           {/* Grid View */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {companies?.data?.map((company: any) => (
-              <Card key={company.id} className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg shadow">
+              <Card key={company.id} className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg shadow flex flex-col">
                 {/* Header */}
-                <div className="p-6">
+                <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start space-x-4">
-                      <Avatar className="h-16 w-16">
+                    <div className="flex items-start space-x-4 flex-1 min-w-0 pr-2">
+                      <Avatar className="h-16 w-16 flex-shrink-0">
                         <AvatarImage src={getAvatarUrl(company)} />
                         <AvatarFallback className="text-lg font-bold text-gray-700">{getInitials(company.name)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">{company.name}</h3>
-                        <p className="text-sm text-gray-600 mb-3">{company.email}</p>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 break-words" title={company.name}>{company.name}</h3>
+                        <p className="text-sm text-gray-600 mb-3 truncate" title={company.email}>{company.email}</p>
                         <div className="flex items-center">
                           <div className={`h-2 w-2 rounded-full mr-2 ${company.status === 'active' ? 'bg-gray-800' : 'bg-gray-400'
                             }`}></div>
@@ -763,7 +763,7 @@ export default function Companies() {
                   </div>
 
                   {/* Plan info */}
-                  <div className="border border-gray-200 rounded-md p-3 mb-4">
+                  <div className="border border-gray-200 rounded-md p-3 mb-4 mt-auto">
                     <div className="flex items-center justify-center">
                       <CreditCard className="h-4 w-4 text-gray-500 mr-2" />
                       <span className="text-sm font-semibold text-gray-800">{company.plan_name}</span>

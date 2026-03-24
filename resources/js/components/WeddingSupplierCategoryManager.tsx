@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { WeddingSupplierCategory } from '@/types/wedding-supplier';
 import { Pencil, Trash2, Plus, Check, X } from 'lucide-react';
+import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 
 interface WeddingSupplierCategoryManagerProps {
     isOpen: boolean;
@@ -25,6 +26,10 @@ export function WeddingSupplierCategoryManager({ isOpen, onClose, categories }: 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editingName, setEditingName] = useState('');
     const [processing, setProcessing] = useState(false);
+    
+    // Delete Confirmation State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState<WeddingSupplierCategory | null>(null);
 
     const handleAdd = () => {
         const name = newCategoryName.trim();
@@ -68,17 +73,30 @@ export function WeddingSupplierCategoryManager({ isOpen, onClose, categories }: 
         });
     };
 
-    const handleDelete = (cat: WeddingSupplierCategory) => {
-        if (!confirm(t('Are you sure you want to delete "{{name}}"?', { name: cat.name }))) return;
+    const handleDeleteClick = (cat: WeddingSupplierCategory) => {
+        setCategoryToDelete(cat);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (!categoryToDelete) return;
         setProcessing(true);
-        router.delete(route('wedding-supplier-categories.destroy', cat.id), {
+        router.delete(route('wedding-supplier-categories.destroy', categoryToDelete.id), {
             preserveScroll: true,
-            onSuccess: () => setProcessing(false),
-            onError: () => setProcessing(false),
+            onSuccess: () => {
+                setProcessing(false);
+                setIsDeleteModalOpen(false);
+                setCategoryToDelete(null);
+            },
+            onError: () => {
+                setProcessing(false);
+                setIsDeleteModalOpen(false);
+            },
         });
     };
 
     return (
+        <>
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-md">
                 <DialogHeader>
@@ -167,7 +185,7 @@ export function WeddingSupplierCategoryManager({ isOpen, onClose, categories }: 
                                             variant="ghost"
                                             size="icon"
                                             className="h-7 w-7 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => handleDelete(cat)}
+                                            onClick={() => handleDeleteClick(cat)}
                                             disabled={processing}
                                         >
                                             <Trash2 className="h-3.5 w-3.5" />
@@ -184,5 +202,17 @@ export function WeddingSupplierCategoryManager({ isOpen, onClose, categories }: 
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <CrudDeleteModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => {
+                setIsDeleteModalOpen(false);
+                setCategoryToDelete(null);
+            }}
+            onConfirm={confirmDelete}
+            entityName={t('Category')}
+            itemName={categoryToDelete?.name || ''}
+        />
+        </>
     );
 }

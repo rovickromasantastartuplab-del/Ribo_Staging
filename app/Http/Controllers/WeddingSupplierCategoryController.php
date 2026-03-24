@@ -68,6 +68,10 @@ class WeddingSupplierCategoryController extends Controller
     {
         $this->authorize('delete', $weddingSupplierCategory);
 
+        if ($weddingSupplierCategory->suppliers()->exists()) {
+            return back()->with('error', 'Cannot delete wedding supplier category that is currently assigned to one or more wedding suppliers.');
+        }
+
         $weddingSupplierCategory->delete();
 
         return back()->with('success', 'Category deleted successfully.');

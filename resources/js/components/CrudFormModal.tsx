@@ -692,6 +692,7 @@ export function CrudFormModal({
             type="date"
             placeholder={field.placeholder}
             value={dateValue}
+            min={typeof field.min === 'function' ? field.min(formData) : field.min}
             onChange={(e) => handleChange(field.name, e.target.value)}
             required={field.required}
             className={errors[field.name] ? 'border-red-500' : ''}

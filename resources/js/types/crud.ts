@@ -99,7 +99,7 @@ export interface FormField {
   width?: string; // CSS width value (e.g., '50%', '200px')
   row?: number; // Optional row number for grouping fields
   step?: string; // For number inputs
-  min?: string; // For number inputs
+  min?: string | ((formData: any) => string); // For number and date inputs
   defaultValue?: any; // Default value for fields
   render?: (field: FormField, formData: any, onChange: (name: string, value: any) => void) => React.ReactNode;
   conditional?: (mode: string, formData: any) => boolean;
