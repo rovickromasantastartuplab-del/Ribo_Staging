@@ -48,7 +48,7 @@ class DocumentTypeController extends Controller
      */
     public function create()
     {
-        //
+    //
     }
 
     /**
@@ -93,7 +93,7 @@ class DocumentTypeController extends Controller
      */
     public function edit(DocumentType $documentType)
     {
-        //
+    //
     }
 
     /**
@@ -170,25 +170,21 @@ class DocumentTypeController extends Controller
         ]);
 
         try {
-            $types = DocumentType::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
+            if (\App\Models\Document::whereIn('type_id', $validated['ids'])->exists()) {
+                return redirect()->back()->with('error', __('Cannot bulk delete types that are currently assigned to one or more documents.'));
+            }
 
-            if ($types->isEmpty()) {
+            $query = DocumentType::whereIn('id', $validated['ids'])->where('created_by', createdBy());
+            $count = $query->count();
+
+            if ($count === 0) {
                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
 
-            $inUse = $types->filter(fn($t) => $t->documents()->count() > 0);
-            $deletable = $types->filter(fn($t) => $t->documents()->count() === 0);
-
-            $deletable->each->delete();
-
-            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
-                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to documents.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
-            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
-                return redirect()->back()->with('error', __('Cannot bulk delete types because they are currently assigned to documents.'));
-            }
-
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
-        } catch (\Exception $e) {
+            $query->delete();
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+        }
+        catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }
     }
