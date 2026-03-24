@@ -26,10 +26,21 @@ class CompanySystemSettingsController extends Controller
                 'dateFormat' => 'required|string',
                 'timeFormat' => 'required|string',
                 'defaultTimezone' => 'required|string',
+                'calendarStartDay' => 'nullable|string',
             ]);
 
             foreach ($validated as $key => $value) {
-                updateSetting($key, $value);
+                if (!is_null($value)) {
+                    updateSetting($key, $value);
+                }
+            }
+
+            // Sync the company user's personal language with their chosen default
+            if (isset($validated['defaultLanguage'])) {
+                $user = auth()->user();
+                if ($user) {
+                    $user->update(['lang' => $validated['defaultLanguage']]);
+                }
             }
 
             return redirect()->back()->with('success', __('System settings updated successfully.'));
