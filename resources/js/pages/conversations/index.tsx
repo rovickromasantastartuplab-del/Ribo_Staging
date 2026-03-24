@@ -1422,10 +1422,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         <div className="flex-1 min-w-0 space-y-1.5">
                                                             <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
                                                                 <span className="text-xs font-semibold truncate flex-1 min-w-0">
-                                                                    {msg.from_name || msg.from_email}
+                                                                    {msg.from_name && msg.from_name !== msg.from_email 
+                                                                        ? `${msg.from_name} <${msg.from_email}>` 
+                                                                        : msg.from_email}
                                                                     {msg.sender && (
                                                                         <span className="ml-1 text-[10px] font-normal text-muted-foreground italic">
-                                                                            via {msg.sender.name}
+                                                                            sent by {msg.sender.name}
                                                                         </span>
                                                                     )}
                                                                 </span>
