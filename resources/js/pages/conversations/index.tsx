@@ -777,6 +777,25 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         handleSelectThread(selectedThread, messagesPage + 1);
     };
 
+    const handlePopulateReplyAll = () => {
+        if (!selectedThread || !selectedThread.participants) return;
+        
+        const accountEmail = (gmailAccount?.email || '').toLowerCase();
+        
+        const externalParticipants = selectedThread.participants.filter((p: string) => {
+            const emailMatch = p.match(/<([^>]+)>/);
+            const rawEmail = emailMatch ? emailMatch[1] : p;
+            return rawEmail.toLowerCase().trim() !== accountEmail.trim();
+        });
+
+        if (externalParticipants.length > 1) {
+            const ccList = externalParticipants.slice(1);
+            setReplyCc(ccList.join(', '));
+            setShowReplyCcBcc(true);
+        }
+    };
+
+
     const handleSendReply = async () => {
         if (!replyBody.trim()) return;
         setSubmittingReply(true);
@@ -1645,19 +1664,33 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()} 
                                                         />
                                                     </div>
-                                                    <Button
-                                                        size="sm"
-                                                        className="gap-1.5 px-4 h-7 text-xs"
-                                                        onClick={handleSendReply}
-                                                        disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Archive'}
-                                                    >
-                                                        {submittingReply ? (
-                                                            <RefreshCw className="h-3 w-3 animate-spin" />
-                                                        ) : (
-                                                            <Send className="h-3 w-3" />
+                                                    <div className="flex items-center gap-2">
+                                                        {(selectedThread.participants?.length > 2) && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="gap-1.5 px-3 h-7 text-xs bg-background hover:bg-muted"
+                                                                onClick={handlePopulateReplyAll}
+                                                                disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                            >
+                                                                <UserPlus className="h-3 w-3 text-muted-foreground" />
+                                                                {t('Reply All')}
+                                                            </Button>
                                                         )}
-                                                        {submittingReply ? t('Sending...') : t('Send Reply')}
-                                                    </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            className="gap-1.5 px-4 h-7 text-xs"
+                                                            onClick={handleSendReply}
+                                                            disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Archive'}
+                                                        >
+                                                            {submittingReply ? (
+                                                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                                            ) : (
+                                                                <Send className="h-3 w-3" />
+                                                            )}
+                                                            {submittingReply ? t('Sending...') : t('Send Reply')}
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
