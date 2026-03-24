@@ -1,6 +1,6 @@
 import { PageTemplate } from '@/components/page-template';
 import { usePage, Link, router } from '@inertiajs/react';
-import { ArrowLeft, User, Building, MapPin, FileText, Phone, Mail, Globe, DollarSign, Users, Calendar, Target, Briefcase, UserCheck, MessageCircle, EyeOff, Trash2, Send, Edit, Check, X } from 'lucide-react';
+import { ArrowLeft, User, Building, MapPin, FileText, Phone, Mail, Globe, DollarSign, Users, Calendar, Target, Briefcase, UserCheck, MessageCircle, EyeOff, Trash2, Send, Edit, Check, X, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { Button } from '@/components/ui/button';
@@ -692,6 +692,17 @@ export default function LeadShow() {
                                   <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20">
                                     {activity.activity_type.charAt(0).toUpperCase() + activity.activity_type.slice(1)}
                                   </span>
+                                  {activity.metadata?.thread_id && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-sky-500 hover:text-sky-700"
+                                      title={t('Open Conversation')}
+                                      onClick={() => router.visit(route('conversations.index', { thread_id: activity.metadata.thread_id }))}
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                   {isCompany && (
                                     <Button
                                       variant="ghost"

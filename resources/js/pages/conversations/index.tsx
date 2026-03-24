@@ -177,7 +177,7 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
 );
 
 /* ── Main component ────────────────────────────────────────── */
-export default function ConversationsIndex({ gmailAccount, companyId, isOwner, unreadCount: initialUnreadCount }: { gmailAccount: any, companyId: number, isOwner: boolean, unreadCount?: number }) {
+export default function ConversationsIndex({ gmailAccount, companyId, isOwner, unreadCount: initialUnreadCount, selectedThreadId }: { gmailAccount: any, companyId: number, isOwner: boolean, unreadCount?: number, selectedThreadId?: number | null }) {
     const { t } = useTranslation();
     const { auth, leadStatuses = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
     const permissions = auth?.permissions || [];
@@ -517,6 +517,22 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
     }, [selectedFolder, gmailAccount?.id, companyId, selectedParticipant?.email, searchQuery, searchParticipants]);
+ 
+    // Handle deep linking to a specific thread on mount
+    useEffect(() => {
+        if (selectedThreadId) {
+            setLoading(true);
+            axios.get(route('api.conversations.show', selectedThreadId))
+                .then(r => {
+                    setSelectedThread(r.data.thread);
+                })
+                .catch(err => {
+                    console.error('Failed to load deep-linked thread:', err);
+                    toast.error(t('Failed to load conversation'));
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [selectedThreadId]);
 
     useEffect(() => {
         if (!companyId) return;

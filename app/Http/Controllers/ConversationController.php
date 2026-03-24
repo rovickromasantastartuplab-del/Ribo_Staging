@@ -40,6 +40,7 @@ class ConversationController extends Controller
 
         return Inertia::render('conversations/index', [
             'initialFolder' => 'inbox',
+            'selectedThreadId' => $request->thread_id ? (int) $request->thread_id : null,
             'unreadCount' => $unreadCount,
             'companyId' => $companyId,
             'isOwner' => $isOwner,
@@ -381,6 +382,9 @@ class ConversationController extends Controller
                             'name' => $msg->sender->name,
                             'avatar' => $msg->sender->avatar_url
                         ] : null, 
+                        'metadata' => [
+                            'thread_id' => $msg->email_thread_id,
+                        ],
                     ];
                 });
 

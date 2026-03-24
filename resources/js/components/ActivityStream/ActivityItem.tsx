@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trash2, Edit, Check, X, Mail } from 'lucide-react';
+import { Trash2, Edit, Check, X, Mail, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { router } from '@inertiajs/react';
@@ -111,6 +111,17 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
                             }`}>
                                 {activity.activity_type.replace('_', ' ').charAt(0).toUpperCase() + activity.activity_type.replace('_', ' ').slice(1)}
                             </span>
+                            {activity.metadata?.thread_id && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 text-indigo-500 hover:text-indigo-700"
+                                    title={t('Open Conversation')}
+                                    onClick={() => router.visit(route('conversations.index', { thread_id: activity.metadata.thread_id }))}
+                                >
+                                    <ExternalLink className="h-3 w-3" />
+                                </Button>
+                            )}
                             {isCompany && onDelete && (
                                 <Button
                                     variant="ghost"
