@@ -594,9 +594,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
             setHistoryActivities(prev => {
                 const combined = append ? [...prev, ...data] : data;
-                // Unique by ID (string prefix + numeric ID from backend)
-                const unique = Array.from(new Map<string, any>(combined.map((item: any) => [item.id, item])).values());
-                return unique;
+                // Unique by ID (now with sync_/crm_/msg_ prefixes from backend)
+                const uniqueMap = new Map<string, any>(combined.map((item: any) => [String(item.id), item]));
+                const unique = Array.from(uniqueMap.values());
+                
+                // Stable sort by created_at DESC then by id DESC
+                return unique.sort((a, b) => {
+                    const dateA = new Date(a.created_at).getTime();
+                    const dateB = new Date(b.created_at).getTime();
+                    if (dateA !== dateB) return dateB - dateA;
+                    return String(b.id).localeCompare(String(a.id));
+                });
             });
             setHistoryPage(current_page);
             setHasMoreHistory(current_page < last_page);

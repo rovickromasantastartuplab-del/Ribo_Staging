@@ -341,10 +341,18 @@ class ConversationController extends Controller
                 ->with('user:id,name,avatar')
                 ->get()
                 ->map(function($act) {
-                    if ($act->user) {
-                        $act->user->append('avatar_url');
-                    }
-                    return $act;
+                    return [
+                        'id' => 'sync_' . $act->id,
+                        'activity_type' => 'system_log',
+                        'title' => $act->type ? str_replace('_', ' ', ucfirst($act->type)) : t('System Activity'),
+                        'description' => $act->description,
+                        'created_at' => $act->created_at,
+                        'user' => $act->user ? [
+                            'id' => $act->user->id,
+                            'name' => $act->user->name,
+                            'avatar' => $act->user->avatar_url
+                        ] : null,
+                    ];
                 });
 
             // 2. Email Messages (Sent/Received)
@@ -390,10 +398,18 @@ class ConversationController extends Controller
                     ->with('user:id,name,avatar')
                     ->get()
                     ->map(function($act) {
-                        if ($act->user) {
-                            $act->user->append('avatar_url');
-                        }
-                        return $act;
+                        return [
+                            'id' => 'crm_' . $act->id,
+                            'activity_type' => 'crm_log',
+                            'title' => t('Lead Activity'),
+                            'description' => $act->description || $act->comment,
+                            'created_at' => $act->created_at,
+                            'user' => $act->user ? [
+                                'id' => $act->user->id,
+                                'name' => $act->user->name,
+                                'avatar' => $act->user->avatar_url
+                            ] : null,
+                        ];
                     });
                 $crmActivities = $crmActivities->concat($activities);
             }
@@ -402,7 +418,16 @@ class ConversationController extends Controller
             $merged = collect($systemActivities)
                 ->concat($emailActivities)
                 ->concat($crmActivities)
-                ->sortByDesc('created_at')
+                ->sort(function($a, $b) {
+                    // Sort by created_at DESC (primary)
+                    $timeA = strtotime($a['created_at']);
+                    $timeB = strtotime($b['created_at']);
+                    if ($timeA != $timeB) {
+                        return $timeB <=> $timeA;
+                    }
+                    // Sort by id DESC (secondary, stable tie-breaker)
+                    return strcmp($b['id'], $a['id']);
+                })
                 ->values();
 
             $perPage = 20;
