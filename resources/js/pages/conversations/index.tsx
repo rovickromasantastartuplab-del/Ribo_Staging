@@ -785,22 +785,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const handleInlineReply = (msg: any) => {
         setActiveReplyMessage(msg);
-        
-        const accountEmail = (gmailAccount?.email || '').toLowerCase();
-        const primaryToRaw = (msg.from_email || '').toLowerCase();
-        
-        const externalParticipants = (selectedThread?.participants || []).filter((p: string) => {
-            const emailMatch = p.match(/<([^>]+)>/);
-            const rawEmail = emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
-            return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
-        });
-
-        const ccEmails = externalParticipants.map((p:string) => {
-            const emailMatch = p.match(/<([^>]+)>/);
-            return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
-        });
-        
-        setReplyCcList(Array.from(new Set(ccEmails)));
+        setReplyCcList([]);
         setShowReplyCcBcc(true);
         scrollToBottom();
         replyEditor?.commands.focus();
