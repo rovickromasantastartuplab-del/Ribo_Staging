@@ -36,4 +36,9 @@ class DocumentFolder extends BaseModel
     {
         return $this->hasMany(DocumentFolder::class, 'parent_folder_id');
     }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'folder_id');
+    }
 }

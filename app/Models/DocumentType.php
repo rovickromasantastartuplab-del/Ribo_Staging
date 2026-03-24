@@ -28,5 +28,10 @@ class DocumentType extends BaseModel
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function documents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Document::class, 'type_id');
+    }
+
 
 }
