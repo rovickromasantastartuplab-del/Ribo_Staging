@@ -28,6 +28,7 @@ class EmailMessage extends BaseModel implements HasMedia
         'message_id_header',
         'created_by',
         'user_id',
+        'bcc_emails',
     ];
 
     protected function casts(): array
@@ -35,6 +36,7 @@ class EmailMessage extends BaseModel implements HasMedia
         return [
             'to_emails' => 'array',
             'cc_emails' => 'array',
+            'bcc_emails' => 'array',
             'gmail_labels' => 'array',
             'sent_at' => 'datetime',
             'user_id' => 'integer',

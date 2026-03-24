@@ -608,7 +608,7 @@ class GmailService
             $sentMessage = $this->gmail->users_messages->send('me', $message);
 
             // Record the sent message locally with staff attribution
-            $this->recordSentMessage($sentMessage, $to, $subject, $body);
+            $this->recordSentMessage($sentMessage, $to, $subject, $body, $bcc);
 
             $this->logActivity('email_sent', 'Email sent to ' . $to, "Subject: {$subject}" . (count($attachments) > 0 ? " (" . count($attachments) . " attachments)" : ""));
 
@@ -920,6 +920,7 @@ class GmailService
         $fromRaw = $this->extractHeader($message, 'From') ?? '';
         $toRaw = $this->extractHeader($message, 'To') ?? '';
         $ccRaw = $this->extractHeader($message, 'Cc');
+        $bccRaw = $this->extractHeader($message, 'Bcc');
 
         $toEmails = array_filter(array_map(
             fn($addr) => $this->parseEmailAddress(trim($addr)),
@@ -930,6 +931,13 @@ class GmailService
             ? array_filter(array_map(
                 fn($addr) => $this->parseEmailAddress(trim($addr)),
                 explode(',', $ccRaw)
+            ))
+            : null;
+
+        $bccEmails = $bccRaw
+            ? array_filter(array_map(
+                fn($addr) => $this->parseEmailAddress(trim($addr)),
+                explode(',', $bccRaw)
             ))
             : null;
 
@@ -952,6 +960,7 @@ class GmailService
                 'from_name' => $this->parseEmailName($fromRaw),
                 'to_emails' => array_values($toEmails),
                 'cc_emails' => $ccEmails ? array_values($ccEmails) : null,
+                'bcc_emails' => $bccEmails ? array_values($bccEmails) : null,
                 'subject' => $this->extractHeader($message, 'Subject'),
                 'body_preview' => $bodyPreview,
                 'body_html' => $bodyHtml ?: $bodyText,
@@ -1110,7 +1119,7 @@ class GmailService
     /**
      * Record a sent message in the local database with staff member attribution.
      */
-    private function recordSentMessage($sentMessage, $to, $subject, $body): void
+    private function recordSentMessage($sentMessage, $to, $subject, $body, array $bcc_emails = []): void
     {
         try {
             $companyId = $this->resolveCompanyId();
@@ -1139,6 +1148,7 @@ class GmailService
                     'from_email' => $this->account->gmail_address,
                     'from_name' => $this->account->name,
                     'to_emails' => [$to],
+                    'bcc_emails' => $bcc_emails ?: null,
                     'subject' => $subject,
                     'body_preview' => mb_substr(strip_tags($body), 0, 200),
                     'body_html' => $body,

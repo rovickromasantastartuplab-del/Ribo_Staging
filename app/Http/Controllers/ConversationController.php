@@ -321,11 +321,11 @@ class ConversationController extends Controller
             $contact = null;
 
             if ($leadId) {
-                $lead = \App\Models\Lead::find($leadId);
+                $lead = \App\Models\Lead::where('created_by', $companyId)->find($leadId);
                 if ($lead && $lead->email) $participantEmails[] = $lead->email;
             }
             if ($contactId) {
-                $contact = \App\Models\Contact::find($contactId);
+                $contact = \App\Models\Contact::where('created_by', $companyId)->find($contactId);
                 if ($contact && $contact->email) $participantEmails[] = $contact->email;
             }
             
