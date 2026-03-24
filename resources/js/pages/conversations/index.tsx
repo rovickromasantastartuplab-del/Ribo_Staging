@@ -148,7 +148,6 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                 {[
                     { key: 'inbox', icon: Inbox, label: t('Inbox'), count: unreadCount },
                     { key: 'my_assignments', icon: UserCheck, label: t('My Assignments'), count: 0 },
-                    { key: 'unassigned', icon: Archive, label: t('Unassigned'), count: 0 },
                     { key: 'unassigned_staff', icon: UserPlus, label: t('Unassigned Staff'), count: 0 },
                     { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
                     { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
@@ -1624,7 +1623,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 }).map((p:string) => {
                                                                     const emailMatch = p.match(/<([^>]+)>/);
                                                                     return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
-                                                                }))).map((ccEmail: string) => {
+                                                                })) as string[]).map((ccEmail) => {
                                                                     const isSelected = replyCcList.includes(ccEmail);
                                                                     return (
                                                                         <Badge 
@@ -1661,7 +1660,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             }).map((p: string) => {
                                                                 const emailMatch = p.match(/<([^>]+)>/);
                                                                 return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
-                                                            }))).map((bccEmail: string) => {
+                                                            })) as string[]).map((bccEmail) => {
                                                                 const isSelected = replyBccList.includes(bccEmail);
                                                                 return (
                                                                     <Badge

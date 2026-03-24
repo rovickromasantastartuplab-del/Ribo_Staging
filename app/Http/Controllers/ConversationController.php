@@ -127,23 +127,6 @@ class ConversationController extends Controller
                     $q->where('from_email', strtolower($gmailAccount->gmail_address));
                 }
             });
-        } elseif ($folder === 'unassigned') {
-            // Smart Unassigned: exclude if explicitly linked AND exclude if participant matches known Lead/Contact email
-            $query->whereDoesntHave('leads')
-                ->whereDoesntHave('contacts')
-                ->where(function ($q) use ($companyId) {
-                    $q->whereNotExists(function ($sq) use ($companyId) {
-                        $sq->selectRaw(1)
-                            ->from('leads')
-                            ->where('leads.created_by', $companyId)
-                            ->whereRaw("email_threads.participants LIKE CONCAT('%', leads.email, '%')");
-                    })->whereNotExists(function ($sq) use ($companyId) {
-                        $sq->selectRaw(1)
-                            ->from('contacts')
-                            ->where('contacts.created_by', $companyId)
-                            ->whereRaw("email_threads.participants LIKE CONCAT('%', contacts.email, '%')");
-                    });
-                });
         } elseif ($folder === 'unassigned_staff') {
             // New folder: threads not assigned to any staff member
             $query->whereDoesntHave('assignments');
