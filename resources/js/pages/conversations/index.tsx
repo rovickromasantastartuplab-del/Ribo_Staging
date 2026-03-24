@@ -189,6 +189,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [isSyncing, setIsSyncing] = useState(false);
     const [showContactSidebar, setShowContactSidebar] = useState(false);
     const [replyBody, setReplyBody] = useState('');
+    const [replyCc, setReplyCc] = useState('');
+    const [replyBcc, setReplyBcc] = useState('');
+    const [showReplyCcBcc, setShowReplyCcBcc] = useState(false);
     const [submittingReply, setSubmittingReply] = useState(false);
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount || 0);
     const [searchQuery, setSearchQuery] = useState('');
@@ -220,9 +223,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const [showCompose, setShowCompose] = useState(false);
     const [composeTo, setComposeTo] = useState('');
+    const [composeCc, setComposeCc] = useState('');
+    const [composeBcc, setComposeBcc] = useState('');
     const [composeSubject, setComposeSubject] = useState('');
     const [composeBody, setComposeBody] = useState('');
     const [isComposing, setIsComposing] = useState(false);
+    const [showComposeCcBcc, setShowComposeCcBcc] = useState(false);
     const [showFormatting, setShowFormatting] = useState(false);
 
     // Tiptap Editor for Compose Modal
@@ -764,12 +770,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         try {
             const formData = new FormData();
             formData.append('body', replyBody);
+            if (replyCc) formData.append('cc', replyCc);
+            if (replyBcc) formData.append('bcc', replyBcc);
             replyFiles.forEach((file) => formData.append('attachments[]', file));
             await axios.post(route('api.conversations.reply', selectedThread.id), formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success(t('Reply sent successfully'));
             setReplyBody('');
+            setReplyCc('');
+            setReplyBcc('');
+            setShowReplyCcBcc(false);
             replyEditor?.commands.setContent('');
             setReplyFiles([]);
             // Refresh list to show updated snippet/timestamp
@@ -793,6 +804,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             formData.append('to', composeTo);
             formData.append('subject', composeSubject);
             formData.append('body', composeBody);
+            if (composeCc) formData.append('cc', composeCc);
+            if (composeBcc) formData.append('bcc', composeBcc);
             composeFiles.forEach((file) => formData.append('attachments[]', file));
             await axios.post(route('api.conversations.compose'), formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -800,9 +813,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             toast.success(t('Email sent successfully'));
             setShowCompose(false);
             setComposeTo('');
+            setComposeCc('');
+            setComposeBcc('');
             setComposeSubject('');
             setComposeBody('');
             setComposeFiles([]);
+            setShowComposeCcBcc(false);
         } catch (error: any) {
             toast.error(error.response?.data?.error || t('Failed to send email'));
         } finally {
@@ -1510,6 +1526,30 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 >
                                                     <EditorContent editor={replyEditor} />
                                                 </div>
+                                                {showReplyCcBcc && (
+                                                    <div className="border-t bg-muted/5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                        <div className="flex items-center px-2.5 py-1.5 border-b group">
+                                                            <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">CC</span>
+                                                            <Input
+                                                                value={replyCc}
+                                                                onChange={(e) => setReplyCc(e.target.value)}
+                                                                placeholder="cc1@example.com, cc2@example.com"
+                                                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-6 bg-transparent text-xs"
+                                                                disabled={selectedThread.status === 'Archive'}
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center px-2.5 py-1.5 group">
+                                                            <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">BCC</span>
+                                                            <Input
+                                                                value={replyBcc}
+                                                                onChange={(e) => setReplyBcc(e.target.value)}
+                                                                placeholder="bcc1@example.com, bcc2@example.com"
+                                                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-6 bg-transparent text-xs"
+                                                                disabled={selectedThread.status === 'Archive'}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 {/* Reply attachment preview */}
                                                 {replyFiles.length > 0 && (
                                                     <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
@@ -1567,6 +1607,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             disabled={submittingReply || selectedThread.status === 'Archive'}
                                                         >
                                                             <Type className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className={cn("h-7 w-7 transition-colors rounded-full", showReplyCcBcc ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                                            onClick={() => setShowReplyCcBcc(!showReplyCcBcc)}
+                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                        >
+                                                            <UserPlus className="h-3.5 w-3.5" />
                                                         </Button>
                                                         <div className="w-px h-4 bg-border mx-1" />
                                                         <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
@@ -1790,7 +1839,39 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 placeholder="recipient@example.com"
                                 className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto break-all bg-transparent text-sm"
                             />
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setShowComposeCcBcc(!showComposeCcBcc)} 
+                                className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-tight"
+                            >
+                                {showComposeCcBcc ? t('Hide CC/BCC') : t('CC/BCC')}
+                            </Button>
                         </div>
+                        {showComposeCcBcc && (
+                            <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
+                                    <Label htmlFor="compose-cc" className="w-[72px] text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Cc')}</Label>
+                                    <Input
+                                        id="compose-cc"
+                                        value={composeCc}
+                                        onChange={(e) => setComposeCc(e.target.value)}
+                                        placeholder="cc1@example.com, cc2@example.com"
+                                        className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto bg-transparent text-sm"
+                                    />
+                                </div>
+                                <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
+                                    <Label htmlFor="compose-bcc" className="w-[72px] text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Bcc')}</Label>
+                                    <Input
+                                        id="compose-bcc"
+                                        value={composeBcc}
+                                        onChange={(e) => setComposeBcc(e.target.value)}
+                                        placeholder="bcc1@example.com, bcc2@example.com"
+                                        className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto bg-transparent text-sm"
+                                    />
+                                </div>
+                            </div>
+                        )}
                         <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
                             <Label htmlFor="compose-subject" className="w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('Subject')}</Label>
                             <Input

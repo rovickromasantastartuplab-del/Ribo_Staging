@@ -580,7 +580,7 @@ class GmailService
      * @param array  $cc        CC recipient email addresses
      * @param array  $attachments  Array of UploadedFile instances
      */
-    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = [], array $attachments = []): bool
+    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = [], array $attachments = [], array $bcc = []): bool
     {
         try {
             // Minimal sanitization to prevent CRLF injection
@@ -592,9 +592,9 @@ class GmailService
             $message = new \Google\Service\Gmail\Message();
 
             if (!empty($attachments)) {
-                $rawMessage = $this->buildMultipartMessage($to, $subject, $body, $inReplyTo, $cc, $attachments);
+                $rawMessage = $this->buildMultipartMessage($to, $subject, $body, $inReplyTo, $cc, $attachments, $bcc);
             } else {
-                $rawMessage = $this->buildSimpleMessage($to, $subject, $body, $inReplyTo, $cc);
+                $rawMessage = $this->buildSimpleMessage($to, $subject, $body, $inReplyTo, $cc, $bcc);
             }
 
             // Base64Url encode
@@ -626,13 +626,17 @@ class GmailService
     /**
      * Build a simple text/html RFC 2822 message (no attachments).
      */
-    private function buildSimpleMessage(string $to, string $subject, string $body, ?string $inReplyTo, array $cc): string
+    private function buildSimpleMessage(string $to, string $subject, string $body, ?string $inReplyTo, array $cc, array $bcc = []): string
     {
         $rawMessage = "From: {$this->account->gmail_address}\r\n";
         $rawMessage .= "To: {$to}\r\n";
 
         if (!empty($cc)) {
             $rawMessage .= "Cc: " . implode(', ', $cc) . "\r\n";
+        }
+
+        if (!empty($bcc)) {
+            $rawMessage .= "Bcc: " . implode(', ', $bcc) . "\r\n";
         }
 
         $rawMessage .= "Subject: {$subject}\r\n";
@@ -652,7 +656,7 @@ class GmailService
     /**
      * Build a multipart/mixed RFC 2822 message with file attachments.
      */
-    private function buildMultipartMessage(string $to, string $subject, string $body, ?string $inReplyTo, array $cc, array $attachments): string
+    private function buildMultipartMessage(string $to, string $subject, string $body, ?string $inReplyTo, array $cc, array $attachments, array $bcc = []): string
     {
         $boundary = 'boundary_' . md5(uniqid(mt_rand(), true));
 
@@ -661,6 +665,10 @@ class GmailService
 
         if (!empty($cc)) {
             $rawMessage .= "Cc: " . implode(', ', $cc) . "\r\n";
+        }
+
+        if (!empty($bcc)) {
+            $rawMessage .= "Bcc: " . implode(', ', $bcc) . "\r\n";
         }
 
         $rawMessage .= "Subject: {$subject}\r\n";

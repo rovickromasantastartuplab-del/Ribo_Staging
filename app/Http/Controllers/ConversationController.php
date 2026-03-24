@@ -613,6 +613,8 @@ class ConversationController extends Controller
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
+            'cc' => 'nullable|string',
+            'bcc' => 'nullable|string',
         ]);
 
         try {
@@ -633,6 +635,10 @@ class ConversationController extends Controller
             
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
+            // Parse CC and BCC from comma-separated strings
+            $cc = array_filter(array_map('trim', explode(',', $request->cc ?? '')));
+            $bcc = array_filter(array_map('trim', explode(',', $request->bcc ?? '')));
+
 
             $success = $service->sendMessage(
                 $request->to,
@@ -640,8 +646,9 @@ class ConversationController extends Controller
                 $request->body,
                 null,
                 null,
-                [],
-                $attachments
+                $cc,
+                $attachments,
+                $bcc
             );
 
             if ($success) {
@@ -686,6 +693,8 @@ class ConversationController extends Controller
 
         $request->validate([
             'body' => 'required|string',
+            'cc' => 'nullable|string',
+            'bcc' => 'nullable|string',
         ]);
 
         try {
@@ -714,19 +723,23 @@ class ConversationController extends Controller
 
             // Get the latest message's Message-ID for proper In-Reply-To threading
             $latestMessage = $thread->latestMessage;
-            $inReplyTo = $latestMessage?->message_id_header;
+            $service = new \App\Services\GmailService($account);
 
-            $replyAttachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
+            $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
+            // Parse CC and BCC from comma-separated strings
+            $cc = array_filter(array_map('trim', explode(',', $request->cc ?? '')));
+            $bcc = array_filter(array_map('trim', explode(',', $request->bcc ?? '')));
 
             $success = $service->sendMessage(
                 $primaryRecipient,
-                "Re: " . $thread->subject,
+                $thread->subject,
                 $request->body,
                 $thread->gmail_thread_id,
-                $inReplyTo,
-                $ccRecipients,
-                $replyAttachments
+                $latestMessage?->message_id_header,
+                $cc,
+                $attachments,
+                $bcc
             );
 
             if ($success) {
