@@ -795,13 +795,10 @@ class ConversationController extends Controller
 
         $user = auth()->user();
 
-        // Company owners bypass; staff must have reply-conversations permission AND be assigned
-        if ($user->type !== 'company') {
+        // Company owners bypass; staff must have reply-conversations permission
+        if ($user->type === 'staff') {
             if (!$user->can('reply-conversations')) {
                 return response()->json(['error' => 'You do not have permission to reply.'], 403);
-            }
-            if (!$thread->isAssignedTo($user)) {
-                return response()->json(['error' => 'You must be assigned to this thread to reply.'], 403);
             }
         }
 
