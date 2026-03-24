@@ -181,6 +181,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const { auth, leadStatuses = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
     const permissions = auth?.permissions || [];
     const canCompose = isOwner || hasPermission(permissions, 'send-conversations');
+    const canManage = isOwner || hasPermission(permissions, 'manage-conversations');
     const isStaff = auth?.user?.type === 'staff';
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
@@ -1705,6 +1706,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             size="sm"
                                                             className="w-full text-xs h-8 shadow-sm font-bold"
                                                             onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)}
+                                                            disabled={!canManage}
                                                         >
                                                             {t('Link to Existing Lead')}
                                                         </Button>
@@ -1717,6 +1719,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             variant="outline"
                                                             className="w-full text-[11px] h-7 border-dashed"
                                                             onClick={() => handleAddAsLead()}
+                                                            disabled={!canManage}
                                                         >
                                                             {t('Create New Lead Anyway')}
                                                         </Button>
@@ -1731,6 +1734,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             variant="outline"
                                                             className="w-full text-[11px] h-7"
                                                             onClick={() => handleAddAsLead()}
+                                                            disabled={!canManage}
                                                         >
                                                             {t('Add as Lead')}
                                                         </Button>
