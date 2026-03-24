@@ -142,16 +142,6 @@ export function AppSidebar() {
             });
         }
 
-        // 1.5 Conversations
-        if (hasPermission(permissions, 'view-conversations')) {
-            items.push({
-                title: t('Conversations'),
-                href: route('conversations.index'),
-                icon: MessageSquare,
-                badge: { label: t('New') }
-            });
-        }
-
         // 2. Staff
         const staffChildren = [];
         if (hasPermission(permissions, 'manage-users')) {
@@ -264,6 +254,16 @@ export function AppSidebar() {
                 title: t('Contacts'),
                 href: route('contacts.index'),
                 icon: Users,
+            });
+        }
+
+        // Conversations (Moved below Contacts)
+        if (hasPermission(permissions, 'view-conversations')) {
+            items.push({
+                title: t('Conversations'),
+                href: route('conversations.index'),
+                icon: MessageSquare,
+                badge: { label: t('New') }
             });
         }
 
