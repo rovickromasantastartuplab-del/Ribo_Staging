@@ -67,12 +67,15 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
                 <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 bg-white flex items-center justify-center">
                     {activity.user ? (
                         <img
-                            src={activity.user.avatar || '/images/avatar/default.png'}
+                            src={activity.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user.name || 'User')}&background=e5e7eb&color=374151&size=32`}
                             alt={activity.user.name || 'User'}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                                const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                                if (target.src !== fallback) {
+                                    target.src = fallback;
+                                }
                             }}
                         />
                     ) : (

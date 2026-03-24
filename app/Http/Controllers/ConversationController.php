@@ -339,7 +339,13 @@ class ConversationController extends Controller
                     }
                 })
                 ->with('user:id,name,avatar')
-                ->get();
+                ->get()
+                ->map(function($act) {
+                    if ($act->user) {
+                        $act->user->append('avatar_url');
+                    }
+                    return $act;
+                });
 
             // 2. Email Messages (Sent/Received)
             $emailActivities = \App\Models\EmailMessage::where('created_by', $companyId)
@@ -365,7 +371,7 @@ class ConversationController extends Controller
                         'user' => $msg->sender ? [
                             'id' => $msg->sender->id,
                             'name' => $msg->sender->name,
-                            'avatar' => $msg->sender->avatar
+                            'avatar' => $msg->sender->avatar_url
                         ] : null, 
                     ];
                 });
@@ -382,7 +388,13 @@ class ConversationController extends Controller
             if ($activeLeadId) {
                 $activities = \App\Models\LeadActivity::where('lead_id', $activeLeadId)
                     ->with('user:id,name,avatar')
-                    ->get();
+                    ->get()
+                    ->map(function($act) {
+                        if ($act->user) {
+                            $act->user->append('avatar_url');
+                        }
+                        return $act;
+                    });
                 $crmActivities = $crmActivities->concat($activities);
             }
 
@@ -411,6 +423,13 @@ class ConversationController extends Controller
             ->with('user:id,name,avatar')
             ->orderByDesc('created_at')
             ->paginate(20);
+
+        $activities->getCollection()->transform(function($act) {
+            if ($act->user) {
+                $act->user->append('avatar_url');
+            }
+            return $act;
+        });
 
         return response()->json($activities);
     }
