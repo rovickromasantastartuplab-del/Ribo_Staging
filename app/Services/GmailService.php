@@ -514,21 +514,25 @@ class GmailService
     }
 
     /**
-     * Move a thread to the Trash in Gmail.
+     * Archive a thread in Gmail (removes INBOX label).
      *
      * @param string $threadId  Gmail thread ID
      */
-    public function trashThread(string $threadId): bool
+    public function archiveThread(string $threadId): bool
     {
         try {
             $this->refreshTokenIfNeeded();
-            $this->gmail->users_threads->trash('me', $threadId);
+            
+            $mods = new \Google\Service\Gmail\ModifyThreadRequest();
+            $mods->setRemoveLabelIds(['INBOX']);
+            
+            $this->gmail->users_threads->modify('me', $threadId, $mods);
 
-            $this->logActivity('email_trashed', 'Thread moved to Trash', "Gmail Thread ID: {$threadId}");
+            $this->logActivity('email_archived', 'Thread archived', "Gmail Thread ID: {$threadId}");
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to trash Gmail thread', [
+            Log::error('Failed to archive Gmail thread', [
                 'gmail_account_id' => $this->account->id,
                 'thread_id' => $threadId,
                 'error' => $e->getMessage()
@@ -538,21 +542,25 @@ class GmailService
     }
 
     /**
-     * Move a thread out of the Trash in Gmail.
+     * Unarchive a thread in Gmail (restores INBOX label).
      *
      * @param string $threadId  Gmail thread ID
      */
-    public function untrashThread(string $threadId): bool
+    public function unarchiveThread(string $threadId): bool
     {
         try {
             $this->refreshTokenIfNeeded();
-            $this->gmail->users_threads->untrash('me', $threadId);
+            
+            $mods = new \Google\Service\Gmail\ModifyThreadRequest();
+            $mods->setAddLabelIds(['INBOX']);
+            
+            $this->gmail->users_threads->modify('me', $threadId, $mods);
 
-            $this->logActivity('email_untrashed', 'Thread restored from Trash', "Gmail Thread ID: {$threadId}");
+            $this->logActivity('email_unarchived', 'Thread restored to Inbox', "Gmail Thread ID: {$threadId}");
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to untrash Gmail thread', [
+            Log::error('Failed to unarchive Gmail thread', [
                 'gmail_account_id' => $this->account->id,
                 'thread_id' => $threadId,
                 'error' => $e->getMessage()

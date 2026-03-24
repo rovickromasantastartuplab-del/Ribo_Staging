@@ -23,7 +23,6 @@ import {
     Smile,
     Link as LinkIcon,
     Type,
-    Trash2,
     Calendar,
     History as HistoryIcon,
     ChevronRight,
@@ -94,7 +93,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
         { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
         { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
         { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
-        { key: 'trash', icon: Trash2, label: t('Trash'), count: 0 },
+        { key: 'archive', icon: Archive, label: t('Archive'), count: 0 },
     ];
     return (
         <div className="flex gap-1 p-2 overflow-x-auto items-center">
@@ -152,7 +151,7 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                     { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
                     { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
                     { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
-                    { key: 'trash', icon: Trash2, label: t('Trash'), count: 0 },
+                    { key: 'archive', icon: Archive, label: t('Archive'), count: 0 },
                 ].map(f => (
                     <button
                         key={f.key}
@@ -1282,15 +1281,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             {t('Closed')}
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
-                                                        {selectedThread.status === 'Trash' ? (
+                                                        {selectedThread.status === 'Archive' ? (
                                                             <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })} className="text-primary focus:text-primary">
                                                                 <Inbox className="w-3.5 h-3.5 mr-2" />
                                                                 {t('Restore to Inbox')}
                                                             </DropdownMenuItem>
                                                         ) : (
-                                                            <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Trash' })} className="text-destructive focus:text-destructive">
-                                                                <Trash2 className="w-3.5 h-3.5 mr-2" />
-                                                                {t('Move to Trash')}
+                                                            <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Archive' })} className="text-muted-foreground">
+                                                                <Archive className="w-3.5 h-3.5 mr-2" />
+                                                                {t('Archive')}
                                                             </DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuContent>
@@ -1459,15 +1458,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                         {/* Reply box */}
                                         <div className="border-t bg-background shrink-0 p-2 lg:p-3">
-                                        <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Trash' ? 'min-h-[160px]' : ''}`}>
-                                            {selectedThread.status === 'Trash' && (
-                                                <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center">
+                                            <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Archive' ? 'min-h-[160px]' : ''}`}>
+                                                {selectedThread.status === 'Archive' && (
+                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center">
                                                         <div className="flex flex-col items-center gap-2 text-center p-4">
                                                             <div className="p-2 rounded-full bg-amber-50 text-amber-600">
-                                                                <AlertCircle className="w-5 h-5" />
+                                                                <Archive className="w-5 h-5" />
                                                             </div>
                                                             <p className="text-sm font-medium text-foreground">
-                                                                {t('This thread is in Trash')}
+                                                                {t('This thread is archived')}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground max-w-[240px]">
                                                                 {t('Restore it to inbox to reply or send messages.')}
@@ -1485,7 +1484,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </div>
                                                 )}
                                                 {/* Staff assignment/permission check overlay */}
-                                                {selectedThread.status !== 'Trash' && !isOwner && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
+                                                {selectedThread.status !== 'Archive' && !isOwner && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
                                                     <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[160px]">
                                                         <div className="flex flex-col items-center gap-2 text-center p-4">
                                                             <div className="p-2 rounded-full bg-amber-50 text-amber-600">
@@ -1505,7 +1504,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </div>
                                                 )}
 
-
                                                 <div 
                                                     className="w-full min-h-[60px] lg:min-h-[80px] cursor-text"
                                                     onClick={() => replyEditor?.commands.focus()}
@@ -1519,7 +1517,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
                                                                 <Paperclip className="h-3 w-3 text-muted-foreground" />
                                                                 <span className="truncate max-w-[120px]">{file.name}</span>
-                                                                <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive" disabled={selectedThread.status === 'Trash'}>
+                                                                <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive" disabled={selectedThread.status === 'Archive'}>
                                                                     <X className="h-3 w-3" />
                                                                 </button>
                                                             </div>
@@ -1534,7 +1532,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             size="sm" 
                                                             className={cn("h-7 w-7 p-0", replyEditor.isActive('bold') && "bg-muted text-primary")}
                                                             onClick={() => replyEditor.chain().focus().toggleBold().run()}
-                                                            disabled={selectedThread.status === 'Trash'}
+                                                            disabled={selectedThread.status === 'Archive'}
                                                         >
                                                             <Bold className="h-3.5 w-3.5" />
                                                         </Button>
@@ -1543,7 +1541,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             size="sm" 
                                                             className={cn("h-7 w-7 p-0", replyEditor.isActive('italic') && "bg-muted text-primary")}
                                                             onClick={() => replyEditor.chain().focus().toggleItalic().run()}
-                                                            disabled={selectedThread.status === 'Trash'}
+                                                            disabled={selectedThread.status === 'Archive'}
                                                         >
                                                             <Italic className="h-3.5 w-3.5" />
                                                         </Button>
@@ -1553,7 +1551,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             size="sm" 
                                                             className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                                                             onClick={() => replyEditor.chain().focus().unsetAllMarks().run()}
-                                                            disabled={selectedThread.status === 'Trash'}
+                                                            disabled={selectedThread.status === 'Archive'}
                                                         >
                                                             <X className="h-3 w-3" />
                                                         </Button>
@@ -1566,17 +1564,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             size="icon" 
                                                             className={cn("h-7 w-7 transition-colors rounded-full", showReplyFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
                                                             onClick={() => setShowReplyFormatting(!showReplyFormatting)}
-                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
                                                         >
                                                             <Type className="h-3.5 w-3.5" />
                                                         </Button>
                                                         <div className="w-px h-4 bg-border mx-1" />
                                                         <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Trash'}>
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Archive'}>
                                                             <Paperclip className="h-3.5 w-3.5" />
                                                         </Button>
                                                         <EmojiPicker 
-                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
                                                             onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()} 
                                                         />
                                                     </div>
@@ -1584,7 +1582,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         size="sm"
                                                         className="gap-1.5 px-4 h-7 text-xs"
                                                         onClick={handleSendReply}
-                                                        disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Trash'}
+                                                        disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Archive'}
                                                     >
                                                         {submittingReply ? (
                                                             <RefreshCw className="h-3 w-3 animate-spin" />

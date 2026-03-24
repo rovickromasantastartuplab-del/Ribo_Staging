@@ -155,15 +155,15 @@ class ConversationController extends Controller
             // In history view, we might want to show everything, including closed
         }
 
-        // Default to "Open" status unless explicitly requesting history, trash, closed, or a specific status
-        if (!in_array($folder, ['history', 'closed', 'trash']) && !$request->has('status')) {
+        // Default to "Open" status unless explicitly requesting history, archive, closed, or a specific status
+        if (!in_array($folder, ['history', 'closed', 'archive']) && !$request->has('status')) {
             $query->where(function($q) {
                 $q->where('status', 'Open')->orWhereNull('status');
             });
         } elseif ($folder === 'closed') {
             $query->where('status', 'Closed');
-        } elseif ($folder === 'trash') {
-            $query->where('status', 'Trash');
+        } elseif ($folder === 'archive') {
+            $query->where('status', 'Archive');
         }
 
         $threads = $query->paginate(20);
@@ -221,37 +221,37 @@ class ConversationController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'nullable|string|in:Open,Closed,Trash',
+            'status' => 'nullable|string|in:Open,Closed,Archive',
             'priority' => 'nullable|string|in:Low,Medium,High',
             'follow_up_at' => 'nullable|date',
         ]);
 
         $statusChanged = isset($validated['status']) && $validated['status'] !== $thread->status;
-        $wasTrash = $thread->status === 'Trash';
+        $wasArchive = $thread->status === 'Archive';
 
         $thread->update($validated);
         $thread = $thread->fresh();
 
-        // Handle Gmail Sync (Trash/Untrash) (Fix 3.1)
+        // Handle Gmail Sync (Archive/Unarchive)
         if ($statusChanged) {
             try {
                 $account = $thread->gmailAccount;
                 if ($account) {
                     $service = new \App\Services\GmailService($account);
                     
-                    if ($thread->status === 'Trash') {
-                        // Moving TO trash
-                        $service->trashThread($thread->gmail_thread_id);
-                    } elseif ($wasTrash && in_array($thread->status, ['Open', 'Closed'])) {
-                        // Restoring FROM trash
-                        $service->untrashThread($thread->gmail_thread_id);
+                    if ($thread->status === 'Archive') {
+                        // Moving TO archive
+                        $service->archiveThread($thread->gmail_thread_id);
+                    } elseif ($wasArchive && in_array($thread->status, ['Open', 'Closed'])) {
+                        // Restoring FROM archive
+                        $service->unarchiveThread($thread->gmail_thread_id);
                     }
                 }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to sync Trash/Untrash status to Gmail', [
+                \Illuminate\Support\Facades\Log::error('Failed to sync Archive/Unarchive status to Gmail', [
                     'thread_id' => $thread->id,
                     'new_status' => $thread->status,
-                    'was_trash' => $wasTrash,
+                    'was_archive' => $wasArchive,
                     'error' => $e->getMessage()
                 ]);
             }
