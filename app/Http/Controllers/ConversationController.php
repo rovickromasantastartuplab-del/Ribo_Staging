@@ -20,7 +20,7 @@ class ConversationController extends Controller
     /**
      * Display the main Conversations Hub.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         $companyId = $user->creatorId();
