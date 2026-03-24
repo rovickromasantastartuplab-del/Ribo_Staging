@@ -317,6 +317,9 @@ class ConversationController extends Controller
             $contactId = $request->get('contact_id');
             $participantEmails = [$email];
             
+            $lead = null;
+            $contact = null;
+
             if ($leadId) {
                 $lead = \App\Models\Lead::find($leadId);
                 if ($lead && $lead->email) $participantEmails[] = $lead->email;
@@ -367,9 +370,6 @@ class ConversationController extends Controller
                     ];
                 });
 
-            // 3. CRM Activities (if Lead exists)
-            $crmActivities = collect();
-            
             // 3. CRM Activities (if Lead exists)
             $crmActivities = collect();
             
