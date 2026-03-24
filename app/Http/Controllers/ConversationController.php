@@ -384,7 +384,7 @@ class ConversationController extends Controller
                     ];
                 });
 
-            // 3. CRM Activities (if Lead exists)
+            // 3. CRM Activities (if Lead exist)
             $crmActivities = collect();
             
             $activeLeadId = $leadId ?: ($lead ? $lead->id : null);

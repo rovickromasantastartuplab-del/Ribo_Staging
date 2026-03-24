@@ -470,7 +470,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             if (selectedParticipant) {
                 setHistoryPage(1);
                 setGmailPageToken(undefined); // Reset token for new participant
-                fetchParticipantActivities(selectedParticipant.email, false);
+                fetchParticipantActivities(selectedParticipant, false);
             } else {
                 setParticipantsPage(1);
                 fetchHistoryParticipants(false);
@@ -487,7 +487,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
                     if (selectedFolder === 'history') {
                         if (selectedParticipant) {
-                            fetchParticipantActivities(selectedParticipant.email, false, true);
+                            fetchParticipantActivities(selectedParticipant, false, true);
                         } else {
                             fetchHistoryParticipants(false, true);
                         }
