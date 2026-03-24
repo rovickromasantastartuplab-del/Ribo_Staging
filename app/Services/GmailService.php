@@ -589,6 +589,11 @@ class GmailService
             
             $this->refreshTokenIfNeeded();
 
+            // For replies, ensure Subject starts with "Re:" for proper recipient-side threading
+            if ($inReplyTo && !preg_match('/^Re:\s/i', $subject)) {
+                $subject = 'Re: ' . $subject;
+            }
+
             $message = new \Google\Service\Gmail\Message();
 
             if (!empty($attachments)) {
