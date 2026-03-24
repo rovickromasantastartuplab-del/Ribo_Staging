@@ -282,6 +282,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     // Inline Reply Feature States
     const [activeReplyMessage, setActiveReplyMessage] = useState<any>(null);
     const [replyCcList, setReplyCcList] = useState<string[]>([]);
+    const [replyBccList, setReplyBccList] = useState<string[]>([]);
 
     // Dynamic Unicode Emoji Engine
     const getEmojiRange = (start: number, end: number) => {
@@ -802,6 +803,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const handleInlineReply = (msg: any) => {
         setActiveReplyMessage(msg);
         setReplyCcList([]);
+        setReplyBccList([]);
         setShowReplyCcBcc(true);
         scrollToBottom();
         replyEditor?.commands.focus();
@@ -817,7 +819,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             const finalCc = replyCcList.join(', ');
             if (finalCc) formData.append('cc', finalCc);
             
-            if (replyBcc) formData.append('bcc', replyBcc);
+            const finalBcc = replyBccList.join(', ');
+            if (finalBcc) formData.append('bcc', finalBcc);
+            
             replyFiles.forEach((file) => formData.append('attachments[]', file));
             
             if (activeReplyMessage) {
@@ -831,7 +835,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             toast.success(t('Reply sent successfully'));
             setReplyBody('');
             setReplyCcList([]);
-            setReplyBcc('');
+            setReplyBccList([]);
             setShowReplyCcBcc(false);
             setActiveReplyMessage(null);
             replyEditor?.commands.setContent('');
@@ -1647,13 +1651,40 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </div>
                                                         <div className="flex items-center px-2.5 py-1.5 group">
                                                             <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">BCC</span>
-                                                            <Input
-                                                                value={replyBcc}
-                                                                onChange={(e) => setReplyBcc(e.target.value)}
-                                                                placeholder="bcc1@example.com, bcc2@example.com"
-                                                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-6 bg-transparent text-xs"
-                                                                disabled={selectedThread.status === 'Archive'}
-                                                            />
+                                                        <div className="flex flex-wrap gap-1.5 flex-1 items-center">
+                                                            {Array.from(new Set((selectedThread?.participants || []).filter((p: string) => {
+                                                                const accountEmail = (gmailAccount?.email || '').toLowerCase();
+                                                                const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
+                                                                const emailMatch = p.match(/<([^>]+)>/);
+                                                                const rawEmail = emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+                                                                return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
+                                                            }).map((p: string) => {
+                                                                const emailMatch = p.match(/<([^>]+)>/);
+                                                                return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+                                                            }))).map((bccEmail: string) => {
+                                                                const isSelected = replyBccList.includes(bccEmail);
+                                                                return (
+                                                                    <Badge
+                                                                        key={bccEmail}
+                                                                        variant={isSelected ? "default" : "outline"}
+                                                                        className="cursor-pointer text-xs px-2 py-0.5"
+                                                                        onClick={() => {
+                                                                            setReplyBccList(prev =>
+                                                                                prev.includes(bccEmail)
+                                                                                    ? prev.filter(e => e !== bccEmail)
+                                                                                    : [...prev, bccEmail]
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        {bccEmail}
+                                                                        {isSelected && <Check className="h-3 w-3 ml-1" />}
+                                                                    </Badge>
+                                                                );
+                                                            })}
+                                                            {(!selectedThread?.participants || selectedThread.participants.length <= 2) && (
+                                                                <span className="text-xs text-muted-foreground italic py-1">{t('No other participants to BCC')}</span>
+                                                            )}
+                                                        </div>
                                                         </div>
                                                     </div>
                                                 )}
