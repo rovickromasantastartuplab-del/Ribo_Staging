@@ -344,7 +344,7 @@ class ConversationController extends Controller
                     return [
                         'id' => 'sync_' . $act->id,
                         'activity_type' => 'system_log',
-                        'title' => $act->type ? str_replace('_', ' ', ucfirst($act->type)) : t('System Activity'),
+                        'title' => $act->type ? str_replace('_', ' ', ucfirst($act->type)) : __('System Activity'),
                         'description' => $act->description,
                         'created_at' => $act->created_at,
                         'user' => $act->user ? [
@@ -401,7 +401,7 @@ class ConversationController extends Controller
                         return [
                             'id' => 'crm_' . $act->id,
                             'activity_type' => 'crm_log',
-                            'title' => t('Lead Activity'),
+                            'title' => __('Lead Activity'),
                             'description' => $act->description || $act->comment,
                             'created_at' => $act->created_at,
                             'user' => $act->user ? [
