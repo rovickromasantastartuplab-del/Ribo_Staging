@@ -805,6 +805,8 @@ class ConversationController extends Controller
             'body' => 'required|string',
             'cc' => 'nullable|string',
             'bcc' => 'nullable|string',
+            'primary_to' => 'nullable|string|email',
+            'reply_to_message_id' => 'nullable|exists:email_messages,id'
         ]);
 
         try {
@@ -827,12 +829,23 @@ class ConversationController extends Controller
                 return response()->json(['error' => 'No recipient found for this thread.'], 422);
             }
 
-            // First external participant is the primary TO; rest are CC
-            $primaryRecipient = $externalParticipants->first();
-            $ccRecipients = $externalParticipants->slice(1)->values()->all();
+            if ($request->primary_to) {
+                $primaryRecipient = $request->primary_to;
+            } else {
+                $primaryRecipient = $externalParticipants->first();
+            }
+            
+            $ccRecipients = $externalParticipants->filter(fn($e) => strtolower($e) !== strtolower($primaryRecipient))->values()->all();
 
-            // Get the latest message's Message-ID for proper In-Reply-To threading
-            $latestMessage = $thread->latestMessage;
+            // Resolve the specific message to reply to for proper In-Reply-To threading
+            if ($request->reply_to_message_id) {
+                $targetMessage = \App\Models\EmailMessage::find($request->reply_to_message_id);
+                $replyToHeader = $targetMessage?->message_id_header;
+            } else {
+                $latestMessage = $thread->latestMessage;
+                $replyToHeader = $latestMessage?->message_id_header;
+            }
+            
             $service = new \App\Services\GmailService($account);
 
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
@@ -846,7 +859,7 @@ class ConversationController extends Controller
                 $thread->subject,
                 $request->body,
                 $thread->gmail_thread_id,
-                $latestMessage?->message_id_header,
+                $replyToHeader,
                 $cc,
                 $attachments,
                 $bcc

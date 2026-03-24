@@ -33,7 +33,9 @@ import {
     Bold,
     Italic,
     Underline,
-    MoreHorizontal
+    MoreHorizontal,
+    CornerDownLeft,
+    Check
 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -276,6 +278,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     });
 
     const [showReplyFormatting, setShowReplyFormatting] = useState(false);
+    
+    // Inline Reply Feature States
+    const [activeReplyMessage, setActiveReplyMessage] = useState<any>(null);
+    const [replyCcList, setReplyCcList] = useState<string[]>([]);
 
     // Dynamic Unicode Emoji Engine
     const getEmojiRange = (start: number, end: number) => {
@@ -777,24 +783,28 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         handleSelectThread(selectedThread, messagesPage + 1);
     };
 
-    const handlePopulateReplyAll = () => {
-        if (!selectedThread || !selectedThread.participants) return;
+    const handleInlineReply = (msg: any) => {
+        setActiveReplyMessage(msg);
         
         const accountEmail = (gmailAccount?.email || '').toLowerCase();
+        const primaryToRaw = (msg.from_email || '').toLowerCase();
         
-        const externalParticipants = selectedThread.participants.filter((p: string) => {
+        const externalParticipants = (selectedThread?.participants || []).filter((p: string) => {
             const emailMatch = p.match(/<([^>]+)>/);
-            const rawEmail = emailMatch ? emailMatch[1] : p;
-            return rawEmail.toLowerCase().trim() !== accountEmail.trim();
+            const rawEmail = emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+            return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
         });
 
-        if (externalParticipants.length > 1) {
-            const ccList = externalParticipants.slice(1);
-            setReplyCc(ccList.join(', '));
-            setShowReplyCcBcc(true);
-        }
+        const ccEmails = externalParticipants.map((p:string) => {
+            const emailMatch = p.match(/<([^>]+)>/);
+            return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+        });
+        
+        setReplyCcList(Array.from(new Set(ccEmails)));
+        setShowReplyCcBcc(true);
+        scrollToBottom();
+        replyEditor?.commands.focus();
     };
-
 
     const handleSendReply = async () => {
         if (!replyBody.trim()) return;
@@ -802,17 +812,27 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         try {
             const formData = new FormData();
             formData.append('body', replyBody);
-            if (replyCc) formData.append('cc', replyCc);
+            
+            const finalCc = replyCcList.join(', ');
+            if (finalCc) formData.append('cc', finalCc);
+            
             if (replyBcc) formData.append('bcc', replyBcc);
             replyFiles.forEach((file) => formData.append('attachments[]', file));
+            
+            if (activeReplyMessage) {
+                formData.append('reply_to_message_id', activeReplyMessage.id.toString());
+                formData.append('primary_to', activeReplyMessage.from_email);
+            }
+
             await axios.post(route('api.conversations.reply', selectedThread.id), formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success(t('Reply sent successfully'));
             setReplyBody('');
-            setReplyCc('');
+            setReplyCcList([]);
             setReplyBcc('');
             setShowReplyCcBcc(false);
+            setActiveReplyMessage(null);
             replyEditor?.commands.setContent('');
             setReplyFiles([]);
             // Refresh list to show updated snippet/timestamp
@@ -860,6 +880,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const handleBack = () => {
         setSelectedThread(null);
+        setActiveReplyMessage(null);
         setShowContactSidebar(false);
     };
 
@@ -1450,8 +1471,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         </span>
                                                                     )}
                                                                 </span>
-                                                                <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px] text-right">
+                                                                <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[120px] text-right flex items-center gap-1.5 justify-end">
                                                                     {timeAgo(msg.sent_at)}
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="icon" 
+                                                                        className="h-6 w-6 rounded-full hover:bg-muted"
+                                                                        onClick={() => handleInlineReply(msg)}
+                                                                        title={t('Reply to this message')}
+                                                                    >
+                                                                        <CornerDownLeft className="h-3.5 w-3.5" />
+                                                                    </Button>
                                                                 </span>
                                                             </div>
                                                             <div className="bg-background border rounded-lg p-3 shadow-sm text-xs lg:text-sm leading-relaxed overflow-hidden break-words [overflow-wrap:anywhere]">
@@ -1557,23 +1587,62 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </div>
                                                 )}
 
+                                                {activeReplyMessage && (
+                                                    <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b">
+                                                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                                            <CornerDownLeft className="h-3.5 w-3.5" />
+                                                            {t('Replying to:')} <strong className="text-foreground">{activeReplyMessage.from_name || activeReplyMessage.from_email}</strong>
+                                                        </span>
+                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => setActiveReplyMessage(null)}>
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                )}
+
                                                 <div 
-                                                    className="w-full min-h-[60px] lg:min-h-[80px] cursor-text"
+                                                    className="w-full min-h-[60px] lg:min-h-[80px] cursor-text bg-background"
                                                     onClick={() => replyEditor?.commands.focus()}
                                                 >
                                                     <EditorContent editor={replyEditor} />
                                                 </div>
                                                 {showReplyCcBcc && (
                                                     <div className="border-t bg-muted/5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                        <div className="flex items-center px-2.5 py-1.5 border-b group">
-                                                            <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">CC</span>
-                                                            <Input
-                                                                value={replyCc}
-                                                                onChange={(e) => setReplyCc(e.target.value)}
-                                                                placeholder="cc1@example.com, cc2@example.com"
-                                                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-6 bg-transparent text-xs"
-                                                                disabled={selectedThread.status === 'Archive'}
-                                                            />
+                                                        <div className="flex px-2.5 py-1.5 border-b group">
+                                                            <span className="w-10 text-[10px] font-bold text-muted-foreground pt-1.5">CC</span>
+                                                            <div className="flex flex-wrap gap-1.5 flex-1 items-center">
+                                                                {Array.from(new Set((selectedThread?.participants || []).filter((p: string) => {
+                                                                    const accountEmail = (gmailAccount?.email || '').toLowerCase();
+                                                                    const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
+                                                                    const emailMatch = p.match(/<([^>]+)>/);
+                                                                    const rawEmail = emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+                                                                    return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
+                                                                }).map((p:string) => {
+                                                                    const emailMatch = p.match(/<([^>]+)>/);
+                                                                    return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+                                                                }))).map((ccEmail: string) => {
+                                                                    const isSelected = replyCcList.includes(ccEmail);
+                                                                    return (
+                                                                        <Badge 
+                                                                            key={ccEmail} 
+                                                                            variant={isSelected ? "default" : "outline"}
+                                                                            className="cursor-pointer text-xs px-2 py-0.5"
+                                                                            onClick={() => {
+                                                                                setReplyCcList(prev => 
+                                                                                    prev.includes(ccEmail) 
+                                                                                        ? prev.filter(e => e !== ccEmail) 
+                                                                                        : [...prev, ccEmail]
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            {ccEmail}
+                                                                            {isSelected && <Check className="h-3 w-3 ml-1" />}
+                                                                        </Badge>
+                                                                    );
+                                                                })}
+                                                                {(!selectedThread?.participants || selectedThread.participants.length <= 2) && (
+                                                                    <span className="text-xs text-muted-foreground italic py-1">No other participants to CC</span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center px-2.5 py-1.5 group">
                                                             <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">BCC</span>
@@ -1665,18 +1734,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         />
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        {(selectedThread.participants?.length > 2) && (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="gap-1.5 px-3 h-7 text-xs bg-background hover:bg-muted"
-                                                                onClick={handlePopulateReplyAll}
-                                                                disabled={submittingReply || selectedThread.status === 'Archive'}
-                                                            >
-                                                                <UserPlus className="h-3 w-3 text-muted-foreground" />
-                                                                {t('Reply All')}
-                                                            </Button>
-                                                        )}
                                                         <Button
                                                             size="sm"
                                                             className="gap-1.5 px-4 h-7 text-xs"
