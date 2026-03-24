@@ -312,18 +312,40 @@ class ConversationController extends Controller
             $email = trim(strtolower($email));
             $companyEmail = strtolower($gmailAccount->gmail_address);
             
-            // 1. Gmail Account Activity (system logs)
+            // 0. Resolve Identity (Lead or Contact if provided)
+            $leadId = $request->get('lead_id');
+            $contactId = $request->get('contact_id');
+            $participantEmails = [$email];
+            
+            if ($leadId) {
+                $lead = \App\Models\Lead::find($leadId);
+                if ($lead && $lead->email) $participantEmails[] = $lead->email;
+            }
+            if ($contactId) {
+                $contact = \App\Models\Contact::find($contactId);
+                if ($contact && $contact->email) $participantEmails[] = $contact->email;
+            }
+            
+            $participantEmails = array_unique(array_filter($participantEmails));
+
+            // 1. System Activities (User Logs)
             $systemActivities = \App\Models\GmailAccountActivity::where('gmail_account_id', $gmailAccount->id)
-                ->where('description', 'like', "%{$email}%")
+                ->where(function($q) use ($participantEmails) {
+                    foreach ($participantEmails as $e) {
+                        $q->orWhere('description', 'like', "%{$e}%");
+                    }
+                })
                 ->with('user:id,name,avatar')
                 ->get();
 
             // 2. Email Messages (Sent/Received)
             $emailActivities = \App\Models\EmailMessage::where('created_by', $companyId)
-                ->where(function($q) use ($email) {
-                    $q->where('from_email', $email)
-                      ->orWhereJsonContains('to_emails', $email)
-                      ->orWhereJsonContains('cc_emails', $email);
+                ->where(function($q) use ($participantEmails) {
+                    foreach ($participantEmails as $e) {
+                        $q->orWhere('from_email', $e)
+                          ->orWhereJsonContains('to_emails', $e)
+                          ->orWhereJsonContains('cc_emails', $e);
+                    }
                 })
                 ->with('sender:id,name,avatar')
                 ->get()
@@ -348,9 +370,17 @@ class ConversationController extends Controller
             // 3. CRM Activities (if Lead exists)
             $crmActivities = collect();
             
-            $lead = \App\Models\Lead::where('created_by', $companyId)->where('email', $email)->first();
-            if ($lead) {
-                $activities = \App\Models\LeadActivity::where('lead_id', $lead->id)
+            // 3. CRM Activities (if Lead exists)
+            $crmActivities = collect();
+            
+            $activeLeadId = $leadId ?: ($lead ? $lead->id : null);
+            if (!$activeLeadId) {
+                $lead = \App\Models\Lead::where('created_by', $companyId)->where('email', $email)->first();
+                $activeLeadId = $lead?->id;
+            }
+
+            if ($activeLeadId) {
+                $activities = \App\Models\LeadActivity::where('lead_id', $activeLeadId)
                     ->with('user:id,name,avatar')
                     ->get();
                 $crmActivities = $crmActivities->concat($activities);
@@ -509,13 +539,51 @@ class ConversationController extends Controller
         // Select only necessary columns and eager load names only
         $threads = EmailThread::where('created_by', $companyId)
             ->select(['id', 'participants', 'last_message_at'])
-            ->with(['leads:id,name', 'contacts:id,name'])
+            ->with(['leads:id,name,email', 'contacts:id,name,email']) // Eager load email for leads/contacts
             ->orderByDesc('last_message_at')
             ->cursor();
 
         $participants = [];
 
         foreach ($threads as $thread) {
+            $linkedLead = $thread->leads->first();
+            $linkedContact = $thread->contacts->first();
+            
+            // Priority 1: Group by Lead
+            if ($linkedLead) {
+                $pId = "lead_{$linkedLead->id}";
+                if (!isset($participants[$pId])) {
+                    $participants[$pId] = [
+                        'type' => 'lead',
+                        'id' => $linkedLead->id,
+                        'name' => $linkedLead->name,
+                        'email' => $linkedLead->email,
+                        'last_activity_at' => $thread->last_message_at,
+                    ];
+                } else if ($thread->last_message_at > $participants[$pId]['last_activity_at']) {
+                    $participants[$pId]['last_activity_at'] = $thread->last_message_at;
+                }
+                continue; // Move to next thread
+            }
+
+            // Priority 2: Group by Contact
+            if ($linkedContact) {
+                $pId = "contact_{$linkedContact->id}";
+                if (!isset($participants[$pId])) {
+                    $participants[$pId] = [
+                        'type' => 'contact',
+                        'id' => $linkedContact->id,
+                        'name' => $linkedContact->name,
+                        'email' => $linkedContact->email,
+                        'last_activity_at' => $thread->last_message_at,
+                    ];
+                } else if ($thread->last_message_at > $participants[$pId]['last_activity_at']) {
+                    $participants[$pId]['last_activity_at'] = $thread->last_message_at;
+                }
+                continue;
+            }
+
+            // Priority 3: Fallback to unique email (for unlinked participants)
             $threadParticipants = $thread->participants ?? [];
             foreach ($threadParticipants as $pEmail) {
                 $pEmail = strtolower($pEmail);
@@ -523,16 +591,14 @@ class ConversationController extends Controller
                 if ($search && !str_contains($pEmail, strtolower($search))) continue;
 
                 if (!isset($participants[$pEmail])) {
-                    $name = $thread->leads->first()?->name 
-                        ?? $thread->contacts->first()?->name 
-                        ?? explode('@', $pEmail)[0];
-
                     $participants[$pEmail] = [
+                        'type' => 'email',
+                        'name' => explode('@', $pEmail)[0],
                         'email' => $pEmail,
-                        'name' => $name,
-                        'avatar' => null,
                         'last_activity_at' => $thread->last_message_at,
                     ];
+                } else if ($thread->last_message_at > $participants[$pEmail]['last_activity_at']) {
+                    $participants[$pEmail]['last_activity_at'] = $thread->last_message_at;
                 }
             }
         }

@@ -563,8 +563,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
             setHistoryParticipants(prev => {
                 const combined = append ? [...prev, ...data] : data;
-                // Unique by email
-                const unique = Array.from(new Map<string, any>(combined.map((item: any) => [item.email, item])).values());
+                // Grouping is now done on the backend by pId (Lead ID or Email)
+                // We just need to ensure unique elements in the React state if append is used
+                const unique = Array.from(new Map<string, any>(combined.map((item: any) => [item.id ? `${item.type}_${item.id}` : item.email, item])).values());
                 return unique;
             });
             setParticipantsPage(current_page);
@@ -577,20 +578,24 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         }
     };
 
-    const fetchParticipantActivities = async (email: string, append = false, silent = false) => {
+    const fetchParticipantActivities = async (participant: any, append = false, silent = false) => {
         if (!silent) {
             setLoadingHistory(true);
             if (!append) setHistoryActivities([]); // Clear previous on fresh load
         }
         try {
             const page = append ? historyPage + 1 : 1;
-            const response = await axios.get(route('api.conversations.activities', { email, page }));
+            const params: any = { email: participant.email, page };
+            if (participant.type === 'lead') params.lead_id = participant.id;
+            if (participant.type === 'contact') params.contact_id = participant.id;
+
+            const response = await axios.get(route('api.conversations.activities', params));
             const { data, current_page, last_page } = response.data;
 
             setHistoryActivities(prev => {
                 const combined = append ? [...prev, ...data] : data;
-                // Unique by ID
-                const unique = Array.from(new Map<number, any>(combined.map((item: any) => [item.id, item])).values());
+                // Unique by ID (string prefix + numeric ID from backend)
+                const unique = Array.from(new Map<string, any>(combined.map((item: any) => [item.id, item])).values());
                 return unique;
             });
             setHistoryPage(current_page);
@@ -692,7 +697,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
             // Re-fetch local activities to show the newly synced ones
             // We append to the current view
-            fetchParticipantActivities(selectedParticipant.email, true, true);
+            fetchParticipantActivities(selectedParticipant, true, true);
         } catch (error: any) {
             console.error('Seamless sync failed:', error);
             // Silent failure, but stop trying if 401 persists
@@ -964,7 +969,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 hasMore={hasMoreHistory || (gmailPageToken !== null)}
                                                 onLoadMore={() => {
                                                     if (hasMoreHistory) {
-                                                        fetchParticipantActivities(selectedParticipant.email, true);
+                                                        fetchParticipantActivities(selectedParticipant, true);
                                                     } else if (gmailPageToken !== null) {
                                                         handleSeamlessSync();
                                                     }
@@ -1003,8 +1008,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-2">
                                                 {historyParticipants.map((p: any) => (
                                                     <button
-                                                        key={p.email}
-                                                        onClick={() => setSelectedParticipant(p)}
+                                                        key={p.type === 'email' ? p.email : `${p.type}_${p.id}`}
+                                                        onClick={() => {
+                                                            setSelectedParticipant(p);
+                                                            fetchParticipantActivities(p);
+                                                        }}
                                                         className="flex items-start gap-4 p-4 rounded-xl border bg-background hover:border-primary/50 hover:shadow-md transition-all text-left group overflow-hidden"
                                                     >
                                                         <Avatar className="h-10 w-10 border group-hover:scale-105 transition-transform">
