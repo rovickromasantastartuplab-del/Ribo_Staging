@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import { 
-    Inbox, 
-    Send, 
-    Archive, 
-    Search, 
-    MoreVertical, 
+import {
+    Inbox,
+    Send,
+    Archive,
+    Search,
+    MoreVertical,
     User,
     UserPlus,
     X,
@@ -21,7 +21,7 @@ import {
     Download,
     Image as ImageIcon,
     Smile,
-    Link,
+    Link as LinkIcon,
     Type,
     Trash2,
     Calendar,
@@ -30,7 +30,16 @@ import {
     Clock,
     UserCheck,
     CheckCircle,
+    Star,
+    Bold,
+    Italic,
+    Underline,
+    MoreHorizontal
 } from 'lucide-react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import { cn } from '@/lib/utils';
 import { ActivityStream } from '@/components/ActivityStream/ActivityStream';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -43,13 +52,13 @@ import { toast } from '@/components/custom-toast';
 import { CrudFormModal } from '@/components/CrudFormModal';
 import { hasPermission } from '@/utils/authorization';
 import axios from 'axios';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { getEcho } from '@/utils/echo';
 import { sanitizeHtml } from '@/utils/sanitize-html';
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
     DropdownMenuSeparator,
     DropdownMenuLabel,
@@ -57,7 +66,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
-import { format } from 'date-fns';
 
 /* ── helpers ───────────────────────────────────────────────── */
 const parseUTC = (dateStr: string) => {
@@ -78,37 +86,38 @@ const timeAgoShort = (dateStr: string) => {
 };
 
 /* ── Folder tab selector (works on all sizes) ──────────────── */
-const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any) => {
+const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCanCompose }: any) => {
     const folders = [
-        { key: 'inbox',      icon: Inbox,           label: t('Inbox'),      count: unreadCount },
-        { key: 'my_assignments', icon: UserCheck,   label: t('My Assignments'), count: 0 },
-        { key: 'unassigned', icon: Archive,         label: t('Unassigned'), count: 0 },
-        { key: 'sent',       icon: Send,            label: t('Sent'),       count: 0 },
-        { key: 'closed',     icon: CheckCircle,     label: t('Closed'),     count: 0 },
-        { key: 'history',    icon: HistoryIcon,     label: t('History'),    count: 0 },
+        { key: 'inbox', icon: Inbox, label: t('Inbox'), count: unreadCount },
+        { key: 'my_assignments', icon: UserCheck, label: t('My Assignments'), count: 0 },
+        { key: 'unassigned', icon: Archive, label: t('Unassigned'), count: 0 },
+        { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
+        { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
+        { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
+        { key: 'trash', icon: Trash2, label: t('Trash'), count: 0 },
     ];
     return (
         <div className="flex gap-1 p-2 overflow-x-auto items-center">
+            {onCanCompose && (
             <Button size="sm" onClick={onCompose} className="h-7 px-3 text-xs gap-1.5 shrink-0 mr-1.5 text-primary-foreground">
                 <PenBox className="h-3.5 w-3.5" />
                 {t('Compose')}
             </Button>
+            )}
             {folders.map(f => (
                 <button
                     key={f.key}
                     onClick={() => onSelect(f.key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
-                        selectedFolder === f.key
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${selectedFolder === f.key
                             ? 'bg-primary/10 text-primary'
                             : 'text-muted-foreground hover:bg-muted'
-                    }`}
+                        }`}
                 >
                     <f.icon className="h-3.5 w-3.5" />
                     {f.label}
                     {f.count > 0 && (
-                        <span className={`text-[10px] px-1 py-0 rounded-full ${
-                            selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20'
-                        }`}>{f.count}</span>
+                        <span className={`text-[10px] px-1 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20'
+                            }`}>{f.count}</span>
                     )}
                 </button>
             ))}
@@ -117,7 +126,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose }: any
 };
 
 /* ── Full sidebar for xl+ screens ──────────────────────────── */
-const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose }: any) => (
+const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose, onCanCompose }: any) => (
     <div className="hidden xl:flex w-[180px] border-r flex-col bg-muted/30 shrink-0">
         <div className="p-3 flex-1">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -127,36 +136,37 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                 </Button>
             </div>
 
+            {onCanCompose && (
             <Button className="w-full mb-4 h-8 text-xs font-semibold gap-1.5 shadow-sm" onClick={onCompose}>
                 <PenBox className="h-3.5 w-3.5" />
                 {t('Compose')}
             </Button>
+            )}
 
             <div className="space-y-0.5">
                 {[
-                    { key: 'inbox',      icon: Inbox,           label: t('Inbox'),      count: unreadCount },
-                    { key: 'my_assignments', icon: UserCheck,   label: t('My Assignments'), count: 0 },
-                    { key: 'unassigned', icon: Archive,         label: t('Unassigned'), count: 0 },
-                    { key: 'unassigned_staff', icon: UserPlus,  label: t('Unassigned Staff'), count: 0 },
-                    { key: 'sent',       icon: Send,            label: t('Sent'),       count: 0 },
-                    { key: 'closed',     icon: CheckCircle,     label: t('Closed'),     count: 0 },
-                    { key: 'history',    icon: HistoryIcon,     label: t('History'),    count: 0 },
+                    { key: 'inbox', icon: Inbox, label: t('Inbox'), count: unreadCount },
+                    { key: 'my_assignments', icon: UserCheck, label: t('My Assignments'), count: 0 },
+                    { key: 'unassigned', icon: Archive, label: t('Unassigned'), count: 0 },
+                    { key: 'unassigned_staff', icon: UserPlus, label: t('Unassigned Staff'), count: 0 },
+                    { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
+                    { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
+                    { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
+                    { key: 'trash', icon: Trash2, label: t('Trash'), count: 0 },
                 ].map(f => (
                     <button
                         key={f.key}
                         onClick={() => onSelect(f.key)}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md transition-colors ${
-                            selectedFolder === f.key ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground'
-                        }`}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md transition-colors ${selectedFolder === f.key ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground'
+                            }`}
                     >
                         <span className="flex items-center gap-2">
                             <f.icon className="h-3.5 w-3.5" />
                             {f.label}
                         </span>
                         {f.count > 0 && (
-                            <span className={`text-[10px] px-1.5 py-0 rounded-full ${
-                                selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
-                            }`}>{f.count}</span>
+                            <span className={`text-[10px] px-1.5 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+                                }`}>{f.count}</span>
                         )}
                     </button>
                 ))}
@@ -170,10 +180,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const { t } = useTranslation();
     const { auth, leadStatuses = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
     const permissions = auth?.permissions || [];
+    const canCompose = isOwner || hasPermission(permissions, 'send-conversations');
+    const isStaff = auth?.user?.type === 'staff';
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
     const [selectedThread, setSelectedThread] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
     const [showContactSidebar, setShowContactSidebar] = useState(false);
     const [replyBody, setReplyBody] = useState('');
@@ -193,14 +205,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [participantsPage, setParticipantsPage] = useState(1);
     const [hasMoreParticipants, setHasMoreParticipants] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
-    const [gmailPageToken, setGmailPageToken] = useState<string | null>(undefined); // undefined = haven't checked Gmail yet
+    const [gmailPageToken, setGmailPageToken] = useState<string | null | undefined>(undefined); // undefined = haven't checked Gmail yet
     const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
     const [searchParticipants, setSearchParticipants] = useState('');
-    
+
     // Feature states
     const [companyUsers, setCompanyUsers] = useState<any[]>([]);
     const [updatingMetadata, setUpdatingMetadata] = useState(false);
-    
+
     // Internal thread message pagination
     const [messagesPage, setMessagesPage] = useState(1);
     const [hasMoreMessages, setHasMoreMessages] = useState(false);
@@ -211,6 +223,124 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [composeSubject, setComposeSubject] = useState('');
     const [composeBody, setComposeBody] = useState('');
     const [isComposing, setIsComposing] = useState(false);
+    const [showFormatting, setShowFormatting] = useState(false);
+
+    // Tiptap Editor for Compose Modal
+    const composeEditor = useEditor({
+        extensions: [
+            StarterKit,
+            Link.configure({
+                openOnClick: false,
+                HTMLAttributes: {
+                    class: 'text-primary underline'
+                }
+            }),
+        ],
+        content: composeBody,
+        editorProps: {
+            attributes: {
+                class: 'prose prose-sm focus:outline-none max-w-none min-h-[250px] p-6 text-sm leading-relaxed'
+            }
+        },
+        onUpdate: ({ editor }) => {
+            setComposeBody(editor.getHTML());
+        },
+    });
+
+    // Tiptap Editor for Main Reply Box
+    const replyEditor = useEditor({
+        extensions: [
+            StarterKit,
+            Link.configure({
+                openOnClick: false,
+                HTMLAttributes: {
+                    class: 'text-primary underline'
+                }
+            }),
+        ],
+        content: replyBody,
+        editorProps: {
+            attributes: {
+                class: 'prose prose-sm focus:outline-none max-w-none min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm leading-relaxed'
+            }
+        },
+        onUpdate: ({ editor }) => {
+            setReplyBody(editor.getHTML());
+        },
+    });
+
+    const [showReplyFormatting, setShowReplyFormatting] = useState(false);
+
+    // Dynamic Unicode Emoji Engine
+    const getEmojiRange = (start: number, end: number) => {
+        const emojis = [];
+        for (let i = start; i <= end; i++) {
+            emojis.push(String.fromCodePoint(i));
+        }
+        return emojis;
+    };
+
+    const emojiCategories = [
+        { name: 'Smileys', emojis: getEmojiRange(0x1F600, 0x1F64F) },
+        { name: 'Gestures', emojis: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏'] },
+        { name: 'Activities', emojis: getEmojiRange(0x1F3A0, 0x1F3C4) },
+        { name: 'Symbols', emojis: ['❤️', '✨', '🔥', '✅', '❌', '⚠️', '💯', '💢', '♻️', '📢', '🔔', '🔒', '🔓', '📍', '✉️', '📞'] },
+    ];
+
+    const EmojiPicker = ({ onSelect, disabled }: { onSelect: (emoji: string) => void, disabled?: boolean }) => (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
+                    disabled={disabled}
+                >
+                    <Smile className="h-3.5 w-3.5" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0 overflow-hidden border shadow-xl" align="start">
+                <div className="flex flex-col h-80">
+                    <div className="px-3 py-2 border-b bg-muted/5">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Select Emoji</span>
+                    </div>
+                    <ScrollArea className="flex-1 p-2">
+                        <div className="space-y-4">
+                            {emojiCategories.map(cat => (
+                                <div key={cat.name} className="space-y-1.5">
+                                    <h4 className="text-[10px] font-bold text-muted-foreground/70 uppercase px-1">{cat.name}</h4>
+                                    <div className="grid grid-cols-7 gap-1">
+                                        {cat.emojis.map(emoji => (
+                                            <button
+                                                key={emoji}
+                                                onClick={() => onSelect(emoji)}
+                                                className="h-8 w-8 flex items-center justify-center hover:bg-muted rounded text-lg transition-transform hover:scale-125 active:scale-95"
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+
+    // Sync external composeBody changes if any (though mostly we use editor)
+    useEffect(() => {
+        if (composeEditor && composeBody === '') {
+            composeEditor.commands.setContent('');
+        }
+    }, [composeBody, composeEditor]);
+
+    useEffect(() => {
+        if (replyEditor && replyBody === '') {
+            replyEditor.commands.setContent('');
+        }
+    }, [replyBody, replyEditor]);
     const [composeFiles, setComposeFiles] = useState<File[]>([]);
     const [replyFiles, setReplyFiles] = useState<File[]>([]);
     const composeFileRef = React.useRef<HTMLInputElement>(null);
@@ -228,14 +358,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const handleAddAsLead = () => {
         if (!selectedThread) return;
-        
+
         // Find the external participant (not the synced Gmail account)
         const me = gmailAccount?.email;
         const externalParticipant = selectedThread.participants?.find((p: string) => !p.includes(me)) || selectedThread.participants?.[0];
-        
+
         let name = '';
         let email = '';
-        
+
         if (externalParticipant) {
             // Check if format is "Name <email@example.com>"
             const match = externalParticipant.match(/(.*)<(.*)>/);
@@ -249,7 +379,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 name = email.split('@')[0];
             }
         }
-        
+
         setLeadInitialData({
             name: name,
             email: email,
@@ -299,7 +429,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const handleLeadFormSubmit = (formData: any) => {
         toast.loading(t('Creating lead and linking thread...'));
-        
+
         router.post(route('leads.store'), {
             ...formData,
             email_thread_id: selectedThread?.id
@@ -343,24 +473,32 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             setThreadPage(1);
             fetchThreads(false);
         }
-        
+
         if (!companyId) return;
 
         const channel = getEcho().private(`company.${companyId}`)
             .listen('.gmail.sync.completed', (data: any) => {
                 if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
-                if (selectedFolder === 'history') {
-                    if (selectedParticipant) {
-                        fetchParticipantActivities(selectedParticipant.email, false, true);
+                    if (selectedFolder === 'history') {
+                        if (selectedParticipant) {
+                            fetchParticipantActivities(selectedParticipant.email, false, true);
+                        } else {
+                            fetchHistoryParticipants(false, true);
+                        }
                     } else {
-                        fetchHistoryParticipants(false, true);
+                        fetchThreads(false, true);
                     }
-                } else {
-                    fetchThreads(false, true);
-                }
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
-                            .then(r => setSelectedThread(r.data))
+                            .then(r => {
+                                const newThread = r.data.thread;
+                                setSelectedThread((prev: any) => {
+                                    if (prev && prev.id === newThread.id) {
+                                        return { ...prev, ...newThread };
+                                    }
+                                    return newThread;
+                                });
+                            })
                             .catch(err => console.error('Silent refresh failed:', err));
                     }
                 }
@@ -370,7 +508,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     useEffect(() => {
         if (!companyId) return;
-        
+
         // Fetch users for assignment dropdown
         axios.get(route('users.index', { api: true }))
             .then(r => setCompanyUsers(r.data.data || []))
@@ -413,10 +551,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             const page = append ? participantsPage + 1 : 1;
             const params: any = { page };
             if (searchParticipants.trim()) params.search = searchParticipants.trim();
-            
+
             const response = await axios.get(route('api.conversations.history.participants', params));
             const { data, current_page, last_page } = response.data;
-            
+
             setHistoryParticipants(prev => {
                 const combined = append ? [...prev, ...data] : data;
                 // Unique by email
@@ -460,14 +598,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     };
 
     const fetchThreads = async (append = false, silent = false) => {
-        if (!silent) setLoading(true);
+        if (!silent) {
+            setLoading(true);
+            if (!append) setThreads([]);
+        }
         try {
             const page = append ? threadPage + 1 : 1;
             const params: any = { folder: selectedFolder, page };
             if (searchQuery.trim()) params.search = searchQuery.trim();
-            
+
             const response = await axios.get(route('api.conversations.threads', params));
-            const { data, current_page, last_page } = response.data;
+            const { threads: threadsData, unread_count } = response.data;
+            const data = threadsData.data;
+            const current_page = threadsData.current_page;
+            const last_page = threadsData.last_page;
 
             if (append) {
                 setThreads(prev => {
@@ -478,9 +622,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 });
             } else {
                 setThreads(data);
-                setUnreadCount(data.filter((t: any) => !t.is_read).length);
             }
-            
+
+            if (unread_count !== undefined) {
+                setUnreadCount(unread_count);
+            }
+
             setThreadPage(current_page);
             setHasMoreThreads(current_page < last_page);
 
@@ -507,7 +654,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const handleSeamlessInboxSync = async () => {
         if (loading || isSyncing) return;
-        
+
         setLoading(true);
         try {
             const response = await axios.post(route('api.conversations.sync_inbox_more'));
@@ -527,53 +674,68 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const handleSeamlessSync = async () => {
         if (!selectedParticipant?.email || isSyncingHistory) return;
-        
+
         setIsSyncingHistory(true);
         try {
             const response = await axios.post(route('api.conversations.history.sync'), {
                 email: selectedParticipant.email,
                 pageToken: gmailPageToken === undefined ? null : gmailPageToken
             });
-            
+
             setGmailPageToken(response.data.nextPageToken || null);
-            
+
             // Re-fetch local activities to show the newly synced ones
             // We append to the current view
             fetchParticipantActivities(selectedParticipant.email, true, true);
         } catch (error: any) {
             console.error('Seamless sync failed:', error);
             // Silent failure, but stop trying if 401 persists
-            setGmailPageToken(null); 
+            setGmailPageToken(null);
         } finally {
             setIsSyncingHistory(false);
         }
     };
 
     const handleSelectThread = async (thread: any, page = 1) => {
-        if (page === 1) setLoading(true);
-        else setLoadingMoreMessages(true);
+        // Prevent clearing the UI if we're just refreshing the current thread (e.g., after reply)
+        if (page === 1 && (!selectedThread || selectedThread.id !== thread.id)) {
+            setLoading(true);
+        } else if (page > 1) {
+            setLoadingMoreMessages(true);
+        }
 
         try {
             const response = await axios.get(route('api.conversations.show', thread.id), {
                 params: { page }
             });
-            
+
             const newThread = response.data.thread;
             const pagination = response.data.messages_pagination;
+            const unread_count = response.data.unread_count;
+
+            if (unread_count !== undefined) {
+                setUnreadCount(unread_count);
+            }
 
             if (page === 1) {
-                setSelectedThread(newThread);
+                setSelectedThread((prev: any) => {
+                    // 100% Fix: Merge with previous state to prevent blanking if relations or attributes flicker
+                    if (prev && prev.id === newThread.id) {
+                        return { ...prev, ...newThread };
+                    }
+                    return newThread;
+                });
                 setMessagesPage(1);
                 setHasMoreMessages(pagination.has_more);
-                // Initial load: scroll to bottom
-                setTimeout(scrollToBottom, 100);
+                // Re-add a small delay for the initial load to ensure flex-col-reverse layout is ready
+                setTimeout(() => scrollToBottom('auto'), 50);
             } else {
-                // Infinite scroll up: prepend messages
+                // Infinite scroll up (logically at end of the array in col-reverse):
                 setSelectedThread((prev: any) => {
                     if (!prev || prev.id !== newThread.id) return prev;
                     return {
                         ...prev,
-                        messages: [...newThread.messages, ...prev.messages]
+                        messages: [...prev.messages, ...newThread.messages]
                     };
                 });
                 setMessagesPage(page);
@@ -587,8 +749,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         }
     };
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
     };
 
     const fetchEarlierMessages = () => {
@@ -608,7 +770,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             });
             toast.success(t('Reply sent successfully'));
             setReplyBody('');
+            replyEditor?.commands.setContent('');
             setReplyFiles([]);
+            // Refresh list to show updated snippet/timestamp
+            fetchThreads(false, true);
             handleSelectThread(selectedThread);
         } catch (error: any) {
             toast.error(error.response?.data?.error || t('Failed to send reply'));
@@ -687,7 +852,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const showDetailPane = !!selectedThread; // Always show on md+ via CSS
 
     return (
-        <PageTemplate 
+        <PageTemplate
             title={t('Conversations')}
             description={t('Unified inbox for all relationships')}
             url="/conversations"
@@ -703,21 +868,22 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 Total overhead ≈ 56 + 40 + 48 + 32 + 16 = ~192px. Use 200px for safety.
             */}
             <div className="flex flex-col h-[calc(100vh-200px)] min-h-[400px] border rounded-xl bg-background shadow-sm overflow-hidden relative">
-                
+
                 {/* Mobile folder tabs: visible below xl where the sidebar is hidden */}
                 <div className="xl:hidden border-b shrink-0">
-                    <FolderTabs 
-                        selectedFolder={selectedFolder} 
-                        onSelect={setSelectedFolder} 
-                        unreadCount={unreadCount} 
-                        t={t} 
+                    <FolderTabs
+                        selectedFolder={selectedFolder}
+                        onSelect={setSelectedFolder}
+                        unreadCount={unreadCount}
+                        t={t}
                         onCompose={() => setShowCompose(true)}
+                        onCanCompose={canCompose}
                     />
                 </div>
 
                 {/* Main flex row: sidebar + list + detail */}
                 <div className="flex flex-1 min-h-0 overflow-hidden">
-                    
+
                     {/* Pane 1: Folder sidebar (xl+ only) */}
                     <FolderSidebar
                         selectedFolder={selectedFolder}
@@ -727,6 +893,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         isSyncing={isSyncing}
                         onSync={handleSync}
                         onCompose={() => setShowCompose(true)}
+                        onCanCompose={canCompose}
                     />
 
                     {selectedFolder === 'history' ? (
@@ -750,7 +917,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-2">
                                             <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" onClick={() => {
                                                 setComposeTo(selectedParticipant.email);
@@ -811,11 +978,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </div>
 
                                     {loadingParticipants && !historyParticipants.length ? (
-                                            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                                                <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
-                                                <p className="text-sm text-muted-foreground">{t('Loading contacts...')}</p>
-                                            </div>
-                                        ) : historyParticipants.length > 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                                            <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
+                                            <p className="text-sm text-muted-foreground">{t('Loading contacts...')}</p>
+                                        </div>
+                                    ) : historyParticipants.length > 0 ? (
                                         <ScrollArea className="flex-1 min-h-0">
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-2">
                                                 {historyParticipants.map((p: any) => (
@@ -881,460 +1048,567 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     ) : (
                         <>
                             {/* Pane 2: Thread list */}
-                    <div className={`
+                            <div className={`
                         border-r flex flex-col bg-background overflow-hidden min-w-0
                         w-full
                         lg:w-[280px] lg:max-w-[280px] xl:w-[280px] xl:max-w-[280px] 2xl:w-[320px] 2xl:max-w-[320px]
                         lg:shrink-0
                         ${selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
-                        {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}
-                        <div className="p-3 border-b shrink-0">
-                            <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                                    <Input 
-                                        placeholder={t('Search threads...')} 
-                                        className="pl-8 bg-muted/50 border-none h-8 text-xs focus-visible:ring-1"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
-                                    />
-                                </div>
-                                <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8 shrink-0" onClick={handleSync} disabled={isSyncing}>
-                                    <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Thread list scroll area */}
-                        <ScrollArea className="flex-1 min-h-0 [&_[data-radix-scroll-area-viewport]>div]:!block">
-                            {!gmailAccount ? (
-                                /* No Gmail account */
-                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                    <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
-                                        <AlertCircle className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
-                                    <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
-                                        {isOwner 
-                                            ? t('Connect your Gmail account in settings to start managing conversations.')
-                                            : t('Please ask your Company Owner to connect a Gmail account in settings.')}
-                                    </p>
-                                    {isOwner && (
-                                        <Button size="sm" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
-                                            {t('Connect Gmail')}
+                                {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}
+                                <div className="p-3 border-b shrink-0">
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                            <Input
+                                                placeholder={t('Search threads...')}
+                                                className="pl-8 bg-muted/50 border-none h-8 text-xs focus-visible:ring-1"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
+                                            />
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8 shrink-0" onClick={handleSync} disabled={isSyncing}>
+                                            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
                                         </Button>
-                                    )}
+                                    </div>
                                 </div>
-                            ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
-                                /* Sync error */
-                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                    <AlertCircle className="h-10 w-10 text-destructive mb-3" />
-                                    <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
-                                    <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
-                                        {gmailAccount.sync_error || t('An error occurred while syncing.')}
-                                    </p>
-                                    <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
-                                        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                                        {t('Try Again')}
-                                    </Button>
-                                </div>
-                            ) : threads.length > 0 ? (
-                                /* Thread list */
-                                <div className="divide-y">
-                                    {threads.map((thread) => (
-                                        <button
-                                            key={thread.id}
-                                            onClick={() => handleSelectThread(thread)}
-                                            className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${
-                                                selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
-                                            }`}
-                                        >
-                                            <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
-                                                <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
-                                                    {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
-                                                    <div className="flex flex-col min-w-0 flex-1">
-                                                        <span className={`text-xs truncate ${
-                                                            !thread.is_read ? 'font-extrabold' : 'font-semibold'
-                                                        } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
-                                                            {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
-                                                        </span>
-                                                        {(thread.leads?.[0] || thread.contacts?.[0]) && (
-                                                            <span className="text-[9px] text-muted-foreground truncate opacity-70">
-                                                                {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
-                                                        {timeAgoShort(thread.last_message_at)}
-                                                    </span>
-                                                </div>
-                                                <div className={`text-xs truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
-                                                    {thread.subject || t('(No Subject)')}
-                                                </div>
-                                                <div className="text-[11px] text-muted-foreground/70 truncate">
-                                                    {thread.snippet}
-                                                </div>
-                                                <div className="mt-1.5 flex flex-wrap gap-1 items-center">
-                                                    {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
-                                                        <>
-                                                            {thread.leads?.length > 0 && (
-                                                                <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
-                                                                    {t('Lead')}
-                                                                </Badge>
-                                                            )}
-                                                            {thread.contacts?.length > 0 && (
-                                                                <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
-                                                                    {t('Contact')}
-                                                                </Badge>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                    
-                                                    {thread.priority && (
-                                                        <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${
-                                                            thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                                                            thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                                            'bg-blue-50 text-blue-600 border-blue-100'
-                                                        }`}>
-                                                            {t(thread.priority)}
-                                                        </Badge>
-                                                    )}
 
-                                                    {thread.assignments?.length > 0 && (
-                                                        <div className="flex items-center gap-0.5 ml-auto">
-                                                            <div className="flex -space-x-1.5 overflow-hidden">
-                                                                {thread.assignments.slice(0, 2).map((a: any) => (
-                                                                    <Avatar key={a.id} className="h-4 w-4 border-background border">
-                                                                        <AvatarFallback className="text-[6px] bg-muted">{a.name.charAt(0)}</AvatarFallback>
-                                                                    </Avatar>
-                                                                ))}
+                                {/* Thread list scroll area */}
+                                <ScrollArea className="flex-1 min-h-0 [&_[data-radix-scroll-area-viewport]>div]:!block">
+                                    {!gmailAccount ? (
+                                        /* No Gmail account */
+                                        <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                            <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
+                                                <AlertCircle className="h-6 w-6 text-primary" />
+                                            </div>
+                                            <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
+                                            <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
+                                                {isOwner
+                                                    ? t('Connect your Gmail account in settings to start managing conversations.')
+                                                    : t('Please ask your Company Owner to connect a Gmail account in settings.')}
+                                            </p>
+                                            {isOwner && (
+                                                <Button size="sm" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
+                                                    {t('Connect Gmail')}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
+                                        /* Sync error */
+                                        <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                            <AlertCircle className="h-10 w-10 text-destructive mb-3" />
+                                            <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
+                                            <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
+                                                {gmailAccount.sync_error || t('An error occurred while syncing.')}
+                                            </p>
+                                            <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+                                                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                                                {t('Try Again')}
+                                            </Button>
+                                        </div>
+                                    ) : threads.length > 0 ? (
+                                        /* Thread list */
+                                        <div className="divide-y">
+                                            {threads.map((thread) => (
+                                                <button
+                                                    key={thread.id}
+                                                    onClick={() => handleSelectThread(thread)}
+                                                    className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
+                                                        }`}
+                                                >
+                                                    <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
+                                                        <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
+                                                            {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
+                                                            <div className="flex flex-col min-w-0 flex-1">
+                                                                <span className={`text-xs truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
+                                                                    } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
+                                                                    {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
+                                                                </span>
+                                                                {(thread.leads?.[0] || thread.contacts?.[0]) && (
+                                                                    <span className="text-[9px] text-muted-foreground truncate opacity-70">
+                                                                        {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                            {thread.assignments.length > 2 && (
-                                                                <span className="text-[8px] text-muted-foreground font-bold">+{thread.assignments.length - 2}</span>
+                                                            <span className="text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
+                                                                {timeAgoShort(thread.last_message_at)}
+                                                            </span>
+                                                        </div>
+                                                        <div className={`text-xs truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
+                                                            {thread.subject || t('(No Subject)')}
+                                                        </div>
+                                                        <div className="text-[11px] text-muted-foreground/70 truncate">
+                                                            {thread.snippet}
+                                                        </div>
+                                                        <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                                                            {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
+                                                                <>
+                                                                    {thread.leads?.length > 0 && (
+                                                                        <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
+                                                                            {t('Lead')}
+                                                                        </Badge>
+                                                                    )}
+                                                                    {thread.contacts?.length > 0 && (
+                                                                        <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
+                                                                            {t('Contact')}
+                                                                        </Badge>
+                                                                    )}
+                                                                </>
+                                                            )}
+
+                                                            {thread.priority && (
+                                                                <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                                                        thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                                                            'bg-blue-50 text-blue-600 border-blue-100'
+                                                                    }`}>
+                                                                    {t(thread.priority)}
+                                                                </Badge>
+                                                            )}
+
+                                                            {thread.assignments?.length > 0 && (
+                                                                <div className="flex items-center gap-0.5 ml-auto">
+                                                                    <div className="flex -space-x-1.5 overflow-hidden">
+                                                                        {thread.assignments.slice(0, 2).map((a: any) => (
+                                                                            <Avatar key={a.id} className="h-4 w-4 border-background border">
+                                                                                <AvatarFallback className="text-[6px] bg-muted">{a.name.charAt(0)}</AvatarFallback>
+                                                                            </Avatar>
+                                                                        ))}
+                                                                    </div>
+                                                                    {thread.assignments.length > 2 && (
+                                                                        <span className="text-[8px] text-muted-foreground font-bold">+{thread.assignments.length - 2}</span>
+                                                                    )}
+                                                                </div>
                                                             )}
                                                         </div>
-                                                    )}
+                                                    </div>
+                                                </button>
+                                            ))}
+
+                                            {/* Sentinel for IntersectionObserver */}
+                                            <div ref={threadObserverTarget} className="h-4 w-full" />
+
+                                            {loading && (
+                                                <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
+                                                    <RefreshCw className="h-4 w-4 animate-spin" />
+                                                    <span className="text-[10px] font-medium">{t('Loading more...')}</span>
                                                 </div>
+                                            )}
+
+                                            {!hasMoreThreads && !loading && threads.length > 10 && (
+                                                <div className="p-6 text-center bg-muted/5">
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : loading && threads.length === 0 ? (
+                                        /* Initial Loading State */
+                                        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                                            <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
+                                            <p className="text-sm text-muted-foreground">{t('Loading conversations...')}</p>
+                                        </div>
+                                    ) : (
+                                        /* Empty state */
+                                        <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                            <div className="h-12 w-12 bg-muted/50 rounded-full flex items-center justify-center mb-3">
+                                                <Inbox className="h-6 w-6 text-muted-foreground/30" />
                                             </div>
-                                        </button>
-                                    ))}
-                                    
-                                    {/* Sentinel for IntersectionObserver */}
-                                    <div ref={threadObserverTarget} className="h-4 w-full" />
-
-                                    {loading && (
-                                        <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
-                                            <RefreshCw className="h-4 w-4 animate-spin" />
-                                            <span className="text-[10px] font-medium">{t('Loading more...')}</span>
+                                            <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
+                                            <p className="text-xs text-muted-foreground mb-4 max-w-[180px]">
+                                                {gmailAccount?.sync_status === 'syncing'
+                                                    ? t('We are currently syncing your inbox...')
+                                                    : t('Try clicking the sync button to fetch your latest emails.')}
+                                            </p>
+                                            {gmailAccount?.sync_error && (
+                                                <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-[200px]">
+                                                    <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
+                                                    {gmailAccount.sync_error}
+                                                </div>
+                                            )}
+                                            <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+                                                <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                                                {t('Sync Now')}
+                                            </Button>
                                         </div>
                                     )}
+                                </ScrollArea>
+                            </div>
 
-                                    {!hasMoreThreads && !loading && threads.length > 10 && (
-                                        <div className="p-6 text-center bg-muted/5">
-                                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                /* Empty state */
-                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                    <div className="h-12 w-12 bg-muted/50 rounded-full flex items-center justify-center mb-3">
-                                        <Inbox className="h-6 w-6 text-muted-foreground/30" />
-                                    </div>
-                                    <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
-                                    <p className="text-xs text-muted-foreground mb-4 max-w-[180px]">
-                                        {gmailAccount?.sync_status === 'syncing' 
-                                            ? t('We are currently syncing your inbox...')
-                                            : t('Try clicking the sync button to fetch your latest emails.')}
-                                    </p>
-                                    {gmailAccount?.sync_error && (
-                                        <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-[200px]">
-                                            <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
-                                            {gmailAccount.sync_error}
-                                        </div>
-                                    )}
-                                    <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
-                                        <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                                        {t('Sync Now')}
-                                    </Button>
-                                </div>
-                            )}
-                        </ScrollArea>
-                    </div>
-
-                    {/* Pane 3: Thread detail + reply */}
-                    <div className={`
+                            {/* Pane 3: Thread detail + reply */}
+                            <div className={`
                         flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/5
                         ${!selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
-                        {selectedThread ? (
-                            <>
-                                {/* Thread header */}
-                                <div className="h-12 lg:h-14 border-b flex items-center justify-between px-3 lg:px-4 bg-background shrink-0">
-                                    <div className="min-w-0 flex-1 flex items-center gap-2">
-                                        <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 shrink-0" onClick={handleBack}>
-                                            <ArrowLeft className="h-4 w-4" />
-                                        </Button>
-                                        <div className="min-w-0">
-                                            <h2 className="text-sm font-semibold truncate">
-                                                {selectedThread.subject || t('(No Subject)')}
-                                            </h2>
-                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                                                <span className="truncate max-w-[200px]">{selectedThread.participants?.join(', ')}</span>
-                                                <span>·</span>
-                                                <span className="shrink-0">{selectedThread.message_count} {t('messages')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-1 ml-2 shrink-0">
-                                        {/* Status Picker */}
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-1.5 px-2.5">
-                                                    <Badge className={`w-2 h-2 rounded-full p-0 ${selectedThread.status === 'Closed' ? 'bg-gray-400' : 'bg-green-500'}`} />
-                                                    {selectedThread.status || t('Open')}
+                                {selectedThread ? (
+                                    <>
+                                        {/* Thread header */}
+                                        <div className="h-12 lg:h-14 border-b flex items-center justify-between px-3 lg:px-4 bg-background shrink-0">
+                                            <div className="min-w-0 flex-1 flex items-center gap-2">
+                                                <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 shrink-0" onClick={handleBack}>
+                                                    <ArrowLeft className="h-4 w-4" />
                                                 </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-32">
-                                                <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })}>
-                                                    <Badge className="w-2 h-2 rounded-full p-0 bg-green-500 mr-2" />
-                                                    {t('Open')}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Closed' })}>
-                                                    <Badge className="w-2 h-2 rounded-full p-0 bg-gray-400 mr-2" />
-                                                    {t('Closed')}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-
-                                        {/* Assignment Picker */}
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" size="icon" className="h-8 w-8 relative">
-                                                    <UserCheck className="h-4 w-4" />
-                                                    {selectedThread.assignments?.length > 0 && (
-                                                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                                                            {selectedThread.assignments.length}
-                                                        </span>
-                                                    )}
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden">
-                                                <div className="p-2 border-b bg-muted/30">
-                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('Assign Staff')}</p>
-                                                </div>
-                                                <ScrollArea className="h-48">
-                                                    <div className="p-1">
-                                                        {companyUsers.map((u: any) => (
-                                                            <DropdownMenuCheckboxItem
-                                                                key={u.id}
-                                                                onSelect={(e) => e.preventDefault()}
-                                                                checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
-                                                                onCheckedChange={(checked) => {
-                                                                    const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];
-                                                                    const nextIds = checked 
-                                                                        ? [...currentIds, u.id]
-                                                                        : currentIds.filter((id: number) => id !== u.id);
-                                                                    handleAssignUsers(nextIds);
-                                                                }}
-                                                                className="flex items-center gap-2 text-xs py-2"
-                                                            >
-                                                                <Avatar className="h-5 w-5">
-                                                                    <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
-                                                                </Avatar>
-                                                                {u.name}
-                                                            </DropdownMenuCheckboxItem>
-                                                        ))}
+                                                <div className="min-w-0">
+                                                    <h2 className="text-sm font-semibold truncate">
+                                                        {selectedThread.subject || t('(No Subject)')}
+                                                    </h2>
+                                                    <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                                                        <span className="truncate max-w-[200px]">{selectedThread.participants?.join(', ')}</span>
+                                                        <span>·</span>
+                                                        <span className="shrink-0">{selectedThread.message_count} {t('messages')}</span>
                                                     </div>
-                                                </ScrollArea>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
-                                                {['Low', 'Medium', 'High'].map(p => (
-                                                    <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
-                                                        <div className={`w-2.5 h-2.5 rounded-full mr-2 ${
-                                                            p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'
-                                                        }`} />
-                                                        {t(p)}
-                                                        {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
-                                                    </DropdownMenuItem>
-                                                ))}
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Follow-up Date')}</DropdownMenuLabel>
-                                                <div className="px-2 py-1.5">
-                                                    <DatePicker
-                                                        selected={selectedThread.follow_up_at ? new Date(selectedThread.follow_up_at) : undefined}
-                                                        onChange={(date: Date | undefined) => handleUpdateMetadata({ follow_up_at: date ? date.toISOString() : null })}
-                                                    />
                                                 </div>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowContactSidebar(!showContactSidebar)}>
-                                            <User className={`h-4 w-4 ${showContactSidebar ? 'text-primary' : ''}`} />
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {/* Messages */}
-                                <ScrollArea className="flex-1 min-h-0">
-                                    <div className="p-3 lg:p-4 lg:p-6 space-y-4 lg:space-y-6 max-w-4xl mx-auto">
-                                        {/* Observer target for loading older history at the top */}
-                                        <div ref={messagesTopObserverTarget} className="h-1 w-full" />
-                                        
-                                        {loadingMoreMessages && (
-                                            <div className="flex justify-center items-center py-2 text-muted-foreground text-[10px] italic">
-                                                <RefreshCw className="h-3 w-3 animate-spin mr-2" />
-                                                {t('Loading earlier messages...')}
                                             </div>
-                                        )}
+                                            <div className="flex items-center gap-1 ml-2 shrink-0">
+                                                {/* Status Picker */}
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-1.5 px-2.5">
+                                                            <Badge className={`w-2 h-2 rounded-full p-0 ${selectedThread.status === 'Closed' ? 'bg-gray-400' : 'bg-green-500'}`} />
+                                                            {selectedThread.status || t('Open')}
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-32">
+                                                        <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })}>
+                                                            <Badge className="w-2 h-2 rounded-full p-0 bg-green-500 mr-2" />
+                                                            {t('Open')}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Closed' })}>
+                                                            <Badge className="w-2 h-2 rounded-full p-0 bg-gray-400 mr-2" />
+                                                            {t('Closed')}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        {selectedThread.status === 'Trash' ? (
+                                                            <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })} className="text-primary focus:text-primary">
+                                                                <Inbox className="w-3.5 h-3.5 mr-2" />
+                                                                {t('Restore to Inbox')}
+                                                            </DropdownMenuItem>
+                                                        ) : (
+                                                            <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Trash' })} className="text-destructive focus:text-destructive">
+                                                                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                                                {t('Move to Trash')}
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
 
-                                        {selectedThread.messages?.map((msg: any) => (
-                                            <div key={msg.id} className="flex gap-2 lg:gap-3">
-                                                <Avatar className="h-7 w-7 lg:h-8 lg:w-8 shrink-0 border">
-                                                    {msg.sender?.avatar ? (
-                                                        <AvatarImage src={msg.sender.avatar} />
-                                                    ) : null}
-                                                    <AvatarFallback className="bg-muted text-[10px]">
-                                                        {(msg.sender?.name || msg.from_email)?.charAt(0).toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0 space-y-1.5">
-                                                    <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
-                                                        <span className="text-xs font-semibold truncate flex-1 min-w-0">
-                                                            {msg.from_name || msg.from_email}
-                                                            {msg.sender && (
-                                                                <span className="ml-1 text-[10px] font-normal text-muted-foreground italic">
-                                                                    via {msg.sender.name}
+                                                {/* Assignment Picker */}
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline" size="icon" className="h-8 w-8 relative">
+                                                            <UserCheck className="h-4 w-4" />
+                                                            {selectedThread.assignments?.length > 0 && (
+                                                                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                                                                    {selectedThread.assignments.length}
                                                                 </span>
                                                             )}
-                                                        </span>
-                                                        <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px] text-right">
-                                                            {timeAgo(msg.sent_at)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="bg-background border rounded-lg p-3 shadow-sm text-xs lg:text-sm leading-relaxed overflow-hidden break-words [overflow-wrap:anywhere]">
-                                                        {msg.body_html ? (
-                                                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
-                                                        ) : (
-                                                            <span className="whitespace-pre-wrap">{msg.body_preview}</span>
-                                                        )}
-                                                    </div>
-                                                    {/* Attachments */}
-                                                    {msg.media && msg.media.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 mt-2">
-                                                            {msg.media.map((file: any) => {
-                                                                const isImage = file.mime_type?.startsWith('image/');
-                                                                const thumbUrl = file.generated_conversions?.thumb
-                                                                    ? (file.original_url?.replace(/\/[^\/]+$/, '/conversions/' + file.name + '-thumb.' + file.file_name?.split('.').pop()))
-                                                                    : null;
-                                                                return isImage ? (
-                                                                    <a key={file.id} href={file.original_url} target="_blank" rel="noopener noreferrer" className="block">
-                                                                        <img
-                                                                            src={thumbUrl || file.original_url}
-                                                                            alt={file.name}
-                                                                            className="max-w-[180px] max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity"
-                                                                        />
-                                                                    </a>
-                                                                ) : (
-                                                                    <a
-                                                                        key={file.id}
-                                                                        href={file.original_url}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors max-w-[220px]"
-                                                                    >
-                                                                        <FileText className="h-4 w-4 text-primary shrink-0" />
-                                                                        <span className="text-xs truncate flex-1 min-w-0">{file.file_name}</span>
-                                                                        <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                                                    </a>
-                                                                );
-                                                            })}
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden">
+                                                        <div className="p-2 border-b bg-muted/30">
+                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('Assign Staff')}</p>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {/* Scroll to bottom target */}
-                                        <div ref={messagesEndRef} className="h-px" />
-                                    </div>
-                                </ScrollArea>
+                                                        <ScrollArea className="h-48">
+                                                            <div className="p-1">
+                                                                {companyUsers.map((u: any) => (
+                                                                    <DropdownMenuCheckboxItem
+                                                                        key={u.id}
+                                                                        onSelect={(e) => e.preventDefault()}
+                                                                        checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
+                                                                        onCheckedChange={(checked) => {
+                                                                            const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];
+                                                                            const nextIds = checked
+                                                                                ? [...currentIds, u.id]
+                                                                                : currentIds.filter((id: number) => id !== u.id);
+                                                                            handleAssignUsers(nextIds);
+                                                                        }}
+                                                                        className="flex items-center gap-2 text-xs py-2"
+                                                                    >
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
+                                                                        </Avatar>
+                                                                        {u.name}
+                                                                    </DropdownMenuCheckboxItem>
+                                                                ))}
+                                                            </div>
+                                                        </ScrollArea>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
 
-                                {/* Reply box */}
-                                <div className="border-t bg-background shrink-0 p-2 lg:p-3">
-                                    <div className="max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden">
-                                        <textarea 
-                                            className="w-full min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm bg-transparent border-none focus:ring-0 resize-none outline-none"
-                                            placeholder={t('Write your reply here...')}
-                                            value={replyBody}
-                                            onChange={(e) => setReplyBody(e.target.value)}
-                                            disabled={submittingReply}
-                                        />
-                                        {/* Reply attachment previews */}
-                                        {replyFiles.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
-                                                {replyFiles.map((file, idx) => (
-                                                    <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
-                                                        <Paperclip className="h-3 w-3 text-muted-foreground" />
-                                                        <span className="truncate max-w-[120px]">{file.name}</span>
-                                                        <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
-                                                            <X className="h-3 w-3" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                        <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
-                                            <div className="flex items-center gap-1">
-                                                <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply}>
-                                                    <Paperclip className="h-3.5 w-3.5" />
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-48">
+                                                        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
+                                                        {['Low', 'Medium', 'High'].map(p => (
+                                                            <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
+                                                                <div className={`w-2.5 h-2.5 rounded-full mr-2 ${p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'
+                                                                    }`} />
+                                                                {t(p)}
+                                                                {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
+                                                            </DropdownMenuItem>
+                                                        ))}
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Follow-up Date')}</DropdownMenuLabel>
+                                                        <div className="px-2 py-1.5">
+                                                            <DatePicker
+                                                                selected={selectedThread.follow_up_at ? new Date(selectedThread.follow_up_at) : undefined}
+                                                                onChange={(date: Date | undefined) => handleUpdateMetadata({ follow_up_at: date ? date.toISOString() : null })}
+                                                            />
+                                                        </div>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+
+                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowContactSidebar(!showContactSidebar)}>
+                                                    <User className={`h-4 w-4 ${showContactSidebar ? 'text-primary' : ''}`} />
                                                 </Button>
                                             </div>
-                                            <Button 
-                                                size="sm" 
-                                                className="gap-1.5 px-4 h-7 text-xs" 
-                                                onClick={handleSendReply} 
-                                                disabled={submittingReply || !replyBody.trim()}
-                                            >
-                                                {submittingReply ? (
-                                                    <RefreshCw className="h-3 w-3 animate-spin" />
-                                                ) : (
-                                                    <Send className="h-3 w-3" />
-                                                )}
-                                                {submittingReply ? t('Sending...') : t('Send Reply')}
-                                            </Button>
                                         </div>
+
+                                        {/* Messages */}
+                                        <ScrollArea className="flex-1 min-h-0">
+                                            <div className="flex flex-col-reverse pt-4 lg:pt-6 px-3 lg:px-4 pb-2 lg:pb-3 space-y-reverse space-y-4 lg:space-y-6 max-w-4xl mx-auto">
+                                                {/* Scroll to bottom target (Native start) */}
+                                                <div ref={messagesEndRef} className="h-0 shrink-0 invisible pointer-events-none" />
+
+                                                {selectedThread.messages?.map((msg: any) => (
+                                                    <div key={msg.id} className="flex gap-2 lg:gap-3">
+                                                        <Avatar className="h-7 w-7 lg:h-8 lg:w-8 shrink-0 border">
+                                                            {msg.sender?.avatar ? (
+                                                                <AvatarImage src={msg.sender.avatar} />
+                                                            ) : null}
+                                                            <AvatarFallback className="bg-muted text-[10px]">
+                                                                {(msg.sender?.name || msg.from_email)?.charAt(0).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex-1 min-w-0 space-y-1.5">
+                                                            <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
+                                                                <span className="text-xs font-semibold truncate flex-1 min-w-0">
+                                                                    {msg.from_name || msg.from_email}
+                                                                    {msg.sender && (
+                                                                        <span className="ml-1 text-[10px] font-normal text-muted-foreground italic">
+                                                                            via {msg.sender.name}
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                                <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px] text-right">
+                                                                    {timeAgo(msg.sent_at)}
+                                                                </span>
+                                                            </div>
+                                                            <div className="bg-background border rounded-lg p-3 shadow-sm text-xs lg:text-sm leading-relaxed overflow-hidden break-words [overflow-wrap:anywhere]">
+                                                                {msg.body_html ? (
+                                                                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
+                                                                ) : (
+                                                                    <span className="whitespace-pre-wrap">{msg.body_preview}</span>
+                                                                )}
+                                                            </div>
+                                                            {/* Attachments */}
+                                                            {msg.media && msg.media.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                                    {msg.media.map((file: any) => {
+                                                                        const isImage = file.mime_type?.startsWith('image/');
+                                                                        const thumbUrl = file.generated_conversions?.thumb
+                                                                            ? (file.original_url?.replace(/\/[^\/]+$/, '/conversions/' + file.name + '-thumb.' + file.file_name?.split('.').pop()))
+                                                                            : null;
+                                                                        return isImage ? (
+                                                                            <a key={file.id} href={file.original_url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                                <img
+                                                                                    src={thumbUrl || file.original_url}
+                                                                                    alt={file.name}
+                                                                                    className="max-w-[180px] max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity"
+                                                                                />
+                                                                            </a>
+                                                                        ) : (
+                                                                            <a
+                                                                                key={file.id}
+                                                                                href={file.original_url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors max-w-[220px]"
+                                                                            >
+                                                                                <FileText className="h-4 w-4 text-primary shrink-0" />
+                                                                                <span className="text-xs truncate flex-1 min-w-0">{file.file_name}</span>
+                                                                                <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                                            </a>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                {loadingMoreMessages && (
+                                                    <div className="flex justify-center items-center py-2 text-muted-foreground text-[10px] italic">
+                                                        <RefreshCw className="h-3 w-3 animate-spin mr-2" />
+                                                        {t('Loading earlier messages...')}
+                                                    </div>
+                                                )}
+
+                                                {/* Observer target for loading older history (now logically at the end of the reversed list) */}
+                                                <div ref={messagesTopObserverTarget} className="h-1 w-full shrink-0" />
+                                            </div>
+                                        </ScrollArea>
+
+                                        {/* Reply box */}
+                                        <div className="border-t bg-background shrink-0 p-2 lg:p-3">
+                                        <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Trash' ? 'min-h-[160px]' : ''}`}>
+                                            {selectedThread.status === 'Trash' && (
+                                                <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center">
+                                                        <div className="flex flex-col items-center gap-2 text-center p-4">
+                                                            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
+                                                                <AlertCircle className="w-5 h-5" />
+                                                            </div>
+                                                            <p className="text-sm font-medium text-foreground">
+                                                                {t('This thread is in Trash')}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground max-w-[240px]">
+                                                                {t('Restore it to inbox to reply or send messages.')}
+                                                            </p>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="mt-1 h-8"
+                                                                onClick={() => handleUpdateMetadata({ status: 'Open' })}
+                                                            >
+                                                                <Inbox className="w-3.5 h-3.5 mr-2" />
+                                                                {t('Restore to Inbox')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {/* Staff assignment/permission check overlay */}
+                                                {selectedThread.status !== 'Trash' && !isOwner && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
+                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[160px]">
+                                                        <div className="flex flex-col items-center gap-2 text-center p-4">
+                                                            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
+                                                                <AlertCircle className="w-5 h-5" />
+                                                            </div>
+                                                            <p className="text-sm font-medium text-foreground">
+                                                                {!hasPermission(permissions, 'reply-conversations')
+                                                                    ? t('You do not have permission to reply')
+                                                                    : t('You are not assigned to this thread')}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground max-w-[240px]">
+                                                                {!hasPermission(permissions, 'reply-conversations')
+                                                                    ? t('Contact your administrator to request reply access.')
+                                                                    : t('Ask a manager to assign you to this thread to reply.')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+
+                                                <div 
+                                                    className="w-full min-h-[60px] lg:min-h-[80px] cursor-text"
+                                                    onClick={() => replyEditor?.commands.focus()}
+                                                >
+                                                    <EditorContent editor={replyEditor} />
+                                                </div>
+                                                {/* Reply attachment preview */}
+                                                {replyFiles.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
+                                                        {replyFiles.map((file, idx) => (
+                                                            <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
+                                                                <Paperclip className="h-3 w-3 text-muted-foreground" />
+                                                                <span className="truncate max-w-[120px]">{file.name}</span>
+                                                                <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive" disabled={selectedThread.status === 'Trash'}>
+                                                                    <X className="h-3 w-3" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {/* Reply Formatting Toolbar */}
+                                                {showReplyFormatting && replyEditor && (
+                                                    <div className="flex items-center gap-0.5 px-2.5 py-1 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('bold') && "bg-muted text-primary")}
+                                                            onClick={() => replyEditor.chain().focus().toggleBold().run()}
+                                                            disabled={selectedThread.status === 'Trash'}
+                                                        >
+                                                            <Bold className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('italic') && "bg-muted text-primary")}
+                                                            onClick={() => replyEditor.chain().focus().toggleItalic().run()}
+                                                            disabled={selectedThread.status === 'Trash'}
+                                                        >
+                                                            <Italic className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <div className="w-px h-3 bg-border mx-1" />
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                                            onClick={() => replyEditor.chain().focus().unsetAllMarks().run()}
+                                                            disabled={selectedThread.status === 'Trash'}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
+                                                    <div className="flex items-center gap-1">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className={cn("h-7 w-7 transition-colors rounded-full", showReplyFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                                            onClick={() => setShowReplyFormatting(!showReplyFormatting)}
+                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                                        >
+                                                            <Type className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <div className="w-px h-4 bg-border mx-1" />
+                                                        <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Trash'}>
+                                                            <Paperclip className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <EmojiPicker 
+                                                            disabled={submittingReply || selectedThread.status === 'Trash'}
+                                                            onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()} 
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        className="gap-1.5 px-4 h-7 text-xs"
+                                                        onClick={handleSendReply}
+                                                        disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Trash'}
+                                                    >
+                                                        {submittingReply ? (
+                                                            <RefreshCw className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            <Send className="h-3 w-3" />
+                                                        )}
+                                                        {submittingReply ? t('Sending...') : t('Send Reply')}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    /* No thread selected (visible on md+) */
+                                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                                        <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                                            <Inbox className="h-8 w-8 text-muted-foreground/30" />
+                                        </div>
+                                        <h3 className="text-lg font-semibold mb-1">{t('Select a conversation')}</h3>
+                                        <p className="text-sm text-muted-foreground max-w-xs">
+                                            {t('Choose a thread from the list to view the full message history and CRM details.')}
+                                        </p>
                                     </div>
-                                </div>
-                            </>
-                        ) : (
-                            /* No thread selected (visible on md+) */
-                            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                                <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-                                    <Inbox className="h-8 w-8 text-muted-foreground/30" />
-                                </div>
-                                <h3 className="text-lg font-semibold mb-1">{t('Select a conversation')}</h3>
-                                <p className="text-sm text-muted-foreground max-w-xs">
-                                    {t('Choose a thread from the list to view the full message history and CRM details.')}
-                                </p>
+                                )}
                             </div>
-                        )}
-                    </div>
                         </>
                     )}
                 </div>
@@ -1343,9 +1617,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 {selectedThread && showContactSidebar && (
                     <>
                         {/* Backdrop for mobile */}
-                        <div 
-                            className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none" 
-                            onClick={() => setShowContactSidebar(false)} 
+                        <div
+                            className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none"
+                            onClick={() => setShowContactSidebar(false)}
                         />
                         <div className="absolute right-0 top-0 bottom-0 z-30 w-[280px] max-w-[85vw] border-l flex flex-col bg-background shadow-2xl overflow-y-auto">
                             <ScrollArea className="flex-1 min-h-0">
@@ -1362,7 +1636,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         {(() => {
                                             const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
                                             const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant;
-                                            
+
                                             return (
                                                 <>
                                                     <Avatar className="h-16 w-16 mb-3 border-2 border-primary/10 shrink-0">
@@ -1412,7 +1686,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         ) : (
                                             <div className="flex flex-col items-center p-4 border border-dashed rounded-lg bg-muted/5">
                                                 <UserPlus className="h-5 w-5 text-muted-foreground/30 mb-1.5" />
-                                                
+
                                                 {selectedThread.suggested_leads?.length > 0 ? (
                                                     <div className="w-full space-y-3">
                                                         <div className="bg-amber-50 border border-amber-100 p-2.5 rounded-md">
@@ -1427,8 +1701,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 {selectedThread.suggested_leads[0].email}
                                                             </p>
                                                         </div>
-                                                        <Button 
-                                                            size="sm" 
+                                                        <Button
+                                                            size="sm"
                                                             className="w-full text-xs h-8 shadow-sm font-bold"
                                                             onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)}
                                                         >
@@ -1438,9 +1712,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
                                                             <div className="relative flex justify-center text-[10px] uppercase"><span className="bg-background px-2 text-muted-foreground font-bold">{t('Or')}</span></div>
                                                         </div>
-                                                        <Button 
-                                                            size="sm" 
-                                                            variant="outline" 
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
                                                             className="w-full text-[11px] h-7 border-dashed"
                                                             onClick={() => handleAddAsLead()}
                                                         >
@@ -1452,9 +1726,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         <p className="text-[11px] text-muted-foreground mb-3 text-center">
                                                             {t('This contact is not yet linked to a Lead or Contact record.')}
                                                         </p>
-                                                        <Button 
-                                                            size="sm" 
-                                                            variant="outline" 
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
                                                             className="w-full text-[11px] h-7"
                                                             onClick={() => handleAddAsLead()}
                                                         >
@@ -1464,7 +1738,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 )}
                                             </div>
                                         )}
-                                        
+
                                         {/* Activities */}
                                         <div>
                                             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
@@ -1507,7 +1781,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     <div className="flex flex-col bg-background">
                         <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
                             <Label htmlFor="compose-to" className="w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('To')}</Label>
-                            <Input 
+                            <Input
                                 id="compose-to"
                                 value={composeTo}
                                 onChange={(e) => setComposeTo(e.target.value)}
@@ -1517,7 +1791,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         </div>
                         <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
                             <Label htmlFor="compose-subject" className="w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('Subject')}</Label>
-                            <Input 
+                            <Input
                                 id="compose-subject"
                                 value={composeSubject}
                                 onChange={(e) => setComposeSubject(e.target.value)}
@@ -1526,12 +1800,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             />
                         </div>
                         <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
-                            <textarea 
-                                value={composeBody}
-                                onChange={(e) => setComposeBody(e.target.value)}
-                                placeholder={t('Write your message here...')}
-                                className="w-full min-h-[250px] p-6 text-sm bg-transparent border-0 focus:ring-0 resize-none outline-none leading-relaxed"
-                            />
+                            <div className="min-h-[250px] cursor-text" onClick={() => composeEditor?.commands.focus()}>
+                                <EditorContent editor={composeEditor} />
+                            </div>
                             {/* Compose attachment previews */}
                             {composeFiles.length > 0 && (
                                 <div className="flex flex-wrap gap-2 px-5 py-3 border-t bg-muted/10">
@@ -1550,22 +1821,59 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     ))}
                                 </div>
                             )}
-                            {/* Toolbar */}
-                            <div className="flex items-center gap-1 px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Type className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Link className="h-4 w-4" /></Button>
-                                <div className="w-px h-5 bg-border mx-2" />
-                                <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"><Smile className="h-4 w-4" /></Button>
+                            {/* Formatting Toolbar (Toggled by T button) */}
+                            {showFormatting && composeEditor && (
+                                <div className="flex items-center gap-0.5 px-5 py-1.5 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
+                                    <Button
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('bold') && "bg-muted text-primary")}
+                                        onClick={() => composeEditor.chain().focus().toggleBold().run()}
+                                    >
+                                        <Bold className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('italic') && "bg-muted text-primary")}
+                                        onClick={() => composeEditor.chain().focus().toggleItalic().run()}
+                                    >
+                                        <Italic className="h-4 w-4" />
+                                    </Button>
+                                    <div className="w-px h-4 bg-border mx-1" />
+                                    <Button
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                        onClick={() => composeEditor.chain().focus().unsetAllMarks().run()}
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            )}
+                            {/* Main Toolbar */}
+                            <div className="flex items-center justify-between px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+                                <div className="flex items-center gap-1">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className={cn("h-8 w-8 transition-colors rounded-full", showFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                        onClick={() => setShowFormatting(!showFormatting)}
+                                    >
+                                        <Type className="h-4 w-4" />
+                                    </Button>
+                                    <div className="w-px h-5 bg-border mx-2" />
+                                    <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
+                                    <EmojiPicker 
+                                        onSelect={(emoji) => composeEditor?.chain().focus().insertContent(emoji).run()} 
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <DialogFooter className="px-5 py-4 bg-muted/10 sm:justify-between items-center rounded-b-xl">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors" onClick={() => setShowCompose(false)} disabled={isComposing}>
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                    <DialogFooter className="px-5 py-4 bg-muted/10 sm:justify-end items-center rounded-b-xl">
                         <div className="flex items-center gap-3">
                             <Button variant="ghost" size="sm" onClick={() => setShowCompose(false)} disabled={isComposing} className="text-xs font-semibold px-4 h-9">
                                 {t('Cancel')}

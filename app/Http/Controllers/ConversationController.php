@@ -36,30 +36,7 @@ class ConversationController extends Controller
             })->first();
         }
 
-        // Compute actual unread count with sync filtering
-        $unreadCountQuery = EmailThread::where('created_by', $companyId)->where('is_read', false);
-        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
-            $syncCategories = $gmailAccount->sync_categories;
-            $hasPrimary = in_array('PRIMARY', $syncCategories);
-            
-            $unreadCountQuery->where(function($q) use ($syncCategories, $hasPrimary) {
-                foreach ($syncCategories as $category) {
-                    if ($category !== 'PRIMARY') {
-                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
-                    }
-                }
-                
-                if ($hasPrimary) {
-                    $q->orWhere(function($sq) {
-                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
-                        foreach ($otherCategories as $other) {
-                            $sq->whereJsonDoesntContain('labels', $other);
-                        }
-                    });
-                }
-            });
-        }
-        $unreadCount = $unreadCountQuery->count();
+        $unreadCount = $this->getGlobalUnreadCount($companyId, $gmailAccount);
 
         return Inertia::render('conversations/index', [
             'initialFolder' => 'inbox',
@@ -178,13 +155,15 @@ class ConversationController extends Controller
             // In history view, we might want to show everything, including closed
         }
 
-        // Default to "Open" status unless explicitly requesting history or a specific status
-        if (!in_array($folder, ['history', 'closed']) && !$request->has('status')) {
+        // Default to "Open" status unless explicitly requesting history, trash, closed, or a specific status
+        if (!in_array($folder, ['history', 'closed', 'trash']) && !$request->has('status')) {
             $query->where(function($q) {
                 $q->where('status', 'Open')->orWhereNull('status');
             });
         } elseif ($folder === 'closed') {
             $query->where('status', 'Closed');
+        } elseif ($folder === 'trash') {
+            $query->where('status', 'Trash');
         }
 
         $threads = $query->paginate(20);
@@ -224,7 +203,12 @@ class ConversationController extends Controller
             return $thread;
         });
 
-        return response()->json($threads);
+        $unreadCount = $this->getGlobalUnreadCount($companyId, $gmailAccount);
+
+        return response()->json([
+            'threads' => $threads,
+            'unread_count' => $unreadCount,
+        ]);
     }
 
     /**
@@ -237,17 +221,46 @@ class ConversationController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'nullable|string|in:Open,Closed',
+            'status' => 'nullable|string|in:Open,Closed,Trash',
             'priority' => 'nullable|string|in:Low,Medium,High',
             'follow_up_at' => 'nullable|date',
         ]);
 
+        $statusChanged = isset($validated['status']) && $validated['status'] !== $thread->status;
+        $wasTrash = $thread->status === 'Trash';
+
         $thread->update($validated);
+        $thread = $thread->fresh();
+
+        // Handle Gmail Sync (Trash/Untrash) (Fix 3.1)
+        if ($statusChanged) {
+            try {
+                $account = $thread->gmailAccount;
+                if ($account) {
+                    $service = new \App\Services\GmailService($account);
+                    
+                    if ($thread->status === 'Trash') {
+                        // Moving TO trash
+                        $service->trashThread($thread->gmail_thread_id);
+                    } elseif ($wasTrash && in_array($thread->status, ['Open', 'Closed'])) {
+                        // Restoring FROM trash
+                        $service->untrashThread($thread->gmail_thread_id);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to sync Trash/Untrash status to Gmail', [
+                    'thread_id' => $thread->id,
+                    'new_status' => $thread->status,
+                    'was_trash' => $wasTrash,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Thread updated successfully.',
-            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
+            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount'])
         ]);
     }
 
@@ -266,11 +279,12 @@ class ConversationController extends Controller
         ]);
 
         $thread->assignments()->sync($request->user_ids);
+        $thread = $thread->fresh();
 
         return response()->json([
             'success' => true,
             'message' => 'Thread assignments updated.',
-            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar'])
+            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount'])
         ]);
     }
 
@@ -548,6 +562,9 @@ class ConversationController extends Controller
             abort(403);
         }
 
+        // Refresh to ensure we have the very latest state (especially after an async sync/reply)
+        $thread = $thread->fresh();
+
         $perPage = $request->input('per_page', 30);
         
         $messagesPaginated = $thread->messages()
@@ -555,12 +572,12 @@ class ConversationController extends Controller
             ->reorder('sent_at', 'desc')
             ->paginate($perPage);
 
-        // Reverse for chronological display
-        $messages = collect($messagesPaginated->items())->reverse()->values();
+        // Return newest to oldest for flex-col-reverse display
+        $messages = collect($messagesPaginated->items())->values();
 
-        $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar']);
+        $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
         
-        // Remove the default messages relation if it was loaded, and attach our paginated/sorted set
+        // Ensure relations are attached so they are serialized in the response
         $thread->setRelation('messages', $messages);
 
         // Mark as read when user opens the thread
@@ -575,7 +592,8 @@ class ConversationController extends Controller
                 'last_page' => $messagesPaginated->lastPage(),
                 'has_more' => $messagesPaginated->hasMorePages(),
                 'total' => $messagesPaginated->total(),
-            ]
+            ],
+            'unread_count' => $this->getGlobalUnreadCount($thread->created_by, $thread->gmailAccount),
         ]);
     }
 
@@ -584,6 +602,13 @@ class ConversationController extends Controller
      */
     public function compose(Request $request)
     {
+        $user = auth()->user();
+
+        // Company owners bypass; staff must have send-conversations permission
+        if ($user->type !== 'company' && !$user->can('send-conversations')) {
+            abort(403, 'You do not have permission to send emails.');
+        }
+
         $request->validate([
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
@@ -591,7 +616,6 @@ class ConversationController extends Controller
         ]);
 
         try {
-            $user = auth()->user();
             $companyId = $user->creatorId();
             
             $account = \App\Models\GmailAccount::where('user_id', $companyId)->first();
@@ -646,6 +670,18 @@ class ConversationController extends Controller
         // Ensure user has access to this company's threads
         if ($thread->created_by !== auth()->user()->creatorId()) {
             abort(403);
+        }
+
+        $user = auth()->user();
+
+        // Company owners bypass; staff must have reply-conversations permission AND be assigned
+        if ($user->type !== 'company') {
+            if (!$user->can('reply-conversations')) {
+                return response()->json(['error' => 'You do not have permission to reply.'], 403);
+            }
+            if (!$thread->isAssignedTo($user)) {
+                return response()->json(['error' => 'You must be assigned to this thread to reply.'], 403);
+            }
         }
 
         $request->validate([
@@ -709,5 +745,41 @@ class ConversationController extends Controller
             ]);
             return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Calculate global unread count for the company's active inbox filters.
+     */
+    private function getGlobalUnreadCount(int $companyId, ?GmailAccount $gmailAccount): int
+    {
+        $unreadCountQuery = EmailThread::where('created_by', $companyId)
+            ->where('is_read', false)
+            ->where(function($q) {
+                $q->where('status', 'Open')->orWhereNull('status');
+            });
+
+        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
+            $syncCategories = $gmailAccount->sync_categories;
+            $hasPrimary = in_array('PRIMARY', $syncCategories);
+            
+            $unreadCountQuery->where(function($q) use ($syncCategories, $hasPrimary) {
+                foreach ($syncCategories as $category) {
+                    if ($category !== 'PRIMARY') {
+                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
+                    }
+                }
+                
+                if ($hasPrimary) {
+                    $q->orWhere(function($sq) {
+                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
+                        foreach ($otherCategories as $other) {
+                            $sq->whereJsonDoesntContain('labels', $other);
+                        }
+                    });
+                }
+            });
+        }
+
+        return $unreadCountQuery->count();
     }
 }

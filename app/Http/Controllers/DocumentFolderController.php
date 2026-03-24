@@ -160,6 +160,10 @@ class DocumentFolderController extends Controller
             ->first();
 
         if ($documentFolder) {
+            if ($documentFolder->documents()->exists()) {
+                return redirect()->back()->with('error', __('Cannot delete document folder that is currently assigned to one or more documents.'));
+            }
+
             try {
                 $documentFolder->delete();
                 return redirect()->back()->with('success', __('Document folder deleted successfully.'));
@@ -203,15 +207,24 @@ class DocumentFolderController extends Controller
         ]);
 
         try {
-            $query = \App\Models\DocumentFolder::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $folders = \App\Models\DocumentFolder::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
             
-            if ($count === 0) {
+            if ($folders->isEmpty()) {
                  return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
             
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUse = $folders->filter(fn($f) => $f->documents()->count() > 0);
+            $deletable = $folders->filter(fn($f) => $f->documents()->count() === 0);
+
+            $deletable->each->delete();
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to documents.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot bulk delete folders because they are currently assigned to documents.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }
