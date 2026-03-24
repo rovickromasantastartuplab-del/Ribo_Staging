@@ -64,6 +64,13 @@ export default function CustomPagesIndex() {
           setEditingPage(null);
           reset();
           toast.success('Page updated successfully!');
+        },
+        onError: (errs) => {
+          if (errs.title) {
+            toast.error(errs.title);
+          } else {
+            toast.error('Validation failed. Please check your inputs.');
+          }
         }
       });
     } else {
@@ -72,6 +79,13 @@ export default function CustomPagesIndex() {
           setIsCreateOpen(false);
           reset();
           toast.success('Page created successfully!');
+        },
+        onError: (errs) => {
+          if (errs.title) {
+            toast.error(errs.title);
+          } else {
+            toast.error('Validation failed. Please check your inputs.');
+          }
         }
       });
     }

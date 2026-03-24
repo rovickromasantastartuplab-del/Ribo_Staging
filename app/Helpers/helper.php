@@ -69,11 +69,8 @@ if (!function_exists('settings')) {
         if ($isNotSuperAdmin) {
             $superAdmin = User::where('type', 'superadmin')->first();
             if ($superAdmin) {
-                $superAdminKeys = [
-                    'dateFormat',
-                    'timeFormat',
-                    'calendarStartDay',
-                    'defaultTimezone',
+                // These keys are ALWAYS taken from superadmin (company cannot override)
+                $forcedSuperAdminKeys = [
                     'defaultCurrency',
                     'decimalFormat',
                     'decimalSeparator',
@@ -81,7 +78,6 @@ if (!function_exists('settings')) {
                     'floatNumber',
                     'currencySymbolSpace',
                     'currencySymbolPosition',
-                    // Brand settings — used as fallback if company row is missing
                     'favicon',
                     'logoDark',
                     'logoLight',
@@ -99,13 +95,31 @@ if (!function_exists('settings')) {
                     'pusher_app_cluster',
                     'google_gmail_pub_sub_topic',
                 ];
+
+                // These keys fall back to superadmin ONLY when company has not set them
+                $fallbackSuperAdminKeys = [
+                    'dateFormat',
+                    'timeFormat',
+                    'calendarStartDay',
+                    'defaultTimezone',
+                ];
+
+                $allSuperAdminKeys = array_merge($forcedSuperAdminKeys, $fallbackSuperAdminKeys);
                 $superAdminSettings = Setting::where('user_id', $superAdmin->id)
-                    ->whereIn('key', $superAdminKeys)
+                    ->whereIn('key', $allSuperAdminKeys)
                     ->pluck('value', 'key')
                     ->toArray();
 
-                // Allow superAdminSettings to overwrite userSettings for these global keys
-                $userSettings = array_merge($userSettings, $superAdminSettings);
+                // Apply forced overrides (superadmin always wins)
+                $forcedSettings = array_intersect_key($superAdminSettings, array_flip($forcedSuperAdminKeys));
+                $userSettings = array_merge($userSettings, $forcedSettings);
+
+                // Apply fallback values (company wins if they have a value set)
+                foreach ($fallbackSuperAdminKeys as $key) {
+                    if (!isset($userSettings[$key]) && isset($superAdminSettings[$key])) {
+                        $userSettings[$key] = $superAdminSettings[$key];
+                    }
+                }
             }
         }
 

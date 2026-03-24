@@ -45,12 +45,14 @@ class CustomPageController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:255|unique:landing_page_custom_pages,title',
             'content' => 'required|string',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer'
+        ], [
+            'title.unique' => __('A page with this title already exists.'),
         ]);
 
         LandingPageCustomPage::create($validated);
@@ -61,12 +63,14 @@ class CustomPageController extends Controller
     public function update(Request $request, LandingPageCustomPage $customPage)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:255|unique:landing_page_custom_pages,title,' . $customPage->id,
             'content' => 'required|string',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer'
+        ], [
+            'title.unique' => __('A page with this title already exists.'),
         ]);
 
         $customPage->update($validated);

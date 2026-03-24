@@ -41,6 +41,26 @@ class SystemSettingsController extends Controller
                 updateSetting($key, $value);
             }
 
+            // Sync the Super Admin's personal language with the new global default
+            if (isset($validated['defaultLanguage'])) {
+                $user = auth()->user();
+                $newLang = $validated['defaultLanguage'];
+
+                // Update Super Admin's language
+                if ($user && $user->isSuperAdmin()) {
+                    $user->update(['lang' => $newLang]);
+
+                    // Auto-update layoutDirection for RTL vs LTR
+                    $rtlLanguages = ['ar', 'he'];
+                    $isRtl = in_array($newLang, $rtlLanguages);
+                    updateSetting('layoutDirection', $isRtl ? 'right' : 'left', $user->id);
+                }
+
+                // Propagate language to all company accounts and their staff
+                \App\Models\User::whereIn('type', ['company', 'staff'])
+                    ->update(['lang' => $newLang]);
+            }
+
             return redirect()->back()->with('success', __('System settings updated successfully.'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to update system settings: :error', ['error' => $e->getMessage()]));
