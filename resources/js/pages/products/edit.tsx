@@ -186,6 +186,7 @@ export default function ProductEdit() {
                 placeholder={t('Select main image...')}
                 showPreview={true}
                 returnType="id"
+                allowedTypes={['image/jpeg', 'image/png', 'image/svg+xml']}
               />
             </div>
 
@@ -199,6 +200,7 @@ export default function ProductEdit() {
                 multiple={true}
                 showPreview={true}
                 returnType="id"
+                allowedTypes={['image/jpeg', 'image/png', 'image/svg+xml']}
               />
             </div>
           </CardContent>
