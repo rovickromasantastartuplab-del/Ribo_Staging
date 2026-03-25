@@ -179,6 +179,13 @@ class EmailTemplateController extends Controller
                 '{opportunity_description}' => 'Opportunity Description',
                 '{company_name}' => 'Company Name'
             ];
+        } elseif ($template->name === 'Conversation Follow Up') {
+            $variables = [
+                '{thread_subject}' => 'Conversation Subject',
+                '{assigned_user_name}' => 'Assigned User Name',
+                '{company_name}' => 'Company Name',
+                '{view_link}' => 'View Link (Public URL)'
+            ];
         } elseif ($template->name === 'Sales Order Created') {
             $variables = [
                 '{order_number}' => 'Order Number',

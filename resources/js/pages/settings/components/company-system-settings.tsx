@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import { SettingsSection } from '@/components/settings-section';
@@ -32,7 +33,8 @@ export default function CompanySystemSettings({
     defaultLanguage: 'en',
     dateFormat: 'MM/DD/YYYY',
     timeFormat: '12h',
-    defaultTimezone: 'UTC'
+    defaultTimezone: 'UTC',
+    conversation_follow_up_enabled: 'on'
   };
   
   // Combine settings from props and page props
@@ -45,7 +47,8 @@ export default function CompanySystemSettings({
     defaultLanguage: settingsData.defaultLanguage || defaultSettings.defaultLanguage,
     dateFormat: settingsData.dateFormat || defaultSettings.dateFormat,
     timeFormat: settingsData.timeFormat || defaultSettings.timeFormat,
-    defaultTimezone: settingsData.defaultTimezone || defaultSettings.defaultTimezone
+    defaultTimezone: settingsData.defaultTimezone || defaultSettings.defaultTimezone,
+    conversation_follow_up_enabled: settingsData.conversation_follow_up_enabled || defaultSettings.conversation_follow_up_enabled
   }));
   
   // Update state when settings change
@@ -81,7 +84,8 @@ export default function CompanySystemSettings({
       defaultLanguage: systemSettings.defaultLanguage,
       dateFormat: systemSettings.dateFormat,
       timeFormat: systemSettings.timeFormat,
-      defaultTimezone: systemSettings.defaultTimezone
+      defaultTimezone: systemSettings.defaultTimezone,
+      conversation_follow_up_enabled: systemSettings.conversation_follow_up_enabled
     };
     
     // Submit to backend using Inertia
@@ -256,6 +260,21 @@ export default function CompanySystemSettings({
                 }
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid gap-2 md:col-span-2 mt-4 pt-4 border-t">
+            <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                    <Label>{t("Enable Conversation Follow-up")}</Label>
+                    <p className="text-sm text-muted-foreground">
+                        {t("Automatically send email reminders and notifications for conversation follow-up dates.")}
+                    </p>
+                </div>
+                <Switch
+                    checked={systemSettings.conversation_follow_up_enabled === 'on'}
+                    onCheckedChange={(checked) => handleSystemSettingsChange('conversation_follow_up_enabled', checked ? 'on' : 'off')}
+                />
+            </div>
           </div>
         </div>
       </form>

@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:renew-gmail-watch')->daily();
+Schedule::command('conversations:follow-up')->hourly();
