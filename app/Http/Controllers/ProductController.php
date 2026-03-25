@@ -523,7 +523,7 @@ class ProductController extends Controller
                     foreach ($mapping as $dbField => $excelColumn) {
                         $colLetter = $headerMap[$excelColumn] ?? null;
                         if ($colLetter) {
-                            $cellValue = $worksheet->getCell($colLetter . $row)->getValue();
+                            $cellValue = $worksheet->getCell($colLetter . $row)->getCalculatedValue();
                             $mappedRow[] = $cellValue !== null ? trim((string) $cellValue) : '';
                         } else {
                             $mappedRow[] = '';

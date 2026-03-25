@@ -58,7 +58,12 @@ export default function WeddingSuppliers() {
     };
 
     const handleExport = () => {
-        window.location.href = route('wedding-suppliers.export');
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (selectedCategory && selectedCategory !== 'all') params.append('category_id', selectedCategory);
+        
+        const queryString = params.toString();
+        window.location.href = route('wedding-suppliers.export') + (queryString ? `?${queryString}` : '');
     };
 
     const handleSort = (field: string) => {

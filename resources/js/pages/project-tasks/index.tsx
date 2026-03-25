@@ -239,6 +239,18 @@ export default function ProjectTasks() {
     }, { preserveState: true, preserveScroll: true });
   };
 
+  const handleExport = () => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.append('search', searchTerm);
+    if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
+    if (selectedPriority && selectedPriority !== 'all') params.append('priority', selectedPriority);
+    if (selectedProject && selectedProject !== 'all') params.append('project_id', selectedProject);
+    if (selectedAssignee && selectedAssignee !== 'all') params.append('assigned_to', selectedAssignee);
+    
+    const queryString = params.toString();
+    window.location.href = route('project-task.export') + (queryString ? `?${queryString}` : '');
+  };
+
   const pageActions = [];
 
   // Add export button
@@ -247,7 +259,7 @@ export default function ProjectTasks() {
       label: t('Export'),
       icon: <Download className="h-4 w-4 mr-2" />,
       variant: 'outline',
-      onClick: () => (CrudFormModal as any).handleExport?.()
+      onClick: () => handleExport()
     });
   }
 

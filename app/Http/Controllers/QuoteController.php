@@ -91,6 +91,7 @@ class QuoteController extends Controller
         })
             ->select('id', 'name', 'account_id')->get(),
             'opportunities' => Opportunity::where('created_by', createdBy())
+            ->where('status', 'active')
             ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function ($q) {
             $q->where('assigned_to', auth()->id());
         })
@@ -153,6 +154,7 @@ class QuoteController extends Controller
         })
             ->select('id', 'name', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
+            ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
             $q->where('assigned_to', auth()->id());
         })
@@ -214,6 +216,7 @@ class QuoteController extends Controller
         })
             ->select('id', 'name', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
+            ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
             $q->where('assigned_to', auth()->id());
         })
@@ -249,7 +252,13 @@ class QuoteController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'opportunity_id' => 'nullable|exists:opportunities,id',
+            'opportunity_id' => [
+                'nullable',
+                Rule::exists('opportunities', 'id')->where(function ($query) {
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
+            ],
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {
@@ -404,7 +413,13 @@ class QuoteController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'opportunity_id' => 'nullable|exists:opportunities,id',
+            'opportunity_id' => [
+                'nullable',
+                Rule::exists('opportunities', 'id')->where(function ($query) {
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
+            ],
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {

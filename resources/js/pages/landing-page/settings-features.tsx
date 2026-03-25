@@ -179,6 +179,7 @@ export default function FeaturesSection({ data, setData, errors, handleInputChan
                 updateSectionData('features', { image: convertToRelativePath(value) });
               }}
               placeholder={t("Select features section image...")}
+              allowedTypes={['image/jpeg', 'image/png', 'image/svg+xml']}
             />
           </div>
         </div>

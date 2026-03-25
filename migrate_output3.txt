@@ -1,0 +1,26 @@
+
+   INFO  Running migrations.  
+
+  2026_03_18_053319_create_email_threadables_table  53.56ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000]: General error: 1005 Can't create table `staging_crm`.`email_threadables` (errno: 150 "Foreign key constraint is incorrectly formed") (Connection: mysql, SQL: alter table `email_threadables` add constraint `email_threadables_email_thread_id_foreign` foreign key (`email_thread_id`) references `email_threads` (`id`) on delete cascade)
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:826
+    822Γûò                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    823Γûò                 );
+    824Γûò             }
+    825Γûò 
+  Γ₧£ 826Γûò             throw new QueryException(
+    827Γûò                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    828Γûò             );
+    829Γûò         }
+    830Γûò     }
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:570
+      PDOException::("SQLSTATE[HY000]: General error: 1005 Can't create table `staging_crm`.`email_threadables` (errno: 150 "Foreign key constraint is incorrectly formed")")
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:570
+      PDOStatement::execute()
+

@@ -18,6 +18,7 @@ class ProductImport implements ToModel, WithHeadingRow
     {
         // Skip if both name and sku are empty
         if (empty($row['name']) && empty($row['sku'])) {
+            $this->skippedCount++;
             return null;
         }
 
@@ -30,14 +31,23 @@ class ProductImport implements ToModel, WithHeadingRow
             }
         }
 
+        $price = is_numeric($row['price'] ?? null) ? (float) $row['price'] : 0;
+        $stock = is_numeric($row['stock'] ?? null) ? (int) $row['stock'] : 0;
+
+        // Skip if price or stock is negative
+        if ($price < 0 || $stock < 0) {
+            $this->skippedCount++;
+            return null;
+        }
+
         $productData = [
-            'name' => $row['name'] ?? '',
-            'sku' => $row['sku'] ?? '',
-            'description' => $row['description'] ?? '',
-            'price' => is_numeric($row['price'] ?? null) ? (float) $row['price'] : 0,
-            'stock_quantity' => is_numeric($row['stock'] ?? null) ? (int) $row['stock'] : 0,
-            'status' => in_array($row['status'] ?? 'active', ['active', 'inactive']) ? $row['status'] : 'active',
+            'name' => $row['name'],
+            'sku' => $row['sku'],
+            'description' => $row['description'] ?? null,
+            'price' => $price,
+            'stock_quantity' => $stock,
             'created_by' => createdBy(),
+            'status' => $row['status'] ?? 'active',
         ];
     
         // Category

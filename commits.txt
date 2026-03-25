@@ -1,0 +1,30 @@
+d0aaee8f Merge branch 'develop' of https://github.com/rovickromasantastartuplab-del/Ribo_Staging into develop
+d04499b1 fix: gracefully handle missing pusher app key
+397dea05 new
+d5c83ddd Merge branch 'develop' of https://github.com/rovickromasantastartuplab-del/Ribo_Staging into develop
+1bc8b7a1 pusher
+e470ba3d feat: Add custom chat widget toggle and strict email validation
+22590e00 fixed
+a69ac126 new
+567a3c5a new
+de64dd8e decrypt
+cc3c3ac6 new
+7ada68f2 new
+3e9bc22f realtime gmail integration
+586a63b2 fixed conversation
+eceed5b6 new settings for integration
+8c66ed16 new
+3db4d49d new
+046e37e9 realtime integration
+c7b9049f integration visibility
+a32c18cb fixed settings
+8d35ed84 fixed bug
+62d4ed50 fixed bug email
+ed6a1806 fixed gmail
+d9f3e4fe new
+458eebfd fix: resolve Gmail persistence database error and add defensive guards for UI crashes
+d8356579 fix: move CustomToast into Inertia context to fix usePage error
+a1b27f2f fix: resolve Gmail connection persistence and UI feedback issues
+77fcf71b fix: swap provider and callback in OAuth routes to match Google config
+b0cce2e0 fix: resolve getSetting argument bug and improve Gmail frontend UX
+e62c9829 fix: restore Integrations visibility for superadmin
