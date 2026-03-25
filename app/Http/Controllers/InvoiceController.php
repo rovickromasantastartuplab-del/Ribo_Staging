@@ -113,6 +113,7 @@ class InvoiceController extends Controller
         })
             ->select('id', 'name', 'quote_number', 'account_id')->get(),
             'opportunities' => Opportunity::where('created_by', createdBy())
+            ->where('status', 'active')
             ->when(auth()->user()->type !== 'company' && !$canViewOpportunities, function ($q) {
             $q->where('assigned_to', auth()->id());
         })
@@ -189,6 +190,7 @@ class InvoiceController extends Controller
         })
             ->select('id', 'name', 'quote_number', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
+            ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
             $q->where('assigned_to', auth()->id());
         })
@@ -255,6 +257,7 @@ class InvoiceController extends Controller
         })
             ->select('id', 'name', 'quote_number', 'account_id')->get();
         $opportunities = Opportunity::where('created_by', createdBy())
+            ->where('status', 'active')
             ->when(auth()->user()->type !== 'company', function ($q) {
             $q->where('assigned_to', auth()->id());
         })
@@ -288,7 +291,13 @@ class InvoiceController extends Controller
             'description' => 'nullable|string',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
             'quote_id' => 'nullable|exists:quotes,id',
-            'opportunity_id' => 'nullable|exists:opportunities,id',
+            'opportunity_id' => [
+                'nullable',
+                Rule::exists('opportunities', 'id')->where(function ($query) {
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
+            ],
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {
@@ -396,7 +405,13 @@ class InvoiceController extends Controller
             'description' => 'nullable|string',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
             'quote_id' => 'nullable|exists:quotes,id',
-            'opportunity_id' => 'nullable|exists:opportunities,id',
+            'opportunity_id' => [
+                'nullable',
+                Rule::exists('opportunities', 'id')->where(function ($query) {
+            $query->where('created_by', createdBy())
+                    ->where('status', 'active');
+        }),
+            ],
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where(function ($query) {

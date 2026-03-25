@@ -12,6 +12,7 @@ use App\Services\StorageConfigService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -191,9 +192,18 @@ class ProductController extends Controller
                 'price' => 'required|numeric|min:0',
                 'stock_quantity' => 'nullable|integer|min:0',
                 'image' => 'nullable|string',
-                'main_image_id' => 'nullable|exists:media,id',
+                'main_image_id' => [
+                    'nullable',
+                    Rule::exists('media', 'id')->where(function ($query) {
+                        $query->where('mime_type', 'like', 'image/%');
+                    }),
+                ],
                 'additional_image_ids' => 'nullable|array',
-                'additional_image_ids.*' => 'exists:media,id',
+                'additional_image_ids.*' => [
+                    Rule::exists('media', 'id')->where(function ($query) {
+                        $query->where('mime_type', 'like', 'image/%');
+                    }),
+                ],
                 'category_id' => 'nullable|exists:categories,id',
                 'brand_id' => 'nullable|exists:brands,id',
                 'tax_id' => 'nullable|exists:taxes,id',
@@ -232,10 +242,19 @@ class ProductController extends Controller
                     'price' => 'required|numeric|min:0',
                     'stock_quantity' => 'nullable|integer|min:0',
                     'image' => 'nullable|string',
-                    'main_image_id' => 'nullable|exists:media,id',
-                    'additional_image_ids' => 'nullable|array',
-                    'additional_image_ids.*' => 'exists:media,id',
-                    'category_id' => 'nullable|exists:categories,id',
+                'main_image_id' => [
+                    'nullable',
+                    Rule::exists('media', 'id')->where(function ($query) {
+                        $query->where('mime_type', 'like', 'image/%');
+                    }),
+                ],
+                'additional_image_ids' => 'nullable|array',
+                'additional_image_ids.*' => [
+                    Rule::exists('media', 'id')->where(function ($query) {
+                        $query->where('mime_type', 'like', 'image/%');
+                    }),
+                ],
+                'category_id' => 'nullable|exists:categories,id',
                     'brand_id' => 'nullable|exists:brands,id',
                     'tax_id' => 'nullable|exists:taxes,id',
                     'status' => 'nullable|in:active,inactive',
@@ -523,7 +542,7 @@ class ProductController extends Controller
                     foreach ($mapping as $dbField => $excelColumn) {
                         $colLetter = $headerMap[$excelColumn] ?? null;
                         if ($colLetter) {
-                            $cellValue = $worksheet->getCell($colLetter . $row)->getValue();
+                            $cellValue = $worksheet->getCell($colLetter . $row)->getCalculatedValue();
                             $mappedRow[] = $cellValue !== null ? trim((string) $cellValue) : '';
                         } else {
                             $mappedRow[] = '';

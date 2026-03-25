@@ -26,6 +26,7 @@ interface MediaLibraryModalProps {
   multiple?: boolean;
   returnType?: 'url' | 'id';
   preSelected?: (string | number)[];
+  allowedTypes?: string[] | string;
 }
 
 export default function MediaLibraryModal({
@@ -34,7 +35,8 @@ export default function MediaLibraryModal({
   onSelect,
   multiple = false,
   returnType = 'url',
-  preSelected = []
+  preSelected = [],
+  allowedTypes
 }: MediaLibraryModalProps) {
   const { auth } = usePage().props as any;
   const permissions = auth?.permissions || [];
@@ -84,19 +86,34 @@ export default function MediaLibraryModal({
     }
   }, [isOpen, fetchMedia, preSelected]);
 
-  // Filter media based on search term
+  // Filter media based on search term and allowed types
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredMedia(media);
-    } else {
-      const filtered = media.filter(item =>
+    let filtered = media;
+
+    // Filter by allowed types if provided
+    if (allowedTypes) {
+      const types = Array.isArray(allowedTypes) ? allowedTypes : [allowedTypes];
+      filtered = filtered.filter(item => {
+        return types.some(type => {
+          if (type.endsWith('/*')) {
+            const prefix = type.replace('/*', '');
+            return item.mime_type.startsWith(prefix);
+          }
+          return item.mime_type === type;
+        });
+      });
+    }
+
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.file_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredMedia(filtered);
     }
+
+    setFilteredMedia(filtered);
     setCurrentPage(1);
-  }, [searchTerm, media]);
+  }, [searchTerm, media, allowedTypes]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredMedia.length / itemsPerPage);
@@ -106,7 +123,25 @@ export default function MediaLibraryModal({
   const handleFileUpload = async (files: FileList) => {
     setUploading(true);
 
-    const validFiles = Array.from(files);
+    let validFiles = Array.from(files);
+
+    if (allowedTypes) {
+      const types = Array.isArray(allowedTypes) ? allowedTypes : [allowedTypes];
+      const initialCount = validFiles.length;
+      validFiles = validFiles.filter(file => {
+        return types.some(type => {
+          if (type.endsWith('/*')) {
+            const prefix = type.replace('/*', '');
+            return file.type.startsWith(prefix);
+          }
+          return file.type === type;
+        });
+      });
+
+      if (validFiles.length < initialCount) {
+        toast.error("Only image files are allowed", { duration: 5000 });
+      }
+    }
 
     if (validFiles.length === 0) {
       setUploading(false);
@@ -210,8 +245,8 @@ export default function MediaLibraryModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden">
-        <DialogHeader className="pb-4">
+      <DialogContent className="max-w-5xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <ImageIcon className="h-5 w-5" />
             Media Library
@@ -223,7 +258,8 @@ export default function MediaLibraryModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 flex flex-col overflow-hidden px-6 pb-2">
+          <div className="space-y-4 flex flex-col flex-1 overflow-hidden">
           {/* Header with Search and Upload */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -241,10 +277,10 @@ export default function MediaLibraryModal({
                 <Input
                   type="file"
                   multiple
-
                   onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
                   className="hidden"
                   id="file-upload"
+                  accept={Array.isArray(allowedTypes) ? allowedTypes.join(',') : allowedTypes}
                 />
                 <Button
                   type="button"
@@ -272,8 +308,8 @@ export default function MediaLibraryModal({
             )}
           </div>
 
-          {/* Media Grid */}
-          <div className="border rounded-lg bg-muted/10 flex flex-col">
+          {/* Media Grid - Scrollable */}
+          <div className="border rounded-lg bg-muted/10 flex flex-col flex-1 overflow-y-auto min-h-0">
             {loading ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
@@ -427,23 +463,25 @@ export default function MediaLibraryModal({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <div className="flex gap-2">
-              {multiple && selectedItems.length > 0 && (
-                <Button variant="outline" onClick={() => setSelectedItems([])} size="sm">
-                  Clear
-                </Button>
-              )}
-              {multiple && selectedItems.length > 0 && (
-                <Button onClick={handleConfirmSelection}>
-                  Select {selectedItems.length} item{selectedItems.length > 1 ? 's' : ''}
-                </Button>
-              )}
-            </div>
+          </div>
+        </div>
+
+        {/* Actions - Fixed Sticky Footer */}
+        <div className="flex justify-between items-center p-6 border-t bg-muted/10 shrink-0">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <div className="flex gap-2">
+            {multiple && selectedItems.length > 0 && (
+              <Button variant="outline" onClick={() => setSelectedItems([])} size="sm">
+                Clear
+              </Button>
+            )}
+            {multiple && selectedItems.length > 0 && (
+              <Button onClick={handleConfirmSelection}>
+                Select {selectedItems.length} item{selectedItems.length > 1 ? 's' : ''}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

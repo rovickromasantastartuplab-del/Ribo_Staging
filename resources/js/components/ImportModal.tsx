@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,8 @@ export function ImportModal({
   importNotes,
   databaseFields
 }: ImportModalProps) {
+  const { props } = usePage();
+  const csrf_token = (props as any).csrf_token;
   const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -57,7 +59,7 @@ export function ImportModal({
         method: 'POST',
         body: formData,
         headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          'X-CSRF-TOKEN': csrf_token || ''
         }
       });
 

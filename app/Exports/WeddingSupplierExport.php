@@ -9,12 +9,36 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class WeddingSupplierExport implements FromCollection, WithHeadings, WithMapping
 {
+    protected $request;
+
+    public function __construct($request = null)
+    {
+        $this->request = $request;
+    }
+
     /**
      * @return \Illuminate\Support\Collection
      */
     public function collection()
     {
-        return WeddingSupplier::with(['category', 'contacts'])->get();
+        $query = WeddingSupplier::with(['category', 'contacts']);
+
+        if ($this->request) {
+            if ($this->request->filled('search')) {
+                $search = $this->request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+
+            if ($this->request->filled('category_id') && $this->request->category_id !== 'all') {
+                $query->where('category_id', $this->request->category_id);
+            }
+        }
+
+        return $query->get();
     }
 
     /**

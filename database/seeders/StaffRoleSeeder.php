@@ -53,7 +53,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'sales-manager',
                     'label' => 'Sales Manager',
                     'description' => 'Sales Manager has access to manage sales operations',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
                         'manage-conversations',
 
@@ -145,7 +145,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'product-manager',
                     'label' => 'Product Manager',
                     'description' => 'Product Manager has access to manage products and inventory',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
 
                         'manage-products',
@@ -211,7 +211,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'accountant',
                     'label' => 'Accountant',
                     'description' => 'Accountant has access to financial operations',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
 
                         'manage-taxes',
@@ -269,7 +269,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'inventory-manager',
                     'label' => 'Inventory Manager',
                     'description' => 'Inventory Manager has access to manage inventory and orders',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
 
                         'manage-products',
@@ -330,7 +330,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'sales-rep',
                     'label' => 'Sales Representative',
                     'description' => 'Sales Representative has limited access to sales operations',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
                         'manage-conversations',
 
@@ -395,7 +395,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'manager',
                     'label' => 'Manager',
                     'description' => 'Manager has comprehensive access to all modules',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
                         'manage-conversations',
 
@@ -592,7 +592,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'project-manager',
                     'label' => 'Project Manager',
                     'description' => 'Project Manager has access to manage projects and tasks',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
 
                         'manage-projects',
@@ -667,7 +667,7 @@ class StaffRoleSeeder extends Seeder
                     'name' => 'support-agent',
                     'label' => 'Support Agent',
                     'description' => 'Support Agent has access to view and support customers',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
 
                         'manage-products',
@@ -739,13 +739,14 @@ class StaffRoleSeeder extends Seeder
                     ]
                 ]
             ];
-        } else {
+        }
+        else {
             $roleTemplates = [
                 [
                     'name' => 'sales-manager',
                     'label' => 'Sales Manager',
                     'description' => 'Sales Manager has access to manage sales operations',
-                    'permissions' =>  [
+                    'permissions' => [
                         'manage-dashboard',
 
                         'manage-media',
@@ -859,7 +860,8 @@ class StaffRoleSeeder extends Seeder
                 // Create 2-3 staff users for each role (total 10-15 per company)
                 if (IsDemo()) {
                     $staffCount = rand(2, 3);
-                } else {
+                }
+                else {
                     $staffCount = 1;
                 }
 
@@ -877,18 +879,19 @@ class StaffRoleSeeder extends Seeder
                     // Create specific user for manager role (first iteration only) - only for company@example.com
                     if ($roleTemplate['name'] === 'manager' && $i === 0 && $company->email === 'company@example.com') {
                         $staff = User::firstOrCreate(
-                            ['email' => 'sarahjohnson@example.com'],
-                            [
-                                'name' => 'Sarah Johnson',
-                                'email_verified_at' => now(),
-                                'password' => Hash::make('password'),
-                                'type' => 'staff',
-                                'lang' => 'en',
-                                'created_by' => $company->id,
-                                'created_at' => now(),
-                            ]
+                        ['email' => 'sarahjohnson@example.com'],
+                        [
+                            'name' => 'Sarah Johnson',
+                            'email_verified_at' => now(),
+                            'password' => Hash::make('password'),
+                            'type' => 'staff',
+                            'lang' => 'en',
+                            'created_by' => $company->id,
+                            'created_at' => now(),
+                        ]
                         );
-                    } else {
+                    }
+                    else {
                         $staff = User::create([
                             'name' => $name,
                             'email' => $email,
