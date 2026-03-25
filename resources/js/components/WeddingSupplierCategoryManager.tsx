@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { WeddingSupplierCategory } from '@/types/wedding-supplier';
 import { Pencil, Trash2, Plus, Check, X } from 'lucide-react';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
+import { toast } from '@/components/custom-toast';
 
 interface WeddingSupplierCategoryManagerProps {
     isOpen: boolean;
@@ -37,11 +38,17 @@ export function WeddingSupplierCategoryManager({ isOpen, onClose, categories }: 
         setProcessing(true);
         router.post(route('wedding-supplier-categories.store'), { name }, {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page: any) => {
                 setNewCategoryName('');
                 setProcessing(false);
+                if (page.props.flash?.success) {
+                    toast.success(t(page.props.flash.success));
+                }
             },
-            onError: () => setProcessing(false),
+            onError: (errors) => {
+                setProcessing(false);
+                toast.error(t('Failed to add category.'));
+            },
         });
     };
 
@@ -64,12 +71,18 @@ export function WeddingSupplierCategoryManager({ isOpen, onClose, categories }: 
         setProcessing(true);
         router.put(route('wedding-supplier-categories.update', cat.id), { name }, {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page: any) => {
                 setEditingId(null);
                 setEditingName('');
                 setProcessing(false);
+                if (page.props.flash?.success) {
+                    toast.success(t(page.props.flash.success));
+                }
             },
-            onError: () => setProcessing(false),
+            onError: (errors) => {
+                setProcessing(false);
+                toast.error(t('Failed to update category.'));
+            },
         });
     };
 
@@ -83,14 +96,20 @@ export function WeddingSupplierCategoryManager({ isOpen, onClose, categories }: 
         setProcessing(true);
         router.delete(route('wedding-supplier-categories.destroy', categoryToDelete.id), {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page: any) => {
                 setProcessing(false);
                 setIsDeleteModalOpen(false);
                 setCategoryToDelete(null);
+                if (page.props.flash?.success) {
+                    toast.success(t(page.props.flash.success));
+                } else if (page.props.flash?.error) {
+                    toast.error(t(page.props.flash.error));
+                }
             },
-            onError: () => {
+            onError: (errors) => {
                 setProcessing(false);
                 setIsDeleteModalOpen(false);
+                toast.error(t('Failed to delete category.'));
             },
         });
     };
