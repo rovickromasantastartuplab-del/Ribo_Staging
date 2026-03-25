@@ -1,5 +1,0 @@
-c0a9a8d0 HEAD@{0}: pull origin develop: Merge made by the 'ort' strategy.
-e470ba3d HEAD@{1}: commit: feat: Add custom chat widget toggle and strict email validation
-c7b9049f HEAD@{2}: checkout: moving from main to develop
-727c835b HEAD@{3}: checkout: moving from develop to main
-c7b9049f HEAD@{4}: pull origin: Fast-forward
