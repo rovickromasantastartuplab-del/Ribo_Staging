@@ -62,7 +62,7 @@ class DocumentController extends Controller
         $query->orderBy($sortField, $sortDirection);
 
         // Apply authorization filter - show assigned_to user wise data
-        if (auth()->user()->type === 'superadmin' || auth()->user()->type === 'super admin') {
+        if (auth()->user()->isSuperAdmin()) {
             // Super admin sees all documents
         } elseif (auth()->user()->type === 'company') {
             $query->where('created_by', createdBy());
@@ -247,7 +247,7 @@ class DocumentController extends Controller
             ],
             'status' => 'nullable|in:active,inactive',
             'publish_date' => 'nullable|date',
-            'expiration_date' => 'nullable|date',
+            'expiration_date' => 'nullable|date|after_or_equal:publish_date',
             'attachment' => 'nullable',
             'description' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id',
@@ -340,7 +340,7 @@ class DocumentController extends Controller
             ],
             'status' => 'nullable|in:active,inactive',
             'publish_date' => 'nullable|date',
-            'expiration_date' => 'nullable|date',
+            'expiration_date' => 'nullable|date|after_or_equal:publish_date',
             'attachment' => 'nullable',
             'description' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id',

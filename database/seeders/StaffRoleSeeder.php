@@ -55,6 +55,7 @@ class StaffRoleSeeder extends Seeder
                     'description' => 'Sales Manager has access to manage sales operations',
                     'permissions' =>  [
                         'manage-dashboard',
+                        'manage-conversations',
 
                         'manage-media',
                         'manage-own-media',
@@ -331,6 +332,7 @@ class StaffRoleSeeder extends Seeder
                     'description' => 'Sales Representative has limited access to sales operations',
                     'permissions' =>  [
                         'manage-dashboard',
+                        'manage-conversations',
 
                         'manage-leads',
                         'view-leads',
@@ -395,6 +397,7 @@ class StaffRoleSeeder extends Seeder
                     'description' => 'Manager has comprehensive access to all modules',
                     'permissions' =>  [
                         'manage-dashboard',
+                        'manage-conversations',
 
                         'manage-users',
                         'view-users',

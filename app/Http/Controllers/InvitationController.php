@@ -33,7 +33,7 @@ class InvitationController extends Controller
                 if (!$creator)
                     return '';
                 // If the creator is a staff member, walk up to the owner
-                if ($creator->type !== 'company' && $creator->type !== 'admin') {
+                if ($creator->type !== 'company') {
                     $owner = User::find($creator->created_by);
                     return $owner?->company_name ?? $creator->company_name ?? $creator->name ?? '';
                 }

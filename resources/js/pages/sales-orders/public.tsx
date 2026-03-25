@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Printer, Copy, Check, Calendar, DollarSign, Package, User, Building, Truck } from 'lucide-react';
 import { toast } from '@/components/custom-toast';
 import { hasPermission } from '@/utils/authorization';
+import { useFavicon } from '@/hooks/use-favicon';
 
 import Template1 from './templates/Template1';
 import Template2 from './templates/Template2';
@@ -35,6 +36,7 @@ export default function PublicSalesOrder({ salesOrder, templateId = 'template1',
     const { t } = useTranslation();
     const { props } = usePage<any>();
     const [copied, setCopied] = useState(false);
+    useFavicon();
 
     const auth = props.auth || {};
     const permissions = auth?.permissions || [];

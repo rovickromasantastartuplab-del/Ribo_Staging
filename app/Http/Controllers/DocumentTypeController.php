@@ -48,7 +48,7 @@ class DocumentTypeController extends Controller
      */
     public function create()
     {
-        //
+    //
     }
 
     /**
@@ -93,7 +93,7 @@ class DocumentTypeController extends Controller
      */
     public function edit(DocumentType $documentType)
     {
-        //
+    //
     }
 
     /**
@@ -128,6 +128,11 @@ class DocumentTypeController extends Controller
         // Check if user has access to this document type
         if ($documentType->created_by !== createdBy()) {
             abort(403, 'Unauthorized access.');
+        }
+
+        if ($documentType->documents()->exists()) {
+            return redirect()->route('document-types.index')
+                ->with('error', __('Cannot delete document type that is currently assigned to one or more documents.'));
         }
 
         $documentType->delete();
@@ -165,6 +170,10 @@ class DocumentTypeController extends Controller
         ]);
 
         try {
+            if (\App\Models\Document::whereIn('type_id', $validated['ids'])->exists()) {
+                return redirect()->back()->with('error', __('Cannot bulk delete types that are currently assigned to one or more documents.'));
+            }
+
             $query = DocumentType::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
 
@@ -174,7 +183,8 @@ class DocumentTypeController extends Controller
 
             $query->delete();
             return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }
     }

@@ -10,7 +10,6 @@ import { SidebarProvider } from './contexts/SidebarContext';
 import { BrandProvider } from './contexts/BrandContext';
 import { ModalStackProvider } from './contexts/ModalStackContext';
 import { initializeTheme } from './hooks/use-appearance';
-import { CustomToast } from './components/custom-toast';
 import { initializeGlobalSettings } from './utils/globalSettings';
 import { HelpArticlePanelRoot, openHelpArticlePanel } from './components/HelpArticlePanel';
 import { initPerformanceMonitoring, lazyLoadImages } from './utils/performance';
@@ -105,7 +104,6 @@ createInertiaApp({
                                 <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
                                     <App {...appProps} />
                                 </Suspense>
-                                <CustomToast />
                                 <HelpArticlePanelRoot />
                             </BrandProvider>
                         </SidebarProvider>

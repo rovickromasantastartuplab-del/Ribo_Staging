@@ -1,6 +1,6 @@
 import { Toaster } from '@/components/ui/sonner';
 import { toast as sonnerToast } from 'sonner';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 const isDemoMode = (): boolean => {
@@ -14,7 +14,7 @@ const originalPut = router.put;
 const originalDelete = router.delete;
 const originalPatch = router.patch;
 
-router.put = function(url: string, data?: any, options?: any) {
+router.put = function (url: string, data?: any, options?: any) {
   if (isDemoMode()) {
     sonnerToast.error(demoModeMessage);
     return;
@@ -22,7 +22,7 @@ router.put = function(url: string, data?: any, options?: any) {
   return originalPut.call(this, url, data, options);
 };
 
-router.delete = function(url: string, options?: any) {
+router.delete = function (url: string, options?: any) {
   if (isDemoMode()) {
     sonnerToast.error(demoModeMessage);
     return;
@@ -30,7 +30,7 @@ router.delete = function(url: string, options?: any) {
   return originalDelete.call(this, url, options);
 };
 
-router.patch = function(url: string, data?: any, options?: any) {
+router.patch = function (url: string, data?: any, options?: any) {
   if (isDemoMode()) {
     sonnerToast.error(demoModeMessage);
     return;
@@ -41,10 +41,10 @@ router.patch = function(url: string, data?: any, options?: any) {
 export const toast = {
   ...sonnerToast,
   loading: (message: string, options?: any) => {
-    if(isDemoMode()){
-        return;
+    if (isDemoMode()) {
+      return;
     }
-    if (isDemoMode() && (message.includes('Delet') || message.includes('Updat') || message.includes('Reset') || message.includes('Modif') || message.includes('Acti') || message.includes('Deacti'))) {
+    if (isDemoMode() && message && (message.includes('Delet') || message.includes('Updat') || message.includes('Reset') || message.includes('Modif') || message.includes('Acti') || message.includes('Deacti'))) {
       return;
     }
     return sonnerToast.loading(message, options);
@@ -52,5 +52,5 @@ export const toast = {
 };
 
 export const CustomToast = () => {
-    return <Toaster position="top-right" duration={4000} richColors closeButton />;
+  return <Toaster position="top-right" duration={4000} richColors closeButton />;
 };

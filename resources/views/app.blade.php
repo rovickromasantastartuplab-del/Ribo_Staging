@@ -39,6 +39,16 @@
         html.dark {
             background-color: oklch(0.145 0 0);
         }
+
+        /* BeDesk Widget Toggle Transitions */
+        body.hide-bedesk #be-chat-iframe {
+            transform: translateX(calc(100% + 20px)) !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+        #be-chat-iframe {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-in-out !important;
+        }
     </style>
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>

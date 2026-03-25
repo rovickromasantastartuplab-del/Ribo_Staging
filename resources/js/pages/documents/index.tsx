@@ -827,7 +827,7 @@ export default function Documents() {
               }))
             },
             { name: 'publish_date', label: t('Publish Date'), type: 'date' },
-            { name: 'expiration_date', label: t('Expiration Date'), type: 'date' },
+            { name: 'expiration_date', label: t('Expiration Date'), type: 'date', min: (data: any) => data.publish_date || '' },
             {
               name: 'attachment',
               label: t('Attachment'),

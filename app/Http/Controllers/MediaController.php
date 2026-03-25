@@ -19,7 +19,7 @@ class MediaController extends Controller
             $mediaQuery = $item->getMedia('images');
 
             // SuperAdmin can see all media
-            if ($user->type === 'superadmin') {
+            if ($user->isSuperAdmin()) {
                 // No user_id filter for superadmin
             }
             // Users with manage-any-media can see all media
@@ -347,7 +347,7 @@ class MediaController extends Controller
     private function checkStorageLimit($files)
     {
         $user = auth()->user();
-        if ($user->type === 'superadmin')
+        if ($user->isSuperAdmin())
             return null;
 
         $limit = $this->getUserStorageLimit($user);

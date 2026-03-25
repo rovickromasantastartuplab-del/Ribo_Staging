@@ -257,6 +257,16 @@ export function AppSidebar() {
             });
         }
 
+        // Conversations (Moved below Contacts)
+        if (hasPermission(permissions, 'view-conversations')) {
+            items.push({
+                title: t('Conversations'),
+                href: route('conversations.index'),
+                icon: MessageSquare,
+                badge: { label: t('New') }
+            });
+        }
+
         // Wedding Suppliers (Feature Flagged)
         if (companyFeatures && companyFeatures.includes('wedding_suppliers_module')) {
             items.push({

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\SocialAccount;
+use App\Models\GmailAccount;
+use App\Jobs\SyncGmailThreadsJob;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -17,10 +19,36 @@ class SocialAuthController extends Controller
      */
     public function redirect($provider)
     {
+        $user = auth()->user();
+
+        // RESTRICT: Only Company Owners can connect social/gmail accounts
+        if (!$user->hasRole('company')) {
+            return redirect()->back()->with('error', 'Only Company Owners are authorized to manage integrations.');
+        }
+
         // For Facebook, we specifically ask for Pages access
         if ($provider === 'facebook') {
             return Socialite::driver('facebook')
                 ->scopes(['pages_show_list', 'pages_messaging', 'pages_read_engagement', 'pages_manage_metadata', 'leads_retrieve'])
+                ->redirect();
+        }
+
+        // For Google/Gmail, build config dynamically from settings table
+        if ($provider === 'google') {
+            $this->configureGoogleSocialite();
+
+            return Socialite::driver('google')
+                ->scopes([
+                    'https://www.googleapis.com/auth/gmail.readonly',
+                    'https://www.googleapis.com/auth/gmail.send',
+                    'openid',
+                    'email',
+                    'profile',
+                ])
+                ->with([
+                    'access_type' => 'offline',
+                    'prompt' => 'consent',
+                ])
                 ->redirect();
         }
 
@@ -34,15 +62,26 @@ class SocialAuthController extends Controller
     {
         if ($request->has('error')) {
             Log::error("OAuth Error from {$provider}: " . $request->get('error_description'));
-            return redirect('/settings#integrations-settings')
+            return redirect()->route('settings', ['#integrations-settings'])
                 ->with('error', 'Connection request was cancelled or failed.');
+        }
+
+        // Reconfigure Socialite for Google before processing the callback
+        if ($provider === 'google') {
+            $this->configureGoogleSocialite();
         }
 
         try {
             // Get the user from the provider
             $socialUser = Socialite::driver($provider)->user();
 
-            $companyId = auth()->user()->id; // Assuming logged in as company
+            if (!auth()->check()) {
+                Log::error("OAuth Callback: No authenticated user session found for {$provider}.");
+                return redirect()->route('login')
+                    ->with('error', 'Your session expired. Please log in again to connect your account.');
+            }
+
+            $companyId = auth()->user()->creatorId();
 
             if ($provider === 'facebook') {
                 // To get all pages this user owns, we have to hit the Graph API
@@ -81,13 +120,95 @@ class SocialAuthController extends Controller
                 }
             }
 
-            return redirect('/settings#integrations-settings')
+            // Handle Google/Gmail OAuth callback
+            if ($provider === 'google') {
+                $user = auth()->user();
+                $companyId = $user->creatorId();
+
+                // RESTRICT: Only Company Owners can connect Gmail
+                if ($user->type !== 'company') {
+                    Log::warning("OAuth Callback: Non-company user (ID: {$user->id}, Type: {$user->type}) attempted to connect Gmail.");
+                    return redirect()->route('settings', ['#integrations-settings'])
+                        ->with('error', 'Only Company Owners are authorized to connect the company Gmail account.');
+                }
+
+                $email = $socialUser->getEmail();
+
+                // RESTRICT: Ensure the Gmail address is unique system-wide (One account per company)
+                $existingAccount = GmailAccount::where('gmail_address', $email)->first();
+                if ($existingAccount && $existingAccount->user_id !== $companyId) {
+                    Log::warning("OAuth Callback: Gmail address {$email} is already linked to another company (Owner ID: {$existingAccount->user_id}).");
+                    return redirect()->route('settings', ['#integrations-settings'])
+                        ->with('error', "The Gmail account ({$email}) is already connected to another company in the system.");
+                }
+
+                $gmailAccount = GmailAccount::updateOrCreate(
+                    [
+                        'user_id' => $companyId,
+                        'gmail_address' => $email,
+                    ],
+                    [
+                        'google_id' => $socialUser->getId(),
+                        'access_token' => $socialUser->token,
+                        'refresh_token' => $socialUser->refreshToken ?? null,
+                        'token_expires_at' => $socialUser->expiresIn
+                            ? now()->addSeconds($socialUser->expiresIn)
+                            : null,
+                        'scopes' => 'https://www.googleapis.com/auth/gmail.readonly',
+                        'sync_status' => 'idle',
+                        'sync_error' => null,
+                    ]
+                );
+
+                // Initiate real-time Pub/Sub Webhooks
+                try {
+                    $gmailService = new \App\Services\GmailService($gmailAccount);
+                    $gmailService->watchInbox();
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to initiate watch inbox on connect', ['error' => $e->getMessage()]);
+                }
+
+                // Dispatch initial sync in the background
+                SyncGmailThreadsJob::dispatchSync($gmailAccount->id);
+
+                return redirect()->route('settings', ['#integrations-settings'])
+                    ->with('success', "Gmail connected successfully: {$socialUser->getEmail()}");
+            }
+
+            return redirect()->route('settings', ['#integrations-settings'])
                 ->with('success', ucfirst($provider) . ' connected successfully!');
 
         } catch (\Exception $e) {
-            Log::error("Exception in {$provider} callback: " . $e->getMessage());
-            return redirect('/settings#integrations-settings')
+            Log::error("Exception in {$provider} callback: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return redirect()->route('settings', ['#integrations-settings'])
                 ->with('error', "Failed to connect to {$provider}: " . $e->getMessage());
         }
+    }
+    /**
+     * Dynamically configure the Socialite Google driver using credentials
+     * stored in the settings table by the superadmin.
+     * Falls back to config/services.php if DB settings are empty.
+     */
+    private function configureGoogleSocialite(): void
+    {
+        // The superadmin is always user_id = 1 or first superadmin
+        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+        $superadminId = $superadmin?->id;
+
+        $clientId = ($superadminId ? getSetting('google_client_id', null, $superadminId) : null)
+            ?: config('services.google.client_id');
+
+        $clientSecret = ($superadminId ? getSetting('google_client_secret', null, $superadminId) : null)
+            ?: config('services.google.client_secret');
+
+        $redirectUri = ($superadminId ? getSetting('google_redirect_uri', null, $superadminId) : null)
+            ?: config('services.google.redirect');
+
+        // Dynamically update the Socialite Google config at runtime
+        config([
+            'services.google.client_id' => $clientId,
+            'services.google.client_secret' => $clientSecret,
+            'services.google.redirect' => $redirectUri,
+        ]);
     }
 }

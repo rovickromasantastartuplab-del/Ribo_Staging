@@ -105,13 +105,11 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
      */
     public function creatorId()
     {
-        if ($this->type == 'superadmin' || $this->type == 'super admin' || $this->type == 'admin') {
+        if ($this->type == 'superadmin' || $this->type == 'super admin' || $this->type == 'company') {
             return $this->id;
-        } elseif ($this->type == 'company') {
-            return $this->id;
-        } else {
-            return $this->created_by;
         }
+
+        return $this->created_by;
     }
 
     /**
@@ -168,13 +166,7 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
         return $this->type === 'superadmin' || $this->type === 'super admin';
     }
 
-    /**
-     * Check if user is admin
-     */
-    public function isAdmin()
-    {
-        return $this->type === 'admin';
-    }
+
 
     // Businesses relationship removed
 
@@ -376,17 +368,6 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
     {
         parent::boot();
 
-        static::creating(function ($user) {
-            if ($user->type === 'company' && !$user->referral_code) {
-                // Generate referral code after the user is saved to get the ID
-                static::created(function ($createdUser) {
-                    if (!$createdUser->referral_code) {
-                        $createdUser->referral_code = 'REF' . str_pad($createdUser->id, 6, '0', STR_PAD_LEFT);
-                        $createdUser->save();
-                    }
-                });
-            }
-        });
 
         static::created(function ($user) {
             // Assign default plan to company users if no default plan exists

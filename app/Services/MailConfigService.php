@@ -50,4 +50,24 @@ class MailConfigService
             'mail.from.name' => $settings['fromName'],
         ]);
     }
+
+    public static function setBroadcastingConfig()
+    {
+        $adminUser = User::where('type', 'superadmin')->first();
+        if (!$adminUser) {
+            return;
+        }
+
+        $getSettings = settings($adminUser->id);
+
+        if (($getSettings['pusher_app_id'] ?? null) && ($getSettings['pusher_app_key'] ?? null)) {
+            Config::set([
+                'broadcasting.connections.pusher.app_id' => $getSettings['pusher_app_id'],
+                'broadcasting.connections.pusher.key' => $getSettings['pusher_app_key'],
+                'broadcasting.connections.pusher.secret' => $getSettings['pusher_app_secret'] ?? '',
+                'broadcasting.connections.pusher.options.cluster' => $getSettings['pusher_app_cluster'] ?? 'mt1',
+                'broadcasting.default' => 'pusher',
+            ]);
+        }
+    }
 }

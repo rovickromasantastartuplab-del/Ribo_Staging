@@ -542,6 +542,14 @@ class QuoteController extends Controller
             return redirect()->back()->with('error', __('Quote not found.'));
         }
 
+        if ($quote->salesOrders()->count() > 0) {
+            return redirect()->back()->with('error', __('Cannot delete quote that is currently assigned to one or more sales orders.'));
+        }
+
+        if ($quote->invoices()->count() > 0) {
+            return redirect()->back()->with('error', __('Cannot delete quote that is currently assigned to one or more invoices.'));
+        }
+
         $quote->products()->detach();
         $quote->delete();
 
@@ -819,15 +827,35 @@ class QuoteController extends Controller
         ]);
 
         try {
-            $query = \App\Models\Quote::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $quotes = \App\Models\Quote::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
 
-            if ($count === 0) {
+            if ($quotes->isEmpty()) {
                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
 
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUseSales = $quotes->filter(fn($q) => $q->salesOrders()->count() > 0);
+            $inUseInvoices = $quotes->filter(fn($q) => $q->invoices()->count() > 0);
+            $inUse = $quotes->filter(fn($q) => $q->salesOrders()->count() > 0 || $q->invoices()->count() > 0);
+            $deletable = $quotes->filter(fn($q) => $q->salesOrders()->count() === 0 && $q->invoices()->count() === 0);
+
+            $deletable->each(function($quote) {
+                $quote->products()->detach();
+                $quote->delete();
+            });
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                if ($inUseInvoices->isNotEmpty()) {
+                    return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to sales orders or invoices.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+                }
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to sales orders.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                if ($inUseInvoices->isNotEmpty()) {
+                    return redirect()->back()->with('error', __('Cannot delete the selected quotes because they are currently assigned to sales orders or invoices.'));
+                }
+                return redirect()->back()->with('error', __('Cannot delete the selected quotes because they are currently assigned to sales orders.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         }
         catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));

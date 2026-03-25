@@ -265,6 +265,10 @@ class ProductController extends Controller
 
         if ($product) {
             try {
+                if ($product->opportunities()->count() > 0) {
+                    return redirect()->back()->with('error', __('Cannot delete product that is currently assigned to one or more opportunities.'));
+                }
+
                 $product->delete();
                 return redirect()->back()->with('success', __('Product deleted successfully.'));
             } catch (\Exception $e) {
@@ -345,54 +349,98 @@ class ProductController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|mimes:csv,txt,xls,xlsx|max:10240',
+            'file' => 'required|mimes:csv,txt,xls,xlsx|max:65536',
         ]);
 
         try {
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
+
             $file = $request->file('file');
+            $extension = strtolower($file->getClientOriginalExtension());
 
-            // Read headers and preview data
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
-            $worksheet = $spreadsheet->getActiveSheet();
-            $highestColumn = $worksheet->getHighestColumn();
-            $highestRow = $worksheet->getHighestRow();
-
-            $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+            // Store the file temporarily for later import
+            $importDir = storage_path('app/imports');
+            if (!file_exists($importDir)) {
+                mkdir($importDir, 0755, true);
+            }
+            $tempFileName = 'import_' . auth()->id() . '_' . time() . '_' . uniqid() . '.' . $extension;
+            $file->move($importDir, $tempFileName);
+            $storedFilePath = $importDir . '/' . $tempFileName;
 
             $headers = [];
-            $headerMap = [];
+            $previewData = [];
 
-            for ($col = 1; $col <= $highestColumnIndex; $col++) {
-                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
-                $value = $worksheet->getCell($colLetter . '1')->getValue();
-
-                if ($value !== null && $value !== '') {
-                    $strValue = trim((string) $value);
-                    $headers[] = $strValue;
-                    $headerMap[$colLetter] = $strValue;
+            if (in_array($extension, ['csv', 'txt'])) {
+                $handle = fopen($storedFilePath, 'r');
+                if ($handle === false) {
+                    throw new \Exception('Could not open file');
                 }
+                $headerRow = fgetcsv($handle);
+                if ($headerRow === false) {
+                    fclose($handle);
+                    throw new \Exception('File is empty or invalid');
+                }
+                $headers = array_map('trim', $headerRow);
+                if (!empty($headers[0])) {
+                    $headers[0] = preg_replace('/^\x{FEFF}/u', '', $headers[0]);
+                }
+                $headers = array_filter($headers, fn($h) => $h !== '');
+
+                $previewCount = 0;
+                while (($row = fgetcsv($handle)) !== false && $previewCount < 3) {
+                    $rowData = [];
+                    foreach ($headers as $idx => $headerName) {
+                        $rowData[$headerName] = isset($row[$idx]) ? trim($row[$idx]) : '';
+                    }
+                    if (!empty(array_filter($rowData, fn($v) => $v !== ''))) {
+                        $previewData[] = $rowData;
+                        $previewCount++;
+                    }
+                }
+                fclose($handle);
+            } else {
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($storedFilePath);
+                $worksheet = $spreadsheet->getActiveSheet();
+                $highestColumn = $worksheet->getHighestColumn();
+                $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+
+                $headerMap = [];
+                for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                    $value = $worksheet->getCell($colLetter . '1')->getValue();
+                    if ($value !== null && $value !== '') {
+                        $strValue = trim((string) $value);
+                        $headers[] = $strValue;
+                        $headerMap[$colLetter] = $strValue;
+                    }
+                }
+
+                $highestRow = min($worksheet->getHighestRow(), 5);
+                for ($row = 2; $row <= $highestRow && count($previewData) < 3; $row++) {
+                    $rowData = [];
+                    foreach ($headerMap as $colLetter => $headerName) {
+                        $colValue = $worksheet->getCell($colLetter . $row)->getValue();
+                        $rowData[$headerName] = $colValue !== null ? trim((string) $colValue) : '';
+                    }
+                    if (!empty(array_filter($rowData, fn($v) => $v !== ''))) {
+                        $previewData[] = $rowData;
+                    }
+                }
+
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
             }
-
-            // Get full data
-            $fullData = [];
-            for ($row = 2; $row <= $highestRow; $row++) {
-                $rowData = [];
-                foreach ($headerMap as $colLetter => $headerName) {
-                    $colValue = $worksheet->getCell($colLetter . $row)->getValue();
-                    $rowData[$headerName] = $colValue !== null ? trim((string) $colValue) : '';
-                }
-                // Only add row if it has some data
-                if (!empty(array_filter($rowData, fn($value) => $value !== ''))) {
-                    $fullData[] = $rowData;
-                }
-            }
-
 
             return response()->json([
                 'excelColumns' => array_values($headers),
-                'previewData' => $fullData // Return full data so frontend can map and import all rows
+                'previewData'  => $previewData,
+                'tempFile'     => $tempFileName,
             ]);
         } catch (\Throwable $e) {
+            if (isset($storedFilePath) && file_exists($storedFilePath)) {
+                unlink($storedFilePath);
+            }
             return response()->json(['error' => __('Failed to parse file: :error', ['error' => $e->getMessage()])], 500);
         }
     }
@@ -404,53 +452,117 @@ class ProductController extends Controller
         }
 
         $rules = [
-            'data' => 'required|array',
+            'mapping'  => 'required|array',
+            'tempFile' => 'required|string',
         ];
 
         $validator = \Validator::make($request->all(), $rules);
-
         if ($validator->fails()) {
-            $messages = $validator->getMessageBag();
-            return redirect()->back()->with('error', $messages->first());
+            return redirect()->back()->with('error', $validator->getMessageBag()->first());
         }
 
         try {
-            $data = $request->data;
+            ini_set('max_execution_time', '600');
+            set_time_limit(600);
 
-            // Create temporary CSV file from data
-            $tempFile = storage_path('tmp/import_' . time() . '.csv');
+            $mapping      = $request->mapping;
+            $tempFileName = basename($request->tempFile);
+            $storedFilePath = storage_path('app/imports/' . $tempFileName);
 
-            // Ensure tmp directory exists
-            if (!file_exists(dirname($tempFile))) {
-                mkdir(dirname($tempFile), 0755, true);
+            if (!file_exists($storedFilePath)) {
+                return redirect()->back()->with('error', __('Import file not found. Please re-upload the file.'));
             }
 
-            $handle = fopen($tempFile, 'w');
+            $extension = strtolower(pathinfo($storedFilePath, PATHINFO_EXTENSION));
 
-            // Write headers
-            if (!empty($data)) {
-                fputcsv($handle, array_keys($data[0]));
+            // Build a mapped CSV that ProductImport can consume
+            $mappedFile = storage_path('app/imports/mapped_' . time() . '_' . uniqid() . '.csv');
+            $outHandle  = fopen($mappedFile, 'w');
 
-                // Write data rows
-                foreach ($data as $row) {
-                    fputcsv($handle, $row);
+            // Write DB field names as the header row
+            fputcsv($outHandle, array_keys($mapping));
+
+            if (in_array($extension, ['csv', 'txt'])) {
+                $inHandle  = fopen($storedFilePath, 'r');
+                $headerRow = fgetcsv($inHandle);
+                if (!empty($headerRow[0])) {
+                    $headerRow[0] = preg_replace('/^\x{FEFF}/u', '', $headerRow[0]);
                 }
+                $headerRow   = array_map('trim', $headerRow);
+                $colIndexMap = array_flip($headerRow);
+
+                while (($row = fgetcsv($inHandle)) !== false) {
+                    $mappedRow = [];
+                    foreach ($mapping as $dbField => $excelColumn) {
+                        $colIdx      = $colIndexMap[$excelColumn] ?? null;
+                        $mappedRow[] = ($colIdx !== null && isset($row[$colIdx])) ? trim($row[$colIdx]) : '';
+                    }
+                    if (!empty(array_filter($mappedRow, fn($v) => $v !== ''))) {
+                        fputcsv($outHandle, $mappedRow);
+                    }
+                }
+                fclose($inHandle);
+            } else {
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($storedFilePath);
+                $worksheet   = $spreadsheet->getActiveSheet();
+                $highestColumn = $worksheet->getHighestColumn();
+                $highestRow    = $worksheet->getHighestRow();
+                $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+
+                $headerMap = [];
+                for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                    $value     = $worksheet->getCell($colLetter . '1')->getValue();
+                    if ($value !== null && $value !== '') {
+                        $headerMap[trim((string) $value)] = $colLetter;
+                    }
+                }
+
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    $mappedRow = [];
+                    foreach ($mapping as $dbField => $excelColumn) {
+                        $colLetter = $headerMap[$excelColumn] ?? null;
+                        if ($colLetter) {
+                            $cellValue = $worksheet->getCell($colLetter . $row)->getValue();
+                            $mappedRow[] = $cellValue !== null ? trim((string) $cellValue) : '';
+                        } else {
+                            $mappedRow[] = '';
+                        }
+                    }
+                    if (!empty(array_filter($mappedRow, fn($v) => $v !== ''))) {
+                        fputcsv($outHandle, $mappedRow);
+                    }
+                }
+
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
             }
-            fclose($handle);
+
+            fclose($outHandle);
 
             $import = new ProductImport();
-            Excel::import($import, $tempFile);
+            \Maatwebsite\Excel\Facades\Excel::import($import, $mappedFile);
 
-            // Clean up temp file
-            unlink($tempFile);
+            if (file_exists($storedFilePath)) {
+                unlink($storedFilePath);
+            }
+            if (file_exists($mappedFile)) {
+                unlink($mappedFile);
+            }
 
             $message = __('Import completed: :added products added, :skipped products skipped', [
-                'added' => $import->getAddedCount(),
-                'skipped' => $import->getSkippedCount()
+                'added'   => $import->getAddedCount(),
+                'skipped' => $import->getSkippedCount(),
             ]);
 
             return redirect()->back()->with('success', $message);
         } catch (\Exception $e) {
+            if (isset($storedFilePath) && file_exists($storedFilePath)) {
+                unlink($storedFilePath);
+            }
+            if (isset($mappedFile) && file_exists($mappedFile)) {
+                unlink($mappedFile);
+            }
             return redirect()->back()->with('error', __('Failed to import: :error', ['error' => $e->getMessage()]));
         }
     }
@@ -467,15 +579,24 @@ class ProductController extends Controller
         ]);
 
         try {
-            $query = \App\Models\Product::whereIn('id', $validated['ids'])->where('created_by', createdBy());
-            $count = $query->count();
+            $products = \App\Models\Product::whereIn('id', $validated['ids'])->where('created_by', createdBy())->get();
             
-            if ($count === 0) {
+            if ($products->isEmpty()) {
                  return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
             
-            $query->delete();
-            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
+            $inUse = $products->filter(fn($p) => $p->opportunities()->count() > 0);
+            $deletable = $products->filter(fn($p) => $p->opportunities()->count() === 0);
+
+            $deletable->each->delete();
+
+            if ($inUse->isNotEmpty() && $deletable->isNotEmpty()) {
+                return redirect()->back()->with('warning', __(':deleted record(s) deleted. :skipped record(s) skipped because they are assigned to opportunities.', ['deleted' => $deletable->count(), 'skipped' => $inUse->count()]));
+            } elseif ($inUse->isNotEmpty() && $deletable->isEmpty()) {
+                return redirect()->back()->with('error', __('Cannot delete the selected products because they are currently assigned to opportunities.'));
+            }
+
+            return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $deletable->count()]));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }

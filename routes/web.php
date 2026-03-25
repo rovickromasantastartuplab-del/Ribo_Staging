@@ -98,6 +98,7 @@ use App\Http\Controllers\LeadCommentController;
 use App\Http\Controllers\OpportunityCommentController;
 use App\Http\Controllers\InvoiceStripePaymentController;
 use App\Http\Controllers\InvoicePayPalPaymentController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\InvoiceBankPaymentController;
 use App\Http\Controllers\InvoiceBenefitPaymentController;
 use App\Http\Controllers\InvoiceCommentController;
@@ -155,6 +156,7 @@ $webhookExcludedMiddleware = [
 ];
 Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhooks\FacebookWebhookController::class, 'handle'])->name('webhooks.facebook')->withoutMiddleware($webhookExcludedMiddleware);
 Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware($webhookExcludedMiddleware);
+Route::match(['GET', 'POST'], 'api/webhooks/gmail', [\App\Http\Controllers\GmailWebhookController::class, 'handle'])->name('webhooks.gmail')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 
 // Health check endpoint for external plugins to verify connection
@@ -606,6 +608,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('contacts/{contact}/toggle-status', [ContactController::class, 'toggleStatus'])->middleware('permission:toggle-status-contacts')->name('contacts.toggle-status');
         });
 
+        // Conversations Hub routes
+        Route::middleware('permission:view-conversations')->group(function () {
+            Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
+            Route::get('api/conversations/threads', [ConversationController::class, 'threads'])->name('api.conversations.threads');
+            Route::post('api/conversations/sync-inbox-more', [ConversationController::class, 'syncInboxHistory'])->name('api.conversations.sync_inbox_more');
+            Route::get('api/conversations/activities', [ConversationController::class, 'activities'])->name('api.conversations.activities');
+            Route::get('api/conversations/history/participants', [ConversationController::class, 'historyParticipants'])->name('api.conversations.history.participants');
+            Route::post('api/conversations/history/sync', [ConversationController::class, 'syncContactHistory'])->name('api.conversations.history.sync');
+            Route::get('api/conversations/threads/{thread}', [ConversationController::class, 'show'])->name('api.conversations.show');
+            Route::post('api/conversations/threads/{thread}/update', [ConversationController::class, 'update'])
+                ->middleware('permission:manage-conversations')
+                ->name('api.conversations.update');
+            Route::post('api/conversations/threads/{thread}/assign', [ConversationController::class, 'assign'])
+                ->middleware('permission:manage-conversations')
+                ->name('api.conversations.assign');
+            Route::post('api/conversations/compose', [ConversationController::class, 'compose'])
+                ->name('api.conversations.compose');
+            Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])
+                ->name('api.conversations.reply');
+            Route::post('api/conversations/threads/{thread}/link-to-lead', [ConversationController::class, 'linkToLead'])
+                ->middleware('permission:manage-conversations')
+                ->name('api.conversations.link_to_lead');
+        });
+
         Route::middleware('permission:manage-lead-statuses')->group(function () {
             Route::get('lead-statuses', [LeadStatusController::class, 'index'])->middleware('permission:manage-lead-statuses')->name('lead-statuses.index');
             Route::post('lead-statuses/reorder', [LeadStatusController::class, 'reorder'])->middleware('permission:edit-lead-statuses')->name('lead-statuses.reorder');
@@ -641,6 +667,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::post('leads/{lead}/update-field', [LeadController::class, 'updateField'])->middleware('permission:edit-leads')->name('leads.update-field');
             Route::put('leads/{lead}/update-status', [LeadController::class, 'updateStatus'])->middleware('permission:edit-leads')->name('leads.update-status');
+            Route::get('leads/{lead}/activities-api', [LeadController::class, 'apiActivities'])->middleware('permission:view-leads')->name('leads.activities.api');
             Route::delete('leads/{lead}/activities', [LeadController::class, 'deleteActivities'])->middleware('permission:delete-leads')->name('leads.delete-activities');
             Route::delete('leads/{lead}/activities/{activity}', [LeadController::class, 'deleteActivity'])->middleware('permission:delete-leads')->name('leads.delete-activity');
 

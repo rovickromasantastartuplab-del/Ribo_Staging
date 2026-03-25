@@ -14,8 +14,8 @@ class CheckInstallation
     public function handle(Request $request, Closure $next)
     {
         // Skip check for installer routes, API routes, and static assets
-        if ($request->is('install/*') ||
-        $request->is('update/*') ||
+        if ($request->is('install*') ||
+        $request->is('update*') ||
         $request->is('css/*') ||
         $request->is('js/*') ||
         $request->is('images/*') ||

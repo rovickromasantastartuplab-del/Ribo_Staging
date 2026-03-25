@@ -39,7 +39,7 @@ import { hasPlanFeature } from '@/utils/planFeatures';
 export default function Settings() {
     const { t } = useTranslation();
     const { position } = useLayout();
-    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}, socialAccounts = [], fieldMappings = [] } = usePage().props as any;
+    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}, socialAccounts = [], fieldMappings = [], googleSettings = null, gmailAccount = null } = usePage().props as any;
     const [activeSection, setActiveSection] = useState('system-settings');
 
     const isSuperAdmin =
@@ -185,9 +185,18 @@ export default function Settings() {
             // Removed twilio-notification-settings
             // Removed: if (item.href === '#payment-settings') return false;
         } else {
-            // Superadmin explicitly does not see company-level notification settings
+            // Superadmin explicitly does not see company-level notification settings and templates
             if (item.href === '#email-notification-settings') return false;
             if (item.href === '#twilio-notification-settings') return false;
+            if (item.href === '#quote-templates') return false;
+            if (item.href === '#sales-order-templates') return false;
+            if (item.href === '#invoice-templates') return false;
+            if (item.href === '#google-calendar-settings') return false;
+        }
+
+        // Allow superadmins to see most items by default unless explicitly blocked above
+        if (isSuperAdmin) {
+            return true;
         }
 
         // Check for both role and permission if both exist
@@ -521,7 +530,7 @@ export default function Settings() {
                     )}
 
                     {/* Google Calendar Settings Section */}
-                    {(auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
+                    {(isSuperAdmin || auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
                         <section id="google-calendar-settings" ref={googleCalendarSettingsRef} className="mb-8">
                             <GoogleCalendarSettings settings={systemSettings} />
                         </section>
@@ -531,9 +540,9 @@ export default function Settings() {
 
 
                     {/* Integrations Settings Section */}
-                    {(auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
+                    {(isSuperAdmin || auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
                         <section id="integrations-settings" ref={integrationsSettingsRef} className="mb-8">
-                            <IntegrationsSettings settings={systemSettings} socialAccounts={socialAccounts} fieldMappings={fieldMappings} />
+                            <IntegrationsSettings settings={systemSettings} socialAccounts={socialAccounts} fieldMappings={fieldMappings} googleSettings={googleSettings} gmailAccount={gmailAccount} />
                         </section>
                     )}
 

@@ -81,7 +81,7 @@ class CompanyController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email:filter|max:255|unique:users',
             'password' => 'nullable|string|min:8',
             'status' => 'required|in:active,inactive',
         ]);
@@ -159,7 +159,7 @@ class CompanyController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $company->id,
+            'email' => 'required|string|email:filter|max:255|unique:users,email,' . $company->id,
             // 'status' => 'required|in:active,inactive',
         ]);
 

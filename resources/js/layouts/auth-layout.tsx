@@ -8,6 +8,7 @@ import { useBrand } from '@/contexts/BrandContext';
 import { useAppearance, THEME_COLORS } from '@/hooks/use-appearance';
 import { useFavicon } from '@/hooks/use-favicon';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
+import { CustomToast } from '@/components/custom-toast';
 
 interface AuthLayoutProps {
     children: ReactNode;
@@ -52,8 +53,8 @@ export default function AuthLayout({
     const [mounted, setMounted] = useState(false);
     const { logoLight, logoDark, themeColor, customColor } = useBrand();
     const { appearance } = useAppearance();
-    const globalSettings = (usePage().props as any).globalSettings;
-    const userLanguage = (usePage().props as any).userLanguage;
+    const globalSettings = (usePage().props as any)?.globalSettings;
+    const userLanguage = (usePage().props as any)?.userLanguage;
 
     const currentLogo = appearance === 'dark' ? logoLight : logoDark;
     const primaryColor = themeColor === 'custom' ? customColor : THEME_COLORS[themeColor as keyof typeof THEME_COLORS];
@@ -192,6 +193,7 @@ export default function AuthLayout({
                 </div>
             </div>
             <CookieConsentBanner />
+            <CustomToast />
         </div>
     );
 }

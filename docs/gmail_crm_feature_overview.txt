@@ -1,0 +1,135 @@
+Gmail Integration for CRM
+F eature Overview and Deep Instruction
+OpenAI
+$(date +%Y-%m-%d)
+Executive overview
+This feature turns the CRM into a connected communication workspace. A platform administrator stores
+the Google app credentials once in system settings, while each company user connects their own Gmail
+account through a familiar OAuth flow. After authorization, the CRM syncs Gmail threads and messages
+so teams can track conversations with leads, contacts, and customers without leaving the CRM.
+The intended experience should feel similar to Brevo Conversations: the connection starts from a clean
+button, account selection happens on Google, tokens are handled by the backend, and the CRM presents a
+clear mailbox status, sync status, and conversation history .
+Recommended principle: keep the first release focused on fetching and organizing emails well
+before expanding into advanced sending, shared inbox logic, or automation rules.
+Quick summary
+Area Description
+Document purpose Provide a practical overview of a Brevo-style Gmail
+connection feature for a CRM after Google Cloud
+and OAuth setup are complete.
+Primary outcome Users can click Connect Gmail , choose a Google
+account, authorize access, and see Gmail
+conversations inside the CRM.
+Recommended MVP Read-only mailbox sync first, then add send/reply
+after the inbox flow is stable.
+1
+1. Product vision
+The feature should allow a CRM user to connect a personal or work Gmail account and see relevant email con-
+versations from inside the CRM. The CRM becomes a communication layer that sits beside leads, contacts,
+deals, and customer records.
+The business value is straightforward: email history is no longer trapped inside personal inboxes, the team
+gains context, and customer communication can be reviewed inside the same system that manages leads and
+pipelines.
+2. Core roles
+• Superadmin or system owner - configures the Google integration once in CRM settings and controls
+whether the feature is available.
+• Company admin - can monitor which users have connected Gmail, see status, and support reconnect
+or disconnect tasks.
+• Company user - connects an individual Gmail account and uses the synced mailbox inside the CRM.
+3. End-user experience
+1. The user opens the CRM mailbox or company communication area and clicks Connect Gmail .
+2. The CRM redirects the user to Google, where the account chooser and consent screen appear.
+3. The user picks a Gmail account and approves the requested permissions.
+4. The backend exchanges the authorization code for tokens and stores the connection securely .
+5. The CRM returns the user to a Gmail connection page that shows the connected account, status, and
+first sync progress.
+6. The CRM loads email threads and starts matching them to leads, contacts, or deals where possible.
+4. F eature modules
+Module What it does Why it matters
+System settings Stores Google Client ID, Client
+Secret, redirect URI, enabled
+scopes, and integration toggles.Lets the platform owner configure
+Gmail once for the whole CRM.
+Connect Gmail Allows a company user to
+authorize their own Gmail
+account with Google OAuth.Matches the Brevo-style one-click
+connection experience.
+Mailbox sync Pulls threads, messages, senders,
+recipients, snippets, and
+timestamps into the CRM.Creates a unified customer
+communication history .
+Conversation view Shows email threads inside the
+CRM and links them to leads,
+contacts, or deals.Reduces context switching and
+keeps teams aligned.
+Reply and send Lets users respond from the CRM
+using the connected Gmail
+account.T urns the CRM into an
+operational inbox, not just a
+viewer.
+Connection health Displays connected account
+status, last sync, token errors,
+reconnect, and disconnect actions.Makes the feature manageable for
+users and support teams.
+2
+5. Recommended UI structure
+Settings level
+• Settings -> Integrations -> Gmail
+• Fields: Enable Integration, Google Client ID, Google Client Secret, Redirect URI, allowed scopes, sync
+interval, and environment label.
+• Status helpers: T est connection, last updated, app environment, and verification notes for admins.
+Company or user level
+• Company -> Email Channels -> Gmail or My Account -> Connected Channels
+• Primary actions: Connect Gmail, Reconnect, Sync now, Disconnect.
+• Status cards: connected email, last sync, sync health, permissions granted, and any token or autho-
+rization issues.
+3
+6. T echnical flow overview
+A clean implementation is split into system credentials, user authorization, token storage, and mailbox sync.
+Stage What happens
+System credentials The superadmin stores Google Client ID, Client
+Secret, redirect URI, and enabled scopes in CRM
+settings.
+OAuth start The Connect Gmail button calls a backend endpoint
+that redirects the user to Google with the chosen
+scopes.
+OAuth callback Google returns an authorization code to the
+backend callback URI.
+T oken exchange The backend exchanges the code for access and
+refresh tokens, then links them to the CRM user.
+Mailbox sync The backend calls Gmail APIs to list threads, fetch
+messages, and store CRM-friendly records.
+Presentation layer The CRM displays connected mailbox status,
+synced threads, and customer-linked conversations.
+7. Suggested data model
+T able Purpose
+integration_settings_google Stores global Google app credentials and feature
+flags.
+company_gmail_accounts Stores one or more user-authorized Gmail
+connections per CRM user or company .
+email_threads Stores Gmail thread IDs mapped to CRM contacts,
+leads, or deals.
+email_messages Stores normalized message records for inbox display
+and history .
+email_sync_logs Stores sync attempts, results, and error messages
+for debugging and support.
+8. Security and operational notes
+• Store Google Client Secret only in protected system settings, never in the frontend.
+• Encrypt refresh tokens at rest and keep access tokens short-lived.
+• Use backend-only OAuth code exchange and validate the state parameter.
+• Provide reconnect and disconnect actions so users can recover from revoked or expired permissions.
+• F or production, align requested Gmail scopes with the smallest practical permission set for the feature.
+9. Recommended release path
+• Phase 1 - Connect Gmail and sync read-only inbox data.
+• Phase 2 - Add conversation linking to leads, contacts, and deals.
+• Phase 3 - Add reply and send from CRM once threading and mailbox sync are stable.
+4
+• Phase 4 - Add shared inbox workflows, assignment rules, templates, and analytics only after the
+fundamentals are reliable.
+10. Final implementation direction
+The best product design for this feature is: one Google app configuration in CRM settings, individual Gmail
+authorization per user, secure backend token handling, and a conversation view inside the CRM that feels
+simple, reliable, and familiar. This gives your CRM a Brevo-style connection experience while still following
+the correct Gmail authorization model.
+Prepared as a high-level feature overview for product planning, UI design, and development handoff.
+5

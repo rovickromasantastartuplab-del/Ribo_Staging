@@ -92,12 +92,29 @@ class LeadController extends Controller
 
         $meetings = $parentMeetings->merge($attendeeMeetings)->merge($parentCalls)->merge($attendeeCalls)->unique('id')->sortByDesc('start_date')->values();
 
-        $activities = $lead->activities()->orderBy('created_at', 'asc')->get()->map(function ($a) {
+        $allStreamItems = $this->getStreamItemsCollection($lead);
+        $streamItems = $allStreamItems->slice(0, 20)->values();
+        $hasMoreStreamItems = $allStreamItems->count() > 20;
+
+        return Inertia::render('leads/show', [
+            'lead' => $lead,
+            'streamItems' => $streamItems,
+            'hasMoreStreamItems' => $hasMoreStreamItems,
+            'comments' => $lead->comments,
+            'relatedAccounts' => $relatedAccounts,
+            'relatedContacts' => $relatedContacts,
+            'meetings' => $meetings
+        ]);
+    }
+
+    private function getStreamItemsCollection(Lead $lead)
+    {
+        $activities = $lead->activities()->orderBy('created_at', 'desc')->get()->map(function ($a) {
             $a->is_lead_event = false;
             return $a;
         });
 
-        $leadEvents = \App\Models\LeadEvent::where('lead_id', $lead->id)->get()->map(function ($e) {
+        $leadEvents = \App\Models\LeadEvent::where('lead_id', $lead->id)->orderBy('received_at', 'desc')->get()->map(function ($e) {
             return (object) [
                 'id' => 'evt_' . $e->id,
                 'created_at' => $e->received_at,
@@ -110,15 +127,53 @@ class LeadController extends Controller
             ];
         });
 
-        $streamItems = collect($activities)->merge($leadEvents)->sortBy('created_at')->values();
+        $emailMessages = $lead->emailThreads()->with(['messages.sender', 'gmailAccount'])->get()->flatMap(function ($thread) {
+            return $thread->messages->map(function ($message) use ($thread) {
+                $isIncoming = strtolower($message->from_email) !== strtolower($thread->gmailAccount->gmail_address);
+                return (object) [
+                    'id' => 'email_' . $message->id,
+                    'is_lead_event' => false,
+                    'activity_type' => 'email',
+                    'title' => $isIncoming 
+                        ? 'Email from ' . ($message->from_name ?: $message->from_email)
+                        : 'Email sent to ' . (implode(', ', $message->to_emails)),
+                    'description' => $message->body_preview,
+                    'created_at' => $message->sent_at ?? $message->created_at,
+                    'user' => (object) [
+                        'name' => $isIncoming ? ($message->from_name ?: $message->from_email) : ($message->sender->name ?? 'System (Gmail)'),
+                        'avatar' => $isIncoming ? null : ($message->sender->avatar ?? null)
+                    ],
+                    'metadata' => [
+                        'thread_id' => $thread->id,
+                        'message_id' => $message->id,
+                        'is_incoming' => $isIncoming
+                    ]
+                ];
+            });
+        });
 
-        return Inertia::render('leads/show', [
-            'lead' => $lead,
-            'streamItems' => $streamItems,
-            'comments' => $lead->comments,
-            'relatedAccounts' => $relatedAccounts,
-            'relatedContacts' => $relatedContacts,
-            'meetings' => $meetings
+        return collect($activities)
+            ->merge($leadEvents)
+            ->merge($emailMessages)
+            ->sortByDesc('created_at')
+            ->values();
+    }
+
+    public function apiActivities(Lead $lead, Request $request)
+    {
+        $page = (int) $request->get('page', 1);
+        $perPage = 20;
+
+        $allStreamItems = $this->getStreamItemsCollection($lead);
+        
+        $total = $allStreamItems->count();
+        $items = $allStreamItems->forPage($page, $perPage)->values();
+
+        return response()->json([
+            'data' => $items,
+            'current_page' => $page,
+            'last_page' => ceil($total / $perPage),
+            'total' => $total,
         ]);
     }
 
@@ -251,7 +306,7 @@ class LeadController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
+            'email' => 'nullable|email:filter|max:255',
             'phone' => 'nullable|string|max:255',
             'company' => 'nullable|string|max:255',
             'account_name' => 'nullable|string|max:255',
@@ -266,10 +321,33 @@ class LeadController extends Controller
             'campaign_id' => 'nullable|exists:campaigns,id',
             'status' => 'nullable|in:active,inactive',
             'assigned_to' => 'nullable|exists:users,id',
+            'email_thread_id' => 'nullable|exists:email_threads,id',
         ]);
 
         $validated['created_by'] = createdBy();
         $validated['status'] = $validated['status'] ?? 'active';
+
+        // Prevent duplicate creation if email already exists
+        if ($request->filled('email')) {
+            $existingLead = Lead::where('created_by', createdBy())
+                ->where('email', strtolower($validated['email']))
+                ->first();
+            
+            if ($existingLead) {
+                // If an existing lead is found, just link the thread to it instead of creating a new one
+                if ($request->has('email_thread_id')) {
+                    $thread = \App\Models\EmailThread::where('id', $request->email_thread_id)
+                        ->where('created_by', createdBy())
+                        ->first();
+                    if ($thread) {
+                        $thread->leads()->syncWithoutDetaching([$existingLead->id => ['matched_via' => 'manual_add_as_lead_duplicate_catch']]);
+                        return back()->with('success', 'Email already exists in Leads. Conversation linked to existing Lead: ' . $existingLead->name);
+                    }
+                }
+                
+                return back()->with('error', 'A Lead with this email address already exists: ' . $existingLead->name);
+            }
+        }
 
         // Auto-assign to current user if staff user
         if (auth()->user()->type !== 'company') {
@@ -277,6 +355,27 @@ class LeadController extends Controller
         }
 
         $lead = Lead::create($validated);
+
+        if ($lead && $lead->email) {
+            // Bulk link all existing threads from this email to the new lead
+            // We use a LIKE query on the participants JSON to handle "Name <email>" formats
+            $matchingThreads = \App\Models\EmailThread::where('created_by', createdBy())
+                ->where('participants', 'LIKE', '%' . $lead->email . '%')
+                ->get();
+            
+            foreach ($matchingThreads as $t) {
+                $t->leads()->syncWithoutDetaching([$lead->id => ['matched_via' => 'manual_add_as_lead_bulk']]);
+            }
+        } elseif ($lead && $request->has('email_thread_id')) {
+            // Fallback for threads without an email (rare)
+            $thread = \App\Models\EmailThread::where('id', $request->email_thread_id)
+                ->where('created_by', createdBy())
+                ->first();
+            if ($thread) {
+                $thread->leads()->syncWithoutDetaching([$lead->id => ['matched_via' => 'manual_add_as_lead']]);
+            }
+        }
+
         if ($lead && !IsDemo()) {
             event(new \App\Events\LeadAssigned($lead));
         }
@@ -318,7 +417,7 @@ class LeadController extends Controller
             try {
                 $validated = $request->validate([
                     'name' => 'required|string|max:255',
-                    'email' => 'nullable|email|max:255',
+                    'email' => 'nullable|email:filter|max:255',
                     'phone' => 'nullable|string|max:255',
                     'company' => 'nullable|string|max:255',
                     'account_name' => 'nullable|string|max:255',

@@ -1,18 +1,20 @@
 import { PageTemplate } from '@/components/page-template';
 import { usePage, Link, router } from '@inertiajs/react';
-import { ArrowLeft, User, Building, MapPin, FileText, Phone, Mail, Globe, DollarSign, Users, Calendar, Target, Briefcase, UserCheck, MessageCircle, EyeOff, Trash2, Send, Edit, Check, X } from 'lucide-react';
+import { ArrowLeft, User, Building, MapPin, FileText, Phone, Mail, Globe, DollarSign, Users, Calendar, Target, Briefcase, UserCheck, MessageCircle, EyeOff, Trash2, Send, Edit, Check, X, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { RefreshCw } from 'lucide-react';
 import { formatCurrency as formatCurrencyUtils } from '@/utils/currency';
 
 export default function LeadShow() {
   const { t } = useTranslation();
-  const { lead, streamItems, auth, relatedAccounts, relatedContacts, meetings } = usePage().props as any;
+  const { lead, streamItems: initialStreamItems, hasMoreStreamItems: initialHasMore, auth, relatedAccounts, relatedContacts, meetings } = usePage().props as any;
   const comments = lead.comments || [];
   const isCompany = auth?.user?.type === 'company' || auth?.user?.type === 'staff';
   const [showStream, setShowStream] = useState(true);
@@ -22,6 +24,61 @@ export default function LeadShow() {
   const [newComment, setNewComment] = useState('');
   const [editingComment, setEditingComment] = useState<number | null>(null);
   const [editCommentText, setEditCommentText] = useState('');
+
+  // Infinite Scroll State
+  const [streamItems, setStreamItems] = useState<any[]>(initialStreamItems || []);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialHasMore || false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const fetchMoreActivities = async () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const response = await axios.get(route('leads.activities.api', lead.id), {
+        params: { page: nextPage }
+      });
+
+      const { data, current_page, last_page } = response.data;
+      
+      setStreamItems(prev => [...prev, ...data]);
+      setPage(current_page);
+      setHasMore(current_page < last_page);
+    } catch (error) {
+      console.error('Failed to fetch more activities:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchMoreActivities();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, page]);
+
+  // Sync with initial load if props change (e.g. after a hard refresh or action)
+  useEffect(() => {
+    if (initialStreamItems) {
+      setStreamItems(initialStreamItems);
+      setPage(1);
+      setHasMore(initialHasMore);
+    }
+  }, [initialStreamItems, initialHasMore]);
 
   const breadcrumbs = [
     { title: t('Dashboard'), href: route('dashboard') },
@@ -41,6 +98,11 @@ export default function LeadShow() {
   };
 
   const formatCurrency = (amount: number) => formatCurrencyUtils(Number(amount || 0));
+  
+  const getInitialAvatar = (name: string) => {
+    const cleanName = (name || 'User').replace(/\s*\(.*?\)/, '').trim();
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=e5e7eb&color=374151&size=32`;
+  };
 
 
 
@@ -513,7 +575,7 @@ export default function LeadShow() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                        target.src = getInitialAvatar(auth?.user?.name);
                       }}
                     />
                   </div>
@@ -559,6 +621,7 @@ export default function LeadShow() {
                           case 'assigned': return <UserCheck className="h-4 w-4 text-purple-600" />;
                           case 'converted': return <Target className="h-4 w-4 text-orange-600" />;
                           case 'comment': return <MessageCircle className="h-4 w-4 text-indigo-600" />;
+                          case 'email': return <Mail className="h-4 w-4 text-sky-600" />;
                           default: return <FileText className="h-4 w-4 text-gray-600" />;
                         }
                       };
@@ -570,6 +633,7 @@ export default function LeadShow() {
                           case 'assigned': return 'border-purple-200 bg-purple-50';
                           case 'converted': return 'border-orange-200 bg-orange-50';
                           case 'comment': return 'border-indigo-200 bg-indigo-50';
+                          case 'email': return 'border-sky-200 bg-sky-50';
                           default: return 'border-gray-200 bg-gray-50';
                         }
                       };
@@ -601,7 +665,7 @@ export default function LeadShow() {
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user?.name || 'User')}&background=e5e7eb&color=374151&size=32`;
+                                  target.src = getInitialAvatar(activity.user?.name);
                                 }}
                               />
                             </div>
@@ -628,6 +692,17 @@ export default function LeadShow() {
                                   <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20">
                                     {activity.activity_type.charAt(0).toUpperCase() + activity.activity_type.slice(1)}
                                   </span>
+                                  {activity.metadata?.thread_id && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-sky-500 hover:text-sky-700"
+                                      title={t('Open Conversation')}
+                                      onClick={() => router.visit(route('conversations.index', { thread_id: activity.metadata.thread_id }))}
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                   {isCompany && (
                                     <Button
                                       variant="ghost"
@@ -717,6 +792,22 @@ export default function LeadShow() {
                         </div>
                       );
                     })}
+                    {/* Sentinel for infinite scroll */}
+                    <div ref={observerTarget} className="h-4 w-full" />
+
+                    {loadingMore && (
+                      <div className="py-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse">
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        <span className="text-[10px] font-medium">{t('Loading older activities...')}</span>
+                      </div>
+                    )}
+
+                    {!hasMore && streamItems.length > 5 && (
+                      <div className="pt-8 pb-4 text-center">
+                        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of history')}</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">

@@ -1,0 +1,57 @@
+﻿
+> build
+> vite build
+
+[36mvite v6.2.0 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 268 modules transformed.
+node.exe : [31mΓ£ù[39m Build 
+failed in 28.56s
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo          : 
+NotSp    ecified: 
+([31mΓ£ù[39m Build f    ailed 
+in 28.56s:String) [], Rem    
+oteException
+    + FullyQualifiedErrorId : 
+Nativ    eCommandError
+ 
+[31merror during build:
+[31m[vite:load-fallback] Could 
+not load /resources/js/layouts/A
+uthenticatedLayout (imported by 
+resources/js/pages/gmail/show.ts
+x): ENOENT: no such file or 
+directory, open 'C:\resources\js
+\layouts\AuthenticatedLayout'[3
+1m
+    at async open (node:internal
+/fs/promises:642:25)
+    at async Object.readFile (no
+de:internal/fs/promises:1279:14)
+    at async Object.load (file:/
+//C:/Users/Rovick/Downloads/Fina
+l_Production/node_modules/vite/d
+ist/node/chunks/dep-ByPKlqZ5.js:
+51082:25)
+    at async PluginDriver.hookFi
+rstAndGetPlugin (file:///C:/User
+s/Rovick/Downloads/Final_Product
+ion/node_modules/rollup/dist/es/
+shared/node-entry.js:21735:28)
+    at async file:///C:/Users/Ro
+vick/Downloads/Final_Production/
+node_modules/rollup/dist/es/shar
+ed/node-entry.js:20858:33
+    at async Queue.work (file://
+/C:/Users/Rovick/Downloads/Final
+_Production/node_modules/rollup/
+dist/es/shared/node-entry.js:219
+45:32)[39m

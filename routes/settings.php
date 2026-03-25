@@ -83,8 +83,8 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('settings/field-mappings/{provider}', [IntegrationsSettingsController::class, 'saveFieldMappings'])->name('settings.field-mappings.save');
 
     // Social & Omnichannel OAuth Integration Routes
-    Route::get('auth/{provider}/redirect', [\App\Http\Controllers\Settings\SocialAuthController::class, 'redirect'])->name('social.redirect');
-    Route::get('auth/{provider}/callback', [\App\Http\Controllers\Settings\SocialAuthController::class, 'callback'])->name('social.callback');
+    Route::get('auth/redirect/{provider}', [\App\Http\Controllers\Settings\SocialAuthController::class, 'redirect'])->name('social.redirect');
+    Route::get('auth/callback/{provider}', [\App\Http\Controllers\Settings\SocialAuthController::class, 'callback'])->name('social.callback');
 
     Route::post('settings/recaptcha', [SystemSettingsController::class, 'updateRecaptcha'])->name('settings.recaptcha.update');
     Route::post('settings/chatgpt', [SystemSettingsController::class, 'updateChatgpt'])->middleware('plan.feature:ai_integration')->name('settings.chatgpt.update');
@@ -123,5 +123,11 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('settings/google-calendar', [SystemSettingsController::class, 'updateGoogleCalendar'])->name('settings.google-calendar.update');
     Route::post('settings/google-calendar/sync', [SystemSettingsController::class, 'syncGoogleCalendar'])->name('settings.google-calendar.sync');
 
+    // Gmail Integration routes
+    Route::post('settings/gmail/disconnect', [\App\Http\Controllers\GmailController::class, 'disconnect'])->name('settings.gmail.disconnect');
+    Route::post('settings/gmail/sync', [\App\Http\Controllers\GmailController::class, 'syncNow'])->name('settings.gmail.sync');
+    Route::post('settings/gmail/categories', [\App\Http\Controllers\GmailController::class, 'updateSyncSettings'])->name('settings.gmail.categories.update');
+    Route::get('gmail/threads', [\App\Http\Controllers\GmailController::class, 'threads'])->name('gmail.threads');
+    Route::get('gmail/threads/{threadId}', [\App\Http\Controllers\GmailController::class, 'showThread'])->name('gmail.thread.show');
 
 });

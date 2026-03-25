@@ -60,12 +60,23 @@ class UserController extends BaseController
 
         // Handle pagination
         $perPage = $request->has('per_page') ? (int) $request->per_page : 10;
+
+        // Optimization for API assignment dropdown
+        if ($request->has('api')) {
+            $perPage = 100; // Allow a larger set for the dropdown
+            $userQuery->select(['users.id', 'users.name', 'users.avatar', 'users.type', 'users.created_at']);
+        }
+
         $users = $userQuery->paginate($perPage)->withQueryString();
+
+        if ($request->has('api') || $request->wantsJson()) {
+            return response()->json($users);
+        }
 
         # Roles listing - Get roles based on user type
         if ($authUser->type === 'company') {
             $roles = Role::where('created_by', $authUser->id)->get();
-        } elseif ($authUser->type === 'superadmin') {
+        } elseif ($authUser->isSuperAdmin()) {
             $roles = Role::get();
         } else {
             // Staff users see roles from their company
@@ -278,7 +289,7 @@ class UserController extends BaseController
     {
         $authUser = Auth::user();
 
-        if ($authUser->type === 'superadmin') {
+        if ($authUser->isSuperAdmin()) {
             // For superadmin: show superadmin logs and company type logs created by superadmin
             $loginHistoriesQuery = \App\Models\LoginHistory::whereHas('user', function ($q) {
                 $q->where('type', 'superadmin')

@@ -12,14 +12,15 @@ class DocumentFolderController extends Controller
     {
         $query = DocumentFolder::query()
             ->with(['parentFolder', 'creator'])
-            ->where(function($q) {
-                if (auth()->user()->type === 'company') {
-                    $q->where('created_by', createdBy());
-                } else {
-                    // Staff users can see folders created by their company
-                    $q->where('created_by', createdBy());
-                }
-            });
+            ->where(function ($q) {
+            if (auth()->user()->type === 'company') {
+                $q->where('created_by', createdBy());
+            }
+            else {
+                // Staff users can see folders created by their company
+                $q->where('created_by', createdBy());
+            }
+        });
 
         // Handle search
         if ($request->has('search') && !empty($request->search)) {
@@ -41,7 +42,8 @@ class DocumentFolderController extends Controller
         // Handle sorting
         if ($request->has('sort_field') && !empty($request->sort_field)) {
             $query->orderBy($request->sort_field, $request->sort_direction ?? 'asc');
-        } else {
+        }
+        else {
             $query->orderBy('id', 'desc');
         }
 
@@ -116,7 +118,7 @@ class DocumentFolderController extends Controller
             $parentFolder = DocumentFolder::where('id', $validated['parent_folder_id'])
                 ->where('created_by', createdBy())
                 ->first();
-            
+
             if (!$parentFolder) {
                 return redirect()->back()->with('error', __('Invalid parent folder selected.'));
             }
@@ -141,14 +143,16 @@ class DocumentFolderController extends Controller
                     'description' => 'nullable|string',
                     'status' => 'nullable|in:active,inactive',
                 ]);
-                
+
                 $documentFolder->update($validated);
 
                 return redirect()->back()->with('success', __('Document folder updated successfully.'));
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage() ?: __('Failed to update document folder.'));
             }
-        } else {
+        }
+        else {
             return redirect()->back()->with('error', __('Document folder not found.'));
         }
     }
@@ -160,13 +164,19 @@ class DocumentFolderController extends Controller
             ->first();
 
         if ($documentFolder) {
+            if ($documentFolder->documents()->exists()) {
+                return redirect()->back()->with('error', __('Cannot delete document folder that is currently assigned to one or more documents.'));
+            }
+
             try {
                 $documentFolder->delete();
                 return redirect()->back()->with('success', __('Document folder deleted successfully.'));
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage() ?: __('Failed to delete document folder.'));
             }
-        } else {
+        }
+        else {
             return redirect()->back()->with('error', __('Document folder not found.'));
         }
     }
@@ -183,10 +193,12 @@ class DocumentFolderController extends Controller
                 $documentFolder->save();
 
                 return redirect()->back()->with('success', __('Document folder status updated successfully.'));
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage() ?: __('Failed to update document folder status.'));
             }
-        } else {
+        }
+        else {
             return redirect()->back()->with('error', __('Document folder not found.'));
         }
     }
@@ -203,16 +215,21 @@ class DocumentFolderController extends Controller
         ]);
 
         try {
+            if (\App\Models\Document::whereIn('folder_id', $validated['ids'])->exists()) {
+                return redirect()->back()->with('error', __('Cannot bulk delete folders that are currently assigned to one or more documents.'));
+            }
+
             $query = \App\Models\DocumentFolder::whereIn('id', $validated['ids'])->where('created_by', createdBy());
             $count = $query->count();
-            
+
             if ($count === 0) {
-                 return redirect()->back()->with('warning', __('No valid records selected to delete.'));
+                return redirect()->back()->with('warning', __('No valid records selected to delete.'));
             }
-            
+
             $query->delete();
             return redirect()->back()->with('success', __('Successfully deleted :count records.', ['count' => $count]));
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete records: :error', ['error' => $e->getMessage()]));
         }
     }

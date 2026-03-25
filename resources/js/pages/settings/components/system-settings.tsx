@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import { SettingsSection } from '@/components/settings-section';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import { router, usePage } from '@inertiajs/react';
 import { toast } from '@/components/custom-toast';
 import languageData from '@/../../resources/lang/language.json';
@@ -107,11 +108,16 @@ export default function SystemSettings({
         router.post(route('settings.system.update'), cleanSettings, {
             preserveScroll: true,
             onSuccess: (page) => {
-                const successMessage = page.props.flash?.success;
-                const errorMessage = page.props.flash?.error;
+                const successMessage = (page.props as any).flash?.success;
+                const errorMessage = (page.props as any).flash?.error;
 
                 if (successMessage) {
                     toast.success(successMessage);
+
+                    // Apply the new language immediately on the frontend
+                    if (i18n.language !== cleanSettings.defaultLanguage) {
+                        i18n.changeLanguage(cleanSettings.defaultLanguage);
+                    }
                 } else if (errorMessage) {
                     toast.error(errorMessage);
                 }

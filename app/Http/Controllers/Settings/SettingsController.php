@@ -10,6 +10,7 @@ use App\Models\Currency;
 use App\Models\PaymentSetting;
 use App\Models\Webhook;
 use App\Models\Workspace;
+use App\Models\GmailAccount;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class SettingsController extends Controller
@@ -95,10 +96,24 @@ class SettingsController extends Controller
         $webhooks = Webhook::where('user_id', $user->id)
             ->get();
 
-        // Get current workspace for company users
         $currentWorkspace = null;
         $socialAccounts = [];
         $fieldMappings = [];
+        $gmailAccount = null;
+        // Fetch connected Gmail account for anyone who can see the translations/integrations section
+        $gmailAccountConfig = GmailAccount::where('user_id', $user->creatorId())->first();
+        if ($gmailAccountConfig) {
+            $gmailAccount = [
+                'id' => $gmailAccountConfig->id,
+                'gmail_address' => $gmailAccountConfig->gmail_address,
+                'last_sync_at' => $gmailAccountConfig->last_sync_at,
+                'sync_status' => $gmailAccountConfig->sync_status,
+                'sync_error' => $gmailAccountConfig->sync_error,
+                'sync_strategy' => $gmailAccountConfig->sync_strategy,
+                'sync_categories' => $gmailAccountConfig->sync_categories,
+            ];
+        }
+
         if ($user->type === 'company') {
             if ($workspaceId) {
                 $currentWorkspace = Workspace::find($workspaceId);
@@ -109,6 +124,21 @@ class SettingsController extends Controller
             $fieldMappings = \App\Models\FieldMapping::where('user_id', $user->id)
                 ->where('provider', 'facebook')
                 ->get(['id', 'external_field', 'crm_field', 'default_value']);
+        }
+
+        // Fetch Google app credentials for superadmin
+        $googleSettings = [];
+        if ($user->isSuperAdmin()) {
+            $googleSettings = [
+                'google_client_id' => getSetting('google_client_id', null, $user->id) ?? '',
+                'google_client_secret' => getSetting('google_client_secret', null, $user->id) ?? '',
+                'google_redirect_uri' => getSetting('google_redirect_uri', url('/auth/callback/google'), $user->id),
+                'google_gmail_pub_sub_topic' => getSetting('google_gmail_pub_sub_topic', null, $user->id) ?? '',
+                'pusher_app_id' => getSetting('pusher_app_id', null, $user->id) ?? '',
+                'pusher_app_key' => getSetting('pusher_app_key', null, $user->id) ?? '',
+                'pusher_app_secret' => getSetting('pusher_app_secret', null, $user->id) ?? '',
+                'pusher_app_cluster' => getSetting('pusher_app_cluster', 'mt1', $user->id) ?? '',
+            ];
         }
 
         return Inertia::render('settings/index', [
@@ -124,6 +154,8 @@ class SettingsController extends Controller
             'webhooks' => $webhooks,
             'socialAccounts' => $socialAccounts,
             'fieldMappings' => $fieldMappings,
+            'gmailAccount' => $gmailAccount,
+            'googleSettings' => $googleSettings,
             'isDemoMode' => config('app.is_demo', false),
         ]);
     }

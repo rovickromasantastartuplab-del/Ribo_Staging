@@ -18,12 +18,62 @@ class IntegrationsSettingsController extends Controller
                 'wordpress_api_key' => 'nullable|string',
                 'ai_intent_enabled' => 'nullable|boolean',
                 'ai_auto_apply_threshold' => 'nullable|numeric|min:1|max:100',
+                'google_client_id' => 'nullable|string',
+                'google_client_secret' => 'nullable|string',
+                'google_redirect_uri' => 'nullable|string',
+                'google_gmail_pub_sub_topic' => 'nullable|string',
+                'pusher_app_id' => 'nullable|string',
+                'pusher_app_key' => 'nullable|string',
+                'pusher_app_secret' => 'nullable|string',
+                'pusher_app_cluster' => 'nullable|string',
+                'gmail_sync_strategy' => 'nullable|in:all,categories,contacts',
+                'gmail_sync_categories' => 'required_if:gmail_sync_strategy,categories|array',
+                'gmail_sync_categories.*' => 'string|in:PRIMARY,SOCIAL,PROMOTIONS,UPDATES,FORUMS',
             ]);
+
+            // Only superadmins may update Google OAuth and Pusher credentials
+            $user = auth()->user();
+            $restrictedFields = [
+                'google_client_id', 'google_client_secret', 'google_redirect_uri', 'google_gmail_pub_sub_topic',
+                'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
+            ];
+            if (!in_array($user->type, ['superadmin', 'super admin'])) {
+                $validated = array_diff_key($validated, array_flip($restrictedFields));
+            }
+
+            // Handle Gmail sync settings before the general loop to avoid array-to-string conversion error
+            if (isset($validated['gmail_sync_strategy']) || isset($validated['gmail_sync_categories'])) {
+                $gmailAccount = \App\Models\GmailAccount::where('user_id', $user->creatorId())->first();
+                if ($gmailAccount) {
+                    $gmailAccount->update([
+                        'sync_strategy' => $validated['gmail_sync_strategy'] ?? $gmailAccount->sync_strategy,
+                        'sync_categories' => $validated['gmail_sync_categories'] ?? $gmailAccount->sync_categories,
+                    ]);
+                }
+                
+                if (isset($validated['gmail_sync_strategy'])) {
+                    updateSetting('gmail_sync_strategy', $validated['gmail_sync_strategy']);
+                    unset($validated['gmail_sync_strategy']);
+                }
+
+                if (isset($validated['gmail_sync_categories'])) {
+                    updateSetting('gmail_sync_categories', json_encode($validated['gmail_sync_categories']));
+                    unset($validated['gmail_sync_categories']);
+                }
+            }
+
+            $sensitiveKeys = ['google_client_secret', 'pusher_app_secret'];
 
             foreach ($validated as $key => $value) {
                 if (is_bool($value)) {
                     $value = $value ? 'true' : 'false';
                 }
+
+                // Encrypt sensitive secrets so they don't sit in plaintext DB
+                if (in_array($key, $sensitiveKeys) && !empty($value)) {
+                    $value = encrypt($value);
+                }
+
                 updateSetting($key, $value);
             }
 

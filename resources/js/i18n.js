@@ -10,11 +10,11 @@ export { default as i18next } from 'i18next';
 // Custom backend to handle the modified response format
 const customBackend = {
   type: 'backend',
-  init: function(services, backendOptions) {
+  init: function (services, backendOptions) {
     this.services = services;
     this.options = backendOptions;
   },
-  read: function(language, namespace, callback) {
+  read: function (language, namespace, callback) {
     const loadPath = window.route ? window.route('translations', language) : `/translations/${language}`;
 
     fetch(loadPath)
@@ -57,31 +57,31 @@ const resetLanguageCache = (language) => {
 
 // Override the changeLanguage method to reset cache
 const originalChangeLanguage = i18n.changeLanguage;
-i18n.changeLanguage = function(language) {
+i18n.changeLanguage = function (language) {
   resetLanguageCache(language);
   return originalChangeLanguage.apply(this, arguments);
 };
 
 // Initialize i18n
 i18n
-    .use(customBackend)
-    .use(initReactI18next)
-    .init({
-        lng: undefined,
-        fallbackLng: false,
-        load: 'currentOnly',
-        debug: process.env.NODE_ENV === 'development',
+  .use(customBackend)
+  .use(initReactI18next)
+  .init({
+    lng: undefined,
+    fallbackLng: false,
+    load: 'currentOnly',
+    debug: process.env.NODE_ENV === 'development',
 
-        interpolation: {
-            escapeValue: false,
-        },
+    interpolation: {
+      escapeValue: false,
+    },
 
-        ns: ['translation'],
-        defaultNS: 'translation',
+    ns: ['translation'],
+    defaultNS: 'translation',
 
-        partialBundledLanguages: true,
-        loadOnInitialization: false
-    });
+    partialBundledLanguages: true,
+    loadOnInitialization: false
+  });
 
 // Export the initialized instance
 export default i18n;
