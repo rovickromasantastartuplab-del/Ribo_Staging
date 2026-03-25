@@ -148,7 +148,7 @@ class MediaController extends Controller
                 ->toArray();
 
             $config = [
-                'allowed_file_types' => $settings['storage_file_types'] ?? 'jpg,jpeg,png,webp,gif',
+                'allowed_file_types' => $settings['storage_file_types'] ?? 'jpg,jpeg,png,webp,gif,svg',
                 'max_file_size_kb' => (int) ($settings['storage_max_upload_size'] ?? 2048)
             ];
 

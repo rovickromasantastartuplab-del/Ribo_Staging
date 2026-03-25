@@ -13,6 +13,7 @@ interface MediaPickerProps {
     placeholder?: string;
     showPreview?: boolean;
     returnType?: 'url' | 'id';
+    allowedTypes?: string[] | string;
 }
 
 export default function MediaPicker({
@@ -22,7 +23,8 @@ export default function MediaPicker({
     multiple = false,
     placeholder = 'Select image...',
     showPreview = true,
-    returnType = 'url'
+    returnType = 'url',
+    allowedTypes
 }: MediaPickerProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -168,6 +170,7 @@ export default function MediaPicker({
                 multiple={multiple}
                 returnType={returnType}
                 preSelected={Array.isArray(value) ? value : (value ? [value] : [])}
+                allowedTypes={allowedTypes}
             />
         </div>
     );

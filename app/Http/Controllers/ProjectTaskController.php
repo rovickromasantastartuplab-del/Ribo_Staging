@@ -398,15 +398,17 @@ class ProjectTaskController extends Controller
         return response()->json($parentTasks);
     }
 
-    public function fileExport()
+    public function fileExport(Request $request)
     {
         if (!auth()->user()->can('export-project-tasks')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        $name = 'project_tasks_' . date('Y-m-d_H-i-s');
+        $name = 'project_task_' . date('Y-m-d_H-i-s');
+        
         ob_start();
-        $data = Excel::download(new ProjectTaskExport(), $name . '.xlsx');
+        
+        $data = Excel::download(new ProjectTaskExport($request), $name . '.xlsx');
         ob_end_clean();
 
         return $data;

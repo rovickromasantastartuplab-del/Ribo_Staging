@@ -229,6 +229,18 @@ export default function Projects() {
     });
   };
 
+  const handleExport = () => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.append('search', searchTerm);
+    if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
+    if (selectedPriority && selectedPriority !== 'all') params.append('priority', selectedPriority);
+    if (selectedAccount && selectedAccount !== 'all') params.append('account_id', selectedAccount);
+    if (selectedAssignee && selectedAssignee !== 'all') params.append('assigned_to', selectedAssignee);
+    
+    const queryString = params.toString();
+    window.location.href = route('project.export') + (queryString ? `?${queryString}` : '');
+  };
+
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedStatus('all');
@@ -252,7 +264,7 @@ export default function Projects() {
       label: t('Export'),
       icon: <Download className="h-4 w-4 mr-2" />,
       variant: 'outline',
-      onClick: () => (CrudFormModal as any).handleExport?.()
+      onClick: () => handleExport()
     });
   }
 

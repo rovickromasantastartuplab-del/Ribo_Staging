@@ -251,7 +251,7 @@ class ProjectController extends Controller
         }
     }
 
-    public function fileExport()
+    public function fileExport(Request $request)
     {
         if (!auth()->user()->can('export-projects')) {
             return redirect()->back()->with('error', __('Permission denied.'));
@@ -261,7 +261,7 @@ class ProjectController extends Controller
         
         ob_start();
         
-        $data = Excel::download(new ProjectExport(), $name . '.xlsx');
+        $data = Excel::download(new ProjectExport($request), $name . '.xlsx');
         ob_end_clean();
 
         return $data;

@@ -754,6 +754,7 @@ const breadcrumbs = [
                           updateSectionData('hero', { image: convertToRelativePath(value) });
                         }}
                         placeholder={t('Select hero image...')}
+                        allowedTypes={['image/jpeg', 'image/png', 'image/svg+xml']}
                       />
                     </div>
 
@@ -956,6 +957,7 @@ const breadcrumbs = [
                                 updateSectionData('screenshots', { screenshots_list: newScreenshots });
                               }}
                               placeholder={t('Select screenshot image...')}
+                              allowedTypes={['image/jpeg', 'image/png', 'image/svg+xml']}
                             />
                           </div>
 
@@ -1479,6 +1481,7 @@ const breadcrumbs = [
                                 updateSectionData('team', { members: newMembers });
                               }}
                               placeholder={t('Select profile image...')}
+                              allowedTypes={['image/jpeg', 'image/png', 'image/svg+xml']}
                             />
                           </div>
 

@@ -66,6 +66,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'send_error_emails' => (bool) env('SEND_ERROR_EMAILS', true),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

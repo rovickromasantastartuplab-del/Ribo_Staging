@@ -170,6 +170,7 @@ export default function AboutSection({ data, setData, errors, handleInputChange,
                 updateSectionData('about', { image: convertToRelativePath(value) });
               }}
               placeholder={t("Select about section image...")}
+              allowedTypes={['image/jpeg', 'image/png', 'image/svg+xml']}
             />
           </div>
           
