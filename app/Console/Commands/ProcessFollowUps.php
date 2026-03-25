@@ -7,6 +7,7 @@ use App\Models\EmailThread;
 use App\Models\User;
 use App\Notifications\ConversationFollowUp;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ProcessFollowUps extends Command
 {
@@ -36,12 +37,21 @@ class ProcessFollowUps extends Command
             ->get();
 
         if ($threads->isEmpty()) {
+            $this->info('No conversation follow-ups are due at this time.');
             return 0; // Nothing to process
         }
+
+        $this->info('Found ' . $threads->count() . ' threads due for follow-up.');
 
         foreach ($threads as $thread) {
             try {
                 $owner = User::find($thread->created_by);
+                
+                // Temporarily authenticate as the owner so global helpers (like getSetting) inside EmailTemplateService work correctly in CLI
+                if ($owner) {
+                    Auth::login($owner);
+                }
+
                 $isFollowUpEnabled = getSetting('conversation_follow_up_enabled', 'on', $owner->id ?? null) === 'on';
 
                 if ($isFollowUpEnabled && $owner) {
@@ -75,8 +85,10 @@ class ProcessFollowUps extends Command
                                 $business,
                                 $user->name
                             );
+                            $this->info('Follow-up email sent to: ' . $user->email);
                         } catch (\Exception $emailEx) {
                             Log::error('Template email failed: ' . $emailEx->getMessage());
+                            $this->error('Failed to send email to ' . $user->email . ': ' . $emailEx->getMessage());
                         }
                     }
                 }
