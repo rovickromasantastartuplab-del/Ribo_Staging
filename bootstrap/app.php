@@ -82,16 +82,24 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->stopIgnoring(\Illuminate\Http\Exceptions\HttpResponseException::class);
 
         $exceptions->reportable(function (\Throwable $e) {
-            if (!env('SEND_ERROR_EMAILS', true)) {
+            // Only send error emails in non-local environments and if configured
+            if (app()->isLocal() || !config('app.send_error_emails', true)) {
                 return;
             }
 
+            // Filter out common "noise" exceptions
             if (
                 $e instanceof \Illuminate\Validation\ValidationException ||
                 $e instanceof \Illuminate\Auth\AuthenticationException ||
                 $e instanceof \Illuminate\Session\TokenMismatchException ||
-                $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+                $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException ||
+                $e instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException
             ) {
+                return;
+            }
+
+            // Filter out specific database noise (like the cache key length issue)
+            if ($e instanceof \Illuminate\Database\QueryException && str_contains($e->getMessage(), "Data too long for column 'key'")) {
                 return;
             }
 
