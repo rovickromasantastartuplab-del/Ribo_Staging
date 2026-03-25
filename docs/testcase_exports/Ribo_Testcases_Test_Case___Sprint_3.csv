@@ -1,0 +1,863 @@
+,,,,,,,,
+ITEM NO.,TEST CASE / SCENARIO,TEST STEP,EXPECTED RESULT,"ACTUAL RESULT
+(1st RUN)",STATUS,"TEST EVIDENCE
+(1st Run)",COMMENT / REMARK,
+Super Admin,,,,,,,,
+Sign In,,,,,,,,
+1.0,"Login page loads 
+successfully",1. Click Login,Login page loads with all required fields/buttons visible,,Passed,,,
+2.0,Login – valid credentials,"1. Enter valid email 
+2. Enter valid password 
+3. Click Login",User logs in successfully and is redirected to Dashboard,,Passed,,,
+3.0,Login using Enter key,"1. Enter valid email & password 
+2. Press Enter",Login is triggered and user is redirected,,Passed,,,
+4.0,Login with invalid email format,"1. Enter test@ 
+2. Enter password 
+3. Login",Validation error shown; login blocked,,Passed,,,
+5.0,Login – non-existing email,"1. Enter email not in system 
+2. Any password 
+3. Login",Error shown; user not logged in,,Passed,,,
+6.0,Login – blank email,"1. Leave email empty 
+2. Enter password 
+3. Login",Required validation appears; no login,,Passed,,,
+7.0,Login – invalid password,"1. Enter valid email 
+2. Wrong password 
+3. Login",Error shown; user not logged in,,Passed,,,
+8.0,Login – blank password,"1. Enter email 
+2. Leave password empty 
+3. Login",Required validation appears; no login,,Passed,,,
+9.0,Login – both fields blank,"1. Leave email & password empty 
+2. Login",Required validations shown,,Passed,,,
+10.0,Password masked by default,1. Type password,Password characters are masked,,Passed,,,
+Dashboard,,,,,,,,
+1.0,"Dashboard page 
+loads","1. Login as Super Admin
+2. Navigate to Dashboard","Dashboard loads successfully with all 
+widgets displayed",,Passed,,,
+2.0,"Total Company 
+widget accuracy","1. Check Total Company count on Dashboard
+2. Compare with Companies module count","Total Company count matches actual 
+number of companies",,Passed,,,
+3.0,"Total Users widget 
+accuracy","1. View Total Users widget
+2. Compare with system users list","Total Users value matches actual 
+users in system",,Passed,,,
+4.0,"Active Subscriptions
+display",1. View Active Subscriptions widget,"Correct number of active 
+subscriptions displayed",,Passed,,,
+5.0,"Monthly Growth 
+chart display",1. Observe Monthly Growth chart,"Chart loads successfully and reflects 
+system growth data",,Passed,,,
+6.0,"Total Revenue 
+widget accuracy","1. Check Total Revenue value
+2. Compare with payment transactions","Revenue value matches recorded 
+payments",,Passed,,,
+7.0,Recent Activity feed,1. View Recent Activity section,"Recent system activities are 
+displayed correctly",,Passed,,,
+8.0,"Top Performing Plans 
+display",1. View Top Performing Plans widget,"Plans ranked correctly based on 
+subscriptions",,Passed,,,
+9.0,"Payment Transaction 
+Log display",1. View Payment Transaction Log section,"Recent payment transactions 
+displayed correctly",,Passed,,,
+10.0,"Company Management 
+Explore button",1. Click Explore under Company Management,"System redirects to Companies 
+module",,Not Started,,,
+11.0,"Subscription Management 
+Explore button",1. Click Explore under Subscription Management,"System redirects to Subscription 
+Management module",,Not Started,,,
+12.0,"Revenue Tracking 
+Explore button",1. Click Explore under Revenue Tracking,"System redirects to Revenue 
+Tracking module",,Not Started,,,
+13.0,"System Growth Explore 
+button",1. Click Explore under System Growth,"System redirects to System 
+Growth module",,Not Started,,,
+Companies,,,,,,,,
+1.0,Companies page loads,1. Navigate to Companies module,Companies page loads successfully,,Passed,,,
+2.0,Add company (valid data),"1. Click Add Company
+2. Enter Company Name
+3. Enter Email
+4. Enable Login toggle
+5. Enter Password
+6. Save","Company created successfully and 
+appears in list",,Passed,,,
+3.0,"Required field validation 
+(Company Name)","1. Leave Company Name empty
+2. Click Save",System displays validation error,,Passed,,,
+4.0,"Required field validation 
+(Email)","1. Leave Email empty
+2. Click Save",System displays validation error,,Passed,,,
+5.0,"Invalid email format 
+validation","1. Enter invalid email format
+2. Click Save",System shows validation error,Accepts email format with no domain extension (e.g. test@example),Passed,(PASSED) 03/19/2026,,
+6.0,Login toggle behavior,1. Enable Login toggle,Password field becomes required,,Passed,,,
+7.0,Disable login toggle,1. Disable login toggle,"Password field becomes optional 
+or hidden",,Passed,,,
+8.0,Switch to List View,Click List View option,Companies displayed in list format,,Passed,,,
+9.0,Switch to Grid View,Click Grid View option,Companies displayed in grid format,UI Overflow on some companies with longer details,Passed,(PASSED) 03/24/2026,,
+10.0,"Grid view displays company 
+details",1. Open Grid View,"Company cards display correct details 
+(company name, email, status, etc.)",,Passed,,,
+11.0,Search company by name,Enter company name in search,Matching companies displayed,,Passed,,,
+12.0,Search company by email,Enter company email,Correct company displayed,,Passed,,,
+13.0,Search non-existing company,Enter invalid keyword,No results displayed,,Passed,,,
+14.0,Filter by Status,Select Active/Inactive filter,Companies filtered correctly,,Passed,,,
+15.0,Filter by Start Date,Select start date filter,Companies filtered by start date,,Passed,,,
+16.0,Filter by End Date,Select end date filter,Companies filtered by end date,,Passed,,,
+17.0,Search functionality in Grid View,"1. Navigate to module
+2. Select Grid View
+3. Enter keyword in Search field","Matching records are displayed in
+ Grid View",,Passed,,,
+18.0,Search with no results,1. Enter non-existing keyword in Search,System displays No results found message,,Passed,,,
+19.0,Clear search results,"1. Enter keyword in Search
+2. Clear search field",Full list of records is displayed again,,Passed,,,
+20.0,Filter records in Grid View,"1. Navigate to module
+2. Select Grid View
+3. Apply filter","Records matching filter criteria are
+ displayed",,Passed,,,
+21.0,Search and filter combination,"1. Apply filter
+2. Enter keyword in Search","System displays records matching both
+ search and filter criteria",,Passed,,,
+22.0,Remove filter,"1. Apply filter
+2. Clear or remove filter",All records are displayed again,,Passed,,,
+23.0,Switch view after search,"1. Search for a record
+2. Switch from List to Grid or Kanban","Search results remain consistent
+ across views",,Passed,,,
+24.0,Switch view after applying filter,"1. Apply filter2. Switch between List, Grid, and Kanban","Filtered results remain consistent
+ across views",,Passed,,,
+25.0,"Companies
+Pagination 10/25/50/100","1. Navigate to Companies module
+2. Select pagination options 10, 25, 50, 100 
+sequentially
+3. Observe displayed records","System correctly updates displayed 
+logs according to selected pagination",,Passed,,,
+26.0,View User Logs,Navigate to User Logs section,User logs displayed successfully,,Passed,,,
+27.0,Search User Logs,Enter keyword in search,Matching logs displayed,,Passed,,,
+28.0,"User Logs 
+Pagination 10/25/50/100","1. Navigate to Companies module
+2. Select pagination options 10, 25, 50, 100 
+sequentially
+3. Observe displayed records","System correctly updates displayed 
+logs according to selected pagination",,Passed,,,
+Wedding Suppliers,,,,,,,,
+1.0,"Wedding Suppliers 
+page loads","1. Login as Super Admin
+2. Navigate to Wedding Suppliers module","Wedding Suppliers page loads 
+successfully",,Passed,,,
+2.0,"Add supplier with valid 
+data","1. Click Add Supplier
+2. Enter Name
+3. Select Category
+4. Enter supplier details
+5. Click Save","Supplier is successfully created and 
+displayed in the list",,Passed,,,
+3.0,"Required field validation 
+– Name","1. Click Add Supplier
+2. Leave Name empty
+3. Click Save","System displays validation error for 
+Name field",,Passed,,,
+4.0,"Required field validation 
+– Category","1. Click Add Supplier
+2. Leave Category empty
+3. Click Save","System displays validation error for 
+Category",,Passed,,,
+5.0,Email format validation,"1. Enter invalid email format
+2. Save supplier",System shows email validation error,Accepts email format with no domain extension (e.g. test@example),Passed,(PASSED) 03/19/2026,,
+6.0,Phone number format validation,"1. Enter invalid phone number format
+2. Save supplier","System shows phone number 
+validation error","Accepts phone number 
+format with alphabetical 
+characters",Passed,(PASSED) 03/17/2026,,
+7.0,"Add supplier with optional 
+fields","1. Fill Name and Category
+2. Leave optional fields empty
+3. Save",Supplier is successfully created,,Passed,,,
+8.0,Add contact person,"1. Click Add Supplier
+2. Click Add Contact
+3. Enter contact details
+4. Save supplier","Contact person is successfully 
+added to supplier",,Passed,,,
+9.0,Contact Email format validation,"1. Enter invalid email format
+2. Save supplier",System shows email validation error,Accepts email format with no domain extension (e.g. test@example),Passed,(PASSED) 03/19/2026,,
+10.0,"Contact Phone number format 
+validation","1. Enter invalid phone number format
+2. Save supplier","System shows phone number 
+validation error","Accepts phone number 
+format with alphabetical 
+characters",Passed,(PASSED) 03/17/2026,,
+11.0,View supplier details,"1. Select existing supplier
+2. Click View","Supplier information is displayed 
+correctly",,Passed,,,
+12.0,Edit supplier,"1. Select supplier
+2. Click Edit
+3. Modify information
+4. Save","Supplier information is updated
+ successfully",,Passed,,,
+13.0,Delete supplier,"1. Select supplier
+2. Click Delete
+3. Confirm deletion",Supplier is removed from the list,,Passed,,,
+14.0,Export suppliers list,1. Click Export button,"Supplier data file downloads 
+successfully",,Passed,,,
+15.0,Export suppliers list with filter,"1. Select category filter 
+2. Click Export button","Supplier data file downloads 
+successfully",Exports all data even with filters,Failed,,,
+16.0,Import suppliers list,"1. Click Import
+2. Upload valid file
+3. Submit","Suppliers are imported successfully 
+into the system","System shows error: ""Failed to parse file""",Failed,,,
+17.0,Search supplier,1. Enter supplier name in Search field,Matching suppliers are displayed,,Passed,,,
+18.0,"Search non-existing 
+supplier",1. Enter invalid keyword,System displays no results,,Passed,,,
+19.0,"Filter suppliers by 
+category",1. Select category filter,"Only suppliers belonging to selected 
+category are displayed",,Passed,,,
+20.0,Pagination 10/25/50/100,"1. Navigate to Wedding Suppliers
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+supplier records according to 
+selected pagination",,Passed,,,
+21.0,Add supplier category,"1. Navigate to Manage Categories
+2. Enter Category Name
+3. Click Add",Category is successfully added,,Passed,,,
+22.0,Edit supplier category,"1. Select category
+2. Click Edit
+3. Update name
+4. Save",Category is updated successfully,,Passed,,,
+23.0,Delete supplier category,1. Select category2. Click Delete,Category is removed successfully,,Passed,,,
+24.0,"Prevent deletion if
+category in use",1. Try deleting category assigned to supplier,"System prevents deletion or 
+prompts warning","Deletion of category 
+also deletes linked wedding supplier record",Passed,(PASSED) 03/24/2026,,
+Media,,,,,,,,
+1.0,Media Library page loads,"1. Login as Super Admin
+2. Navigate to Media Library",Media Library page loads successfully,,Passed,,,
+2.0,Upload media file,"1. Click Upload Media
+2. Select valid file
+3. Upload","File uploads successfully and 
+appears in Media Library",,Passed,,,
+3.0,"Upload multiple media 
+files",1. Upload multiple files simultaneously,All selected files upload successfully,,Passed,,,
+4.0,"Upload unsupported file 
+format",1. Upload invalid file type,"System displays file format validation
+ error",,Passed,,,
+5.0,"Upload file exceeding
+ size limit",1. Upload file exceeding system limit,"System prevents upload and displays 
+error message",,Passed,,,
+6.0,Search media file,1. Enter file name in Search field,Matching media files are displayed,,Passed,,,
+7.0,Search non-existing media file,1. Enter invalid keyword,System displays no results,,Passed,,,
+Plans- Plan,,,,,,,,
+1.0,Plans page loads,1. Navigate to Plans module,Plans page loads successfully,,Passed,,,
+2.0,Monthly / Yearly toggle,1. Switch Monthly/Yearly toggle,"Plans display correct pricing based 
+on toggle selection",,Passed,,,
+3.0,Add plan with valid data,1. Click Add Plan2. Fill required fields3. Save,Plan is successfully created,,Passed,,,
+4.0,"Add plan with missing required 
+fields",1. Leave required fields blank2. Click Save,System displays validation errors,,Passed,,,
+5.0,Add currency to plan,"1. Click Add Currency
+2. Select currency from dropdown
+3. Enter monthly and yearly price","Currency pricing is successfully 
+added to plan",,Passed,,,
+6.0,Enable Branding toggle,1. Enable Branding toggle while creating plan,"Branding feature is enabled for 
+the plan",,Passed,,,
+7.0,AI Integration toggle,1. Enable AI Integration toggle,"AI features become enabled for 
+the plan",,Passed,,,
+8.0,Enable Trial toggle,1. Enable Trial toggle2. Enter trial days,"Plan trial configuration saved 
+successfully",,Passed,,,
+9.0,Set default plan,1. Enable Default Plan toggle,"Selected plan becomes system 
+default",,Passed,,,
+10.0,Activate/Deactivate plan,1. Toggle Active switch,Plan status updates accordingly,,Passed,,,
+11.0,Edit plan,"1. Select plan
+2. Click Edit
+3. Modify details
+4. Save",Plan details update successfully,,Passed,,,
+12.0,Delete plan,"1. Select plan
+2. Click Delete
+3. Confirm",Plan is removed from system,,Passed,,,
+13.0,"Prevent deletion of active 
+subscribed plan",1. Try deleting plan used by active subscription,"System prevents deletion or displays
+ warning",,Passed,,,
+Plans - Plan Request,,,,,,,,
+1.0,View plan requests,1. Navigate to Plan Requests,All plan requests are displayed,,Passed,,,
+2.0,Approve plan request,1. Select pending request2. Click Approve,Request status changes to Approved,,Passed,,,
+3.0,Reject plan request,1. Select pending request2. Click Reject,Request status changes to Rejected,,Passed,,,
+4.0,Search plan request,1. Enter keyword in Search field,Matching requests are displayed,,Passed,,,
+5.0,Filter plan requests by status,1. Select status filter,"Requests are filtered based on 
+selected status",,Passed,,,
+6.0,Pagination 10/25/50/100,"1. Navigate to Plan Requests
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+supplier records according to 
+selected pagination",,Passed,,,
+Plan - Plan Orders,,,,,,,,
+1.0,View plan orders,1. Navigate to Plan Orders,Plan orders list loads successfully,,Passed,,,
+2.0,Search plan order,1. Enter keyword in Search field,Matching orders displayed,,Passed,,,
+3.0,Filter plan orders by status,1. Select status filter,"Orders filtered based on selected 
+status",,Passed,,,
+4.0,Pagination 10/25/50/100,"1. Navigate to Plan Orders
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+supplier records according to 
+selected pagination",,Passed,,,
+Coupons,,,,,,,,
+1.0,Coupons page loads,"1. Login as Super Admin
+2. Navigate to Coupons module",Coupons page loads successfully,,Passed,,,
+2.0,Add coupon with valid data,"1. Click Add New Coupon
+2. Enter required fields
+3. Save","Coupon is successfully created and 
+displayed in list",,Passed,,,
+3.0,Required field validation,"1. Leave required fields (Coupon Name, 
+Discount Type, Discount Value) empty
+2. Click Save","System displays validation errors 
+for required fields",,Passed,,,
+4.0,Manual coupon code entry,"1. Select Manual Code Generation
+2. Enter coupon code
+3. Save","Coupon is created with manually 
+entered code",,Passed,,,
+5.0,Auto generate coupon code,"1. Select Auto Generate option
+2. Save coupon","System automatically generates
+ coupon code",,Passed,,,
+6.0,Discount type validation,"1. Select different Discount Types (e.g., 
+Percentage / Fixed)
+2. Enter discount value",System applies discount type correctly,,Passed,,,
+7.0,Minimum spend validation,"1. Set minimum spend amount
+2. Save coupon","Coupon applies only when minimum 
+spend requirement is met",,Passed,,,
+8.0,Maximum spend validation,1. Set maximum spend value2. Save coupon,"Coupon applies only up to maximum 
+spend limit",,Passed,,,
+9.0,Total usage limit validation,"1. Set total usage limit
+2. Apply coupon multiple times","Coupon stops working after usage 
+limit is reached",,Passed,,,
+10.0,Usage limit per user validation,"1. Set usage limit per user
+2. Attempt to reuse coupon with same user","Coupon cannot be reused beyond 
+allowed limit",,Passed,,,
+11.0,Expiry date validation,"1. Set expiry date
+2. Attempt to use coupon after expiration","System prevents coupon usage 
+after expiry date",,Passed,,,
+12.0,Status toggle,1. Toggle coupon status (Active/Inactive),Coupon status updates successfully,,Passed,,,
+13.0,View coupon details,"1. Select coupon
+2. Click View",Coupon details are displayed correctly,,Passed,,,
+14.0,Edit coupon,"1. Select coupon
+2. Click Edit
+3. Modify details
+4. Save","Coupon details are updated 
+successfully",,Passed,,,
+15.0,Delete coupon,"1. Select coupon
+2. Click Delete
+3. Confirm deletion",Coupon is removed from the list,,Passed,,,
+16.0,Search coupon,1. Enter coupon name/code in search field,Matching coupons are displayed,,Passed,,,
+17.0,Search non-existing coupon,1. Enter invalid keyword,System displays no results,,Passed,,,
+18.0,Filter by Status,1. Select Status filter (Active/Inactive),"Coupons are filtered according to 
+selected status",,Passed,,,
+19.0,Filter by Discount Type,1. Select Discount Type filter,"Coupons are filtered according to 
+selected discount type",,Passed,,,
+20.0,Pagination 10/25/50/100,"1. Navigate to Coupons
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+supplier records according to 
+selected pagination",,Passed,,,
+Currencies,,,,,,,,
+1.0,Currencies page loads,"1. Login as Super Admin
+2. Navigate to Currencies module",Currencies page loads successfully,,Passed,,,
+2.0,Add new currency with valid data,"1. Click Add New Currency
+2. Enter Currency Name
+3. Enter Currency Code
+4. Enter Currency Symbol
+5. Save","Currency is successfully created 
+and appears in list",,Passed,,,
+3.0,Required field validation,"1. Leave required fields empty
+2. Click Save","System displays validation error
+ for required fields",,Passed,,,
+4.0,Currency code validation,"1. Enter invalid currency code format
+2. Save",System displays validation error,,Passed,,,
+5.0,Set default currency,"1. Check Set as Default Currency
+2. Save","Selected currency becomes
+ system default",,Passed,,,
+6.0,"Prevent multiple default 
+currencies",1. Set another currency as default,"Previous default currency is 
+automatically removed or replaced",,Passed,,,
+7.0,Edit currency,"1. Select existing currency
+2. Click Edit
+3. Modify details
+4. Save",Currency details update successfully,,Passed,,,
+8.0,Delete currency,"1. Select currency
+2. Click Delete
+3. Confirm deletion",Currency is removed from system,,Passed,,,
+9.0,"Prevent deletion of default 
+currency",1. Attempt to delete default currency,"System prevents deletion or prompts 
+warning",,Passed,,,
+10.0,Search currency,1. Enter currency name/code in Search field,"Matching currency records are 
+displayed",,Passed,,,
+11.0,Pagination 10/25/50/100,"1. Navigate to Currencies
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+supplier records according to 
+selected pagination",,Passed,,,
+Referral Program,,,,,,,,
+1.0,Referral Dashboard loads,1. Navigate to Referral Program → Dashboard,Dashboard loads successfully,,Passed,,,
+2.0,Display total referrals,1. View Total Referrals widget,"Correct total referrals count 
+displayed",,Passed,,,
+3.0,Display pending payouts,1. View Pending Payouts widget,"Correct pending payout value 
+displayed",,Passed,,,
+4.0,Display total commission paid,1. View Total Commission Paid widget,"Correct commission paid value 
+displayed",,Passed,,,
+5.0,Display active companies,1. View Active Companies widget,"Correct number of active companies 
+displayed",,Passed,,,
+6.0,Top referring companies display,1. View Top Referring Companies section,"Companies ranked correctly based 
+on referrals",,Passed,,,
+7.0,Monthly performance display,1. View Monthly Performance ,"Correct number of referred users and 
+payouts processed displayed",,Passed,,,
+8.0,Payout requests display,1. View Payout Requests section,Payout requests are displayed correctly,,Passed,,,
+9.0,Referred Users page loads,1. Navigate to Referred Users,Referred users list loads successfully,,Passed,,,
+10.0,Display total referred users,1. View Total Referred Users widget,"Correct number of referred users
+ displayed",,Passed,,,
+11.0,Display users with plans,1. View Users With Plans widget,"Correct number of users with active 
+plans displayed",,Passed,,,
+12.0,Display total commission earned,1. View Total Commission Earned widget,Commission value displayed correctly,,Passed,,,
+13.0,View referred users list,1. Check referred users table,List displays all referred users correctly,,Passed,,,
+14.0,View payout request details,1. Select payout request,"Details of payout request displayed 
+correctly",,Not Started,,,
+15.0,Enable referral program,"1. Navigate to Payout Requests
+2. Enable Referral Program toggle
+3. Save",Referral program becomes active,,Passed,,,
+16.0,Disable referral program,1. Disable Referral Program toggle,Referral program becomes inactive,,Passed,,,
+17.0,"Commission percentage 
+validation","1. Enter commission percentage
+2. Save","Commission percentage saved 
+successfully",,Passed,,,
+18.0,Minimum threshold validation,"1. Enter minimum threshold amount
+2. Save",System accepts valid threshold amount,,Passed,,,
+19.0,Referral guidelines update,"1. Edit referral guidelines text
+2. Save",Updated guidelines saved successfully,,Passed,,,
+Landing Page - Landing Page,,,,,,,,
+1.0,Landing Page settings page loads,"1. Login as Super Admin
+2. Navigate to Landing Page → Settings",Landing Page settings load successfully,,Passed,,,
+2.0,Update General settings,"1. Enter Company Name
+2. Enter Contact Email, Phone, Address
+3. Update Theme Colors
+4. Save","General settings saved successfully 
+and preview updates",,Passed,,,
+3.0,Contact information preview,"1. Update contact information
+2. Observe preview section",Contact preview updates correctly,,Passed,,,
+4.0,Section order toggle,"1. Navigate to Setup -> Order
+2. Enable/Disable sections in Order list","Landing page sections show/hide 
+according to toggle settings",,Passed,,,
+5.0,Disable all sections,"1. Disable all toggles
+2. Save",Page handles empty state gracefully,,Passed,,,
+6.0,Rapid toggle switching,"1. Toggle sections repeatedly
+2. Save",No UI glitch or crash,,Passed,,,
+7.0,SEO settings validation,"1. Navigate to Setup -> Advanced
+2. Enter Meta Title and Meta Description
+3. Save",SEO settings saved successfully,,Passed,,,
+8.0,SEO empty fields,Leave meta fields blank,Default or validation shown,,Not Started,,,
+9.0,SEO special characters,Enter symbols/emojis,Proper encoding without breaking,,Not Started,,,
+10.0,Header layout configuration,"1. Navigate to Layout -> Header
+2. Enable/Disable Header Section
+3. Toggle Transparent Header
+4. Modify background and text color
+5. Save",Header updates correctly in preview,,Passed,,,
+11.0,Header disabled,Disable header section,Header hidden from preview,,Passed,,,
+12.0,Hero section configuration,"1. Navigate to Layout -> Hero
+2.Enable Hero section
+3. Select layout style
+4. Add title, subtitle, buttons
+5. Upload hero image
+6. Save","Hero section appears correctly in 
+preview",,Passed,,,
+13.0,Hero image invalid upload,Upload unsupported file,Upload rejected with error,,Not Started,,,
+14.0,Footer configuration,"1. Navigate to Layout -> Footer
+2.Add company description
+3. Add newsletter title/subtitle
+4. Add social links and footer links
+5. Save",Footer section updates correctly,,Passed,,,
+15.0,Add feature box,"1. Navigate to  Content → Features
+2. Click Add Feature Box
+3. Enter Title, Icon, Description
+4. Click Save","Feature box appears correctly on 
+landing page",,Passed,,,
+16.0,Edit feature box,Modify existing feature,Changes reflected correctly,,Passed,,,
+17.0,Delete feature box,Delete feature,Feature removed successfully,,Passed,,,
+18.0,Add screenshot,"1. Navigate to Content → Screenshots
+2. Click Add Screenshot
+3. Upload screenshot image
+4. Enter Title, Alt Text, Description
+5. Save",Screenshot section displays correctly,,Passed,,,
+19.0,Screenshot invalid format,Upload invalid file,Error displayed,"No error validation shown, invalid file types
+can be saved",Failed,,,
+20.0,Add reason and statistics,"1. Navigate to  Content → Why Us
+2. Click Add Reason
+3. Enter Title, Icon, Description
+4. Add Statistics Section
+5. Click Save",Reasons and statistics appear correctly,,Passed,,,
+21.0,Configure About section,"1. Navigate to Content → About
+2. Enter About Title and Description
+3. Upload About Image
+4. Add Company Values or Statistics
+5. Save","About section appears correctly on 
+landing page",,Passed,,,
+22.0,Add team member,"1. Navigate to Social → Team
+2. Click Add Team Member
+3. Enter Name, Role, Bio
+4. Upload Profile Image
+5. Save","Team member appears correctly in 
+team section",,Passed,,,
+23.0,"Team member image invalid 
+upload",Upload unsupported file,Upload rejected with error,"No error validation shown, invalid file types
+can be saved",Failed,,,
+24.0,Display reviews and plans section,"1. Enable Reviews and Plans sections
+2. Save","Sections appear correctly on landing 
+page",,Passed,,,
+25.0,Configure FAQ section content,"1. Navigate to Engagement → FAQ
+2. Enter Section Title
+3. Enter Section Subtitle
+4. Enter CTA Text
+5. Enter Button Text
+6. Click Save","FAQ section content is saved 
+successfully and appears correctly in 
+preview",,Passed,,,
+26.0,Add FAQ item,"1.Click Add FAQs
+2. Enter Question and Answer
+3. Click Save","New FAQ item appears correctly in 
+the FAQ section",,Passed,,,
+27.0,Delete FAQ item,"1.. Click Delete on an existing FAQ
+2. Confirm deletion","Selected FAQ item is removed 
+successfully",,Passed,,,
+28.0,Configure Newsletter section,"1. Navigate to Engagement → Newsletter
+2. Enter Section Title
+3. Enter Section Subtitle
+4. Enter Privacy Text
+5. Click Save","Newsletter section information is 
+saved successfully",,Passed,,,
+29.0,Add Newsletter Benefit,"1. Click Add Newsletter Benefit
+2. Enter Icon (Emoji), Title, and Description
+3. Save","Newsletter benefit is added and 
+displayed correctly",,Passed,,,
+30.0,Delete Newsletter Benefit,"1. Click Delete on an existing benefit
+2. Confirm deletion","Newsletter benefit is removed 
+successfully",,Passed,,,
+31.0,Configure Contact section details,"1. Navigate to Engagement → Contact
+2. Enter Section Title and Section Subtitle
+3. Enter Form Title4. Enter Contact Info Title 
+and Description
+5. Enter Email Address, Phone Number, Address
+6. Click Save","Contact section details are saved 
+successfully",,Passed,,,
+32.0,Add Contact FAQ,"1.  Click Add Contact FAQs
+2. Enter Question and Answer
+3. Click Save","Contact FAQ appears correctly in the 
+contact section",,Passed,,,
+33.0,Delete Contact FAQ,"1. . Click Delete on existing Contact FAQ
+2. Confirm deletion",Contact FAQ is removed successfully,,Passed,,,
+34.0,Setup progress indicator,1. Configure landing page sections,"Setup progress percentage updates 
+correctly",,Passed,,,
+35.0,Live preview,"1. Modify any section
+2. Observe preview","Live preview reflects changes 
+immediately",,Passed,,,
+36.0,Color scheme preview,1. Change theme colors,Preview updates color scheme correctly,,Passed,,,
+37.0,Unsaved changes handling,1. Modify → Navigate away,Warning prompt shown,,Not Started,,,
+Landing Page - Custom Pages,,,,,,,,
+1.0,Custom Pages page loads,1. Navigate to Landing Page → Custom Pages,"Custom Pages page loads 
+successfully with list of sent contact 
+messages",,Passed,,,
+2.0,Add custom page,"1. Click Add Page
+2. Enter title, content, SEO meta
+3. Save",Custom page created successfully,,Passed,,,
+3.0,Verify new page visibility,"1. Login as Super Admin
+2. Navigate to Landing Page → Custom Pages
+3. Add a new page and click Save
+4. Open the Landing Page (public view)
+5. Locate the newly created page","Newly created page should be visible and 
+accessible on the landing page (e.g., via 
+navigation menu or direct URL)",,Passed,,,
+4.0,Edit custom page,"1. Select page
+2. Modify content
+3. Save",Page updates successfully,,Passed,,,
+5.0,Enable custom page,"1. Select disabled page 
+2. Toggle Enable ON","Page becomes active and visible on 
+landing site",,Passed,,,
+6.0,Disable custom page,"1. Select active page 
+2. Toggle Enable OFF","Page becomes inactive and hidden 
+from landing site",,Passed,,,
+8.0,"Direct URL access for 
+disabled page",1. Disable page → Access via URL,"Access blocked or redirected (e.g., 
+404/hidden)",,Passed,,,
+9.0,Toggle persistence after refresh,Enable/Disable page → Refresh page,"State (enabled/disabled) persists 
+correctly",,Passed,,,
+10.0,Toggle multiple pages,Enable/Disable multiple pages,"All states update correctly without 
+conflict",,Passed,,,
+11.0,Empty page title validation,Leave title blank → Save,Validation error shown,,Passed,,,
+12.0,Duplicate page title,Create page with existing title,"Proper validation or allowed with 
+uniqueness handling",No proper error handlig,Passed,(PASSED) 03/24/26,,
+13.0,Long title/content,Enter very long text,System handles without breaking UI,,Not Started,,,
+14.0,Delete custom page,"1. Select page
+2. Click Delete",Page removed successfully,,Not Started,,,
+15.0,Delete confirmation validation,Click delete → Cancel,Page is not deleted,,Not Started,,,
+16.0,Search custom page,1. Enter page title in search field,Matching page results displayed,,Not Started,,,
+17.0,Search with no results,Enter non-existing title,“No results found” message displayed,,Not Started,,,
+18.0,"Pagination (10, 25, 50, 100)",1. Change pagination option,"Records display according to selected
+ pagination",,Not Started,,,
+Landing Page - Contact Messages,,,,,,,,
+1.0,Contact Messages page loads,1. Navigate to Landing Page → Contact Messages,"Contact Message page loads 
+successfully with list of sent contact 
+messages",,Passed,,,
+2.0,View contact message,"1. Select a message from the list
+2. Open/View the message details","Selected contact message details are 
+displayed correctly",,Passed,,,
+3.0,Delete contact message,"
+1. Select a message
+2. Click Delete
+3. Confirm deletion","Contact message is removed 
+successfully from the list",,Passed,,,
+4.0,Search contact messages,1. Enter keyword in Search field,Matching messages displayed,,Passed,,,
+5.0,"Pagination (10,25,50,100)",1. Select pagination option,"Messages display according to selected 
+limit",,Passed,,,
+Landing Page - Newsletters,,,,,,,,
+1.0,Newsletters page loads,1. Navigate to Landing Page → Newsletters,"Newletter page loads 
+successfully with list of newsletter 
+subscribers",,Passed,,,
+2.0,Delete newsletter subscriber,"1.Select subscriber
+2. Click Delete
+3. Confirm deletion","Selected subscriber is removed from 
+the list",,Passed,,,
+3.0,Search contact messages,1. Enter keyword in search field,Matching messages displayed,,Passed,,,
+4.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Email Templates,,,,,,,,
+1.0,Email Templates page loads,"1. Login as Super Admin
+2. Navigate to Email Templates","Email Templates page loads 
+successfully with list of templates",,Passed,,,
+2.0,View email template details,"1. Navigate to Email Templates
+2. Select a template from the list
+3. Click View","Template details page opens displaying 
+Template Settings, Email Content, and
+ Variables",,Passed,,,
+3.0,Update template settings,"1. Navigate to Email Templates → View Template
+2. Go to Template Setting section
+3. Modify From Name
+4. Click Save Changes","Template settings are saved 
+successfully",,Passed,,,
+4.0,Prevent editing template name,"1. Navigate to Email Templates → View Template
+2. Attempt to modify Template Name","System prevents editing of Template 
+Name field",,Passed,,,
+5.0,"Update email content for 
+selected language","1. Navigate to Email Templates → View Template 
+→ Email Content
+2. Select a Language from the language selector
+3. Update Email Subject and Email Content
+4. Save changes","Email subject and content are saved 
+successfully for selected language",,Passed,,,
+6.0,"Insert available variables into 
+email content","1. Navigate to Email Templates → View Template
+2. Click a variable from Available Variables list
+3. Paste into Email Content editor
+4. Save","Variable is inserted correctly into email 
+template content",,Passed,,,
+7.0,Search email template,"1. Navigate to Email Templates
+2. Enter template name in Search field",Matching email templates are displayed,,Passed,,,
+8.0,"Pagination (10, 25, 50, 100)","1. Navigate to Email Templates
+2. Change pagination to 10, 25, 50, 100 
+sequentially3. Observe displayed records","System displays correct number of 
+templates according to selected 
+pagination",,Passed,,,
+Settings,,,,,,,,
+1.0,Access Settings page,"1. Login as Super Admin
+2. Navigate to Settings","Settings page loads successfully 
+displaying all configuration sections",,Passed,,,
+2.0,Update system language,"1. Navigate to Settings → System Settings 
+section
+2. Select Language
+3. Click Save Changes",Language is updated successfully,,Passed,,,
+3.0,Change date and time format,"1. Navigate to Settings → System Settings 
+section
+2. Select Date Format and Time Format
+3. Save changes","Date and time format updates across 
+system",,Passed,,,
+4.0,Update default timezone,"1. Navigate to Settings → System Settings 
+section
+2. Select Default Timezone
+3. Click Save Changes",Timezone is updated successfully,,Passed,,,
+5.0,Toggle email verification,"1. Navigate to Settings → System Settings 
+section
+2. Toggle Email Verification ON/OFF
+3. Save changes","Email verification setting updates 
+successfully",,Passed,,,
+6.0,Toggle landing page visibility,"1. Navigate to Settings → System Settings 
+section
+2. Toggle Landing Page ON/OFF
+3. Save changes","Landing page availability updates 
+successfully",,Passed,,,
+7.0,Update Terms & Conditions URL,"1. Navigate to Settings → System Settings 
+section
+2. Enter Terms & Conditions URL
+3. Click Save Changes",URL is saved successfully,,Passed,,,
+8.0,Upload brand logos,"1. Navigate to Settings → Brand Settings section
+2. Upload Logo Dark, Logo Light
+3. Click Save Changes",Logos upload and save successfully,,Passed,,,
+9.0,Upload favicon in Super Admin,"1. Login as Super Admin 
+2. Go to Brand Settings 
+3. Upload favicon 
+4. Save",Favicon saved successfully,,Passed,,,
+10.0,"Favicon displayed in company 
+interface","1. Login as Company User 
+2. Open Dashboard",Browser tab shows updated favicon,Favicon not updated for company users,Passed,,,
+11.0,"Favicon reflected across 
+modules","1. Navigate across modules
+(Leads, Accounts, Projects etc.)",Same favicon displayed on all pages,Favicon not updated for company users,Passed,,,
+12.0,Favicon after logout/login,"1. Logout 
+2. Login again as company user",Updated favicon still visible,Favicon not updated for company users,Passed,,,
+13.0,Favicon after browser refresh,1. Refresh page,Favicon remains visible,,Passed,,,
+14.0,Favicon update replacement,"1. Upload new favicon 
+2. Save","New favicon replaces old favicon 
+across UI",Favicon not updated for company users,Passed,,,
+16.0,Update title and footer text,"1. Navigate to Settings → Brand Settings section
+2. Enter Title Text and Footer Text
+3. Save changes",Text updates successfully,,Passed,,,
+17.0,Modify theme color,"1. Navigate to Settings → Brand Settings → 
+Theme
+2. Select Theme Color
+3. Observe Live Preview
+4. Save changes","Theme color updates and preview 
+reflects change",,Passed,,,
+18.0,Change sidebar variant,"1. Navigate to Settings → Brand Settings → 
+Theme
+2. Select Sidebar Variant (Inset/Floating/Minimal)
+3. Save changes",Sidebar layout updates successfully,,Passed,,,
+19.0,Change sidebar style,"1. Navigate to Settings → Brand Settings → 
+Theme
+2. Select Sidebar Style (Plain/Colored/Gradient)
+3. Save changes",Sidebar style updates successfully,,Passed,,,
+20.0,Change layout direction,"1. Navigate to Settings → Brand Settings → 
+Theme
+2. Select Layout Direction (LTR/RTL)
+3. Save changes",Layout direction updates successfully,,Passed,,,
+21.0,Change theme mode,"1. Navigate to Settings → Brand Settings → 
+Theme
+2. Select Theme Mode (Light/Dark/System)
+3. Save changes",Theme mode updates successfully,,Passed,,,
+22.0,Configure currency format,"1. Navigate to Settings → Currency Settings 
+section
+2. Select Format Options
+3. Save changes",Currency format updates successfully,,Passed,,,
+23.0,Change default currency,"1. Navigate to Settings → Currency Settings
+ section
+2. Select Default Currency
+3. Save changes",Default currency updates successfully,,Passed,,,
+24.0,Configure decimal formatting,"1. Navigate to Settings → Currency Settings 
+section
+2. Set Decimal Places, Decimal Separator, 
+Thousands Separator
+3. Save changes",Decimal formatting updates successfully,,Passed,,,
+25.0,Toggle decimal display,"1. Navigate to Settings → Currency Settings 
+section
+2. Toggle Show Decimal ON/OFF
+3. Save changes","Decimal display setting updates 
+successfully",,Passed,,,
+26.0,"Toggle spacing between amount 
+and symbol","1. Navigate to Settings → Currency Settings 
+section
+2. Toggle Add Space Between Amount and 
+Symbol
+3. Save changes","Currency spacing format updates 
+successfully",,Passed,,,
+27.0,Configure SMTP email settings,"1. Navigate to Settings → Email Settings 
+section
+2. Enter SMTP Host, Port, Username, 
+Password, Encryption
+3. Click Save Changes",SMTP configuration saves successfully,,Passed,,,
+28.0,Send test email,"1. Navigate to Settings → Email Settings 
+section
+2. Click Test Email Configuration",Test email sends successfully,,Passed,,,
+29.0,Update sender details,"1. Navigate to Settings → Email Settings 
+section
+2. Modify From Address and From Name
+3. Save changes",Sender details update successfully,,Passed,,,
+30.0,Search payment method,"1. Navigate to Settings → Payment Settings 
+section
+2. Enter keyword in Search Payment Methods",Matching payment methods display,,Passed,,,
+31.0,Filter payment methods,"1. Navigate to Settings → Payment Settings 
+section
+2. Apply filter (All / Enabled / Disabled)","Filtered payment methods display 
+correctly",,Passed,,,
+32.0,"Enable or disable payment 
+method","1. Navigate to Settings → Payment Settings 
+section
+2. Toggle payment method ON/OFF
+3. Click Save Changes","Payment method status updates 
+successfully",,Passed,,,
+33.0,Configure Google ReCaptcha,"1. Navigate to Settings → ReCaptcha Settings 
+section
+2. Toggle Enable ReCaptcha
+3. Select Version (v2/v3)4. Enter Site Key and 
+Secret Key
+5. Save changes",ReCaptcha settings save successfully,,Passed,,,
+34.0,Configure ChatGPT integration,"1. Navigate to Settings → ChatGPT Settings 
+section
+2. Enter ChatGPT Key and Model Name
+3. Save changes","ChatGPT configuration saves 
+successfully",,Passed,,,
+35.0,Configure cookie consent settings,"1. Navigate to Settings → Cookie Settings 
+section
+2. Toggle cookie options and update descriptions
+3. Save changes",Cookie settings update successfully,,Passed,,,
+36.0,"Download accepted cookies 
+report","1. Navigate to Settings → Cookie Settings 
+section
+2. Click Download Accepted Cookies CSV",CSV file downloads successfully,,Passed,,,
+37.0,Update SEO metadata,"1. Navigate to Settings → SEO Settings section
+2. Enter Meta Keywords and Meta Description
+3. Upload Meta Image4. Click Save Changes",SEO settings save successfully,,Passed,,,
+38.0,"Saved SEO fields persist after 
+refresh","1. Enter SEO data 
+2. Save 
+3. Refresh page","Saved values remain displayed after 
+refresh",,Passed,,,
+39.0,"Saved SEO fields persist after 
+logout/login","1. Enter SEO data 
+2. Save 
+3. Logout
+4. Login 
+5. Return to SEO Settings",Saved values remain intact after relogin,,Passed,,,
+40.0,"Required field validation for 
+Meta Keywords","1. Clear Keywords 
+2. Click Save","Proper validation message appears 
+if field is required, if applicable",,Passed,,,
+41.0,"Required field validation for 
+Meta Description","1. Clear Meta Description 
+2. Click Save","Proper validation message appears 
+if field is required",,Passed,,,
+42.0,"Character limit enforced for 
+Meta Description","1. Enter text beyond allowed limit 
+2. Save","System enforces character limit or 
+shows validation message",,Passed,,,
+43.0,Empty field handling,"1. Leave one or more SEO fields empty 
+2. Save","System either allows save with safe 
+fallback or shows validation",,Passed,,,
+45.0,"Boundary test for very long 
+Meta Description","1. Enter Meta Description longer than 160
+2. Save","System does not allow description 
+exceeding 160 characters",,Passed,,,
+46.0,Save without changes,"1. Open SEO Settings 
+2. Click Save without editing","System behaves correctly and does 
+not corrupt existing data",,Passed,,,
+47.0,"Cancel/back navigation 
+without save","1. Edit SEO fields 
+2. Navigate away without saving",Unsaved changes are discarded,,Passed,,,
+48.0,Configure local storage,"1. Navigate to Settings → Storage Settings → 
+Local Storage
+2. Select allowed file types
+3. Set Max Upload Size
+4. Save changes",Local storage settings save successfully,,Not Started,,,
+49.0,Configure AWS S3 storage,"1. Navigate to Settings → Storage Settings → 
+AWS S3
+2. Enter AWS credentials and bucket information
+3. Save changes",AWS configuration saves successfully,,Not Started,,,
+50.0,Configure Wasabi storage,"1. Navigate to Settings → Storage Settings → 
+Wasabi
+2. Enter Wasabi credentials
+3. Save changes",Wasabi configuration saves successfully,,Not Started,,,
+51.0,Clear system cache,"1. Navigate to Settings → Cache Settings 
+section
+2. Click Delete Cache",System cache clears successfully,,Not Started,,,

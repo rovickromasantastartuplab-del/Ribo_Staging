@@ -1,0 +1,1330 @@
+,,,,,,,,
+ITEM NO.,TEST CASE / SCENARIO,TEST STEP,EXPECTED RESULT,"ACTUAL RESULT
+(1st RUN)",STATUS,"TEST EVIDENCE
+(1st Run)",COMMENT / REMARK,
+Company,,,,,,,,
+Sign Up,,,,,,,,
+1.0,Registration page loads,1. Navigate to Registration page,Registration form loads successfully,,Passed,,,
+2.0,Successful registration,"1. Enter valid Email
+2. Enter Password
+3. Enter Confirm Password
+4. Check Agree to Terms and Conditions
+5. Click Register","User account is created and verification 
+email is sent",,Passed,,,
+3.0,Password mismatch validation,"1. Enter Password
+2. Enter different Confirm Password
+3. Click Register","System displays password mismatch 
+validation message",,Passed,,,
+4.0,Required fields validation,"1. Leave required fields empty
+2. Click Register","System displays required field
+validation messages",,Passed,,,
+5.0,Terms and conditions required,"1. Fill all fields
+2. Do NOT check Agree to Terms
+3. Click Register","System prevents registration and 
+prompts user to agree to terms",,Passed,,,
+6.0,Duplicate email registration,1. Register using an already existing email,"System prevents duplicate registration 
+and displays error message",,Passed,,,
+7.0,Register with invalid email format,"1. Enter test@example
+2. Enter and Confirm password 
+3.Sign Up",Validation error shown; registration blocked,Accepts email format with no domain extension (e.g. test@example),Passed,,(PASSED) - 03/19/2026,
+Verify Email,,,,,,,,
+1.0,Verification email received,"1. Register account
+2. Check email inbox","Verification email is received 
+successfully",,Passed,,,
+2.0,"Redirect to onboarding after 
+successful email verification","1. Register a new account
+2. Open verification email
+3. Click verification link","Email is verified and user is redirected 
+to the onboarding page",,Passed,,,
+3.0,Invalid verification link,1. Click expired or modified verification link,"System displays invalid or expired 
+link error",,Passed,,,
+4.0,Login without verification,1. Attempt to login before verifying email,"System restricts login and redirects to 
+verify email page",,Passed,,,
+Onboarding,,,,,,,,
+1.0,"Onboarding page loads 
+successfully",1. Complete email verification,"Onboarding page loads displaying the 
+Company Name setup step",,Passed,,,
+2.0,"Prevent access to dashboard 
+before onboarding completion","1. Verify email
+2. Attempt to directly access dashboard URL","System redirects user to onboarding 
+until setup is completed",,Passed,,,
+3.0,"Onboarding starts with 
+company setup","1. Verify email
+2. Observe first onboarding step","System displays Enter Company Name 
+as the first onboarding step",,Passed,,,
+4.0,"Onboarding session 
+persistence","1. Verify email
+2. Start onboarding
+3. Refresh page","Onboarding progress remains and 
+user stays on the same onboarding step",,Passed,,,
+5.0,Company name entry,"1. Enter Company Name
+2. Click Continue","Company name is saved and 
+onboarding proceeds to next step",,Passed,,,
+6.0,Empty company name validation,"1. Leave Company Name empty
+2. Click Continue",System shows required field validation,,Passed,,,
+7.0,Default roles displayed,1. Navigate to Roles step,"Predefined roles Admin and Sales 
+Manager are displayed",,Passed,,,
+8.0,Create custom role,"1. Click Create Role
+2. Enter Role Name
+3. Select permissions
+4. Save",Custom role is created successfully,,Passed,,,
+9.0,Role permissions selection,"1. Create role
+2. Select permissions
+3. Save","Selected permissions are saved 
+correctly",,Passed,,,
+10.0,Skip roles setup,1. Click Skip for Now,"System proceeds to next onboarding
+step",,Passed,,,
+11.0,Add team member,"1. Enter Name
+2. Enter Email
+3. Select Role
+4. Click Continue",Team member is added successfully,,Passed,,,
+12.0,Role dropdown selection,1. Click Role dropdown,"Available roles are displayed for 
+selection",,Passed,,,
+13.0,Invalid email validation,"1. Enter invalid email format
+2. Click Continue","System displays email format validation
+error",Accepts email format with no domain extension (e.g. test@example),Passed,,(PASSED) - 03/19/2026,
+14.0,Skip team member setup,1. Click Skip for Now,System proceeds to dashboard,,Passed,,,
+15.0,"Redirect to dashboard after 
+onboarding",1. Complete onboarding process,"User is redirected to the dashboard 
+successfully",,Passed,,,
+16.0,Dashboard loads correctly,1. Verify dashboard after onboarding,"Dashboard loads with company 
+account initialized",,Passed,,,
+17.0,"Plan subscription pop-up 
+appears on first login","1. Login using newly registered company account
+2. Navigate to Dashboard","Plan subscription pop-up appears
+ automatically on dashboard",,Passed,,,
+18.0,Display available plans in pop-up,1. Observe the plans displayed in the pop-up,"Available plans are displayed correctly 
+with pricing and plan details",,Passed,,,
+19.0,Monthly / Yearly pricing toggle,"1. Switch from Monthly to Yearly
+2. Switch back to Monthly","Plan pricing updates correctly based 
+on selected billing cycle",,Passed,,,
+20.0,Subscribe to a plan from pop-up,1. Click Subscribe on a selected plan,"User proceeds to plan subscription or 
+payment process",,Passed,,,
+21.0,Cancel / Close pop-up,1. Click Cancel / Close button,"Pop-up closes and dashboard remains 
+accessible",,Passed,,,
+22.0,"“Don’t show this again” 
+checkbox functionality","1. Check Don’t show this again
+2. Click Close
+3. Refresh dashboard or login again","Plan subscription pop-up no longer 
+appears on dashboard",,Passed,,,
+23.0,"Pop-up reappears when 
+checkbox not selected","1. Close pop-up without checking Don’t show this again
+2. Refresh dashboard or login again",Pop-up appears again on dashboard,,Passed,,,
+24.0,"Plan details correctness in
+pop-up","1. Compare plan name, price, and features shown in pop-up","Plan information matches system plan
+ configuration",,Passed,,,
+25.0,"Toggle state persists while 
+pop-up open","1. Select Yearly toggle
+2. Browse plans within pop-up","All displayed plans reflect selected
+billing cycle",,Passed,,,
+Log In,,,,,,,,
+1.0,"Login page loads 
+successfully",1. Click Login,Login page loads with all required fields/buttons visible,,Passed,,,
+2.0,Login – valid credentials,"1. Enter valid email 
+2. Enter valid password 
+3. Click Login",User logs in successfully and is redirected to Dashboard,,Passed,,,
+3.0,Login using Enter key,"1. Enter valid email & password 
+2. Press Enter",Login is triggered and user is redirected,,Passed,,,
+4.0,Login with invalid email format,"1. Enter test@ 
+2. Enter password 
+3. Login",Validation error shown; login blocked,,Passed,,,
+5.0,Login – non-existing email,"1. Enter email not in system 
+2. Any password 
+3. Login",Error shown; user not logged in,,Passed,,,
+6.0,Login – blank email,"1. Leave email empty 
+2. Enter password 
+3. Login",Required validation appears; no login,,Passed,,,
+7.0,Login – invalid password,"1. Enter valid email 
+2. Wrong password 
+3. Login",Error shown; user not logged in,,Passed,,,
+8.0,Login – blank password,"1. Enter email 
+2. Leave password empty 
+3. Login",Required validation appears; no login,,Passed,,,
+9.0,Login – both fields blank,"1. Leave email & password empty 
+2. Login",Required validations shown,,Passed,,,
+10.0,Password masked by default,1. Type password,Password characters are masked,,Passed,,,
+Forgot Password,,,,,,,,
+1.0,Forgot Password link visible,1. Observe login form,“Forgot password?” link is visible and clickable,,Passed,,,
+2.0,Forgot Password page loads successfully,1. Click Forgot password? from Login,Forgot Password page loads with Email field and submit button,,Passed,,,
+3.0,UI elements are displayed correctly,1. Observe page,"Email field, “Email password reset link” button, and “Back to login” link are visible",,Passed,,,
+4.0,Submit valid registered email,"1. Enter registered email 
+2. Click Email password reset link",Success message shown; reset email is sent,,Passed,,,
+5.0,Submit non-existing email,"1. Enter unregistered email 
+2. Submit",Generic success message shown,,Passed,,,
+6.0,Submit invalid email format,"1. Enter test@ 
+2. Submit",Validation error shown,,Passed,,,
+7.0,Submit empty email field,"1. Leave email empty 
+2. Submit",Required field validation shown,,Passed,,,
+Reset Password,,,,,,,,
+1.0,Password reset link opens reset password page,1. Click reset link from email,User is redirected to Reset Password page,,Passed,,,
+2.0,UI elements visible,1. Observe page,"New Password, Confirm Password, Submit button visible",,Passed,,,
+3.0,Reset password with valid inputs,"1. Enter valid new password 
+2. Enter matching confirm 
+password 
+3. Click Reset/Submit",Password is reset successfully; success message shown,,Passed,,,
+4.0,Login using newly reset password,"1. Go to Login page 
+2. Enter email 
+3. Enter new password",User logs in successfully,,Passed,,,
+5.0,Password confirmation mismatch,"1. Enter new password 
+2. Enter different confirm password",Validation error shown,,Passed,,,
+6.0,Empty password fields,"1. Leave fields empty 
+2. Submit",Required validation shown,,Passed,,,
+7.0,Reset link expires after defined time,"1. Wait until link expiry
+2. Click link",Expired link error shown,,Passed,,,
+8.0,Reset link becomes invalid after use,1. Use reset link again after success,Error shown; link no longer usable,,Passed,,,
+Profile Settings,,,,,,,,
+1.0,View profile settings,"1. Click User Icon (Top Right)
+2. Select Profile Settings","Profile Settings page loads 
+successfully",,Passed,,,
+2.0,"Update profile 
+information","1. Navigate to Profile Settings → 
+Profile
+2. Edit Name / Email / Company
+Name
+3. Click Save","Profile information updates 
+successfully",,Passed,,,
+3.0,Upload profile avatar,"1. Navigate to Profile Settings → 
+Profile
+2. Click Change Avatar
+3. Upload valid image file
+4. Save changes","Avatar uploads and displays 
+successfully",,Passed,,,
+4.0,"Upload avatar with 
+invalid file type","1. Click Change Avatar
+2. Upload unsupported file type 
+(e.g., PDF, DOCX)","File selection does not show unsupported 
+file types",,Passed,,,
+5.0,"Upload avatar 
+exceeding file size limit","1. Click Change Avatar
+2. Upload image larger than 2MB","System displays file size validation 
+error",,Passed,,,
+6.0,"Save profile with 
+empty required fields","1. Clear Name or Email field
+2. Click Save","System prevents saving and shows 
+validation message",,Passed,,,
+7.0,Update email address,"1. Navigate to Profile Settings → 
+Profile
+2. Change Email Address
+3. Click Save",Email address updates successfully,,Passed,,,
+8.0,Change password successfully,"1. Navigate to Profile Settings → 
+Password
+2. Enter Current Password
+3. Enter New Password
+4. Enter Confirm Password
+5. Click Save Password",Password updates successfully,,Passed,,,
+9.0,Incorrect current password,"1. Enter incorrect Current Password
+2. Enter new password
+3. Click Save Password","System displays error for incorrect 
+current password",,Passed,,,
+10.0,Password mismatch validation,"1. Enter New Password
+2. Enter different Confirm Password
+3. Click Save Password","System shows password mismatch 
+validation",,Passed,,,
+11.0,Empty password fields,"1. Leave fields empty
+2. Click Save Password",System shows required field validation,,Passed,,,
+Dashboard,,,,,,,,
+1.0,Dashboard loads after successful login,1. Login with valid credentials,User is redirected to Company Dashboard,,Passed,,,
+2.0,Dashboard URL access without login,1. Open /dashboard without session,User redirected to Login page,,Passed,,,
+3.0,Company name displayed correctly,1. Observe top-right company name,Logged-in company name is displayed correctly,,Passed,,,
+4.0,Language selector visible,1. Observe header,Language dropdown is visible,,Passed,,,
+5.0,Language switch updates dashboard text,1. Change language,All dashboard labels update correctly,,Passed,,,
+6.0,Language persists after refresh,"1. Change language 
+2. Refresh page",Selected language persists,,Passed,,,
+7.0,Refresh button reloads dashboard data,1. Click Refresh,Dashboard widgets reload with updated data,,Passed,,,
+8.0,Total Employees widget displays correct count,1. Compare count with Staff list,Employee count matches actual records,,Passed,,,
+9.0,Total Leads widget displays correct count,1. Compare with Leads module,Lead count matches records,,Passed,,,
+10.0,Total Sales widget displays correct value,1. Compare with confirmed sales,Sales count/value matches data,,Passed,,,
+11.0,Total Customers widget displays correct count,1. Compare with Accounts/Customers,Customer count matches system data,,Passed,,,
+12.0,Total Projects widget displays correct count,1. Compare with Projects module,Active projects count is accurate,,Passed,,,
+13.0,Company Revenue widget calculation,1. Compare revenue with sales records,Revenue equals sum of confirmed sales,,Passed,,,
+14.0,Sales Trends chart loads successfully,1. Observe Sales Trends graph,Chart renders without errors,,Passed,,,
+15.0,Storage Usage widget displays correct usage,1. Observe storage usage,Usage % and size reflect actual storage,,Passed,,,
+16.0,Lead Conversions chart loads,1. Observe Lead Conversions graph,Chart renders successfully,,Passed,,,
+17.0,Lead Conversions tooltip accuracy,1. Hover on data points,Tooltip values match data,,Passed,,,
+18.0,Customer Distribution chart loads,1. Observe donut chart,Chart renders without UI issues,,Passed,,,
+19.0,Latest Leads widget displays recent entries,1. Observe Latest Leads list,Most recent leads displayed in correct order,,Passed,,,
+20.0,Recent Sales widget displays latest sales,1. Observe Recent Sales,Latest confirmed sales shown,,Passed,,,
+21.0,Active Projects widget accuracy,1. Compare with Projects module,Active projects count matches,,Passed,,,
+22.0,Dashboard handles zero data,1. Login to company with no data,"Widgets show 0 / empty state, no crash",,Passed,,,
+23.0,Dashboard handles partial data,1. Company has leads but no sales,Only relevant widgets populated,,Passed,,,
+24.0,Responsive layout behavior,1. Resize browser window,Layout adapts without overlap,,Passed,,,
+25.0,Scroll behavior,1. Scroll dashboard,Smooth scrolling; no layout jump,,Passed,,,
+26.0,Logout from dashboard,"1. Logout 
+2. Try browser back",User cannot reaccess dashboard,,Passed,,,
+Staff - User,,,,,,,,
+1.0,Users page loads,1. Go to Staff → Users,Users list page loads without error,,Passed,,,
+2.0,Create User,"1. Click Add User 
+2. Fill Name, Email, Password, Confirm Password, Role 
+3. Save",User created and appears in list,,Passed,,,
+3.0,Create User – required field validations,"1. Open Add User 
+2. Leave required fields empty 
+3. Click Save",Required field errors displayed; no user created,,Passed,,,
+4.0,Create User – invalid email format,"1. Enter email test@ 
+2. Fill others 
+3. Save",Validation error; user not created,Accepts email format with no domain extension (e.g. test@example),Passed,,(PASSED) - 03/19/2026,
+5.0,Create User – duplicate email,"1. Add user using existing email 
+2. Save",Error shown; duplicate prevented,,Passed,,,
+6.0,Create User – role required,"1. Fill all except Role 
+2. Save",Validation error; no user created,,Passed,,,
+7.0,Edit user,"1. Open user 
+2. Edit Name/Role 
+3. Save",Updates saved and reflected in list,,Passed,,,
+8.0,Edit user – change email to existing email,"1. Edit user email to another user’s email 
+2. Save",Duplicate prevented; error shown,,Passed,,,
+9.0,Edit user – cancel/discard changes,"1. Edit user 
+2. Modify fields 
+3. Cancel/Back",Changes not saved,,Passed,,,
+10.0,Delete user ,"1. Click Delete 
+2. Confirm deletion",User removed from list; cannot login,,Passed,,,
+11.0,Delete user – cancel confirmation,"1. Click Delete 
+2. Cancel",User remains unchanged,,Passed,,,
+12.0,Toggle Status → Inactive blocks login,"1. Toggle user to Inactive 
+2. Attempt login",Inactive user cannot login,,Passed,,,
+13.0,Toggle Status → Active restores login,"1. Toggle user to Active 
+2. Attempt login",User can login again,,Passed,,,
+14.0,Toggle Status – status persists after refresh,"1. Toggle status 
+2. Refresh page",Status remains saved correctly,,Passed,,,
+15.0,Reset Password,"1. Click Reset Password 
+2. Confirm 
+3. Login using new password 
+(or check email reset)",Password reset succeeds; user can login,,Passed,,,
+16.0,View User Logs,"1. Open a user 
+2. Click View Logs",Logs page/modal displays user actions history,,Passed,,,
+17.0,Search user by Name,"1. Enter keyword in Search 
+2. Submit",Matching users displayed,,Passed,,,
+18.0,Search – no results state,1. Search random string,“No results found” shown; no crash,,Passed,,,
+19.0,Filter by Role,"1. Open Role filter 
+2. Select a role 
+3. Apply",Only users with selected role displayed,,Passed,,,
+20.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+21.0,Clear filter restores full list,"1. Apply filter 
+2. Clear/Reset",Full list restored,,Passed,,,
+22.0,Pagination 10/25/50/100,"1. Navigate to Users
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Staff - Roles,,,,,,,,
+1.0,Roles page loads,1. Go to Staff → Roles,Roles list loads without error,,Passed,,,
+2.0,Create Role,"1. Click Add Role 
+2. Enter Role Name + Description 
+3. Select permissions 
+4. Save",Role saved and appears in list,,Passed,,,
+3.0,Create Role – Role Name required,"1. Leave Role Name blank 
+2. Save",Validation error; role not created,,Passed,,,
+4.0,Create Role – duplicate Role Name,"1. Create role with existing name 
+2. Save",Duplicate blocked or handled consistently,,Passed,,,
+5.0,Create Role – no permissions selected,"1. Create role with no permissions 
+2. Save",Role created (if allowed) but access restricted,,Passed,,,
+6.0,View Role details,1. Open role row/View,Role info + permission list displayed correctly,,Passed,,,
+7.0,Edit Role name/description,"1. Edit role 
+2. Update fields 
+3. Save",Updates saved; reflected in list,,Passed,,,
+8.0,Edit Role permissions,"1. Edit role 
+2. Add/remove permissions 
+3. Save",Changes apply; impacted users gain/lose access accordingly,,Passed,,,
+9.0,Edit Role – cancel/discard changes,"1. Edit role 
+2. Modify 
+3. Cancel",No changes saved,,Passed,,,
+10.0,Delete Role,"1. Delete role not assigned to any user 
+2. Confirm",Role deleted; removed from list,,Passed,,,
+11.0,Search Role by name,"1. Enter role keyword 
+2. Search",Matching roles returned,,Passed,,,
+12.0,Search Role – no results,1. Search random string,No results state shown,,Passed,,,
+13.0,Pagination 10/25/50/100,"1. Navigate to Roles
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+15.0,Role permission persistence after refresh,"1. Edit permissions 
+2. Refresh page 
+3. Reopen role",Permissions remain saved correctly,,Passed,,,
+Lead Management - Lead Statuses,,,,,,,,
+1.0,Lead Statuses page loads,1. Go to Lead Management → Lead Statuses,Page loads with status list,,Passed,,,
+2.0,Create Lead Status,"1. Click Add 
+2. Fill Status Name + Color 
+3. Optional Description/Status 
+4. Save",Status created and appears in list,,Passed,,,
+3.0,Create Lead Status – required validations,"1. Leave Status Name/Color empty 
+2. Save",Validation errors shown; not saved,,Passed,,,
+4.0,Create Lead Status – duplicate Status Name,"1. Create status with existing name 
+2. Save",Duplicate blocked OR allowed consistently,,Passed,,,
+5.0,Create Lead Status – invalid color value,"1. Input invalid color 
+2. Save",Validation prevents invalid color,,Passed,,,
+6.0,View Lead Status,1. Open/View a status,Correct status details displayed,,Passed,,,
+7.0,Edit Lead Status,"1. Edit status name/description/color 
+2. Save",Changes reflected in list and lead form dropdown,,Passed,,,
+8.0,Edit Lead Status – to duplicate name,"1. Rename status to existing name 
+2. Save",Duplicate rule enforced consistently,,Passed,,,
+9.0,Delete Lead Status ,1. Delete status ,Status deleted successfully,,Passed,,,
+10.0,Toggle Lead Status → Inactive,"1. Toggle status to Inactive 
+2. Open Add Lead form",Inactive status not selectable,,Passed,,,
+11.0,Toggle Lead Status persists,"1. Toggle 
+2. Refresh page",Toggle state remains saved,,Passed,,,
+12.0,Search Lead Status,1. Search by status name,Matching statuses returned,,Passed,,,
+13.0,Filter by Status (Active/Inactive),1. Apply filter by status,List updates based on selected filter,,Passed,,,
+14.0,Search + Filter combined,"1. Filter Active 
+2. Search keyword",Results match both criteria,,Passed,,,
+15.0,Pagination 10/25/50/100,"1. Navigate to Lead Statuses
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Lead Management - Lead Sources,,,,,,,,
+1.0,Lead Sources page loads,1. Lead Management → Lead Sources,Page loads with sources list,,Passed,,,
+2.0,Create Lead Source,"1. Add 2. Fill Source Name 
+3. Optional Description/Status 
+4. Save",Source created and appears in list,,Passed,,,
+3.0,Create Lead Source – required validations,"1. Leave Source Name empty 
+2. Save",Validation error shown,,Passed,,,
+4.0,Create Lead Source – duplicate name,"1. Create source with existing name 
+2. Save",Duplicate blocked OR allowed consistently,,Passed,,,
+5.0,View Lead Source,1. View source details,Correct details shown,,Passed,,,
+6.0,Edit Lead Source,"1. Edit source name/description/status 
+2. Save",Changes reflected correctly,,Passed,,,
+7.0,Delete Lead Source not in use,1. Delete unused source,Source removed from list,,Passed,,,
+8.0,Toggle Lead Source → Inactive,"1. Toggle inactive 
+2. Open Add Lead form",Inactive source hidden/disabled from selection,,Passed,,,
+9.0,Search Lead Source,1. Search keyword,Matching sources returned,,Passed,,,
+10.0,Filter by Status,1. Filter Active/Inactive,List updates correctly,,Passed,,,
+11.0,Pagination 10/25/50/100,"1. Navigate to Lead Sources
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Lead Management - Leads,,,,,,,,
+1.0,Leads page loads,1. Go to Lead Management → Leads,Leads list loads without errors,,Passed,,,
+2.0,Create Lead minimal required,"1. Add Lead 
+2. Fill Lead Name 
+3. Save",Lead created and appears in list,,Passed,,,
+3.0,Create Lead with full details,"1. Fill Lead Name + Email + Phone + Company + 
+Lead Status/Source + Assign To 
+2. Save",Lead saved; fields persist correctly,,Passed,,,
+4.0,Create Lead – invalid email format,"1. Email = aaa 
+2. Save",Validation error,Accepts email format with no domain extension (e.g. test@example),Passed,,(PASSED) - 03/19/2026,
+5.0,Create Lead – invalid phone format,"1. Phone contains letters 
+2. Save",Validation error,"Accepts phone with alphabetic 
+characters",Passed,,(PASSED) 03/17/2026,
+6.0,Create Lead – negative lead value,"1. Lead Value = -1 
+2. Save",Validation blocks negative value,,Passed,,,
+7.0,Toggle Lead status Active/Inactive,"1. Toggle lead status from list 
+2. Refresh",Lead status updates and persists,,Passed,,,
+8.0,View Lead details,1. Click lead to open details,Full lead details displayed correctly,,Passed,,,
+9.0,Edit Lead,"1. Open lead 
+2. Update fields (status, source, notes) 
+3. Save",Updates saved and reflected in list,,Passed,,,
+10.0,Edit Lead – remove required Lead Name,"1. Edit lead 
+2. Clear Lead Name 
+3. Save",Validation error; cannot save invalid state,,Passed,,,
+11.0,Delete Lead,"1. Delete lead 
+2. Confirm",Lead removed,,Passed,,,
+12.0,Delete Lead – cancel confirmation,"1. Delete 
+2. Cancel",Lead remains unchanged,,Passed,,,
+13.0,Search Leads by Lead Name/Email/Company,1. Search keyword from Lead ,Matching leads displayed,,Passed,,,
+14.0,Search – no results state,1. Search random string,“No results found” shown,,Passed,,,
+15.0,Filter by Lead Status,1. Apply Lead Status filter,List updates correctly,,Passed,,,
+16.0,Filter by Lead Source,1. Apply Lead Source filter,List updates correctly,,Passed,,,
+17.0,Filter by Status,1. Apply Status filter,List updates correctly,,Passed,,,
+18.0,Filter by Converted,1. Apply Converted filter,Shows only converted/unconverted leads,,Passed,,,
+19.0,Filter by Assigned To,1. Select user in Assigned To filter,Shows only leads assigned to user,,Passed,,,
+20.0,Clear filters restores full list,1. Clear/Reset filters,Full list restored,,Passed,,,
+21.0,Change view: List → Kanban,1. Change view to Kanban,Kanban renders correctly with same dataset,,Passed,,,
+22.0,Change view: Kanban → Grid,1. Change view to Grid,Grid renders correctly with same dataset,,Passed,,,
+23.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+24.0,Pagination 10/25/50/100,"1. Navigate to Leads
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+25.0,Export leads,"1. Apply filter 
+2. Click Export",File downloads successfully with correct data,,Passed,,,
+26.0,Export with zero results,"1. Filter to no data 
+2. Export",Export produces empty file or blocks with message,,Passed,,,
+27.0,Import leads,"1. Click Import 
+2. Upload valid template 
+3. Confirm",Leads imported; success summary shown,,Passed,,,
+28.0,Import missing required column,1. Upload template missing Lead Name column,Import not allowed with clear error,,Passed,,,
+29.0,Import duplicate leads behavior,"1. Import with duplicate emails/names 
+2. Submit","System Error Shown ""Duplicate Email""",,Passed,,,
+Opportunity Management - Opportunity Stages,,,,,,,,
+1.0,Opportunity Stages page loads,1. Go to Opportunity Management → Opportunity Stages,Page loads with stage list,,Passed,,,
+2.0,Create Opportunity Stage,"1. Click Add 
+2. Fill Stage Name + Color + Probability 
+3. Optional Description/Status 
+4. Save",Stage created and appears in list,,Passed,,,
+3.0,Create Stage – required field validations,"1. Leave Stage Name/Color/Probability empty 
+2. Save",Validation errors shown; no record saved,,Passed,,,
+4.0,Create Stage – Probability below 0,"1. Probability = -1 
+2. Save",Validation error shown,,Passed,,,
+5.0,Create Stage – Probability above 100,"1. Probability = 101 
+2. Save",Validation error shown,,Passed,,,
+6.0,Create Stage – Probability non-numeric,"1. Probability = “abc” 
+2. Save",Validation error shown,,Passed,,,
+7.0,Create Stage – Probability decimal,"1. Probability = 12.5 
+2. Save",Validation error shown,,Passed,,,
+8.0,Create Stage – duplicate Stage Name,"1. Create stage with existing name 
+2. Save",Duplicate allowed consistently,,Passed,,,
+9.0,View stage details,1. Open/View a stage,Details show correct values,,Passed,,,
+10.0,Edit stage,"1. Edit name/color/probability 
+2. Save",Changes saved and reflected everywhere,,Passed,,,
+11.0,Edit stage – invalid probability update,"1. Edit stage 
+2. Set probability = 200
+3. Save",Validation prevents invalid update,,Passed,,,
+12.0,Delete stage not used by opportunities,1. Delete unused stage,Stage removed from list,,Passed,,,
+13.0,Delete stage used by opportunities,1. Delete stage currently assigned to opportunities,Blocked OR requires reassignment,,Passed,,,
+14.0,Toggle stage inactive,"1. Toggle inactive 
+2. Open Add Opportunity form",Inactive stage hidden/disabled from selection and Kanban View,,Passed,,,
+15.0,Search stages by name,1. Search keyword,Matching stages displayed,,Passed,,,
+16.0,Filter stages by status,1. Filter Active/Inactive,List updates correctly,,Passed,,,
+17.0,Pagination 10/25/50/100,"1. Navigate to Oppotunity Stages
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Opportunity Management - Opportunity Sources,,,,,,,,
+1.0,Opportunity Sources page loads,1. Go to Opportunity Management → Opportunity Sources,Page loads successfully,,Passed,,,
+2.0,Create Opportunity Source,"1. Click Add 
+2. Fill Source Name 
+3. Optional Description/Status 
+4. Save",Source created and appears in list,,Passed,,,
+3.0,Create Source – Source Name required,"1. Leave Source Name blank 
+2. Save",Validation error shown,,Passed,,,
+4.0,Create Source – duplicate Source Name,"1. Create source with existing name 
+2. Save",Duplicate blocked OR allowed consistently,,Passed,,,
+5.0,View Opportunity Source,1. View source details,Correct values displayed,,Passed,,,
+6.0,Edit Opportunity Source,"1. Edit name/description/status 
+2. Save",Changes saved correctly,,Passed,,,
+7.0,Delete Source not used,1. Delete unused source,Source deleted,,Passed,,,
+8.0,Delete Source used by opportunities,1. Delete source assigned to opportunities,Blocked OR requires reassignment,,Passed,,,
+9.0,Toggle Source inactive,"1. Toggle inactive 
+2. Open Add Opportunity form",Inactive source hidden/disabled,,Passed,,,
+10.0,Search Source by name,1. Search keyword,Matching sources shown,,Passed,,,
+11.0,Filter Source by status,1. Filter Active/Inactive,Filter works correctly,,Passed,,,
+12.0,Pagination 10/25/50/100,"1. Navigate to Opportunity Sources
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Opportunity Management - Opportunities,,,,,,,,
+1.0,Opportunities page loads,1. Opportunity Management → Opportunities,Opportunities list loads without error,,Passed,,,
+2.0,Create Opportunity minimal required,"1. Add Opportunity 
+2. Fill Opportunity Name + Account + Stage + Source 
+3) Save",Opportunity created and shown in list,,Passed,,,
+3.0,Create Opportunity with full details,"1. Fill all fields (desc, close date, company, contact, notes, assign to) 
+2. Save",Opportunity saved; data persists correctly,,Passed,,,
+4.0,Create Opportunity – Opportunity Name required,"1. Leave Opportunity Name blank 
+2. Save",Validation error shown,,Passed,,,
+5.0,Create Opportunity – Account required,"1. Leave Account blank 
+2. Save",Validation error shown,,Passed,,,
+6.0,Create Opportunity – Stage required,"1. Leave Stage blank 
+2. Save",Validation error shown,,Passed,,,
+7.0,Create Opportunity – Source required,"1. Leave Source blank 
+2. Save",Validation error shown,,Passed,,,
+8.0,Close Date validation,1. Set close date in the past (if rule exists) 2. Save,Accepted or rejected consistently,,Passed,,,
+9.0,Account + Contact relationship validation,"1. Select Account A 
+2. Select Contact from Account B 
+3. Save",System blocks mismatch OR auto-filters contacts by account,,Passed,,,
+10.0,Add product to opportunity,"1. Navigate to Opportunity Management → Opportunities
+2. Click Add Opportunity
+3. Enter Opportunity Name
+4. Select Account
+5. Select Stage
+6. Select Source
+7. Click Add under Products section
+8. Select an existing product
+9. Enter Quantity
+10. Click Save",Product line item is added and saved under the opportunity,,Passed,,,
+11.0,Product fields auto-filled from product master,"1. Add a product line
+2. Select an existing product from dropdown","Quantity, Unit Price, Tax Amount, and Line Total auto-populate from product master data",,Passed,,,
+12.0,Quantity field accepts valid values,"1. Select a product
+2. Enter Quantity = 1 or more",Quantity field accepts input and updates totals,,Passed,,,
+13.0,Quantity validation – zero value,"1. Select product
+2. Enter Quantity = 0",Validation error shown; cannot save,,Passed,,,
+14.0,Quantity validation – negative value,"1. Select product
+2. Enter Quantity = -1",Validation error shown,,Passed,,,
+15.0,Unit Price auto-filled correctly,1. Select product with predefined price,Unit Price matches product setup,,Passed,,,
+16.0,Unit Price manual override behavior,"1. Select product
+2. Edit Unit Price manually",System allows or blocks edit based on design,,Passed,,,
+17.0,Unit Price validation – negative value,1. Enter Unit Price = -100,Validation error shown,,Passed,,,
+18.0,Tax Amount is auto-filled and non-editable,"1. Select an existing product
+2. Attempt to click or type in Tax Amount field",Tax Amount field is read-only and cannot be edited,,Passed,,,
+19.0,Line Total is auto-filled and non-editable,"1. Select an existing product
+2. Attempt to click or type in Line Total field",Line Total field is read-only and cannot be edited,,Passed,,,
+20.0,Line Total auto-calculated correctly,"1. Select product
+2. Enter Quantity",Line Total = Quantity × Unit Price + Tax ,,Passed,,,
+21.0,Line Total updates when quantity changes,1. Change Quantity after initial entry,Line Total recalculates automatically,,Passed,,,
+22.0,Line Total updates when unit price changes,1. Modify Unit Price,Line Total recalculates correctly,,Passed,,,
+23.0,Product with no tax configured,1. Select product without tax,Tax Amount defaults to 0; Line Total calculated correctly,,Passed,,,
+24.0,Change selected product updates calculated fields,"1. Select Product A
+2. Observe values
+3. Change to Product B","Unit Price, Tax Amount, Line Total update to Product B",,Passed,,,
+25.0,Manual overrides reset on product change,"1. Select product
+2. Edit Quantity/Unit Price
+3. Change product",Values reset based on new product,,Passed,,,
+26.0,Add multiple products to one opportunityAdd same product multiple times,"1. Add first product
+2. Click Add again
+3. Add second product",Multiple line items saved correctly,,Passed,,,
+27.0,Remove product line before save,"1. Add product line
+2. Click Remove/Delete icon",Product line removed successfully,,Passed,,,
+28.0,Remove product line after save,"1. Save opportunity
+2. Edit opportunity
+3. Remove product",Product removed; totals recalculated,,Passed,,,
+29.0,Missing product selection validation,"1. Click Add Product
+2. Do not select product
+3. Click Save",Validation error shown,,Passed,,,
+30.0,Inactive product not selectable,"1. Mark product inactive
+2. Open product dropdown",Inactive product hidden,,Passed,,,
+31.0,Product data persists after save,"1. Save opportunity
+2. Reopen opportunity","Product, Tax Amount, and Line Total persist correctly",,Passed,,,
+32.0,Calculated fields remain non-editable after edit,"1. Edit existing opportunity
+2. Try editing Tax Amount / Line Total",Fields remain read-only,,Passed,,,
+33.0,View opportunity details,"1. Navigate to Opportunities
+2. Select an opportunity from list
+3. Open/View opportunity",Opportunity details display correctly,,Passed,,,
+34.0,Edit opportunity,"1. Navigate to Opportunities
+2. Select an opportunity
+3. Click Edit
+4. Modify fields
+5. Click Save",Opportunity updates successfully,,Passed,,,
+35.0,Delete opportunity,"1. Navigate to Opportunities
+2. Select opportunity
+3. Click Delete
+4. Confirm deletion","Opportunity is removed from the 
+system",,Passed,,,
+36.0,Toggle opportunity status,"1. Navigate to Opportunities
+2. Toggle Status Active/Inactive","Opportunity status updates 
+successfully",,Passed,,,
+37.0,Add notes to opportunity,"1. Navigate to Opportunities →
+ Add/Edit Opportunity
+2. Enter Notes
+3. Save changes","Notes are saved successfully in 
+opportunity record",,Passed,,,
+38.0,"Assign opportunity to 
+user","1. Navigate to Opportunities → 
+Add/Edit Opportunity
+2. Select Assign To user
+3. Save changes","Opportunity is assigned to selected 
+user",,Passed,,,
+39.0,Search opportunities,"1. Navigate to Opportunities
+2. Enter keyword in Search field",Matching opportunities are displayed,,Passed,,,
+40.0,Filter by account,"1. Navigate to Opportunities
+2. Apply Filter by Account","Opportunities belonging to selected 
+account are displayed",,Passed,,,
+41.0,Filter by stage,"1. Navigate to Opportunities
+2. Apply Filter by Stage","Opportunities with selected 
+stage appear",,Passed,,,
+42.0,Filter by source,"1. Navigate to Opportunities
+2. Apply Filter by Source","Opportunities with selected source
+ appear",,Passed,,,
+43.0,Filter by status,"1. Navigate to Opportunities
+2. Apply Filter by Status",Opportunities filtered by status appear,,Passed,,,
+44.0,Filter by assigned user,"1. Navigate to Opportunities
+2. Apply Filter by Assigned To","Opportunities assigned to selected 
+user appear",,Passed,,,
+45.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+46.0,Change view to List,"1. Navigate to Opportunities
+2. Select List View",Opportunities display in list format,,Passed,,,
+47.0,Change view to Kanban,"1. Navigate to Opportunities
+2. Select Kanban View","Opportunities display in kanban board 
+grouped by stage",,Passed,,,
+48.0,Change view to Grid,"1. Navigate to Opportunities
+2. Select Grid View",Opportunities display in grid layout,,Passed,,,
+49.0,Pagination 10/25/50/100,"1. Navigate to Account Types
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Account Management - Account Types,,,,,,,,
+1.0,Account Types page loads,1. Go to Account Management → Account Types,Page loads successfully,,Passed,,,
+2.0,Create Account Type,"1. Click Add Account Type
+2. Enter Name
+3. (Optional) Enter Description and select Color
+4. Set Status = Active
+5. Click Save",Account Type is created and appears in list,,Passed,,,
+3.0,Create Account Type – Name required,"1. Click Add Account Type
+2. Leave Name empty
+3. Click Save",Validation error shown; record not saved,,Passed,,,
+4.0,Create Account Type – duplicate Name,"1. Create Account Type with existing Name
+2. Click Save",Duplicate blocked OR allowed consistently,,Passed,,,
+5.0,View Account Type,1. Click View on an Account Type,Account Type details displayed correctly,,Passed,,,
+6.0,Edit Account Type,"1. Edit Name/Description/Color/Status
+2. Click Save",Changes saved and reflected in list,,Passed,,,
+7.0,Delete Account Type not in use,1. Delete an unused Account Type,Account Type deleted successfully,,Passed,,,
+8.0,Delete Account Type in use by Accounts,1. Attempt to delete Account Type assigned to Accounts,System blocks deletion or requires reassignment,,Passed,,,
+9.0,Toggle Account Type status,1. Toggle status Active ↔ Inactive,Status updated and persists after refresh,,Passed,,,
+10.0,Inactive Account Type hidden in Account form,"1. Set Account Type to Inactive
+2. Open Add Account form",Inactive type is hidden or disabled,,Passed,,,
+11.0,Search Account Type,"1. Enter keyword in Search field
+",Matching Account Types displayed,,Passed,,,
+12.0,Filter Account Type by Status,1. Apply Active/Inactive filter,List updates correctly,,Passed,,,
+13.0,Pagination 10/25/50/100,"1. Navigate to Opportunities
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Account Management - Account Industries,,,,,,,,
+1.0,Account Industries page loads,1. Go to Account Management → Account Industries,Page loads successfully,,Passed,,,
+2.0,Create Account Type,"1. Click Add Account Industry
+2. Enter Name
+3. (Optional) Enter Description and select Color
+4. Set Status = Active
+5. Click Save",Account Industry created and appears in list,,Passed,,,
+3.0,Create Account Industry – Name required,"1. Leave Name empty
+2. Click Save",Validation error shown; record not saved,,Passed,,,
+4.0,Create Account Industry – duplicate Name,1. Create Industry with existing Name,Duplicate blocked or allowed consistently,,Passed,,,
+5.0,View Account Industry,1. View Industry details,Details displayed correctly,,Passed,,,
+6.0,Edit Account Industry,"1. Edit fields
+2. Click Save",Changes saved correctly,,Passed,,,
+7.0,Delete Account Industry not in use,1. Delete unused Industry,Industry deleted successfully,,Passed,,,
+8.0,Delete Account Industry in use,1. Attempt delete Industry used by Accounts,System blocks delete or requires reassignmen,,Passed,,,
+9.0,Toggle Industry status,1. Toggle Active/Inactive,Status persists after refresh,,Passed,,,
+10.0,Inactive Industry hidden in Account form,"1. Set Industry inactive
+2. Open Add Account form",Inactive Industry hidden or disabled,,Passed,,,
+11.0,Search Account Industry,1. Search by Name,Matching results shown,,Passed,,,
+12.0,Filter Industry by Status,1. Apply Status filter,Filter works correctly,,Passed,,,
+13.0,Pagination 10/25/50/100,"1. Navigate to Account Industries
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Header,,,,,,,,
+,Menu Icon,1. Click Menu icon,• Menu will collapse/uncollapse,,NOT YET STARTED,,,
+,Bell Icon,1. Click Bell icon ,• Notifications will appear,,NOT YET STARTED,,,
+,Profile Header,1. View Profile Header,"• User must be able to see this 
+- Profile Image
+- Name (First Name, Last Name) 
+- Downward Arrow ",,NOT YET STARTED,,,
+,Profile Header - Downard Arrow,1. Click Downward Arrow icon,• User must be able to see the Profile settings and logout,,NOT YET STARTED,,,
+,Downard Arrow - Profile Settings,"1. Click Downward Arrow icon
+2. Click Profile settings Button",• User must be redirected to Profile settings page,,NOT YET STARTED,,,
+,Downard Arrow - Log out,"1. Click Downward Arrow icon
+2. Click Logout Button","• User must be able to logout and close the access session
+• user will redirect to admin login",,NOT YET STARTED,,,
+Notification,,,,,,,,
+,Notifications,"1. Click Bell icon
+2. Click any Notification","• User will be redirected to the notification (Tuition fees, Other transaction)",,NOT YET STARTED,,,
+Account Management - Accounts,,,,,,,,
+1.0,Account page loads,1. Go to Account Management → Account,Accounts list loads successfully,,Passed,,,
+2.0,Create Account minimal required,"1. Click Add Account
+2. Enter Account Name
+3. Click Save",Account created and appears in list,,Passed,,,
+3.0,Create Account with full details,"1. Fill all account fields
+2. Click Save",Account saved with all data persisted,,Passed,,,
+4.0,Account Name required validation,"1. Leave Account Name empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Invalid email format,"1. Enter invalid email
+2. Click Save",Validation error,Accepts email format with no domain extension (e.g. test@example),Passed,,(PASSED) - 03/19/2026,
+6.0,Invalid phone number format,1. Enter letters in Phone field,Validation error,"Accepts phone with alphabetic 
+characters",Passed,,(PASSED) 03/17/2026,
+7.0,Website URL validation,1. Enter invalid website URL,Validation error,,Passed,,,
+8.0,Enter Billing Address fields,"1. Navigate to Account Management → Accounts
+2. Click Add Account
+3. Enter Account Name
+4. Enter Billing Address
+5. Enter Billing City
+6. Enter Billing State
+7. Enter Billing Postal Code
+8. Enter Billing Country
+9. Click Save",Billing Address fields are saved correctly,,Passed,,,
+9.0,Edit Billing Address after save,"1. Open existing Account
+2. Update Billing Address fields
+3. Click Save",Updated Billing Address is saved correctly,,Passed,,,
+10.0,Billing Address accepts alphanumeric characters,1. Enter letters and numbers in Billing fields,Fields accept valid characters,,Passed,,,
+11.0,Billing Address allows special characters,"1. Enter special characters (.,-/)",Characters accepted or safely validated,,Passed,,,
+12.0,Billing Address with partial fields,"1. Enter only Billing Address
+2. Leave City/State empty
+3. Save",Partial Billing Address saved (if optional),,Passed,,,
+13.0,Billing Address does not auto-copy to Shipping,"1. Enter Billing Address
+2. Do NOT click Copy button",Shipping Address remains unchanged,,Passed,,,
+14.0,Copy Billing to Shipping,"1. Enter Billing Address fields
+2. Click Copy Billing to Shipping button",Shipping fields auto-filled correctly,,Passed,,,
+15.0,Copy Billing overwrites existing Shipping data,"1. Fill Shipping fields
+2. Click Copy Billing to Shipping",Shipping data overwritten or confirmation shown,,Passed,,,
+16.0,Billing address remains editable after copy,"1. Use Copy Billing
+2. Edit Billing Address",Billing fields remain editable,,Passed,,,
+17.0,Shipping address remains editable after copy,"1. Use Copy Billing
+2. Edit Shipping Address",Shipping fields remain editable,,Passed,,,
+18.0,Assign To field behavior,1. Select user in Assign To,Account assigned to selected user,,Passed,,,
+19.0,Type selection reflects Account Type,"1. Select Account Type
+2. Save and reopen",Type persists correctly,,Passed,,,
+20.0,Industry selection reflects Account Industry,"1. Select Industry
+2. Save and reopen",Industry persists correctly,,Passed,,,
+21.0,Toggle Account status Active/Inactive,"1. Toggle status
+2. Refresh page",Status updated and persisted,,Passed,,,
+22.0,Inactive Account behavior,"1. Set Account to Inactive
+2. Attempt to link in Leads/Opportunities",Inactive Account hidden or blocked,,Passed,,,
+23.0,View Account details,1. Open an Account,All account details displayed correctly,,Passed,,,
+24.0,Edit Account,"1. Edit fields
+2. Click Save",Changes saved and reflected,,Passed,,,
+25.0,Delete Account not linked to records,1. Delete Account with no dependencies,Account deleted successfully,,Passed,,,
+26.0,Delete Account linked to Opportunities,1. Attempt to delete linked Account,System blocks delete or requires reassignment,"Allows Deletion of Accounts linked to 
+opportunities 
+Deleted Account also deletes 
+opportunity data related to it
+",Passed,,(PASSED) 03/17/2026,
+27.0,Search Accounts,1. Enter keyword,Matching accounts shown,,Passed,,,
+28.0,Filter by Type,1. Apply Type filter,List updates correctly,,Passed,,,
+29.0,Filter by Industry,1. Apply Industry filter,List updates correctly,,Passed,,,
+30.0,Filter by Status,1. Apply Status filter,List updates correctly,,Passed,,,
+31.0,Filter by Assigned to,1. Apply Assigned to filter,List updates correctly,,Passed,,,
+32.0,Combine filters,1. Apply multiple filters,Results satisfy all filters,,Passed,,,
+33.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+34.0,Clear filters restores full list,1. Clear filters,Full list restored,,Passed,,,
+35.0,Pagination 10/25/50/100,"1. Navigate to Accounts
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+36.0,Change View: List → Grid,1. Switch view,Grid view displays correct data,,Passed,,,
+Contacts,,,,,,,,
+1.0,Contacts page loads,1. Navigate to Contacts module,Contacts list page loads successfully,,Passed,,,
+2.0,Create Contact – minimal required,"1. Click Add Contact
+2. Enter Contact Name
+3. Select Account
+4. Click Save",Contact created and appears in list,,Passed,,,
+3.0,Create Contact – full details,"1. Fill all fields in Add Contact form
+2. Click Save",Contact saved with all details persisted,,Passed,,,
+4.0,Contact Name required validation,"1. Leave Contact Name empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Account required validation,"1. Leave Account empty
+2. Click Save",Validation error shown,,Passed,,,
+6.0,Invalid email format,"1. Enter invalid email (e.g. aaa@)
+2. Click Save",Validation error shown,Accepts email format with no domain extension (e.g. test@example),Passed,,(PASSED) - 03/19/2026,
+7.0,Invalid phone format,"1. Enter letters in Phone field
+2. Click Save",Validation error shown,"Accepts phone with alphabetic 
+characters",Passed,,(PASSED) 03/17/2026,
+8.0,Assign To field behavior,1. Select user in Assign To,Contact assigned correctly,,Passed,,,
+9.0,Inactive Contact behavior,"1. Set Contact to Inactive
+2. Attempt to select in Opportunities/Leads",Inactive contact hidden,,Passed,,,
+10.0,View Contact details,1. Click a Contact from list,Contact details displayed correctly,,Passed,,,
+11.0,Edit Contact,"1. Open Contact
+2. Edit fields
+3. Click Save",Changes saved and reflected,,Passed,,,
+12.0,Edit Contact – remove required fields,"1. Edit Contact
+2. Clear Contact Name or Account
+3. Save",Validation error shown,,Passed,,,
+13.0,Delete Contact,"1. Click Delete
+2. Confirm deletion",Contact removed and inaccessible,,Passed,,,
+14.0,Delete Contact – cancel confirmation,"1. Click Delete
+2. Cancel",Contact remains unchanged,,Passed,,,
+15.0,Search Contact by Name,1. Enter Contact Name keyword,Matching contacts displayed,,Passed,,,
+16.0,Search Contact – no results state,1. Search random string,“No results found” message shown,,Passed,,,
+17.0,Filter Contacts by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+18.0,Filter Contacts by Assigned To,1. Apply Assigned To filter,Correct results shown,,Passed,,,
+19.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+20.0,Clear filters restores list,1. Clear filters,Full contact list restored,,Passed,,,
+21.0,Pagination 10/25/50/100,"1. Navigate to Contacts
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Wedding Suppliers,,,,,,,,
+1.0,"Wedding Suppliers module 
+visibility for eligible plans","1. Login as Company User with Starter/Growth/Pro plan
+2. Check module list",Wedding Suppliers module is visible,,Passed,,,
+2.0,"Wedding Suppliers module 
+hidden for Free plan","1. Login as Company User with Free plan
+2. Check module list",Wedding Suppliers module is not visible,,Passed,,,
+3.0,Wedding Suppliers page loads,1. Navigate to Wedding Suppliers module,"Wedding Suppliers page loads 
+successfully displaying supplier list",,Passed,,,
+4.0,View wedding supplier details,"1. Navigate to Wedding Suppliers module
+2. Open a supplier record",Supplier details are displayed correctly,,Passed,,,
+5.0,"Search wedding suppliers by 
+name",1. Enter supplier name in Search field,Matching suppliers are displayed,,Passed,,,
+6.0,"Search with no matching 
+supplier",1. Enter non-existing keyword in Search,"System displays No results found 
+message",,Passed,,,
+7.0,Clear search results,"1. Enter keyword in Search
+2. Clear search field",Full supplier list is displayed again,,Passed,,,
+8.0,Filter suppliers by category,"1. Select Category filter
+2. Choose category ","Suppliers belonging to selected 
+category are displayed",,Passed,,,
+9.0,Remove category filter,"1. Apply category filter
+2. Clear filter",All suppliers are displayed again,,Passed,,,
+10.0,Search and filter combination,"1. Apply Category filter
+2. Enter keyword in Search","Results match both search keyword 
+and selected category",,Passed,,,
+11.0,Pagination 10/25/50/100,"1. Navigate to Contacts
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Product Setup - Taxes,,,,,,,,
+1.0,Taxes page loads,1. Navigate to Product Setup → Taxes,Taxes list page loads successfully,,Passed,,,
+2.0,Create Tax,"1. Click Add Tax
+2. Enter Tax Name
+3. Enter Rate
+4. Select Type
+5. Set Status = Active
+6. Click Save",Tax created and appears in list,,Passed,,,
+3.0,Tax Name required validation,"1. Leave Tax Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,Rate required,"1. Leave Rate empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Rate validation – negative value,"1. Enter Rate = -1
+2. Click Save",Validation error shown,,Passed,,,
+6.0,Rate validation – non-numeric,"1. Enter Rate = abc
+2. Click Save",Validation error shown,,Passed,,,
+7.0,Rate validation – above max (percentage),"1. Set Type = Percentage
+2. Enter Rate > 100",Validation error shown,,Passed,,,
+8.0,Tax Type behavior,1. Create Tax with different Types,Rate interpreted correctly based on Type,,Passed,,,
+9.0,Create duplicate Tax Name,1. Create Tax with existing name,Duplicate blocked or allowed consistently,,Passed,,,
+10.0,View Tax details,1. Click View Tax,Tax details displayed correctly,,Passed,,,
+11.0,Edit Tax,"1. Edit Rate/Description/Status
+2. Click Save",Changes saved and reflected,,Passed,,,
+12.0,Toggle Tax status,1. Toggle Active ↔ Inactive,Status updated and persists,,Passed,,,
+13.0,Inactive Tax behavior,"1. Set Tax inactive
+2. Add Product/Opportunity",Inactive Tax not selectable,,Passed,,,
+14.0,Delete unused Tax,1. Delete Tax not linked to products,Tax deleted successfully,,Passed,,,
+15.0,Delete Tax in use,1. Attempt delete Tax linked to products,System blocks delete or warns user,"System allows deletion of tax
+used by products record",Passed,,(PASSED) - 03/19/2026,
+16.0,Search Tax,1. Enter keyword in Search,Matching taxes shown,,Passed,,,
+17.0,Filter Tax by Status,1. Apply Status filter,List updates correctly,,Passed,,,
+18.0,Pagination 10/25/50/100,"1. Navigate to Taxes
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Product Setup - Brands,,,,,,,,
+1.0,Brands page loads,1. Navigate to Product Setup → Brands,Brands list loads successfully,,Passed,,,
+2.0,Create Brand,"1. Click Add Brand
+2. Enter Brand Name
+3. Enter Website (optional)
+4. Set Status = Active
+5. Click Save",Brand created and appears in list,,Passed,,,
+3.0,Brand Name required validation,"1. Leave Brand Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,Website URL validation,1. Enter invalid website URL,Validation error shown,,Passed,,,
+5.0,Create duplicate Brand Name,1. Create Brand with existing name,Duplicate blocked or allowed consistently,,Passed,,,
+6.0,View Brand details,1. Click View Brand,Brand details displayed correctly,,Passed,,,
+7.0,Edit Brand,"1. Edit Brand details
+2. Click Save",Changes saved successfully,,Passed,,,
+8.0,Toggle Brand status,1. Toggle Active ↔ Inactive,Status updated and persists,,Passed,,,
+9.0,Inactive Brand behavior,"1. Set Brand inactive
+2. Add/Edit Product",Inactive Brand hidden,,Passed,,,
+10.0,Delete unused Brand,1. Delete Brand not linked to products,Brand deleted successfully,,Passed,,,
+11.0,Delete Brand in use,1. Attempt delete Brand linked to products,System blocks delete or warns user,"System allows deletion of brands 
+used by products record",Passed,,(PASSED) - 03/19/2026,
+12.0,Search Brand,1. Enter keyword,Matching brands shown,,Passed,,,
+13.0,Filter Brand by Status,1. Apply Status filter,Filter works correctly,,Passed,,,
+14.0,Pagination 10/25/50/100,"1. Navigate to Brands
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Product Setup - Categories,,,,,,,,
+1.0,Categories page loads,1. Navigate to Product Setup → Categories,Categories list loads successfully,,Passed,,,
+2.0,Create Category,"1. Click Add Category
+2. Enter Category Name
+3. Enter Slug (if editable)
+4. Set Status = Active
+5. Click Save",Category created and appears in list,,Passed,,,
+3.0,Category Name required validation,"1. Leave Category Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,View Category details,1. Click View Category,Category details displayed correctly,,Passed,,,
+5.0,Edit Category,"1. Edit fields
+2. Click Save",Changes saved successfully,,Passed,,,
+6.0,Toggle Category status,1. Toggle Active ↔ Inactive,Status updated and persists,,Passed,,,
+7.0,Inactive Category behavior,"1. Set Category inactive
+2. Add/Edit Product",Inactive Category hidden,,Passed,,,
+8.0,Delete unused Category,1. Delete Category not linked to products,Category deleted successfully,,Passed,,,
+9.0,Delete Category in use,1. Attempt delete Category linked to products,System blocks delete or warns user,System allows deletion of categories used by products record,Passed,,(PASSED) - 03/19/2026,
+10.0,Search Category,1. Search by Category Name,Matching categories displayed,,Passed,,,
+11.0,Filter Category by Status,1. Apply Status filter,Filter works correctly,,Passed,,,
+12.0,Pagination 10/25/50/100,"1. Navigate to Categories
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+Products,,,,,,,,
+1.0,Products page loads,1. Navigate to Products module,Products list page loads successfully,,Passed,,,
+2.0,Create Product – minimal required,"1. Click Add Product
+2. Enter Product Name
+3. Enter SKU
+4. Enter Price
+5. Enter Stock Quantity
+6. Click Save",Product created and appears in list,,Passed,,,
+3.0,Create Product – full details,"1. Fill all product fields
+2. Click Save",Product saved with all details persisted,,Passed,,,
+4.0,Product Name required validation,"1. Leave Product Name empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,SKU required validation,"1. Leave SKU empty
+2. Click Save",Validation error shown,,Passed,,,
+6.0,SKU uniqueness validation,1. Create product with existing SKU,Duplicate SKU blocked,,Passed,,,
+7.0,Price required validation,"1. Leave Price empty
+2. Click Save",Validation error shown,,Passed,,,
+8.0,Price validation – negative value,"1. Enter Price = -1
+2. Click Save",Validation error shown,,Passed,,,
+9.0,Stock Quantity required validation,"1. Leave Stock Quantity empty
+2. Click Save",Validation error shown,,Passed,,,
+10.0,Stock Quantity validation – negative value,"1. Enter Stock Quantity = -5
+2. Click Save",Validation error shown,,Passed,,,
+11.0,Stock Quantity validation – zero value,"1. Enter Stock Quantity = 0
+2. Click Save",Accepted or rejected consistently,,Passed,,,
+12.0,Category selection,"1. Select Category
+2. Save and reopen product",Category persists correctly,,Passed,,,
+13.0,Brand selection,"1. Select Brand
+2. Save and reopen product",Tax persists and applies downstream,,Passed,,,
+14.0,Tax selection,"1. Select Tax
+2. Save and reopen product",Tax persists and applies downstream,,Passed,,,
+15.0,Assign To behavior,"1. Select user in Assign To
+2. Save",Product assigned correctly,,Passed,,,
+16.0,Upload Main Image,"1. Add Product
+2. Upload Main Image
+3. Save",Main image uploaded and displayed,,Passed,,,
+17.0,Upload Additional Images,1. Upload multiple additional images,All images uploaded successfully,,Passed,,,
+18.0,Remove uploaded image before save,"1. Upload image
+2. Remove image",Image removed successfully,,Passed,,,
+19.0,Image persistence after save,"1. Save product
+2. Reopen product",Images persist correctly,,Passed,,,
+20.0,View Product details,1. Click product from list,Product details displayed correctly,,Passed,,,
+21.0,Edit Product,"1. Edit product fields
+2. Click Save",Changes saved and reflected,,Passed,,,
+22.0,Edit Product – duplicate SKU,1. Change SKU to existing SKU,Validation error shown,,Passed,,,
+23.0,Toggle Product status Active/Inactive,"1. Toggle status
+2. Refresh page",Status updated and persists,,Passed,,,
+24.0,Inactive Product behavior,"1. Set product inactive
+2. Add Opportunity product",Inactive product not selectable,,Passed,,,
+25.0,Delete Product not in use,1. Delete unused product,Product deleted successfully,,Passed,,,
+26.0,Delete Product in use,1. Attempt delete product used in Opportunity,System blocks delete or warns user,Products in use by opportunities are deleted,Passed,,(PASSED) - 03/19/2026,
+27.0,Search Product by Name,1. Enter product name keyword,Matching products displayed,,Passed,,,
+28.0,Search Product by SKU,1. Enter SKU keyword,Correct product displayed,,Passed,,,
+29.0,Search – no results,1. Search random string,“No results found” shown,,Passed,,,
+30.0,Filter by Category,1. Apply Category filter,Products filtered correctly,,Passed,,,
+31.0,Filter by Brand,1. Apply Brand filter,Products filtered correctly,,Passed,,,
+32.0,Filter by Status,1. Apply Status filter,Products filtered correctly,,Passed,,,
+33.0,Filter by Assigned To,1. Apply Assigned To filter,Products filtered correctly,,Passed,,,
+34.0,Combine filters,1. Apply multiple filters,Results satisfy all filters,,Passed,,,
+35.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+36.0,Clear filters restores list,1. Clear filters,Full product list restored,,Passed,,,
+37.0,Change View: List → Grid,1. Switch view,Grid view displays correct data,,Passed,,,
+38.0,View persistence after refresh,"1. Change view
+2. Refresh page",Selected view persists ,,Passed,,,
+39.0,Pagination 10/25/50/100,"1. Navigate to Products
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+40.0,Export Products,1. Click Export,Export file downloaded successfully,,Passed,,,
+41.0,Export with no product,1. Click Export,Empty file,,Passed,,,
+42.0,Import Products,"1. Click Import
+2. Upload valid template",Products imported successfully,"“Failed to Parse File” 
+Error When Importing Products",Passed,,(PASSED) - 03/24/2026,
+43.0,Import invalid file type,1. Attempt to upload non-supported file,"Validation error shown or unsupported file
+types not available for import",,Passed,,,
+44.0,Import missing required columns,1. Upload template missing SKU or Name,Import rejected with error,,Passed,,,
+45.0,Import duplicate SKU handling,1. Import product with existing SKU,Duplicate blocked or handled consistently,,Passed,,,
+46.0,Import negative price or stock,1. Import invalid values,Row rejected with clear error,"System allows import of products
+with negative price or stocks",Failed,,,
+Quotes,,,,,,,,
+1.0,Quotes page loads,1. Navigate to Quotes module,Quotes list page loads successfully,,Passed,,,
+2.0,Create Quote – minimal required,"1. Click Add Quote
+2. Enter Name
+3. Select Account
+4. Select Status
+5. Click Save",Quote created and appears in list,,Passed,,,
+3.0,Name required validation,"1. Leave Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,Valid Until date validation,1. Set Valid Until to past date,Accepted or rejected consistently,,Passed,,,
+5.0,Opportunity auto-populates Account,"1. Select Opportunity
+2. Observe Account field",Account auto-filled based on Opportunity,,Passed,,,
+6.0,Add product line,"1. Click Add under Product & Services
+2. Select Product
+3. Enter Quantity",Product line added successfully,,Passed,,,
+7.0,Unit Price auto-filled,1. Select existing product,Unit Price auto-populated from Product,,Passed,,,
+8.0,Quantity validation – zero,1. Enter Quantity = 0,Validation error shown,,Passed,,,
+9.0,Quantity validation – negative,1. Enter Quantity = -1,Validation error shown,,Passed,,,
+10.0,Discount Type – Percentage,"1. Select Discount Type = Percentage
+2. Enter Discount Value",Discount Amount calculated correctly,,Passed,,,
+11.0,Discount Type – Fixed Amount,"1. Select Discount Type = Fixed Amount
+2. Enter Discount Value",Discount Amount calculated correctly,,Passed,,,
+12.0,Discount percentage >100,1. Enter Discount Value >100,Validation error shown,,Passed,,,
+13.0,Negative discount value,1. Enter Discount Value = -10,Validation error shown,,Passed,,,
+14.0,Tax Amount non-editable,1. Try editing Tax Amount manually,Field is read-only,,Passed,,,
+15.0,Final Total calculation,"1. Enter Quantity
+2. Apply Discount",Final Total = (Qty × Unit Price) - Discount,,Passed,,,
+16.0,Final Total updates when quantity changes,1. Change Quantity,Final Total recalculates automatically,,Passed,,,
+17.0,Add multiple product lines,1. Add two or more products,Totals calculated correctly for all lines,,Passed,,,
+18.0,Remove product line,"1. Add product
+2. Remove product",Line removed and totals recalculated,,Passed,,,
+19.0,Enter Billing Address manually,"1. Enter Billing Address fields
+2. Click Save",Billing Address saved correctly,,Passed,,,
+20.0,Copy Billing to Shipping,"1. Enter Billing Address fields
+2. Click Copy Billing to Shipping",Shipping Address auto-filled correctly,,Passed,,,
+21.0,Copy overwrites Shipping fields,"1. Enter Shipping Address
+2. Click Copy",Shipping fields overwritten,,Passed,,,
+22.0,Shipping remains editable after copy,"1. Use Copy
+2. Edit Shipping Address",Shipping fields editable,,Passed,,,
+23.0,Toggle Quote status,1. Change status Draft → Sent,Status updated and persists,,Passed,,,
+24.0,Delete unused Quote,"1. Click Delete
+2. Confirm",Quote deleted successfully,,Passed,,,
+25.0,Delete Quote linked to Sales Order,1. Attempt delete linked Quote,System blocks delete,"Quotes Can be deleted even if in use by Sales Order, Invoice",Passed,,(PASSED) 03/19/2026,
+26.0,View Quote details,1. Click Quote from list,Full details displayed correctly,,Passed,,,
+27.0,Change Quote status,"1. Navigate to Quotes module
+2. Open an existing Delivery Order
+3. Change Status
+4. Save changes",Status updates successfully according to selected value,,Passed,,,
+28.0,Edit Quote,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+29.0,Copy Quote Link,"1. Open Quote
+2. Click Copy Quote Link",Link copied to clipboard,,Passed,,,
+30.0,Open copied link,1. Paste link in new tab,Correct Quote page loads,,Passed,,,
+31.0,Search Quote by Name,1. Enter Name keyword,Matching quotes displayed,,Passed,,,
+32.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+33.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+34.0,Combine filters,1. Apply multiple filters,Results satisfy all filters,,Passed,,,
+11.0,Pagination 10/25/50/100,"1. Navigate to Quotes
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+35.0,Export Quotes,1. Click Export,Export file downloaded successfully,,Passed,,,
+36.0,Export with no results,1. Click Export,Empty file,,Passed,,,
+Sales Orders,,,,,,,,
+1.0,Sales Orders page loads,1. Navigate to Sales Orders module,Sales Orders list loads successfully,,Passed,,,
+2.0,Create Sales Order – minimal required,"1. Click Add Sales Order
+2. Enter Name
+3. Enter Order Date
+4. Select Account
+5. Click Save",Sales Order created successfully,,Passed,,,
+3.0,Name required validation,"1. Leave Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,Order Date required validation,"1. Leave Order Date empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Delivery Date before Order Date,"1. Set Delivery Date earlier than Order Date
+2. Click Save",Validation error shown or consistent handling,,Passed,,,
+6.0,Select existing Quote auto-populates Sales Order,"1. Click Add Sales Order
+2. Select existing Quote with product lines
+3. Observe form fields","Account, product lines, pricing, discount, and totals auto-populated",,Passed,,,
+7.0,Auto-populated product lines match Quote exactly,"1. Select Quote
+2. Compare Quantity, Unit Price, Discount Type, Discount Value",Values match Quote exactly,,Passed,,,
+8.0,Final Total matches Quote total,"1. Select Quote
+2. Compare Final Total with Quote",Totals are identical,,Passed,,,
+9.0,Changing Quote resets populated fields,"1. Select Quote A
+2. Change to Quote B",Product lines update correctly,,Passed,,,
+10.0,Account auto-filled from Quote,"1. Select Quote
+2. Observe Account field",Account matches Quote Account,,Passed,,,
+11.0,Billing & Shipping Contacts auto-filled,"1. Select Quote
+2. Observe contact fields",Contacts match Quote data,,Passed,,,
+12.0,Add product line,"1. Click Add under Product & Services
+2. Select Product
+3. Enter Quantity",Product line added successfully,,Passed,,,
+13.0,Unit Price auto-filled,1. Select existing product,Unit Price auto-populated,,Passed,,,
+14.0,Quantity validation – zero,1. Enter Quantity = 0,Validation error shown,,Passed,,,
+15.0,Quantity validation – negative,1. Enter Quantity = -1,Validation error shown,,Passed,,,
+16.0,Discount Type – Percentage,"1. Select Discount Type = Percentage
+2. Enter Discount Value",Discount Amount calculated correctly,,Passed,,,
+17.0,Discount Type – Fixed Amount,"1. Select Discount Type = Fixed Amount
+2. Enter Discount Value",Discount Amount calculated correctly,,Passed,,,
+18.0,Discount percentage >100,1. Enter Discount Value >100,Validation error shown,,Passed,,,
+19.0,Negative discount value,1. Enter Discount Value = -10,Validation error shown,,Passed,,,
+20.0,Tax Amount non-editable,1. Attempt manual edit of Tax Amount,Field is read-only,,Passed,,,
+21.0,Final Total calculation,"1. Enter Quantity
+2. Apply Discount",Final Total = (Qty × Unit Price) - Discount,,Passed,,,
+22.0,Final Total recalculates on change,1. Modify Quantity or Discount,Final Total updates automatically,,Passed,,,
+23.0,Add multiple product lines,1. Add two or more products,Totals calculated correctly across all lines,,Passed,,,
+24.0,Remove product line,"1. Add product
+2. Remove line",Line removed and totals recalculated,,Passed,,,
+25.0,Enter Billing Address manually,"1. Fill Billing Address fields
+2. Click Save",Billing Address saved correctly,,Passed,,,
+26.0,Copy Billing to Shipping,"1. Enter Billing Address
+2. Click Copy Billing to Shipping",Shipping Address auto-filled correctly,,Passed,,,
+27.0,Copy overwrites Shipping data,"1. Enter Shipping Address
+2. Click Copy",Shipping fields overwritten,,Passed,,,
+28.0,Shipping remains editable,"1. Use Copy
+2. Edit Shipping fields",Shipping fields remain editable,,Passed,,,
+29.0,Toggle Sales Order status,1. Change status Draft → Confirmed,Status updated and persists,,Passed,,,
+30.0,Edit Sales Order,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+31.0,Delete Sales Order not linked,"1. Click Delete
+2. Confirm",Sales Order deleted successfully,,Passed,,,
+32.0,"Delete Sales Order linked to other
+record",1. Attempt delete linked Sales Order,System blocks delete,"Sales Order Can be deleted even if linked and used by Invoice, Delivery Orders, Return Orders, and Purchase Orders",Passed,,(PASSED) 03/19/2026,
+33.0,Search Sales Order by Name,1. Enter keyword,Matching records displayed,,Passed,,,
+34.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+35.0,Filter by Account,1. Apply Account filter,Correct results shown,,Passed,,,
+36.0,Filter by Assigned,1. Apply Assigned filter,Correct results shown,,Passed,,,
+37.0,Combine filters,1. Apply multiple filters,Results satisfy all filters,,Passed,,,
+38.0,Pagination 10/25/50/100,"1. Navigate to Sales Orders
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+39.0,Export Sales Orders,1. Click Export,Export file downloaded successfully,,Passed,,,
+40.0,Export with no data,1. Click Export,Empty File,,Passed,,,
+Invoices,,,,,,,,
+1.0,Invoice page loads,1. Navigate to Invoices module,Invoice list loads successfully,,Passed,,,
+2.0,"Create Invoice –
+ minimal required","1. Click Add Invoice
+2. Enter Name
+3. Enter Invoice Date
+4. Enter Due Date
+5. Select Account
+6. Click Save",Invoice created successfully,,Passed,,,
+3.0,Invoice Name required validation,"1. Leave Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,Invoice Date required validation,"1. Leave Invoice Date empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Due Date required validation,"1. Leave Due Date empty
+2. Click Save",Validation error shown,,Passed,,,
+6.0,Due Date before Invoice Date,"1. Enter Invoice Date
+2. Enter earlier Due Date
+3. Save",Validation error or consistent handling,,Passed,,,
+7.0,Select Sales Order auto-populates Invoice,"1. Click Add Invoice
+2. Select existing Sales Order with products","Product lines, Account, and totals auto-populated",,Passed,,,
+8.0,Product values match Sales Order,"1. Select Sales Order
+2. Compare Quantity, Unit Price, Discount",Values match exactly,,Passed,,,
+9.0,Select Quote auto-populates Invoice,1. Select existing Quote with product,Product lines and pricing copied correctly,,Passed,,,
+10.0,Select Opportunity behavior,1. Select Opportunity with products,Products populated or behavior consistent,,Passed,,,
+11.0,Changing source resets product lines,"1. Select Sales Order A
+2. Change to Sales Order B",Product lines update correctly,,Passed,,,
+12.0,Account auto-filled from selected source,1. Select Sales Order/Quote,Account auto-filled correctly,,Passed,,,
+13.0,Add product manually,"1. Click Add under Product & Services
+2. Select Product
+3. Enter Quantity",Product line added successfully,,Passed,,,
+14.0,Unit Price auto-filled,1. Select Product,Unit Price auto-populated,,Passed,,,
+15.0,"Discount Type – 
+Percentage","1. Select Discount Type = Percentage
+2. Enter Discount Value",Discount applied correctly,,Passed,,,
+16.0,"Discount Type – 
+Fixed Amount","1. Select Discount Type =
+ Fixed Amount
+2. Enter Discount Value",Discount applied correctly,,Passed,,,
+17.0,Negative discount validation,1. Enter Discount Value = -5,Validation error shown,,Passed,,,
+18.0,Discount >100% validation,1. Enter Discount Value >100,Validation error shown,,Passed,,,
+19.0,Invoice total calculation,"1. Enter Quantity
+2. Apply Discount",Invoice total calculated correctly,,Passed,,,
+20.0,Recalculation on change,1. Modify Quantity or Discount,Total updates automatically,,Passed,,,
+21.0,Multiple product lines calculation,1. Add multiple products,Totals correct across all lines,,Passed,,,
+22.0,Enter Billing Address manually,"1. Fill Billing fields
+2. Save",Address saved correctly,,Passed,,,
+23.0,Assign To behavior,1. Select user in Assign To,Invoice assigned correctly,,Passed,,,
+24.0,Notes field persistence,"1. Enter Notes
+2. Save
+3. Reopen",Notes persist correctly,,Passed,,,
+25.0,Terms field persistence,"1. Enter Terms
+2. Save
+3. Reopen",Terms persist correctly,,Passed,,,
+26.0,Delete Invoice,"1. Click Delete
+2. Confirm",Invoice deleted successfully,,Passed,,,
+28.0,Edit Invoice ,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+29.0,Change Invoice status,"1. Navigate to Invoices module
+2. Open an existing Invoice
+3. Change Status
+4. Save changes","Status updates successfully according to 
+selected value",,Passed,,,
+30.0,Search Invoice by Name,1. Enter keyword,Matching invoices displayed,,Passed,,,
+31.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+32.0,Filter by Account,1. Apply Account filter,Correct results shown,,Passed,,,
+33.0,Filter by Assigned,1. Apply Assigned filter,Correct results shown,,Passed,,,
+34.0,Pagination 10/25/50/100,"1. Navigate to Invoices
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+35.0,Export Invoices,1. Click Export,Export file downloaded successfully,,Passed,,,
+36.0,Export with no results,"1. Filter to zero records
+2. Click Export",Empty file,,Passed,,,
+Delivery Orders,,,,,,,,
+1.0,"Delivery Orders page 
+loads",1. Navigate to Delivery Orders module,Delivery Orders list loads successfully,,Passed,,,
+2.0,Create Delivery Order – minimal required,"1. Click Add Delivery Order
+2. Enter Name
+3. Select Sales Order
+4. Enter Delivery Date
+5. Click Save",Delivery Order created successfully,,Passed,,,
+3.0,Name required validation,"1. Leave Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,"Delivery Date required 
+validation","1. Leave Delivery Date empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,"Expected Delivery Date 
+before Delivery Date","1. Enter Delivery Date
+2. Enter earlier Expected Delivery Date
+3. Click Save",Validation error shown,,Passed,,,
+6.0,"Selecting Sales Order 
+auto-populates all 
+dependent fields 
+correctly","1. Navigate to Delivery Orders module
+2. Click Add Delivery Order
+3. Select an existing Sales Order with 
+products
+4. Observe Account field
+5. Observe Product & Services section
+7. Compare Product Name, Quantity
+8. Verify totals or computed values",Fields auto-filled with correct data,,Passed,,,
+7.0,Shipping Provider selection,"1. Select Shipping Provider
+2. Save",Provider saved correctly,,Passed,,,
+8.0,Tracking Number persistence,"1. Enter Tracking Number
+2. Save
+3. Reopen",Tracking Number saved correctly,,Passed,,,
+9.0,"Product Quantity 
+validation – zero","1. Enter Quantity = 0
+2. Save",Validation error shown,,Passed,,,
+10.0,"Quantity validation – 
+negative","1. Enter Quantity = -1
+2. Save",Validation error shown,,Passed,,,
+11.0,"Manual product addition 
+without Sales Order","1. Do not select Sales Order
+2. Add Product manually
+3. Save",Product line added successfully,,Passed,,,
+12.0,Remove product line,"1. Add product
+2. Remove line",Line removed successfully,,Passed,,,
+13.0,Delivery Address entry,"1. Fill Delivery Address fields
+2. Save",Address saved correctly,,Passed,,,
+14.0,Shipping Cost validation – negative,"1. Enter Shipping Cost = -10
+2. Save",Validation error shown,,Passed,,,
+15.0,Shipping Cost saved correctly,"1. Enter Shipping Cost
+2. Save",Shipping Cost persists correctly,,Passed,,,
+16.0,"Delivery Notes 
+persistence","1. Enter Delivery Notes
+2. Save
+3. Reopen",Notes persist correctly,,Passed,,,
+17.0,"View Delivery Order 
+details","1. Navigate to Delivery Orders module
+2. Click a Delivery Order from the list","All Delivery Order details displayed 
+correctly (Products, Address, Status, 
+Tracking Number, Shipping Cost)",,Passed,,,
+18.0,Edit Quote,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+19.0,"Change Delivery Order 
+status","1. Navigate to Delivery Orders module
+2. Open an existing Delivery Order
+3. Change Status
+4. Save changes",Status updates successfully according to selected value,,Passed,,,
+20.0,Search Delivery Order,1. Enter keyword in Search field,Matching records displayed,,Passed,,,
+21.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+22.0,Filter by Account,1. Apply Account filter,Correct results shown,,Passed,,,
+23.0,Filter by Sales Order,1. Apply Sales Order filter,Correct results shown,,Passed,,,
+24.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+25.0,Pagination 10/25/50/100,"1. Navigate to Delivery Orders
+2. Select 10 records per page
+3. Verify displayed results
+4. Select 25, 50, 100 sequentially","System correctly updates displayed 
+records according to selected pagination",,Passed,,,
+,,,,,,,,
+,,," • User will be able to see his Profile Photo
+ • User is able to change/update his Profile Photo
+ • Maximum image file size should be 3mb or lower",,NOT YET STARTED,,,
+,,,• User can be able to remove the Profile picture,,NOT YET STARTED,,,
+,,," • User will be able to see his First name
+ • User cannot change/update his First name",,NOT YET STARTED,,,
+,,," • User will be able to see his Middle name
+ • User cannot change/update his Middle name",,NOT YET STARTED,,,
+,,," • User will be able to see his Last name
+ • User cannot change/update his Last name",,NOT YET STARTED,,,
+,,," • User will be able to see his email address 
+ • User cannot change/update his email address ",,NOT YET STARTED,,,
+,,," • User will be able to see his email address 
+ • User cannot change/update his email address ",,NOT YET STARTED,,,
+,,," • User will be able to see his Mobile Number
+ • User is able to change/update his Mobile Number",,NOT YET STARTED,,,
+,,," • User will be able to see his Home Address
+ • User is able to change/update his Home Address",,NOT YET STARTED,,,

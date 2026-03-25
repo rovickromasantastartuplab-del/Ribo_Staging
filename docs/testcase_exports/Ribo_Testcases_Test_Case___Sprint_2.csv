@@ -1,0 +1,964 @@
+,,,,,,,,
+ITEM NO.,TEST CASE / SCENARIO,TEST STEP,EXPECTED RESULT,"ACTUAL RESULT
+(1st RUN)",STATUS,"TEST EVIDENCE
+(1st Run)",COMMENT / REMARK,
+Company,,,,,,,,
+Return Orders,,,,,,,,
+1.0,Return Orders page loads,1. Navigate to Return Orders module,Return Orders list loads successfully,,Passed,,,
+2.0,Create Return Order – valid data (happy path),"1. Click Add Return Order
+2. Enter Name
+3. Select Sales Order
+4. Enter Return Reason
+5. Enter Return Date
+6. Add Product
+7. Click Save",Return Order created successfully,,Passed,,,
+3.0,Name required validation,"1. Leave Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,Sales Order required validation,"1. Leave Sales Order empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Selecting Sales Order auto-populates related fields,"1. Click Add Return Order
+2. Select existing Sales Order with products
+3. Verify Account field
+4. Verify Product & Services section",Account and Contact match Sales Order; product lines available for selection,,Passed,,,
+6.0,Quantity validation – zero,"1. Enter Quantity = 0
+2. Save",Validation error shown,,Passed,,,
+7.0,Quantity validation – negative,"1. Enter Quantity = -1
+2. Save",Validation error shown,,Passed,,,
+8.0,Unit Price auto-filled,1. Select Product,Unit Price auto-populated correctly,,Passed,,,
+9.0,Discount Type – Percentage,"1. Select Discount Type = Percentage
+2. Enter Discount Value",Discount calculated correctly,,Passed,,,
+10.0,Discount Type – Fixed Amount,"1. Select Discount Type = Fixed Amount
+2. Enter Discount Value",Discount calculated correctly,,Passed,,,
+11.0,Final Total calculation,"1. Enter Quantity
+2. Apply Discount",Final Total calculated correctly,,Passed,,,
+12.0,Multiple product lines,"1. Add multiple products
+2. Save",Totals calculated correctly,,Passed,,,
+13.0,Shipping Provider saved correctly,"1. Select Shipping Provider
+2. Save",Provider saved successfully,,Passed,,,
+14.0,Tracking Number persistence,"1. Enter Tracking Number
+2. Save
+3. Reopen",Tracking Number saved correctly,,Passed,,,
+15.0,Reason Description persistence,"1. Enter Reason Description
+2. Save
+3. Reopen",Description persists correctly,,Passed,,,
+16.0,Notes persistence,"1. Enter Notes
+2. Save
+3. Reopen",Notes persist correctly,,Passed,,,
+17.0,Assign To behavior,"1. Select user in Assign To
+2. Save",Return Order assigned correctly,,Passed,,,
+18.0,View Return Order details,"1. Navigate to Return Orders module
+2. Click a Return Order from the list","All Return Order details displayed correctly (Products, Return Reason, Status, Tracking Number, Totals",,Passed,,,
+19.0,Edit Return Order,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+20.0,Change Return Order status,"1. Navigate to Return Orders module
+2. Open an existing Return Order
+3. Change Status
+4. Save changes",Status updates successfully according to selected value,,Passed,,,
+21.0,Search Return Order,1. Enter keyword in Search field,Matching records displayed,,Passed,,,
+22.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+23.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+24.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Receipt Orders,,,,,,,,
+1.0,Receipt Orders page loads,1. Navigate to Receipt Orders module,Receipt Orders list loads successfully,,Passed,,,
+2.0,Create Receipt Order – valid data,"1. Click Add Receipt Order
+2. Enter Name
+3. Enter Receipt Date
+4. Select Purchase Order or Return Order
+5. Add Product
+6. Save",Receipt Order created successfully,,Passed,,,
+3.0,Name required validation,"1. Leave Name empty
+2. Click Save",Validation error shown,,Passed,,,
+4.0,Receipt Date required validation,"1. Leave Receipt Date empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Receipt Date before Expected Date,"1. Enter Expected Date
+2. Enter earlier Receipt Date
+3. Save",System handles consistently (allowed or validated per rule),,Passed,,,
+6.0,Selecting Purchase Order auto-populates related fields,"1. Click Add Receipt Order
+2. Select existing Purchase Order
+3. Verify Account
+4. Verify Product lines",Account and products match selected Purchase Order,,Passed,,,
+7.0,"Selecting Return Order auto-populates 
+related fields","1. Select existing Return Order
+2. Verify Account and Product lines",Account and products match selected Return Order,,Passed,,,
+8.0,Quantity validation – zero,"1. Enter Quantity = 0
+2. Save",Validation error shown,,Passed,,,
+9.0,Quantity validation – negative,"1. Enter Quantity = -1
+2. Save",Validation error shown,,Passed,,,
+10.0,Unit Price auto-filled,1. Select Product,Unit Price auto-populated correctly,,Passed,,,
+11.0,Discount Type – Percentage,"1. Select Percentage
+2. Enter Discount Value",Discount calculated correctly,,Passed,,,
+12.0,Discount Type – Fixed Amount,"1. Select Fixed
+2. Enter Discount Value",Discount calculated correctly,,Passed,,,
+13.0,Final Total calculation,"1. Enter Quantity
+2. Apply Discount",Final Total calculated correctly,,Passed,,,
+14.0,Multiple product lines,"1. Add multiple products
+2. Save",Totals calculated correctly,,Passed,,,
+15.0,View Receipt Order details,"1. Navigate to Receipt Orders module
+2. Click a Receipt Order from the list","All Receipt Order details displayed correctly (Products, Status, Totals, Linked Orders)",,Passed,,,
+16.0,Edit Receipt Order,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+17.0,Changes saved successfully,"1. Open existing Receipt Order
+2. Change Status
+3. Save changes",Status updates successfully according to selected value,,Passed,,,
+18.0,Search Receipt Order,1. Enter keyword in Search field,Matching records displayed,,Passed,,,
+19.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+20.0,Filter by Account,1. Apply Account filter,Correct results shown,,Passed,,,
+21.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+22.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Purchase Orders,,,,,,,,
+1.0,Purchase Orders page loads,1. Navigate to Purchase Orders module,Purchase Orders list loads successfully,,Passed,,,
+2.0,Create Purchase Order – valid data,"1. Click Add Purchase Order
+2. Enter Name
+3. Enter Order Date
+4. Select Account
+5. Add Product
+6. Save",Purchase Order created successfully,,Passed,,,
+3.0,Name required validation,Name required validation,Validation error shown,,Passed,,,
+4.0,Order Date required validation,"1. Leave Order Date empty
+2. Click Save",Validation error shown,,Passed,,,
+5.0,Expected Delivery Date before Order Date,"1. Enter Order Date
+2. Enter earlier Expected Delivery Date
+3. Save","1. Enter Order Date
+2. Enter earlier Expected Delivery Date
+3. Save",,Passed,,,
+6.0,Selecting Sales Order auto-populates related fields,"1. Click Add Purchase Order
+2. Select Sales Order
+3. Verify Account and product data","Account and products, and shipping provider match Sales Order",,Passed,,,
+7.0,Changing Sales Order resets product data,"1. Select Sales Order A
+2. Change to Sales Order B",Product data updates accordingl,,Passed,,,
+8.0,Product data updates accordingl,"1. Click Add under Product & Services
+2. Select Product
+3. Enter Quantity",Product line added successfully,,Passed,,,
+9.0,Quantity validation – zero,Quantity validation – zero,"1. Enter Quantity = 0
+2. Save",,Passed,,,
+10.0,Quantity validation – negative,"1. Enter Quantity = -1
+2. Save",Validation error shown,,Passed,,,
+11.0,Unit Price auto-filled,1. Select Product,Unit Price auto-populated correctly,,Passed,,,
+12.0,Discount Type – Percentage,"1. Select Percentage
+2. Enter Discount Value","1. Select Percentage
+2. Enter Discount Value",,Passed,,,
+13.0,Discount Type – Fixed Amount,"1. Select Fixed
+2. Enter Discount Value",Discount calculated correctly,,Passed,,,
+14.0,Discount Amount non-editable,Discount Amount non-editable,1. Attempt to manually edit Discount Amount,,Passed,,,
+15.0,Tax Amount calculation,"1. Add product with tax
+2. Verify Tax Amount",Tax calculated correctly based on configured rate,,Passed,,,
+16.0,Final Total calculation,Final Total calculation,Final Total calculated correctly,,Passed,,,
+17.0,Multiple product lines,"1. Add multiple products
+2. Save",Totals calculated correctly across lines,,Passed,,,
+18.0,View Purchase Order details,"1. Navigate to Purchase Orders module
+2. Click a Purchase Order from the list","All Purchase Order details displayed correctly (Products, Totals, Status, Linked Sales Order)",,Passed,,,
+19.0,Edit Purchase Order,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+20.0,Changes saved successfully,"1. Open existing Purchase Order
+2. Change Status
+3. Save changes",Status updates successfully according to selected value,,Passed,,,
+21.0,Search Purchase Order,1. Enter keyword in Search field,Matching records displayed,,Passed,,,
+22.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+23.0,Filter by Account,1. Apply Account filter,Correct results shown,,Passed,,,
+24.0,Filter by Sales Order,1. Apply Sales Order filter,Correct results shown,,Passed,,,
+25.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+26.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Document Management - Folders,,,,,,,,
+1.0,Folders page loads,"1. Navigate to Document Management 
+→ Folders",Folders list loads successfully,,Passed,,,
+2.0,Create Folder,"1. Click Add Folder
+2. Enter Folder Name
+3. Select Parent Folder (optional)
+4. Enter Description (optional)
+5. Set Status
+6. Save",Folder created and appears in list,,Passed,,,
+3.0,Folder Name required validation,"1. Click Add Folder
+2. Leave Folder Name empty
+3. Save",Validation error shown,,Passed,,,
+4.0,Create nested folder under Parent Folder,"1. Create folder
+2. Select Parent Folder ≠ Root
+3. Save",Folder created under selected parent,,Passed,,,
+5.0,Folder created under selected parent,1. Enter keyword in Search,Matching folders displayed,,Passed,,,
+6.0,Matching folders displayed,1. Apply Parent Folder filter,Only folders under parent shown,,Passed,,,
+7.0,Only folders under parent shown,1. Apply Status filter,Correct results shown,,Passed,,,
+8.0,View Folder details,1. Open an existing Folder from list,1. Open an existing Folder from list,,Passed,,,
+9.0,Folder details displayed correctly,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+10.0,Change Folder status,Change Folder status,Status updates successfully according to selected value,,Passed,,,
+11.0,Delete Folder (empty),Delete Folder (empty),Folder deleted successfully,,Passed,,,
+12.0,Delete Folder with contents,Delete Folder with contents,System blocks delete or requires reassignment,"System allows deletion of Folder linked to a
+Document Record
+",Passed,(PASSED) 03/24/2026,,
+13.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Document Management - Types,,,,,,,,
+1.0,Types page loads,1. Navigate to Document Management → Types,Types list loads successfully,,Passed,,,
+2.0,Create Document Type,Type created and appears in list,Type created and appears in list,,Passed,,,
+3.0,Type Name required validation,"1. Click Add Type
+2. Leave Type Name empty
+3. Save","1. Click Add Type
+2. Leave Type Name empty
+3. Save",,Passed,,,
+4.0,Validation error shown,Search Type,1. Enter keyword in Search,,Passed,,,
+5.0,Matching types displayed,1. Apply Status filter,Correct results shown,,Passed,,,
+6.0,Correct results shown,1. Open an existing Type from list,Type details displayed correctly,,Passed,,,
+7.0,Edit Type,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+8.0,Change Type status,"1. Open existing Type
+2. Change Status
+3. Save",Status updates successfully according to selected value,,Passed,,,
+9.0,Delete Type,Delete Type,Type deleted successfully,,Passed,,,
+10.0,Delete Type in use,1. Attempt delete Type used by documents,System blocks deletion or requires reassignment,"System allows deletion of Type linked to a
+Document Record
+",Passed,(PASSED) 03/24/2026,,
+11.0,Filter document types by Status,"1. Navigate to Document Management → Types
+2. Select Status (e.g., Active/Inactive)
+3. Apply filter","Only document types matching the selected 
+status are displayed",,Passed,,,
+12.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Document Management -Documents,,,,,,,,
+1.0,Documents page loads,1. Navigate to Document Management → Documents,1. Navigate to Document Management → Documents,,Passed,,,
+2.0,Documents list loads successfully,"1. Click Add Document
+2. Enter Document Name
+3. Select Account/Folder/Type (optional per design)
+4. Upload Attachment (if required by process)
+5. Set Status
+6. Save",Document created and appears in list,,Passed,,,
+3.0,Document Name required validation,"1. Click Add Document
+2. Leave Document Name empty
+3. Save",Validation error shown,,Passed,,,
+4.0,Upload Attachment,"1. Add Document
+2. Upload a valid file
+3. Save",Attachment uploads successfully and is linked to document,,Passed,,,
+5.0,Invalid attachment,Invalid attachment,1. Upload unsupported file type,,Passed,,,
+7.0,Expiration Date before Publish Date,"1. Set Publish Date
+2. Set Expiration Date earlier
+3. Save",Validation error or consistent handling,"System accepts documents with expiration
+date earlier than publish date",Passed,(PASSED) 03/24/2026,,
+8.0,Assign To saved correctly,"1. Select Assign To
+2. Save",Assignment persists,,Passed,,,
+9.0,View Document details,1. Open an existing Document from list,Document details displayed correctly,,Passed,,,
+10.0,Edit Document,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+11.0,Change Document status,"1. Open existing Document
+2. Change Status
+3. Save",Status updates successfully according to selected value,,Passed,,,
+12.0,Delete Document,"1. Delete document
+2. Confirm",Document deleted successfully,,Passed,,,
+13.0,Search Document,1. Enter keyword in Search,Matching documents displayed,,Passed,,,
+14.0,Filter by Folder,1. Apply Folder filter,Correct results shown,,Passed,,,
+15.0,Filter by Type,1. Apply Type filter,Correct results shown,,Passed,,,
+16.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+17.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+18.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+19.0,Change View (List/Grid),1. Switch view from List to Grid (or vice versa),View changes successfully,,Passed,,,
+20.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Campaign Management - Campaign Types,,,,,,,,
+1.0,Campaign Type page loads,"1. Navigate to Campaign Management 
+→ Campaign Type",Campaign Type list loads successfully,,Passed,,,
+2.0,Create Campaign Type,"1. Click Add Campaign Type
+2. Enter Name
+3. (Optional) Enter Description and Color
+4. Set Status
+5. Save",Campaign Type created and appears in list,,Passed,,,
+3.0,Search Campaign Type,1. Enter keyword in Search,1. Enter keyword in Search,,Passed,,,
+4.0,Filter Campaign Type by Status,Filter Campaign Type by Status,Correct results shown,,Passed,,,
+5.0,Correct results shown,1. Open an existing Campaign Type from list,Details displayed correctly,,Passed,,,
+6.0,Edit Campaign Type,Edit Campaign Type,Changes saved successfully,,Passed,,,
+7.0,Change Campaign Type status,"1. Open existing Campaign Type
+2. Change Status
+3. Save changes",Status updates successfully according to selected value,,Passed,,,
+8.0,Delete Campaign Type (unused),1. Delete Campaign Type not used in Campaigns,1. Delete Campaign Type not used in Campaigns,,Passed,,,
+9.0,Deleted used campaign type,1. Attempt delete type used by Campaigns,System blocks deletion or requires reassignment,"System allows deletion
+Deleting Campaign Type Also deletes 
+linked Campaign record",Passed,(PASSED) - 03/19/26,,
+10.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Campaign Management - Target Lists,,,,,,,,
+1.0,Target List page loads,"1. Navigate to Campaign Management 
+→ Target List",Target List page loads successfully,,Passed,,,
+2.0,Create Target List,"1. Click Add Target List
+2. Enter Name
+3. (Optional) Enter Description
+4. Set Status
+5. Save",Target List created successfully,,Passed,,,
+3.0,Target List created successfully,"1. Click Add Target List
+2. Leave Name empty
+3. Save",Validation error shown,,Passed,,,
+4.0,Validation error shown,1. Enter keyword in Search,Matching results shown,,Passed,,,
+5.0,Filter Target List by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+6.0,View Target List details,1. Open an existing Target List from list,1. Open an existing Target List from list,,Passed,,,
+7.0,Edit Target List,Edit Target List,Changes saved successfully,,Passed,,,
+8.0,Change Target List status,"1. Open existing Target List
+2. Change Status
+3. Save changes",Status updates successfully according to selected value,,Passed,,,
+9.0,Delete Target List (unused),1. Delete Target List not linked to Campaigns,Deleted successfully,,Passed,,,
+10.0,Delete Target List in use,1. Attempt delete list linked to Campaigns,System blocks deletion or requires reassignment,"Deleting Target list is allowed even if 
+linked to campaign",Passed,(PASSED) - 03/19/26,,
+11.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Campaign Management - Campaigns,,,,,,,,
+1.0,Campaigns page loads,1. Navigate to Campaign Management → Campaigns,Campaign list loads successfully,,Passed,,,
+2.0,Create Campaign,"1. Click Add Campaign
+2. Enter Campaign Name
+3. Enter Start Date
+4. Enter End Date
+5. Select Campaign Type
+6. (Optional) Fill remaining fields
+7. Save",Campaign created successfully,,Passed,,,
+3.0,Campaign Name required validation,"1. Leave Campaign Name empty
+2. Save","1. Leave Campaign Name empty
+2. Save",,Passed,,,
+4.0,Start Date required validation,"1. Leave Start Date empty
+2. Save",Validation error shown,,Passed,,,
+5.0,End Date required validation,"1. Leave End Date empty
+2. Save",Validation error shown,,Passed,,,
+6.0,End Date earlier than Start Date,"1. Enter Start Date
+2. Enter earlier End Date
+3. Save",Validation error shown,,Passed,,,
+7.0,Campaign Type required validation,"1. Leave Campaign Type empty
+2. Save",Validation error shown,,Passed,,,
+8.0,Budget validation – negative,"1. Enter Budget = -100
+2. Save",Validation error or consistent handling,,Passed,,,
+9.0,Actual Cost validation – negative,"1. Enter Actual Cost = -100
+2. Save",Validation error or consistent handling,,Passed,,,
+10.0,View Campaign details,"1. Navigate to Campaigns
+2. Click a Campaign from the list",All Campaign details displayed correctly,,Passed,,,
+11.0,Edit Campaign,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+12.0,Change Campaign status,"1. Open existing Campaign
+2. Change Status
+3. Save changes",Status updates successfully according to selected value,,Passed,,,
+13.0,Delete Campaign,"1. Click Delete
+2. Confirm deletion",Campaign deleted successfully,,Passed,,,
+14.0,Search Campaign,1. Enter keyword in Search field,Matching campaigns displayed,,Passed,,,
+15.0,Filter by Campaign Type,1. Apply Campaign Type filter,Correct results shown,,Passed,,,
+16.0,Filter by Target List,1. Apply Target List filter,Correct results shown,,Passed,,,
+17.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+18.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+19.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+20.0,Change View (List/Grid),1. Switch view from List to Grid (or vice versa),View changes successfully,,Passed,,,
+21.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Project Management - Task Statuses,,,,,,,,
+1.0,Task Status page loads,"1. Navigate to Project Management 
+→ Task Statuses",1. Navigate to Campaign Management → Target List,,Passed,,,
+2.0,Task Status list loads successfully,"1. Click Add Task Status
+2. Enter Status Name
+3. Select Color
+4. Set Status
+5. Save",Task Status created successfully,,Passed,,,
+3.0,Status Name required validation,Status Name required validation,Validation error shown,,Passed,,,
+4.0,Validation error shown,"1. Leave Color empty
+2. Save",Validation error shown,,Passed,,,
+5.0,Search Task Status,1. Enter keyword in Search,Matching results displayed,,Passed,,,
+6.0,Search Task Status,1. Enter keyword in Search,Correct results shown,,Passed,,,
+7.0,View Task Status details,1. Open existing Task Status,Details displayed correctly,,Passed,,,
+8.0,Edit Task Status,"1. Edit fields
+2. Save","1. Edit fields
+2. Save",,Passed,,,
+9.0,Change Task Status status,Change Task Status status,"1. Open existing Task Status
+2. Change Status
+3. Save",,Passed,,,
+10.0,Delete Task Status,Delete Task Status,Deleted successfully,,Passed,,,
+11.0,Delete Task Status in use,1. Attempt delete status linked to tasks,System blocks deletion,,Passed,,,
+12.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Project Management - Project Tasks,,,,,,,,
+1.0,Project Tasks page loads,1. Navigate to Project Management → Project Tasks,Task list loads successfully,,Passed,,,
+2.0,Create Task,"1. Click Add Task
+2. Enter Task Title
+3. Select Project
+4. Fill optional fields
+5. Save",Task created successfully,,Passed,,,
+3.0,Task created successfully,"1. Leave Task Title empty
+2. Save",Validation error shown,,Passed,,,
+4.0,Project required validation,"1. Leave Project empty
+2. Save",Validation error shown,,Passed,,,
+5.0,Due Date before Start Date,"1. Enter Start Date
+2. Enter earlier Due Date
+3. Save",Validation error,,Passed,,,
+6.0,Priority selection,1. Select each Priority value,Value saved correctly,,Passed,,,
+7.0,Progress validation (>100%),"1. Enter Progress = 120
+2. Save",Validation error shown,,Passed,,,
+8.0,Estimated Hours negative validation,"1. Enter negative value
+2. Save",Validation error shown,,Passed,,,
+9.0,Actual Hours negative validation,"1. Enter negative value
+2. Save",Validation error shown,,Passed,,,
+10.0,View Task details,1. Open existing Task,1. Open existing Task,,Passed,,,
+11.0,Edit Task,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+12.0,Changes saved successfully,"1. Open Task
+2. Change Status
+3. Save",Status updates successfully,,Passed,,,
+13.0,Search Task,1. Enter keyword in Search,Matching tasks displayed,,Passed,,,
+14.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+15.0,Filter by Priority,1. Apply Priority filter,Correct results shown,,Passed,,,
+16.0,Filter by Priority,1. Apply Project filter,Correct results shown,,Passed,,,
+17.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+18.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+19.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+20.0,Change View (List/Grid),1. Switch view,View changes successfully,,Passed,,,
+21.0,Export projects with active filter,"1. Apply filter 
+2. Click Export","Exported file contains only filtered project 
+records",Exports all records even if filtered,Failed,,,
+22.0,Export projects with no filter,1. Click Export without applying filter,"Exported file contains all visible project 
+records",,Passed,,,
+Project Management - Projects,,,,,,,,
+1.0,Projects page loads,1. Navigate to Project Management → Projects,Projects list loads successfully,,Passed,,,
+2.0,Create Project,"1. Click Add Project
+2. Enter Project Name
+3. Select Account
+4. Fill optional fields
+5. Save",Project created successfully,,Passed,,,
+3.0,Project Name required validation,"1. Leave Project Name empty
+2. Save",Validation error shown,,Passed,,,
+4.0,Account required validation,"1. Leave Account empty
+2. Save",Validation error shown,,Passed,,,
+5.0,End Date before Start Date,"1. Enter Start Date
+2. Enter earlier End Date
+3. Save",Validation error shown,,Passed,,,
+6.0,Budget negative validation,"1. Enter Budget = -100
+2. Save",Validation error shown,,Passed,,,
+7.0,View Project details,1. Open existing Project,Project details displayed correctly,,Passed,,,
+8.0,Edit Project,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+9.0,Change Project status,"1. Open Project
+2. Change Status
+3. Save",Project status is updated successfully and reflected in the project list and details page.,,Passed,,,
+10.0,Status updates successfully,"1. Delete project
+2. Confirm",Project deleted successfully (if no dependencies),,Passed,,,
+11.0,Search Project,1. Enter keyword,Matching projects displayed,,Passed,,,
+12.0,Filter by Status,1. Apply Status filter,Correct results shown,,Passed,,,
+13.0,Filter by Priority,1. Apply Priority filter,Correct results shown,,Passed,,,
+14.0,Filter by Account,1. Apply Account filter,Correct results shown,,Passed,,,
+15.0,Filter by Assigned To,1. Apply Assigned filter,Correct results shown,,Passed,,,
+16.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+17.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+18.0,Change View (List/Grid),1. Switch view,View changes successfully,,Passed,,,
+19.0,Export projects with active filter,"1. Apply filter 
+2. Click Export","Exported file contains only filtered project 
+records",Exports all records even if filtered,Failed,,,
+20.0,Export projects with no filter,1. Click Export without applying filter,"Exported file contains all visible project 
+records",,Passed,,,
+21.0,View Project in Gantt View,"1. Navigate to Project Management → Projects 
+2. Open an existing project 3. Switch to Gantt View","Project tasks are displayed in Gantt timeline 
+view successfully",,Passed,,,
+22.0,Gantt View loads correct task dates,"1. Open project in Gantt View 
+2. Check task start and end dates","Tasks are displayed in correct timeline 
+positions based on saved dates",,Passed,,,
+23.0,Empty project in Gantt View,"1. Open a project with no tasks 
+2. Switch to Gantt View",Empty state is displayed correctly,,Passed,,,
+24.0,Add Task in Gantt View,"1. Open project in Gantt View 
+2. Click Add Task 
+3. Enter required fields 
+4. Save","Task is added successfully and shown in 
+Gantt View",,Passed,,,
+25.0,Add Task validation in Gantt View,"1. Click Add Task 
+2. Leave required fields empty 
+3. Save","Validation errors are displayed for required 
+fields",,Passed,,,
+26.0,Edit Task in Gantt View,"1. Open existing task in Gantt View 
+2. Edit task details 
+3. Save",Task changes are saved successfully,,Passed,,,
+27.0,View Project in Kanban View,"1. Open an existing project 
+2. Switch to Kanban View","Project tasks are displayed in Kanban 
+columns successfully",,Passed,,,
+28.0,Kanban View displays tasks by status,"1. Open project in Kanban View 
+2. Review task columns","Tasks are grouped under the correct status 
+columns",,Passed,,,
+29.0,Empty project in Kanban View,"1. Open a project with no tasks 
+2. Switch to Kanban View",Empty state is displayed correctly,,Passed,,,
+31.0,Edit Task in Kanban View,"1. Open an existing task in Kanban View 
+2. Edit task fields 
+3. Save","Updated task details are saved and 
+reflected in Kanban View",,Passed,,,
+32.0,Edit Task status in Kanban View,"1. Open task in Kanban View 
+2. Change task status 
+3. Save","Task moves to the correct status column 
+after update",,Passed,,,
+33.0,Click task to view details,"1. Open project in Kanban View 
+2. Click a task card","Task details page or modal opens and 
+displays correct task information",,Passed,,,
+34.0,Task details show complete information,"1. Click a task card 
+2. Review displayed details","Task name, status, assignee, dates, 
+priority, and description display correctly",,Passed,,,
+35.0,Search project by keyword,"1. Navigate to Projects page 
+2. Enter keyword in Search",Matching project records are displayed,,Passed,,,
+36.0,Search returns no results,1. Enter invalid/non-existing keyword in Search,"No results found message is displayed 
+correctly",,Passed,,,
+37.0,Filter projects by Status,1. Apply Status filter,"Only projects matching selected status 
+are displayed",,Passed,,,
+38.0,Filter projects by Priority,1. Apply Priority filter,"Only projects matching selected priority 
+are displayed",,Passed,,,
+39.0,Apply multiple filters,1. Apply Status and Priority filters together,"Projects matching all selected filters are 
+displayed",,Passed,,,
+40.0,Clear applied filters,1. Apply filters 2. Clear/reset filters,Project list returns to default unfiltered state,,Passed,,,
+Calendar,,,,,,,,
+1.0,Calendar page loads,1. Navigate to Calendar module,Calendar loads successfully,,Passed,,,
+2.0,Switch to Day View,1. Click day view,Calendar switches to days layout,,Passed,,,
+3.0,Navigate to Previous Day,"1. Click ""<"" button",Calendar moves to previous day,,Passed,,,
+4.0,Navigate to Next Day,"1. Click "">"" button",Calendar moves to next day,,Passed,,,
+5.0,Today button,"1. Navigate away from today
+2. Click ""Today""",Calendar returns to current date,,Passed,,,
+6.0,Switch to Month View,1. Click Month view,Calendar switches to Month layout,,Passed,,,
+7.0,Switch to Week View,1. Click Week view,1. Click Week view,,Passed,,,
+8.0,Events reflect correctly on navigation,"1. Navigate between dates
+2. Verify events appear on correct dates",Meetings/Calls appear on correct date/time,,Passed,,,
+Cases,,,,,,,,
+1.0,Cases page loads,1. Navigate to Cases module,Cases list loads successfully,,Passed,,,
+2.0,Create Case,"1. Click Add Case
+2. Enter Subject
+3. Select Account
+4. Select Priority
+5. Select Case Type
+6. Save",Case created successfully,,Passed,,,
+3.0,Subject required validation,"1. Leave Subject empty
+2. Save",Validation error shown,,Passed,,,
+4.0,Account required validation,"1. Leave Account empty
+2. Save",Validation error shown,,Passed,,,
+5.0,Priority required validation,"1. Leave Account empty
+2. Save",Validation error shown,,Passed,,,
+6.0,Case Type required validation,"1. Leave Case Type empty
+2. Save",Validation error shown,,Passed,,,
+7.0,View Case details,1. Open existing Case,Case details displayed correctly,,Passed,,,
+8.0,Edit Case,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+9.0,Change Case status,"1. Open Case
+2. Change Status
+3. Save",Status updates successfully,,Passed,,,
+10.0,Delete Case,"1. Delete Case
+2. Confirm",Case deleted successfully,,Passed,,,
+11.0,Search Case,1. Enter keyword,Matching results displayed,,Passed,,,
+12.0,Filter by Account,1. Apply filter,Correct results shown,,Passed,,,
+13.0,Filter by Priority,1. Apply filter,Correct results shown,,Passed,,,
+14.0,Filter by Status,1. Apply filter,Correct results shown,,Passed,,,
+15.0,Filter by Type,1. Apply filter,Correct results shown,,Passed,,,
+16.0,Filters persist across view change,"1. Apply filters 
+2. Switch views",Filters remain applied,,Passed,,,
+17.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+18.0,Change View (List/Grid),1. Switch view,View changes successfully,,Passed,,,
+Meetings,,,,,,,,
+1.0,Meetings page loads,1. Navigate to Meetings module,Meetings list loads successfully,,Passed,,,
+2.0,Create Meeting,"1. Click Add Meeting
+2. Fill required fields
+3. Save",Meeting created successfully,,Passed,,,
+3.0,Required field validations,"1. Leave required fields empty
+2. Save",Validation errors shown,,Passed,,,
+4.0,"End Time before 
+Start Time","1. Enter invalid time range
+2. Save",Validation error shown,,Passed,,,
+5.0,Add Attendees,1. Add attendee (User/Contact/Lead)2. Save,Attendee added successfully,,Passed,,,
+6.0,Remove Attendee,"1. Click Remove
+2. Save",Attendee removed successfully,,Passed,,,
+7.0,"Meeting appears 
+on Calendar","1. Create Meeting
+2. Navigate to Calendar",Meeting appears on correct date/time,,Passed,,,
+8.0,"Edit Meeting updates 
+Calendar","1. Edit date/time
+2. Save",Calendar reflects updated schedule,,Passed,,,
+9.0,View Meeting details,1. Open Meeting,Details displayed correctly,,Passed,,,
+10.0,Edit Meeting,1. Edit fields2. Save,Details displayed correctly,,Passed,,,
+11.0,Change Meeting status,1. Change Status2. Save,Status updates successfully,,Passed,,,
+12.0,Delete Meeting,1. Delete Meeting,Meeting removed from list & calendar,,Passed,,,
+13.0,Search Meeting,1. Enter keyword,Matching meetings displayed,,Passed,,,
+14.0,Filter by Status,1. Apply Filter,Correct results shown,,Passed,,,
+15.0,Filter by Assigned To,1. Apply Filter,Correct results shown,,Passed,,,
+16.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Calls,,,,,,,,
+1.0,Calls page loads,1. Navigate to Calls module,Calls list loads successfully,,Passed,,,
+2.0,Create Calls,"1. Click Add Call
+2. Fill required fields
+3. Save",Call created successfully,,Passed,,,
+3.0,"Required field 
+validation","1. Leave required fields empty
+2. Save",Validation errors shown,,Passed,,,
+4.0,"End Time before 
+Start Time","1. Enter invalid time range
+2. Save",Validation error shown,,Passed,,,
+5.0,"Add / Remove 
+Attendees","1. Add attendee
+2. Remove attendee",Attendee updates correctly,,Passed,,,
+6.0,"Call appears on 
+Calendar","1. Create Call
+2. Navigate to Calendar",Call appears on correct date/time,,Passed,,,
+7.0,"Edit Call updates 
+Calendar","1. Create Call
+2. Navigate to Calendar",Calendar updates correctly,,Passed,,,
+8.0,View Call details,1. Open Call,Details displayed correctly,,Passed,,,
+9.0,Edit Call,"1. Edit fields
+2. Save",Changes saved successfully,,Passed,,,
+10.0,Change Call status,"1. Change Status
+2. Save",Status updates successfully,,Passed,,,
+11.0,Delete Call,1. Delete Call,Call removed from list & calendar,,Passed,,,
+13.0,Search Calls,1. Enter keyword,Matching calls displayed,,Passed,,,
+12.0,Filter by Status,1. Apply Filter,Correct results shown,,Passed,,,
+13.0,Filter by Assigned To,1. Apply Filter,Correct results shown,,Passed,,,
+14.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Reports - Lead Reports,,,,,,,,
+1.0,"Lead Reports page 
+loads","1. Navigate to Reports 
+→ Lead Reports","Lead report loads with statistics and 
+graphs",,Passed,,,
+2.0,"Lead statistics 
+accuracy","1. Compare displayed total 
+with actual Lead count in module","Report count matches actual system 
+data",,Passed,,,
+3.0,"Lead graph renders 
+correctly",1. View chart,"Graph loads without distortion or 
+missing data",,Passed,,,
+4.0,"Apply From/To Date 
+filter","1. Enter From Date
+2. Enter To Date
+3. Apply filter","Report updates according to selected 
+date range",,Passed,,,
+5.0,"From Date greater 
+than To Date","1. Enter invalid date range
+2. Apply filter",Validation error or no data returned,,Passed,,,
+6.0,Empty filter reset,"1. Clear filter
+2. Apply",Full data displayed,,Passed,,,
+Reports - Sales Reports,,,,,,,,
+1.0,Sales Reports page loads,1. Navigate to Reports → Sales Reports,Sales report loads successfully,,Passed,,,
+2.0,Sales totals match Sales Orders/Invoices,1. Compare totals,Report totals match transactional data,,Passed,,,
+3.0,Date filter works,1. Apply From/To Date filter,Data updates correctly,,Passed,,,
+4.0,"From Date greater 
+than To Date","1. Enter invalid date range
+2. Apply filter",Validation error or no data returned,,Passed,,,
+5.0,Graph reflects filtered data,"1. Apply filter
+2. View graph",Graph updates accordingly,,Passed,,,
+6.0,Empty filter reset,"1. Clear filter
+2. Apply",Full data displayed,,Passed,,,
+Reports - Product Reports,,,,,,,,
+1.0,Product Reports page loads,1. Navigate to Product Reports,Product report loads successfully,,Passed,,,
+2.0,Product count accuracy,"1. Compare report count with 
+Product module",Counts match,,Passed,,,
+3.0,Date filter functionality,1. Apply From/To Date filter,Data updates correctly,,Passed,,,
+4.0,"From Date greater 
+than To Date","1. Enter invalid date range
+2. Apply filter",Validation error or no data returned,,Passed,,,
+5.0,Graph reflects filtered data,"1. Apply filter
+2. View graph",Graph updates accordingly,,Passed,,,
+6.0,Empty filter reset,"1. Clear filter
+2. Apply",Full data displayed,,Passed,,,
+Reports - Contact Reports,,,,,,,,
+1.0,Contact Reports page loads,"1. Navigate to Contact 
+Reports",Report loads successfully,,Passed,,,
+2.0,Date filter works,1. Apply From/To Date filter,Data updates correctly,,Passed,,,
+3.0,"From Date greater 
+than To Date","1. Enter invalid date range
+2. Apply filter",Validation error or no data returned,,Passed,,,
+4.0,Empty filter reset,"1. Clear filter
+2. Apply",Full data displayed,,Passed,,,
+5.0,Switch to Daily View,1. Toggle Daily view,Report displays daily breakdown,,Passed,,,
+6.0,Switch to Monthly View,1. Toggle Monthly view,Report displays monthly breakdown,,Passed,,,
+7.0,Toggle updates graph,"1. Switch views
+2. Observe graph",Graph reflects selected view,,Passed,,,
+Reports - Project Reports,,,,,,,,
+1.0,Project Reports page loads,"1. Navigate to Project 
+Reports",Report loads successfully,,Passed,,,
+2.0,Date filter works,1. Apply From/To Date filter,Data updates correctly,,Passed,,,
+3.0,"From Date greater 
+than To Date","1. Enter invalid date range
+2. Apply filter",Validation error or no data returned,,Passed,,,
+4.0,Empty filter reset,"1. Clear filter
+2. Apply",Full data displayed,,Passed,,,
+5.0,Switch Daily/Monthly view,1. Toggle view,Data and graph update correctly,,Passed,,,
+6.0,Project data accuracy,"1. Compare report totals 
+with Project module",Data matches,,Passed,,,
+Shipping Provider Types,,,,,,,,
+1.0,"Shipping Provider 
+Types page loads","1. Navigate to Shipping 
+Provider Types",Page loads successfully,,Passed,,,
+2.0,"Create Shipping 
+Provider Type","1. Click Add
+2. Enter Name
+3. (Optional) Description & 
+Color
+4. Set Status
+5. Save",Provider Type created successfully,,Passed,,,
+3.0,"Name required 
+validation","1. Leave Name empty
+2. Save",Validation error shown,,Passed,,,
+4.0,"Duplicate Name 
+validation","1. Enter existing Name
+2. Save","System prevents duplicate entry or 
+shows validation error",,Passed,,,
+5.0,"View Shipping 
+Provider Type details","1. Click an existing Shipping 
+Provider Type from list","Shipping Provider Type details 
+displayed correctly",,Passed,,,
+6.0,"Edit Shipping Provider 
+Type","1. Edit existing record fields
+2. Click Save",Changes saved successfully,,Passed,,,
+7.0,"Change Shipping 
+Provider Type status","1. Open existing record
+2. Change Status
+3. Click Save","Status updates successfully according 
+to selected value",,Passed,,,
+8.0,"Delete Shipping 
+Provider Type","1. Click Delete on unused 
+record
+2. Confirm deletion","Shipping Provider Type deleted 
+successfully",,Passed,,,
+10.0,"Search Shipping 
+Provider Type","1. Enter keyword in Search 
+field",Matching records displayed correctly,,Passed,,,
+11.0,Filter by Status,1. Apply Status filter,Correct filtered results displayed,,Passed,,,
+12.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Plans - Plans,,,,,,,,
+1.0,Plans page loads,1. Navigate to Plans module,"Plans page loads successfully with 
+available plans displayed",,Passed,,,
+2.0,View available plans,"1. Verify Free, Starter, Growth, Pro, Business+ 
+plans are displayed","All available plans displayed correctly 
+with pricing and details",,Passed,,,
+3.0,Monthly and Yearly toggle,"1. Switch from Monthly to Yearly
+2. Switch back to Monthly","Plan pricing updates correctly based 
+on selected billing cycle",,Passed,,,
+4.0,Start 30-Day Trial,1. Click “Start 30 Day Trial” for a plan,"Trial activated successfully for selected 
+plan",,Passed,,,
+5.0,Trial activation restriction,1. Attempt to activate trial again (if already used),System prevents duplicate trial activation,,Passed,,,
+6.0,Subscribe Now button opens payment window,1. Click “Subscribe Now”,"Payment or subscription window opens 
+for selected plan",,Passed,,,
+7.0,Selected Plan details correctness,1. Click Subscribe on a specific plan,"Selected plan name, price, and billing 
+cycle are displayed correctly in the 
+payment window",,Passed,,,
+8.0,Select payment method,"1. Select available payment method
+2. Proceed","Selected payment method is accepted 
+and user proceeds to payment confirmation",,Passed,,,
+9.0,Coupon code valid,"1. Enter valid coupon code
+2. Apply","Valid coupon is accepted and discount 
+is applied to the total price",,Passed,,,
+10.0,Coupon code invalid,"1. Enter invalid coupon code
+2. Apply","System displays error message indicating 
+coupon code is invalid",,Passed,,,
+11.0,Successful subscription payment,1. Complete payment process,"Payment is processed successfully and 
+subscription is activated for the selected 
+plan",,Passed,,,
+12.0,Payment failure handling,1. Simulate failed payment,"System displays payment failure 
+message and subscription is not 
+activated",,Passed,,,
+13.0,Coupon + Yearly billing combination,"1. Navigate to Plans page
+2. Select Yearly billing
+3. Click Subscribe on a plan
+4. Enter valid coupon code
+5. Apply coupon","Coupon discount is correctly applied to the 
+yearly price",,Passed,,,
+14.0,Coupon calculation accuracy,"1. Select Yearly plan
+2. Apply percentage or fixed coupon","Discounted total price is calculated 
+correctly based on coupon rules",,Passed,,,
+15.0,Switch plan during active trial,"1. Activate 30-day trial for a plan
+2. Navigate to Plans page
+3. Attempt to subscribe to another plan","System either upgrades plan correctly or 
+shows restriction message",,Not Started,,,
+16.0,Plan downgrade during trial,"1. Start trial on a higher plan
+2. Attempt to switch to lower plan","System handles downgrade correctly or 
+shows restriction based on business rules",,Passed,,,
+17.0,Refresh after successful payment,"1. Subscribe to a plan
+2. Complete payment successfully
+3. Refresh the page",User subscription updates immediately,,Not Started,,,
+18.0,"Prevent duplicate subscription 
+after payment","1. Complete successful payment
+2. Attempt to subscribe again to same plan","System prevents duplicate subscription or 
+shows plan already active message",,Passed,,,
+Plans - Plan Requests,,,,,,,,
+1.0,Plan Requests page loads,1. Navigate to Plan Requests module,"Plan Requests page loads successfully 
+and displays the list of plan requests",,Passed,,,
+2.0,Display Plan Requests,1. Verify existing plan requests are displayed,"Existing plan requests are displayed 
+correctly in the list",,Passed,,,
+3.0,Search Plan Requests,1. Enter keyword in Search,"Matching plan requests are displayed 
+based on the search keyword",,Passed,,,
+4.0,Filter Plan Requests by Status,1. Apply Status filter,"Only plan requests matching the 
+selected status are displayed",,Passed,,,
+5.0,View Plan Request details,1. Open a Plan Request,"Selected plan request details are 
+displayed correctly",,Passed,,,
+7.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Plans - Plan Orders,,,,,,,,
+1.0,Plan Orders page loads,1. Navigate to Plan Orders module,"Plan Orders page loads successfully 
+and displays the list of plan orders",,Passed,,,
+2.0,Display Plan Orders,1. Verify existing Plan Orders are displayed,"Existing plan orders are displayed 
+correctly in the list",,Passed,,,
+3.0,Search Plan Orders,1. Enter keyword in Search,"Matching plan orders are displayed 
+based on the search keyword",,Passed,,,
+4.0,Filter Plan Orders by Status,1. Apply Status filter,"Only plan orders matching the selected 
+status are displayed",,Passed,,,
+5.0,View Plan Order details,1. Open a Plan Order,"Selected plan order details are 
+displayed correctly",,Passed,,,
+6.0,Change Plan Order status,1. Open Plan Order2. Change Status3. Save,"Plan order status is updated successfully 
+and reflected in the list",,Passed,,,
+7.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to selected
+ limit",,Passed,,,
+Referral Program,,,,,,,,
+1.0,"Referral Dashboard 
+loads","1. Navigate to Referral Program 
+→ Dashboard",Dashboard loads successfully,,Passed,,,
+2.0,"Total Referrals 
+accuracy","1. Compare dashboard count with actual 
+referral records","Total Referrals count matches 
+system data",,Passed,,,
+3.0,"Referred Users 
+count accuracy",1. Compare with referred users list,Count matches correctly,,Not Started,,,
+4.0,"Total Earned 
+calculation","1. Verify commission totals from referred 
+users with active plans",Total Earned reflects correct sum,,Not Started,,,
+,5.0,Available Balance calculation,1. Verify balance after payouts,Available Balance updates correctly,Not Started,Not Run,,Critical financial logic
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+,,,,,Not Started,,,
+6.0,"Referred Users 
+page loads",1. Navigate to Referred Users,Page loads successfully,,Passed,,,
+7.0,"Total Referred Users 
+count",1. Compare list count with dashboard,Count matches correctly,,Passed,,,
+8.0,"Users With Plans 
+calculation",1. Verify only users with active plans counted,Correct users counted,,Not Started,,,
+9.0,"Commission per 
+user accuracy",1. Verify commission from subscribed plans,Commission calculated correctly,,Not Started,,,
+10.0,List display accuracy,1. Verify user details in list,Correct user details displayed,,Not Started,,,
+11.0,"Payout Requests
+ page loads",1. Navigate to Payout Requests,Page loads successfully,,Not Started,,,
+12.0,"Request Payout 
+(below minimum amount)","1. Ensure balance below minimum
+2. Attempt Request Payout",Request button disabled or blocked,,Passed,,,
+13.0,"Request Payout 
+(eligible amount)","1. Ensure balance meets minimum
+2. Click Request Payout",Payout request created successfully,,Not Started,,,
+14.0,"Payout Request 
+appears in list","1. Create payout request
+2. Verify list",Request appears correctly in list,,Not Started,,,
+15.0,"Available Balance 
+updated after payout",1. Submit payout request,"Available balance reduces 
+accordingly",,Not Started,,,
+Media Library,,,,,,,,
+1.0,"Media Library page 
+loads",1. Navigate to Media Library,Page loads successfully,,Passed,,,
+2.0,"Upload media 
+(valid file)","1. Click Upload
+2. Select valid file
+3. Confirm upload","File uploads successfully and 
+appears in list",,Passed,,,
+3.0,"Upload invalid 
+file type",1. Select unsupported file,System blocks upload or shows error,,Passed,,,
+4.0,Upload large file,1. Upload large file,System handles per size limit rule,,Passed,,,
+5.0,Search media files,1. Enter keyword in Search,Matching media files displayed,,Passed,,,
+6.0,Delete media file,1. Delete media file,File removed successfully,,Passed,,,
+Notification Templates,,,,,,,,
+1.0,"Notification Templates 
+page loads",1. Navigate to Notification Templates,Templates displayed successfully,,Passed,,,
+2.0,"View Notification 
+Template",1. Click Eye icon,Template details displayed correctly,,Passed,,,
+3.0,Edit Template Title,"1. Modify Title
+2. Save",Title updated successfully,,Passed,,,
+4.0,Edit Template Content,"1. Modify Content
+2. Save",Content updated successfully,,Passed,,,
+5.0,"Required field 
+validation","1. Remove Title or Content
+2. Save",Validation error shown (if required),,Passed,,,
+6.0,"Search Notification 
+Template",1. Enter keyword in Search,Matching templates displayed,,Passed,,,
+7.0,"Pagination (10,25,50,100)",1. Select pagination options,"Messages display according to 
+selected limit",,Passed,,,
+Settings,,,,,,,,
+1.0,Access Settings page,"1. Login as Super Admin
+2. Navigate to Settings","Settings page loads successfully 
+displaying all configuration sections",,Passed,,,
+2.0,"Verify Language setting 
+changes","1. Navigate to Settings → System Settings → 
+Language. 
+2. Select a different language from the dropdown. 
+3. Click Save/Apply.","UI elements, messages, and labels reflect 
+the selected language.","UI elements, messages, and labels does not reflect the selected language.",Passed,(PASSED) 03/24/2026,,
+3.0,"Verify Date Format 
+change","1. Navigate to Settings → System Settings → 
+Date Format. 
+2. Select a new date format
+3. Click Save/Apply.","All date fields across the system display in 
+the new format.","Selection reverts back to old format after 
+clicking save",Passed,(PASSED) 03/24/2027,,
+4.0,"Verify Time Format 
+change","1. Navigate to Settings → System Settings → Time 
+Format. 
+2. Select 12-hour or 24-hour format. 
+3. Click Save/Apply.","All time fields update to the selected 
+format.","Selection reverts back to old format
+after clicking save",Passed,(PASSED) 03/24/2028,,
+5.0,"Verify Default Timezone 
+change","1. Navigate to Settings → System Settings → 
+Default Timezone. 
+2. Select a new timezone. 
+3. Click Save/Apply.","All time-sensitive data reflects the 
+updated timezone.","Selection reverts back to Asia/Manila 
+Timezone after clicking save",Passed,(PASSED) 03/24/2029,,
+6.0,"Verify Email Provider 
+settings","1. Navigate to Settings → Email Settings → 
+Email Provider. 
+2. Select an email provider. 
+3. Click Save/Apply.","System sends emails using the selected 
+provider.",,Passed,,,
+7.0,Verify SMTP Settings,"1. Navigate to Settings → Email Settings → 
+SMTP Host/Port/Username/Password/Encryption. 
+2. Enter valid SMTP details. 
+3. Click Save/Apply.","Emails are successfully sent using 
+SMTP configuration.",,Passed,,,
+8.0,"Verify From Address 
+and Name","1. Navigate to Settings → Email Settings → 
+From Address/From Name. 
+2. Enter new values. 
+3. Click Save/Apply.","Emails sent from system reflect updated 
+address and name.",,Passed,,,
+9.0,"Verify Email 
+Notification toggle","1. Navigate to Settings → Email Notification Settings. 
+2. Enable or disable specific notifications. 
+3. Click Save/Apply.","Notifications sent according to updated 
+configuration.",,Passed,,,
+10.0,"Verify Twilio SMS 
+configuration","1. Navigate to Settings → Twilio Notification Settings. 
+2. Enter valid Twilio account SID, token, and number. 
+3. Click Save/Apply.","SMS notifications sent successfully via 
+Twilio.",,Not Started,,,
+11.0,"Verify Company 
+Payment gateway","1. Navigate to Settings → Company Payment Settings. 
+2. Select/configure payment gateway. 
+3. Click Save/Apply.","Subscription payments processed via 
+configured gateway.",,Passed,,,
+12.0,"Verify Quote Template 
+customization","1. Navigate to Settings → Quote Templates. 
+2. Update template layout, colors, and display options. 
+3. Click Save/Apply.","New template reflected in all quotes; 
+preview works.",,Passed,,,
+13.0,"Verify Sales Order 
+Template customization","1. Navigate to Settings → Sales Order Templates. 
+2. Update template layout, colors, and display options. 
+3. Click Save/Apply.","Updated template reflected in all sales 
+orders; preview works.",,Passed,,,
+14.0,"Verify Invoice Template
+customization","1. Navigate to Settings → Invoice Templates. 
+2. Update template layout, colors, and display options. 
+3. Click Save/Apply.","Updated template reflected in all 
+invoices; preview works.",,Passed,,,
+15.0,"Verify Google Calendar 
+integration","1. Navigate to Settings → Google Calendar Settings. 
+2. Connect to Google account. 
+3. Click Save/Apply.","App appointments synchronize with 
+Google Calendar.",,Not Started,,,
+16.0,"Verify Webhook 
+configuration","1. Navigate to Settings → Webhook Settings. 
+2. Add/edit webhook URL and select events. 
+3. Click Save/Apply.","Webhook triggers correctly when 
+configured events occur.",,Not Started,,,

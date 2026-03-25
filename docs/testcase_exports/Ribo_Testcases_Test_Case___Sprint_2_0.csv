@@ -1,0 +1,396 @@
+,,,,,,,,
+ITEM NO.,TEST CASE / SCENARIO,TEST STEP,SEVERITY,EXPECTED RESULT,"ACTUAL RESULT
+(1st RUN)",STATUS,"TEST EVIDENCE
+(1st Run)",COMMENT / REMARK
+STUDENT,,,,,,,,
+Notification,,,,,,,,
+,Notifications,"1. Click Bell icon
+2. Click any Notification",,"• User will be redirected to the notification (Tuition fees, Other transaction)",,NOT YET STARTED,,
+Other Transaction,,,,,,,,
+,Menu - Dashboard - Overview,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the overview that consists of:
+- Profile Picture
+- Full name
+- Student ID
+- Academic Year
+- Year Level
+- Semester
+- Course
+- Department
+
+• User will be able to view Outstanding balance 
+- Tooltip icon
+- outstanding balance (Hover Tooltip)
+- Progress bar & number of months
+- Amount Paid
+- Total
+- Pay button
+---------------------------------------------------
+- Due on 
+- Extended Due on
+
+",,NOT YET STARTED,,
+,Menu - Dashboard - Recent Activity,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the Recent Activity that consists of:
+
+Latest Transactions
+- View All link
+- Details of Latest Transaction
+Official Receipt 
+-  View All link
+- Details of Latest Transaction
+- View Receeipt Link
+- Processing of OR must not be seen in this table",,NOT YET STARTED,,
+,Menu - Tuition fees,1. Click Tuition Fees Button,,"• User can be able to view 
+- Pay outstanding balance
+- Search
+- Date Range
+- Filter by (Payment Status / OR status)
+
+Tuition Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Amount
+- Official Receipt Status
+- Pagination",,NOT YET STARTED,,
+,Support - Terms and Conditions,1. Click Terms and Conditions Button,,"• User is able to view Terms and Conditions 
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - Finance Policy,1. Click Finance Policy Button,,"• User is able to view Finance Policy
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - FAQs,1. Click FAQs Button,,• User is able to view FAQs ,,NOT YET STARTED,,
+,Support - Contact us,1. Click Contact us Button,,"• User is able to view Contact us 
+-Send us an Email
+- Contact details
+ ",,NOT YET STARTED,,
+Terms & Conditions,,,,,,,,
+,Menu - Dashboard - Overview,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the overview that consists of:
+- Profile Picture
+- Full name
+- Student ID
+- Academic Year
+- Year Level
+- Semester
+- Course
+- Department
+
+• User will be able to view Outstanding balance 
+- Tooltip icon
+- outstanding balance (Hover Tooltip)
+- Progress bar & number of months
+- Amount Paid
+- Total
+- Pay button
+---------------------------------------------------
+- Due on 
+- Extended Due on
+
+",,NOT YET STARTED,,
+,Menu - Dashboard - Recent Activity,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the Recent Activity that consists of:
+
+Latest Transactions
+- View All link
+- Details of Latest Transaction
+Official Receipt 
+-  View All link
+- Details of Latest Transaction
+- View Receeipt Link
+- Processing of OR must not be seen in this table",,NOT YET STARTED,,
+,Menu - Tuition fees,1. Click Tuition Fees Button,,"• User can be able to view 
+- Pay outstanding balance
+- Search
+- Date Range
+- Filter by (Payment Status / OR status)
+
+Tuition Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Amount
+- Official Receipt Status
+- Pagination",,NOT YET STARTED,,
+,Menu - Other Transactions,1. Click Other Transaction Button,,"• User can be able to view 
+- Pay other fees
+- Search
+- Date Range
+
+Other Transaction Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Miscellaneous item
+- Amount
+- Payment Channel
+- Pagination",,NOT YET STARTED,,
+,Support - Finance Policy,1. Click Finance Policy Button,,"• User is able to view Finance Policy
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - FAQs,1. Click FAQs Button,,• User is able to view FAQs ,,NOT YET STARTED,,
+,Support - Contact us,1. Click Contact us Button,,"• User is able to view Contact us 
+-Send us an Email
+- Contact details
+ ",,NOT YET STARTED,,
+,Terms and Condition,1. View Terms & Conditions,,• View Terms and Conditions Content,,NOT YET STARTED,,
+,Terms and Condition - Last Revised,1. View Terms & Conditions,,• Last Revised must be updated when the Terms and Conditions is revised,,NOT YET STARTED,,
+Finance Policy,,,,,,,,
+,Menu - Dashboard - Overview,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the overview that consists of:
+- Profile Picture
+- Full name
+- Student ID
+- Academic Year
+- Year Level
+- Semester
+- Course
+- Department
+
+• User will be able to view Outstanding balance 
+- Tooltip icon
+- outstanding balance (Hover Tooltip)
+- Progress bar & number of months
+- Amount Paid
+- Total
+- Pay button
+---------------------------------------------------
+- Due on 
+- Extended Due on
+
+",,NOT YET STARTED,,
+,Menu - Dashboard - Recent Activity,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the Recent Activity that consists of:
+
+Latest Transactions
+- View All link
+- Details of Latest Transaction
+Official Receipt 
+-  View All link
+- Details of Latest Transaction
+- View Receeipt Link
+- Processing of OR must not be seen in this table",,NOT YET STARTED,,
+,Menu - Tuition fees,1. Click Tuition Fees Button,,"• User can be able to view 
+- Pay outstanding balance
+- Search
+- Date Range
+- Filter by (Payment Status / OR status)
+
+Tuition Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Amount
+- Official Receipt Status
+- Pagination",,NOT YET STARTED,,
+,Menu - Other Transactions,1. Click Other Transaction Button,,"• User can be able to view 
+- Pay other fees
+- Search
+- Date Range
+
+Other Transaction Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Miscellaneous item
+- Amount
+- Payment Channel
+- Pagination",,NOT YET STARTED,,
+,Support - Terms and Conditions,1. Click Terms and Conditions Button,,"• User is able to view Terms and Conditions 
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - FAQs,1. Click FAQs Button,,• User is able to view FAQs ,,NOT YET STARTED,,
+,Support - Contact us,1. Click Contact us Button,,"• User is able to view Contact us 
+-Send us an Email
+- Contact details
+ ",,NOT YET STARTED,,
+,Finance Policy,1. View Terms & Conditions,,• View Terms and Conditions Content,,NOT YET STARTED,,
+,Finance Policy - Last Revised,1. View Terms & Conditions,,• Last Revised must be updated when the Terms and Conditions is revised,,NOT YET STARTED,,
+FAQs,,,,,,,,
+,Menu - Dashboard - Overview,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the overview that consists of:
+- Profile Picture
+- Full name
+- Student ID
+- Academic Year
+- Year Level
+- Semester
+- Course
+- Department
+
+• User will be able to view Outstanding balance 
+- Tooltip icon
+- outstanding balance (Hover Tooltip)
+- Progress bar & number of months
+- Amount Paid
+- Total
+- Pay button
+---------------------------------------------------
+- Due on 
+- Extended Due on
+
+",,NOT YET STARTED,,
+,Menu - Dashboard - Recent Activity,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the Recent Activity that consists of:
+
+Latest Transactions
+- View All link
+- Details of Latest Transaction
+Official Receipt 
+-  View All link
+- Details of Latest Transaction
+- View Receeipt Link
+- Processing of OR must not be seen in this table",,NOT YET STARTED,,
+,Menu - Tuition fees,1. Click Tuition Fees Button,,"• User can be able to view 
+- Pay outstanding balance
+- Search
+- Date Range
+- Filter by (Payment Status / OR status)
+
+Tuition Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Amount
+- Official Receipt Status
+- Pagination",,NOT YET STARTED,,
+,Menu - Other Transactions,1. Click Other Transaction Button,,"• User can be able to view 
+- Pay other fees
+- Search
+- Date Range
+
+Other Transaction Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Miscellaneous item
+- Amount
+- Payment Channel
+- Pagination",,NOT YET STARTED,,
+,Support - Terms and Conditions,1. Click Terms and Conditions Button,,"• User is able to view Terms and Conditions 
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - Finance Policy,1. Click Finance Policy Button,,"• User is able to view Finance Policy
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - Contact us,1. Click Contact us Button,,"• User is able to view Contact us 
+-Send us an Email
+- Contact details
+ ",,NOT YET STARTED,,
+,Search,1. Input Text in the Search Field ,,• User will be able to see the matched FAQs based on the inputted text on search field,,NOT YET STARTED,,
+,Plus Icon,1. Click Plus Icon,,FAQs Record will collapse the clicked Plus icon,,NOT YET STARTED,,
+,Minus Icon,1. Click Minus Icon,,FAQs Record will uncollapse the clicked Minus icon,,NOT YET STARTED,,
+Contact Us,,,,,,,,
+,Menu - Dashboard - Overview,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the overview that consists of:
+- Profile Picture
+- Full name
+- Student ID
+- Academic Year
+- Year Level
+- Semester
+- Course
+- Department
+
+• User will be able to view Outstanding balance 
+- Tooltip icon
+- outstanding balance (Hover Tooltip)
+- Progress bar & number of months
+- Amount Paid
+- Total
+- Pay button
+---------------------------------------------------
+- Due on 
+- Extended Due on
+
+",,NOT YET STARTED,,
+,Menu - Dashboard - Recent Activity,"1. Click Dashboard Button
+",,"• User will be redirected to Dashboards
+• User will be able to view the Recent Activity that consists of:
+
+Latest Transactions
+- View All link
+- Details of Latest Transaction
+Official Receipt 
+-  View All link
+- Details of Latest Transaction
+- View Receeipt Link
+- Processing of OR must not be seen in this table",,NOT YET STARTED,,
+,Menu - Tuition fees,1. Click Tuition Fees Button,,"• User can be able to view 
+- Pay outstanding balance
+- Search
+- Date Range
+- Filter by (Payment Status / OR status)
+
+Tuition Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Amount
+- Official Receipt Status
+- Pagination",,NOT YET STARTED,,
+,Menu - Other Transactions,1. Click Other Transaction Button,,"• User can be able to view 
+- Pay other fees
+- Search
+- Date Range
+
+Other Transaction Table
+- Reference No.
+- Date of payment
+- Payment Status
+- Miscellaneous item
+- Amount
+- Payment Channel
+- Pagination",,NOT YET STARTED,,
+,Support - Terms and Conditions,1. Click Terms and Conditions Button,,"• User is able to view Terms and Conditions 
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - Finance Policy,1. Click Finance Policy Button,,"• User is able to view Finance Policy
+• User is able to view the Last Revised ",,NOT YET STARTED,,
+,Support - FAQs,1. Click FAQs Button,,• User is able to view FAQs ,,NOT YET STARTED,,
+,Sending of Email - Subject ,"1. Input Subject (Required, Maximum 50 Characters)
+2. Input Message (Required, Maximum of 255 Characters)",,"• User is able to input aplanumeric characters 
+• This field is Required to send email 
+",,NOT YET STARTED,,
+,Sending of Email - Message,"1. Input Subject (Required, Maximum 50 Characters)
+2. Input Message (Required, Maximum of 255 Characters)",,"• User is able to input aplanumeric characters 
+• This field is Required to send email 
+",,NOT YET STARTED,,
+,Sending of Email - Successful email,"1. Input Subject (Required, Maximum 50 Characters)
+2. Input Message (Required, Maximum of 255 Characters)
+3. Click ""Send Message"" Button",,"• Subject Field must have inputs 
+• Message Field must have inputs
+• The receiving Email must receive the email",,NOT YET STARTED,,
+,Sending of Email - Unuccessful email (Subject),"1. Input Subject (Required, Maximum 50 Characters)
+2. Click ""Send Message"" Button",,"• Error in Subject Field that message field is required
+• Sending Email must not proceed",,NOT YET STARTED,,
+,Sending of Email - Unuccessful email (Message),"1. Input Message (Required, Maximum 225 Characters)
+2. Click ""Send Message"" Button",,"• Error in Message Field that message field is required
+• Sending Email must not proceed",,NOT YET STARTED,,
+ADMIN,,,,,,,,
+Notification,,,,,,,,
+,Notifications,"1. Click Bell icon
+2. Click any Notification",,• User will be redirected to Payment Management Tab,,NOT YET STARTED,,
+Dashboard,,,,,,,,
+,,,,,,,,
+Student Management,,,,,,,,
+,,,,,,,,
+Payment Management,,,,,,,,
+,,,,,,,,
+Manage OR,,,,,,,,
+,,,,,,,,
+Staff Management,,,,,,,,
+,,,,,,,,
+Content Management,,,,,,,,
+,,,,,,,,
+Report Management,,,,,,,,
+,,,,,,,,
+Profile Settings,,,,,,,,
+,,,,,,,,
+History Logs,,,,,,,,
+,,,,,,,,
+,,,,,,,,
+,,,,,,,,

@@ -1,0 +1,56 @@
+STUDENT ,,ADMIN,
+,,,
+LOGIN,,LOGIN,
+STUDENT ID,alphanumeric which consist of 10 characters,USERNAME,
+PASSWORD,Minimum of 8 alphanumeric character,PASSWORD,Minimum of 8 alphanumeric character
+,Maximum of 50 alphanumeric character,,Maximum of 50 alphanumeric character
+,Must have at least one special character,,Must have at least one special character
+FORGOT PASSWORD,,STAFF MANAGEMENT>ADD NEW STAFF,
+EMAIL ADDRESS,email add,Profile image,"jpeg, png; up to 20mb"
+,,FIRST NAME,Maximum of 70 characters
+PAY,,MIDLE NAME,OPTIONAL
+UPLOAD PROOF OF PAYMENT,,LAST NAME,Maximum of 70 characters
+,,ACCOUNT,
+,,ROLE,
+PAY>MODE OF PAYMENT> CREDIT CARDS> CARD INFORMATION,,EMAIL ADDRESS,Maximum of 70 characters
+CARD NUMBER,,MOBILE NUMBER,Use the 11-digit (e.g. 09171234567) or 12-digit (e.g. 639181234567) format
+CARD NAME,,HOME ADDRESS,Up to 70 characters
+EXPIRY DATE,,,
+CVV,,STUDENT MANAGEMENT,
+,,PAYMENT TRANSACTION,
+CONTACT US ,,STAFF MANAGEMENT,
+NAME,,CONTENT MANAGEMENT ,
+STUDENT ID,,REPORTS MANAGEMENT,
+EMAIL ADDRESS,,,
+DEPARTMENT,,CHANGE PASSWORD,
+MESSAGE,,Current password,current password
+,,new password,Minimum of 8 alphanumeric character
+PROFILE SETTINGS,,,Maximum of 50 alphanumeric character
+Upload a Photo,"jpeg, png; up to 20mb",,Must have at least one special character
+Student ID ,alphanumeric which consist of 32 characters,confirm password,Minimum of 8 alphanumeric character
+Email address,EMAIL,,Maximum of 50 alphanumeric character
+First name,Maximum of 70 characters,,Must have at least one special character
+midle name,OPTIONAL,,
+Last name,Maximum of 70 characters,Edit Student Balance,
+mobile number,Use the 11-digit (e.g. 09171234567) or 12-digit (e.g. 639181234567) format,Current Balance,
+birthday,DATE PICKET  MM/DD/YYYY,payment status ,
+age,,enter reason for editing,
+gender,,,
+home address,,Add new FAQ Record,
+course,Pre input,Question,
+department,Pre input,Answer,
+academic year,Pre input,,
+semester,,Terms and condition,
+,,title,
+CHANGE PASSWORD,,body,
+Current password,current password,,
+new password,Minimum of 8 alphanumeric character,Contact us details,
+,Maximum of 50 alphanumeric character,Phone number,
+,Must have at least one special character,email address,
+confirm password,Minimum of 8 alphanumeric character,shcool address,
+,Maximum of 50 alphanumeric character,,
+,Must have at least one special character,PAYMENT STATUS STUDENT,
+,,paid,
+Forgot password,,payment validated,
+email,,,
+,,PAYMENT STATUS STUDENT,
