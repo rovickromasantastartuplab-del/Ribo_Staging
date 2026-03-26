@@ -32,6 +32,8 @@ export default function Accounts() {
   const [showFilters, setShowFilters] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [selectedIdsForBulkDelete, setSelectedIdsForBulkDelete] = useState<any[]>([]);
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
   const [activeView, setActiveView] = useState('list');
@@ -178,26 +180,30 @@ export default function Accounts() {
         return;
       }
 
-      if (confirm(t('Are you sure you want to delete the selected {{count}} records? This action cannot be undone.', { count: selectedIds.length }))) {
-        toast.loading(t('Deleting records...'));
-
-        router.delete(route('accounts.bulk-delete'), {
-          data: { ids: selectedIds },
-          onSuccess: (page: any) => {
-            toast.dismiss();
-            if (page.props.flash?.success) {
-              toast.success(t(page.props.flash.success));
-            } else if (page.props.flash?.error) {
-              toast.error(t(page.props.flash.error));
-            }
-          },
-          onError: () => {
-            toast.dismiss();
-            toast.error(t('Failed to delete records.'));
-          }
-        });
-      }
+      setSelectedIdsForBulkDelete(selectedIds);
+      setIsBulkDeleteModalOpen(true);
     }
+  };
+
+  const handleBulkDeleteConfirm = () => {
+    setIsBulkDeleteModalOpen(false);
+    toast.loading(t('Deleting records...'));
+
+    router.delete(route('accounts.bulk-delete'), {
+      data: { ids: selectedIdsForBulkDelete },
+      onSuccess: (page: any) => {
+        toast.dismiss();
+        if (page.props.flash?.success) {
+          toast.success(t(page.props.flash.success));
+        } else if (page.props.flash?.error) {
+          toast.error(t(page.props.flash.error));
+        }
+      },
+      onError: () => {
+        toast.dismiss();
+        toast.error(t('Failed to delete records.'));
+      }
+    });
   };
 
   const handleDeleteConfirm = () => {
@@ -298,7 +304,8 @@ export default function Accounts() {
     options: users.map((u: any) => ({
       value: u.id.toString(),
       label: u.name
-    }))
+    })),
+    defaultValue: auth.user.type === 'company' ? undefined : auth.user.id.toString()
   };
 
   // Add the "Add New Account" button if user has permission
@@ -874,6 +881,14 @@ export default function Accounts() {
         onConfirm={handleDeleteConfirm}
         itemName={currentItem?.name || ''}
         entityName={t('account')}
+      />
+
+      <CrudDeleteModal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => setIsBulkDeleteModalOpen(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        itemName={t('the selected {{count}} records', { count: selectedIdsForBulkDelete.length })}
+        entityName={t('accounts')}
       />
     </PageTemplate>
   );

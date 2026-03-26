@@ -138,8 +138,9 @@ class OpportunityController extends Controller
         $validated['created_by'] = createdBy();
         $validated['status'] = $validated['status'] ?? 'active';
 
-        // Auto-assign to current user if staff user
-        if (auth()->user()->type !== 'company' && !auth()->user()->can('manage-opportunities')) {
+        // Auto-assign to current user if staff user or doesn't have manage permission
+        // Auto-assign to current user if not provided and not company owner or superadmin
+        if (empty($validated['assigned_to']) && auth()->user()->type !== 'company' && !auth()->user()->isSuperAdmin()) {
             $validated['assigned_to'] = auth()->id();
         }
 
