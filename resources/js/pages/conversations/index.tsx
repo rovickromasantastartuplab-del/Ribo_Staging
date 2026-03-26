@@ -218,6 +218,30 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     // Feature states
     const [companyUsers, setCompanyUsers] = useState<any[]>([]);
+    // Calendar pane drag-resize width
+    const [calendarWidth, setCalendarWidth] = useState(340);
+    const isResizingCalendar = React.useRef(false);
+    const resizeStartX = React.useRef(0);
+    const resizeStartWidth = React.useRef(0);
+
+    const handleCalendarResizeMouseDown = (e: React.MouseEvent) => {
+        isResizingCalendar.current = true;
+        resizeStartX.current = e.clientX;
+        resizeStartWidth.current = calendarWidth;
+        const onMouseMove = (ev: MouseEvent) => {
+            if (!isResizingCalendar.current) return;
+            const delta = ev.clientX - resizeStartX.current;
+            const next = Math.max(240, Math.min(560, resizeStartWidth.current + delta));
+            setCalendarWidth(next);
+        };
+        const onMouseUp = () => {
+            isResizingCalendar.current = false;
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+        };
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+    };
     const [updatingMetadata, setUpdatingMetadata] = useState(false);
 
     // Internal thread message pagination
@@ -1145,10 +1169,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     ) : (
                         <>
                             {/* Pane 2: Thread list or Calendar */}
-                            <div className={`
-                        flex-1 ${selectedFolder === 'calendar' && !selectedThread ? '' : 'lg:max-w-md xl:max-w-[400px]'} border-r flex flex-col bg-background min-w-0
-                        ${selectedThread ? 'hidden lg:flex' : 'flex'}
-                    `}>
+                            <div
+                                className={`border-r flex flex-col bg-background min-w-0 ${selectedThread ? 'hidden lg:flex' : 'flex'}`}
+                                style={selectedFolder === 'calendar' ? { width: calendarWidth, minWidth: 240, maxWidth: 560, flexShrink: 0 } : { flex: 1, maxWidth: '400px' }}
+                            >
                                 {selectedFolder === 'calendar' ? (
                                     <ConversationsCalendar ref={calendarRef} onSelectThread={handleSelectThreadById} t={t} />
                                 ) : (
@@ -1337,6 +1361,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </>
                                 )}
                             </div>
+
+                            {/* Drag resize handle — only visible when calendar is open alongside the chat pane */}
+                            {selectedFolder === 'calendar' && selectedThread && (
+                                <div
+                                    onMouseDown={handleCalendarResizeMouseDown}
+                                    className="hidden lg:flex w-1.5 cursor-col-resize shrink-0 items-center justify-center group hover:bg-primary/20 transition-colors z-10 select-none"
+                                    title="Drag to resize"
+                                >
+                                    <div className="w-0.5 h-8 rounded-full bg-border group-hover:bg-primary/50 transition-colors" />
+                                </div>
+                            )}
 
                             {/* Pane 3: Thread detail + reply */}
                             <div className={`
