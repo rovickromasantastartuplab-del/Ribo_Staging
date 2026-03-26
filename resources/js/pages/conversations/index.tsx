@@ -47,7 +47,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ConversationsCalendar } from './components/conversations-calendar';
+import { ConversationsCalendar, ConversationsCalendarHandle } from './components/conversations-calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/custom-toast';
@@ -485,6 +485,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     // Ref for real-time refresh
     const selectedThreadIdRef = React.useRef<number | null>(null);
+    const calendarRef = React.useRef<ConversationsCalendarHandle>(null);
     useEffect(() => { selectedThreadIdRef.current = selectedThread?.id || null; }, [selectedThread?.id]);
 
     useEffect(() => {
@@ -912,6 +913,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             setSelectedThread(response.data.thread);
             // Refresh thread list to show new metadata (like closed)
             fetchThreads(false, true);
+            // If follow-up date changed (set or cleared), refresh the calendar view
+            if ('follow_up_at' in updates) {
+                calendarRef.current?.refresh();
+            }
             toast.success(t('Conversation updated'));
         } catch (error) {
             toast.error(t('Failed to update conversation'));
@@ -1145,7 +1150,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         ${selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
                                 {selectedFolder === 'calendar' ? (
-                                    <ConversationsCalendar onSelectThread={handleSelectThreadById} t={t} />
+                                    <ConversationsCalendar ref={calendarRef} onSelectThread={handleSelectThreadById} t={t} />
                                 ) : (
                                     <>
                                         {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}

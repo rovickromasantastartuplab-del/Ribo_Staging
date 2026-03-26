@@ -1,14 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
-import { Card } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function ConversationsCalendar({ onSelectThread, t }: { onSelectThread: (threadId: number) => void, t: any }) {
+export interface ConversationsCalendarHandle {
+    refresh: () => void;
+}
+
+interface ConversationsCalendarProps {
+    onSelectThread: (threadId: number) => void;
+    t: any;
+}
+
+export const ConversationsCalendar = forwardRef<ConversationsCalendarHandle, ConversationsCalendarProps>(
+    function ConversationsCalendar({ onSelectThread, t }, ref) {
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,61 +37,66 @@ export function ConversationsCalendar({ onSelectThread, t }: { onSelectThread: (
         fetchEvents();
     }, []);
 
+    // Expose refresh to parent via ref
+    useImperativeHandle(ref, () => ({
+        refresh: fetchEvents,
+    }));
+
     const handleEventClick = (info: any) => {
         info.jsEvent.preventDefault();
         const threadId = info.event.id;
         if (threadId) {
-            // Trigger the parent index.tsx's thread selector so it opens on the right side seamlessly
             onSelectThread(Number(threadId));
         }
     };
 
     return (
-        <div className="flex flex-col h-full bg-background overflow-hidden p-6 relative">
-            <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col h-full bg-background overflow-hidden">
+            {/* Header */}
+            <div className="flex justify-between items-center px-4 py-3 border-b shrink-0">
                 <div>
-                    <h2 className="text-xl font-semibold tracking-tight">{t('Follow-up Calendar')}</h2>
-                    <p className="text-sm text-muted-foreground">{t('Track all upcoming conversation follow-ups')}</p>
+                    <h2 className="text-sm font-semibold tracking-tight">{t('Follow-up Calendar')}</h2>
+                    <p className="text-[11px] text-muted-foreground">{t('Upcoming follow-ups')}</p>
                 </div>
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={fetchEvents} 
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchEvents}
                     disabled={loading}
-                    className="gap-2"
+                    className="gap-1.5 h-7 text-xs"
                 >
-                    <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin text-primary' : ''}`} />
+                    <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin text-primary' : ''}`} />
                     {t('Refresh')}
                 </Button>
             </div>
-            
-            <Card className="flex-1 p-4 shadow-sm min-h-0 overflow-y-auto">
+
+            {/* Calendar body */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3">
                 <FullCalendar
                     plugins={[dayGridPlugin, interactionPlugin]}
                     initialView="dayGridMonth"
                     headerToolbar={{
                         left: 'prev,next today',
                         center: 'title',
-                        right: 'dayGridMonth'
+                        right: '',
                     }}
                     events={events}
                     eventClick={handleEventClick}
-                    height="100%"
-                    contentHeight="auto"
+                    height="auto"
                     eventDisplay="block"
                     dayMaxEvents={3}
                     eventContent={(eventInfo) => {
                         const isClosed = eventInfo.event.extendedProps.status === 'Closed' || eventInfo.event.extendedProps.status === 'Archive';
                         return (
-                            <div className={`p-1 overflow-hidden cursor-pointer hover:opacity-80 rounded text-xs ${isClosed ? 'bg-gray-100 text-gray-500 line-through' : 'bg-blue-100 text-blue-800 font-medium'}`}>
-                                <div className="truncate px-1">
+                            <div className={`overflow-hidden cursor-pointer hover:opacity-80 rounded text-[10px] px-1 py-0.5 ${isClosed ? 'bg-gray-100 text-gray-500 line-through' : 'bg-primary/10 text-primary font-medium'}`}>
+                                <div className="truncate">
                                     {eventInfo.event.title}
                                 </div>
                             </div>
                         );
                     }}
                 />
-            </Card>
+            </div>
         </div>
     );
-}
+});
