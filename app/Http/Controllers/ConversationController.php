@@ -280,7 +280,15 @@ class ConversationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thread updated successfully.',
-            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount'])
+            'thread' => $thread->load([
+                'messages' => function($query) {
+                    $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
+                },
+                'leads.leadStatus', 
+                'contacts', 
+                'assignments:id,name,avatar', 
+                'gmailAccount'
+            ])
         ]);
     }
 
@@ -304,7 +312,15 @@ class ConversationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thread assignments updated.',
-            'thread' => $thread->load(['messages.media', 'messages.sender', 'leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount'])
+            'thread' => $thread->load([
+                'messages' => function($query) {
+                    $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
+                },
+                'leads.leadStatus', 
+                'contacts', 
+                'assignments:id,name,avatar', 
+                'gmailAccount'
+            ])
         ]);
     }
 
