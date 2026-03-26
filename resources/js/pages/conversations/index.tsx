@@ -47,6 +47,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ConversationsCalendar } from './components/conversations-calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/custom-toast';
@@ -93,6 +94,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
         { key: 'my_assignments', icon: UserCheck, label: t('My Assignments'), count: 0 },
         { key: 'unassigned', icon: Archive, label: t('Unassigned'), count: 0 },
         { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
+        { key: 'calendar', icon: Calendar, label: t('Follow-up Calendar'), count: 0 },
         { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
         { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
         { key: 'archive', icon: Archive, label: t('Archive'), count: 0 },
@@ -150,6 +152,7 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                     { key: 'my_assignments', icon: UserCheck, label: t('My Assignments'), count: 0 },
                     { key: 'unassigned_staff', icon: UserPlus, label: t('Unassigned Staff'), count: 0 },
                     { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
+                    { key: 'calendar', icon: Calendar, label: t('Follow-up Calendar'), count: 0 },
                     { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
                     { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
                     { key: 'archive', icon: Archive, label: t('Archive'), count: 0 },
@@ -437,6 +440,19 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 console.error(errors);
             }
         });
+    };
+
+    const handleSelectThreadById = (id: number) => {
+        setLoading(true);
+        axios.get(route('api.conversations.show', id))
+            .then(r => {
+                setSelectedThread(r.data.thread);
+            })
+            .catch(err => {
+                console.error('Failed to load thread from calendar:', err);
+                toast.error(t('Failed to load conversation'));
+            })
+            .finally(() => setLoading(false));
     };
 
     const handleLeadFormSubmit = (formData: any) => {
@@ -1123,195 +1139,198 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         </div>
                     ) : (
                         <>
-                            {/* Pane 2: Thread list */}
+                            {/* Pane 2: Thread list or Calendar */}
                             <div className={`
-                        border-r flex flex-col bg-background overflow-hidden min-w-0
-                        w-full
-                        lg:w-[280px] lg:max-w-[280px] xl:w-[280px] xl:max-w-[280px] 2xl:w-[320px] 2xl:max-w-[320px]
-                        lg:shrink-0
+                        flex-1 ${selectedFolder === 'calendar' && !selectedThread ? '' : 'lg:max-w-md xl:max-w-[400px]'} border-r flex flex-col bg-background min-w-0
                         ${selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
-                                {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}
-                                <div className="p-3 border-b shrink-0">
-                                    <div className="flex gap-2">
-                                        <div className="relative flex-1">
-                                            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                                            <Input
-                                                placeholder={t('Search threads...')}
-                                                className="pl-8 bg-muted/50 border-none h-8 text-xs focus-visible:ring-1"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
-                                            />
-                                        </div>
-                                        <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8 shrink-0" onClick={handleSync} disabled={isSyncing}>
-                                            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {/* Thread list scroll area */}
-                                <ScrollArea className="flex-1 min-h-0 [&_[data-radix-scroll-area-viewport]>div]:!block">
-                                    {!gmailAccount ? (
-                                        /* No Gmail account */
-                                        <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                            <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
-                                                <AlertCircle className="h-6 w-6 text-primary" />
-                                            </div>
-                                            <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
-                                            <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
-                                                {isOwner
-                                                    ? t('Connect your Gmail account in settings to start managing conversations.')
-                                                    : t('Please ask your Company Owner to connect a Gmail account in settings.')}
-                                            </p>
-                                            {isOwner && (
-                                                <Button size="sm" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
-                                                    {t('Connect Gmail')}
+                                {selectedFolder === 'calendar' ? (
+                                    <ConversationsCalendar onSelectThread={handleSelectThreadById} t={t} />
+                                ) : (
+                                    <>
+                                        {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}
+                                        <div className="p-3 border-b shrink-0">
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                                    <Input
+                                                        placeholder={t('Search threads...')}
+                                                        className="pl-8 bg-muted/50 border-none h-8 text-xs focus-visible:ring-1"
+                                                        value={searchQuery}
+                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
+                                                    />
+                                                </div>
+                                                <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8 shrink-0" onClick={handleSync} disabled={isSyncing}>
+                                                    <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
                                                 </Button>
-                                            )}
+                                            </div>
                                         </div>
-                                    ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
-                                        /* Sync error */
-                                        <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                            <AlertCircle className="h-10 w-10 text-destructive mb-3" />
-                                            <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
-                                            <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
-                                                {gmailAccount.sync_error || t('An error occurred while syncing.')}
-                                            </p>
-                                            <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
-                                                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                                                {t('Try Again')}
-                                            </Button>
-                                        </div>
-                                    ) : threads.length > 0 ? (
-                                        /* Thread list */
-                                        <div className="divide-y">
-                                            {threads.map((thread) => (
-                                                <button
-                                                    key={thread.id}
-                                                    onClick={() => handleSelectThread(thread)}
-                                                    className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
-                                                        }`}
-                                                >
-                                                    <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
-                                                        <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
-                                                            {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
-                                                            <div className="flex flex-col min-w-0 flex-1">
-                                                                <span className={`text-xs truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
-                                                                    } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
-                                                                    {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
-                                                                </span>
-                                                                {(thread.leads?.[0] || thread.contacts?.[0]) && (
-                                                                    <span className="text-[9px] text-muted-foreground truncate opacity-70">
-                                                                        {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <span className="text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
-                                                                {timeAgoShort(thread.last_message_at)}
-                                                            </span>
-                                                        </div>
-                                                        <div className={`text-xs truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
-                                                            {thread.subject || t('(No Subject)')}
-                                                        </div>
-                                                        <div className="text-[11px] text-muted-foreground/70 truncate">
-                                                            {thread.snippet}
-                                                        </div>
-                                                        <div className="mt-1.5 flex flex-wrap gap-1 items-center">
-                                                            {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
-                                                                <>
-                                                                    {thread.leads?.length > 0 && (
-                                                                        <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
-                                                                            {t('Lead')}
-                                                                        </Badge>
-                                                                    )}
-                                                                    {thread.contacts?.length > 0 && (
-                                                                        <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
-                                                                            {t('Contact')}
-                                                                        </Badge>
-                                                                    )}
-                                                                </>
-                                                            )}
 
-                                                            {thread.priority && (
-                                                                <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                                                                        thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                                                            'bg-blue-50 text-blue-600 border-blue-100'
-                                                                    }`}>
-                                                                    {t(thread.priority)}
-                                                                </Badge>
-                                                            )}
-
-                                                            {thread.assignments?.length > 0 && (
-                                                                <div className="flex items-center gap-0.5 ml-auto">
-                                                                    <div className="flex -space-x-1.5 overflow-hidden">
-                                                                        {thread.assignments.slice(0, 2).map((a: any) => (
-                                                                            <Avatar key={a.id} className="h-4 w-4 border-background border">
-                                                                                <AvatarFallback className="text-[6px] bg-muted">{a.name.charAt(0)}</AvatarFallback>
-                                                                            </Avatar>
-                                                                        ))}
+                                        {/* Thread list scroll area */}
+                                        <ScrollArea className="flex-1 min-h-0 [&_[data-radix-scroll-area-viewport]>div]:!block">
+                                            {!gmailAccount ? (
+                                                /* No Gmail account */
+                                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                                    <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
+                                                        <AlertCircle className="h-6 w-6 text-primary" />
+                                                    </div>
+                                                    <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
+                                                    <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
+                                                        {isOwner
+                                                            ? t('Connect your Gmail account in settings to start managing conversations.')
+                                                            : t('Please ask your Company Owner to connect a Gmail account in settings.')}
+                                                    </p>
+                                                    {isOwner && (
+                                                        <Button size="sm" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
+                                                            {t('Connect Gmail')}
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
+                                                /* Sync error */
+                                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                                    <AlertCircle className="h-10 w-10 text-destructive mb-3" />
+                                                    <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
+                                                    <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
+                                                        {gmailAccount.sync_error || t('An error occurred while syncing.')}
+                                                    </p>
+                                                    <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+                                                        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                                                        {t('Try Again')}
+                                                    </Button>
+                                                </div>
+                                            ) : threads.length > 0 ? (
+                                                /* Thread list */
+                                                <div className="divide-y">
+                                                    {threads.map((thread) => (
+                                                        <button
+                                                            key={thread.id}
+                                                            onClick={() => handleSelectThread(thread)}
+                                                            className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
+                                                                }`}
+                                                        >
+                                                            <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
+                                                                <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
+                                                                    {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
+                                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                                        <span className={`text-xs truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
+                                                                            } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
+                                                                            {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
+                                                                        </span>
+                                                                        {(thread.leads?.[0] || thread.contacts?.[0]) && (
+                                                                            <span className="text-[9px] text-muted-foreground truncate opacity-70">
+                                                                                {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
-                                                                    {thread.assignments.length > 2 && (
-                                                                        <span className="text-[8px] text-muted-foreground font-bold">+{thread.assignments.length - 2}</span>
+                                                                    <span className="text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
+                                                                        {timeAgoShort(thread.last_message_at)}
+                                                                    </span>
+                                                                </div>
+                                                                <div className={`text-xs truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
+                                                                    {thread.subject || t('(No Subject)')}
+                                                                </div>
+                                                                <div className="text-[11px] text-muted-foreground/70 truncate">
+                                                                    {thread.snippet}
+                                                                </div>
+                                                                <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                                                                    {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
+                                                                        <>
+                                                                            {thread.leads?.length > 0 && (
+                                                                                <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
+                                                                                    {t('Lead')}
+                                                                                </Badge>
+                                                                            )}
+                                                                            {thread.contacts?.length > 0 && (
+                                                                                <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
+                                                                                    {t('Contact')}
+                                                                                </Badge>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+
+                                                                    {thread.priority && (
+                                                                        <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                                                                thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                                                                    'bg-blue-50 text-blue-600 border-blue-100'
+                                                                            }`}>
+                                                                            {t(thread.priority)}
+                                                                        </Badge>
+                                                                    )}
+
+                                                                    {thread.assignments?.length > 0 && (
+                                                                        <div className="flex items-center gap-0.5 ml-auto">
+                                                                            <div className="flex -space-x-1.5 overflow-hidden">
+                                                                                {thread.assignments.slice(0, 2).map((a: any) => (
+                                                                                    <Avatar key={a.id} className="h-4 w-4 border-background border">
+                                                                                        <AvatarFallback className="text-[6px] bg-muted">{a.name.charAt(0)}</AvatarFallback>
+                                                                                    </Avatar>
+                                                                                ))}
+                                                                            </div>
+                                                                            {thread.assignments.length > 2 && (
+                                                                                <span className="text-[8px] text-muted-foreground font-bold">+{thread.assignments.length - 2}</span>
+                                                                            )}
+                                                                        </div>
                                                                     )}
                                                                 </div>
-                                                            )}
+                                                            </div>
+                                                        </button>
+                                                    ))}
+
+                                                    {/* Sentinel for IntersectionObserver */}
+                                                    <div ref={threadObserverTarget} className="h-4 w-full" />
+
+                                                    {loading && (
+                                                        <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
+                                                            <RefreshCw className="h-4 w-4 animate-spin" />
+                                                            <span className="text-[10px] font-medium">{t('Loading more...')}</span>
                                                         </div>
+                                                    )}
+
+                                                    {!hasMoreThreads && !loading && threads.length > 10 && (
+                                                        <div className="p-6 text-center bg-muted/5">
+                                                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : loading && threads.length === 0 ? (
+                                                /* Initial Loading State */
+                                                <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                                                    <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
+                                                    <p className="text-sm text-muted-foreground">{t('Loading conversations...')}</p>
+                                                </div>
+                                            ) : (
+                                                /* Empty state */
+                                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                                    <div className="h-12 w-12 bg-muted/50 rounded-full flex items-center justify-center mb-3">
+                                                        <Inbox className="h-6 w-6 text-muted-foreground/30" />
                                                     </div>
-                                                </button>
-                                            ))}
-
-                                            {/* Sentinel for IntersectionObserver */}
-                                            <div ref={threadObserverTarget} className="h-4 w-full" />
-
-                                            {loading && (
-                                                <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
-                                                    <RefreshCw className="h-4 w-4 animate-spin" />
-                                                    <span className="text-[10px] font-medium">{t('Loading more...')}</span>
+                                                    <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
+                                                    <p className="text-xs text-muted-foreground mb-4 max-w-[180px]">
+                                                        {gmailAccount?.sync_status === 'syncing'
+                                                            ? t('We are currently syncing your inbox...')
+                                                            : t('Try clicking the sync button to fetch your latest emails.')}
+                                                    </p>
+                                                    {gmailAccount?.sync_error && (
+                                                        <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-[200px]">
+                                                            <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
+                                                            {gmailAccount.sync_error}
+                                                        </div>
+                                                    )}
+                                                    <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+                                                        <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                                                        {t('Sync Now')}
+                                                    </Button>
                                                 </div>
                                             )}
-
-                                            {!hasMoreThreads && !loading && threads.length > 10 && (
-                                                <div className="p-6 text-center bg-muted/5">
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : loading && threads.length === 0 ? (
-                                        /* Initial Loading State */
-                                        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                                            <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
-                                            <p className="text-sm text-muted-foreground">{t('Loading conversations...')}</p>
-                                        </div>
-                                    ) : (
-                                        /* Empty state */
-                                        <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                            <div className="h-12 w-12 bg-muted/50 rounded-full flex items-center justify-center mb-3">
-                                                <Inbox className="h-6 w-6 text-muted-foreground/30" />
-                                            </div>
-                                            <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
-                                            <p className="text-xs text-muted-foreground mb-4 max-w-[180px]">
-                                                {gmailAccount?.sync_status === 'syncing'
-                                                    ? t('We are currently syncing your inbox...')
-                                                    : t('Try clicking the sync button to fetch your latest emails.')}
-                                            </p>
-                                            {gmailAccount?.sync_error && (
-                                                <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-[200px]">
-                                                    <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
-                                                    {gmailAccount.sync_error}
-                                                </div>
-                                            )}
-                                            <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
-                                                <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                                                {t('Sync Now')}
-                                            </Button>
-                                        </div>
-                                    )}
-                                </ScrollArea>
+                                        </ScrollArea>
+                                    </>
+                                )}
                             </div>
 
                             {/* Pane 3: Thread detail + reply */}

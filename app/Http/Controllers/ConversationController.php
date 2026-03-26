@@ -196,6 +196,42 @@ class ConversationController extends Controller
     }
 
     /**
+     * Fetch all threads with a follow-up date for the calendar.
+     */
+    public function calendarEvents(Request $request)
+    {
+        $companyId = auth()->user()->creatorId();
+        
+        $threads = EmailThread::where('created_by', $companyId)
+            ->whereNotNull('follow_up_at')
+            ->get(['id', 'subject', 'participants', 'follow_up_at', 'status']);
+
+        $events = $threads->map(function ($thread) {
+            $title = $thread->subject ?: 'Follow up (No Subject)';
+            if (empty($thread->subject) && is_array($thread->participants) && count($thread->participants) > 0) {
+                // Try to extract just the name or email from "Name <email@example.com>"
+                $firstParticipant = $thread->participants[0];
+                if (preg_match('/^(.*)</', $firstParticipant, $matches)) {
+                    $title = trim($matches[1]) ?: $title;
+                } else {
+                    $title = $firstParticipant;
+                }
+            }
+            
+            return [
+                'id' => $thread->id,
+                'title' => $title,
+                'start' => $thread->follow_up_at->toIso8601String(),
+                'allDay' => true,
+                'type' => 'follow_up',
+                'status' => $thread->status
+            ];
+        });
+
+        return response()->json($events);
+    }
+
+    /**
      * Update thread metadata (status, priority, follow_up_at).
      */
     public function update(Request $request, EmailThread $thread)
