@@ -22,8 +22,8 @@ class MediaController extends Controller
             if ($user->isSuperAdmin()) {
                 // No user_id filter for superadmin
             }
-            // Users with manage-any-media can see all media in their company
-            elseif ($user->hasPermissionTo('manage-any-media')) {
+            // Company owners and users with manage-any-media can see all media in their company
+            elseif ($user->type === 'company' || $user->hasPermissionTo('manage-any-media')) {
                 $companyUserIds = $this->getCompanyUserIds($user);
                 $mediaQuery = $mediaQuery->whereIn('user_id', $companyUserIds);
             }
@@ -270,8 +270,8 @@ class MediaController extends Controller
 
         // SuperAdmin can download any media
         if ($user->type !== 'superadmin') {
-            if ($user->hasPermissionTo('manage-any-media')) {
-                // Users with manage-any-media can download any media in their company
+            if ($user->type === 'company' || $user->hasPermissionTo('manage-any-media')) {
+                // Company owners and users with manage-any-media can download any media in their company
                 $companyUserIds = $this->getCompanyUserIds($user);
                 $query->whereIn('user_id', $companyUserIds);
             } else {
@@ -326,8 +326,8 @@ class MediaController extends Controller
 
         // SuperAdmin can delete any media
         if ($user->type !== 'superadmin') {
-            if ($user->hasPermissionTo('manage-any-media')) {
-                // Users with manage-any-media can delete any media in their company
+            if ($user->type === 'company' || $user->hasPermissionTo('manage-any-media')) {
+                // Company owners and users with manage-any-media can delete any media in their company
                 $companyUserIds = $this->getCompanyUserIds($user);
                 $query->whereIn('user_id', $companyUserIds);
             } else {
