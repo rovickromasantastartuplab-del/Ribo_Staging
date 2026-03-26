@@ -309,6 +309,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [activeReplyMessage, setActiveReplyMessage] = useState<any>(null);
     const [replyCcList, setReplyCcList] = useState<string[]>([]);
     const [replyBccList, setReplyBccList] = useState<string[]>([]);
+    const [ccInput, setCcInput] = useState('');
+    const [bccInput, setBccInput] = useState('');
 
     // Dynamic Unicode Emoji Engine
     const getEmojiRange = (start: number, end: number) => {
@@ -1673,16 +1675,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         <div className="flex px-2.5 py-1.5 border-b group">
                                                             <span className="w-10 text-[10px] font-bold text-muted-foreground pt-1.5">CC</span>
                                                             <div className="flex flex-wrap gap-1.5 flex-1 items-center">
-                                                                {Array.from(new Set((selectedThread?.participants || []).filter((p: string) => {
+                                                                {Array.from(new Set([
+                                                                    ...(selectedThread?.participants || []).map((p: string) => {
+                                                                        const emailMatch = p.match(/<([^>]+)>/);
+                                                                        return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+                                                                    }),
+                                                                    ...replyCcList
+                                                                ].filter((rawEmail: string) => {
                                                                     const accountEmail = (gmailAccount?.email || '').toLowerCase();
                                                                     const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
-                                                                    const emailMatch = p.match(/<([^>]+)>/);
-                                                                    const rawEmail = emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
                                                                     return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
-                                                                }).map((p:string) => {
-                                                                    const emailMatch = p.match(/<([^>]+)>/);
-                                                                    return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
-                                                                })) as string[]).map((ccEmail) => {
+                                                                }))).map((ccEmail) => {
                                                                     const isSelected = replyCcList.includes(ccEmail);
                                                                     return (
                                                                         <Badge 
@@ -1702,24 +1705,39 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         </Badge>
                                                                     );
                                                                 })}
-                                                                {(!selectedThread?.participants || selectedThread.participants.length <= 2) && (
-                                                                    <span className="text-xs text-muted-foreground italic py-1">No other participants to CC</span>
-                                                                )}
+                                                                <input
+                                                                    type="email"
+                                                                    placeholder={t('Add CC...')}
+                                                                    value={ccInput}
+                                                                    onChange={(e) => setCcInput(e.target.value)}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+                                                                            e.preventDefault();
+                                                                            const val = ccInput.trim().replace(/,/g, '');
+                                                                            if (val && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                                                                                setReplyCcList(prev => prev.includes(val) ? prev : [...prev, val]);
+                                                                                setCcInput('');
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    className="flex-1 min-w-[80px] bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
+                                                                />
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center px-2.5 py-1.5 group">
                                                             <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">BCC</span>
                                                         <div className="flex flex-wrap gap-1.5 flex-1 items-center">
-                                                            {Array.from(new Set((selectedThread?.participants || []).filter((p: string) => {
+                                                            {Array.from(new Set([
+                                                                ...(selectedThread?.participants || []).map((p: string) => {
+                                                                    const emailMatch = p.match(/<([^>]+)>/);
+                                                                    return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+                                                                }),
+                                                                ...replyBccList
+                                                            ].filter((rawEmail: string) => {
                                                                 const accountEmail = (gmailAccount?.email || '').toLowerCase();
                                                                 const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
-                                                                const emailMatch = p.match(/<([^>]+)>/);
-                                                                const rawEmail = emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
                                                                 return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
-                                                            }).map((p: string) => {
-                                                                const emailMatch = p.match(/<([^>]+)>/);
-                                                                return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
-                                                            })) as string[]).map((bccEmail) => {
+                                                            }))).map((bccEmail) => {
                                                                 const isSelected = replyBccList.includes(bccEmail);
                                                                 return (
                                                                     <Badge
@@ -1739,9 +1757,23 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     </Badge>
                                                                 );
                                                             })}
-                                                            {(!selectedThread?.participants || selectedThread.participants.length <= 2) && (
-                                                                <span className="text-xs text-muted-foreground italic py-1">{t('No other participants to BCC')}</span>
-                                                            )}
+                                                            <input
+                                                                type="email"
+                                                                placeholder={t('Add BCC...')}
+                                                                value={bccInput}
+                                                                onChange={(e) => setBccInput(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        const val = bccInput.trim().replace(/,/g, '');
+                                                                        if (val && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                                                                            setReplyBccList(prev => prev.includes(val) ? prev : [...prev, val]);
+                                                                            setBccInput('');
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="flex-1 min-w-[80px] bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
+                                                            />
                                                         </div>
                                                         </div>
                                                     </div>
