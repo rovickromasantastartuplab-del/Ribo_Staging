@@ -421,7 +421,7 @@ export default function LandingPage() {
                 )}
             </Head>
             <div
-                className="min-h-screen bg-white"
+                className="min-h-screen bg-white w-full max-w-full overflow-x-hidden"
                 style={{
                     scrollBehavior: 'smooth',
                     '--brand-color': primaryColor,

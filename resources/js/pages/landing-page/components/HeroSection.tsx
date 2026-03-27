@@ -90,7 +90,7 @@ export default function HeroSection({ settings, sectionData, brandColor = '#3b82
           </div>
 
           {/* Right Content - Hero Image */}
-          <div className="relative">
+          <div className="relative overflow-hidden">
             <div className="relative">
               <img
                 src={heroImage || getImageUrl('/screenshots/hero-default.png')}

@@ -79,7 +79,7 @@ export default function WhyChooseUs({ settings, sectionData, brandColor = '#3b82
     : defaultStats;
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-white" ref={ref}>
+    <section className="py-12 sm:py-16 lg:py-20 bg-white overflow-x-hidden" ref={ref}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Content */}

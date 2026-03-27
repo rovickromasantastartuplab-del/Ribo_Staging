@@ -241,7 +241,7 @@ export default function CustomPage() {
       </Head>
 
       <div
-        className="min-h-screen bg-white"
+        className="min-h-screen bg-white w-full max-w-full overflow-x-hidden"
         style={{
           '--primary-color': primaryColor,
           '--secondary-color': secondaryColor,
@@ -251,7 +251,7 @@ export default function CustomPage() {
           '--accent-color-rgb': accentColor.replace('#', '').match(/.{2}/g)?.map(x => parseInt(x, 16)).join(', ') || '16, 185, 129'
         } as React.CSSProperties}
       >
-        <Header max-w-7xl mx-auto p
+        <Header
           settings={settings}
           customPages={customPages}
           sectionData={settings?.config_sections?.sections?.find(s => s.key === 'header') || {}}
