@@ -332,7 +332,7 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
                         </div>
 
                         {/* Payment Summary Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="border-l-4 hover:shadow-lg transition-shadow bg-white rounded-lg shadow-sm border" style={{ borderLeftColor: template.primary }}>
                                 <div className="p-6">
                                     <div className="flex items-center justify-between">
@@ -377,7 +377,7 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
                         </div>
 
                         {/* Invoice Details Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="border-l-4 hover:shadow-lg transition-shadow bg-white rounded-lg shadow-sm border" style={{ borderLeftColor: template.primary }}>
                                 <div className="p-6">
                                     <div className="flex items-center justify-between">

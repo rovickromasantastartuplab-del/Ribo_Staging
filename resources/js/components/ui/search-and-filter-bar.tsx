@@ -83,7 +83,7 @@ export function SearchAndFilterBar({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <form onSubmit={onSearch} className="flex gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-64 min-w-[200px]">
+            <div className="relative flex-1 sm:w-64 min-w-0">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("Search...")}

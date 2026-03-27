@@ -1337,7 +1337,7 @@ export default function PaymentSettings({
                   helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.CINETPAY]}
                   helpText={t("Get your CinetPay API credentials from your")}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                     <PaymentInputField
                       id="cinetpay_site_id"
                       label={t("Site ID")}
@@ -1537,7 +1537,7 @@ export default function PaymentSettings({
                   helpUrl={PAYMENT_METHOD_HELP_URLS[PAYMENT_METHODS.EASEBUZZ]}
                   helpText={t("Get your Easebuzz API credentials from your")}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                     <PaymentInputField
                       id="easebuzz_merchant_key"
                       label={t("Merchant Key")}
@@ -1582,7 +1582,7 @@ export default function PaymentSettings({
                     onChange={(mode) => setData('ozow_mode', mode)}
                     name="ozow"
                   />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                     <PaymentInputField
                       id="ozow_site_key"
                       label={t("Site Key")}

@@ -309,7 +309,7 @@ export default function OnboardingRoles({
                                                                                 onClick={() => togglePermission(roleIndex, perm.id)}
                                                                                 className="w-3 h-3"
                                                                             />
-                                                                            <span className="text-[11px] text-gray-600">
+                                                                            <span className="text-xs text-gray-600">
                                                                                 {perm.label}
                                                                             </span>
                                                                         </label>
@@ -372,7 +372,7 @@ export default function OnboardingRoles({
                                     <select
                                         value={data.member_roles[index]?.role_id || 0}
                                         onChange={(e) => updateMemberRole(index, parseInt(e.target.value))}
-                                        className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 min-w-[120px]"
+                                        className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 min-w-[7.5rem]"
                                         style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                                     >
                                         <option value={0}>{t("No role")}</option>

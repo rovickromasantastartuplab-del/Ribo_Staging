@@ -61,7 +61,7 @@ export default function Template4({ quote, items, taxesData, settings, color, qr
                                 {logoDark && (
                                     <img
                                         src={settings.quoteLogo || logoDark}
-                                        style={{ maxWidth: '150px',maxHeight:'150px' }}
+                                        className="max-w-[150px] max-h-[150px] object-contain"
                                         alt="Logo"
                                     />
                                 )}

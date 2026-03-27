@@ -247,7 +247,7 @@ export default function Dashboard({
         {/* Charts Section */}
         <motion.div variants={itemVariants} className="space-y-6">
           {/* First Row - Sales Trends and Storage Usage */}
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-3">
             {/* Sales Trends */}
             <Card className="hover:shadow-lg transition-all duration-300 lg:col-span-2">
               <CardHeader className="pb-2">

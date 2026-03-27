@@ -180,7 +180,7 @@ export default function CurrencySettings() {
                                                 {currencySettings.currencyName} ({currencySettings.defaultCurrency})
                                             </div>
                                         </div>
-                                        <div className="w-full md:w-auto md:max-w-[200px]">
+                                        <div className="w-full md:w-auto md:max-w-xs">
                                             <div className="flex items-center gap-2">
                                                 <Input
                                                     type="number"
@@ -219,7 +219,7 @@ export default function CurrencySettings() {
                                                     <SelectValue placeholder={t("Select currency")} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <div className="max-h-[300px] overflow-y-auto">
+                                                    <div className="max-h-72 overflow-y-auto">
                                                         {currencies && currencies.length > 0 ? (
                                                             currencies.map((currency: CurrencyProps) => (
                                                                 <SelectItem key={currency.id} value={currency.code}>

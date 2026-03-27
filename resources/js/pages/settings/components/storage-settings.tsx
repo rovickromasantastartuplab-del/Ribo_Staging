@@ -282,7 +282,7 @@ export default function StorageSettings({ settings = {} }: StorageSettingsProps)
             {t("Unselect All")}
           </Button>
         </div>
-        <div className="grid grid-cols-4 gap-2 p-4 border rounded-md max-h-48 overflow-y-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4 border rounded-md max-h-48 overflow-y-auto">
           {filteredExtensions.map((ext) => (
             <div key={ext} className="flex items-center space-x-2">
               <Checkbox
@@ -497,7 +497,7 @@ export default function StorageSettings({ settings = {} }: StorageSettingsProps)
           className="w-full"
           onValueChange={(value) => setStorageSettings(prev => ({ ...prev, storageType: value as StorageType }))}
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
             <TabsTrigger value="local" className="flex items-center gap-2">
               <HardDrive className="h-4 w-4" />
               {t("Local Storage")}

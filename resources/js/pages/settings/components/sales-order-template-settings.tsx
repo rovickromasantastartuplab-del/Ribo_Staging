@@ -316,7 +316,7 @@ export default function SalesOrderTemplateSettings() {
 
                         <div className="space-y-2">
                             <Label>{t('Color Input')}</Label>
-                            <div className="grid grid-cols-6 gap-1 w-50">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1 w-50">
                                 {colors.map((color) => (
                                     <label key={color} className="cursor-pointer">
                                         <input

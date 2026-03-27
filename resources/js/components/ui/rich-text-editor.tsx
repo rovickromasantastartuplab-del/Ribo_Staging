@@ -267,13 +267,13 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
         <textarea
           value={htmlContent}
           onChange={handleHtmlChange}
-          className="w-full p-4 min-h-[200px] font-mono text-sm border-0 resize-none focus:outline-none bg-gray-50"
+          className="w-full p-4 min-h-[12.5rem] font-mono text-sm border-0 resize-none focus:outline-none bg-gray-50"
           placeholder="Enter HTML content..."
         />
       ) : (
         <EditorContent 
           editor={editor} 
-          className="prose prose-sm max-w-none p-4 min-h-[200px] focus-within:outline-none"
+          className="prose prose-sm max-w-none p-4 min-h-[12.5rem] focus-within:outline-none"
           placeholder={placeholder}
         />
       )}

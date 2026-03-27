@@ -76,7 +76,7 @@ export const ConversationsCalendar = forwardRef<ConversationsCalendarHandle, Con
             <div className="flex justify-between items-center px-4 py-3 border-b shrink-0">
                 <div>
                     <h2 className="text-sm font-semibold tracking-tight">{t('Follow-up Calendar')}</h2>
-                    <p className="text-[11px] text-muted-foreground">{t('Upcoming follow-ups')}</p>
+                    <p className="text-xs text-muted-foreground">{t('Upcoming follow-ups')}</p>
                 </div>
                 <Button
                     variant="outline"

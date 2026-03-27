@@ -212,7 +212,7 @@ export default function ProductEdit() {
             <CardTitle>{t('Categories & Settings')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('Category')}</label>
                 <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>

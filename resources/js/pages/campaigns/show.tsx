@@ -195,7 +195,7 @@ export default function CampaignShow() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <h4 className="text-sm font-medium text-muted-foreground">{t('Budget')}</h4>
                 <p className="text-2xl font-bold text-green-600 mt-2">{formatCurrency(campaign.budget)}</p>

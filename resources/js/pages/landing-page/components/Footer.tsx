@@ -72,7 +72,7 @@ export default function Footer({ settings, sectionData = {}, brandColor = '#3b82
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="py-12 sm:py-16">
-          <div className="grid lg:grid-cols-6 gap-8 sm:gap-12">
+          <div className="grid lg:grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 sm:gap-12">
             {/* Company Info */}
             <div className="lg:col-span-2">
               <Link href="/" className="inline-block mb-6">

@@ -205,7 +205,7 @@ export default function ReturnOrderShow() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
               {returnOrder.sales_order && (
                 <div className="p-6 bg-purple-50 rounded-xl border border-purple-200 hover:shadow-md transition-shadow">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Sales Order')}</p>

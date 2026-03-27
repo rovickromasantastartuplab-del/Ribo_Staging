@@ -131,7 +131,7 @@ export default function EmailSettings() {
         </Button>
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Email Settings */}
         <div className="lg:col-span-2">
           <form id="email-settings-form" onSubmit={submitEmailSettings}>

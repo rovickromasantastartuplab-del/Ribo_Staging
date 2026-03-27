@@ -76,7 +76,7 @@ export default function OnboardingPlan({ plans, currentPlanId, defaultPlanId }: 
             description={t("Select a plan that fits your business needs. You can always change it later.")}
         >
             <form onSubmit={submit}>
-                <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto pr-1">
+                <div className="space-y-3 mb-6 max-h-[25rem] overflow-y-auto pr-1">
                     {plans.map((plan) => {
                         const isSelected = selectedPlanId === plan.id;
                         const isDefault = plan.id === defaultPlanId;
@@ -148,7 +148,7 @@ export default function OnboardingPlan({ plans, currentPlanId, defaultPlanId }: 
                                         {/* Features */}
                                         <div className="flex flex-wrap gap-x-3 gap-y-1">
                                             {features.map((feature, idx) => (
-                                                <span key={idx} className="text-[11px] text-gray-500 flex items-center gap-1">
+                                                <span key={idx} className="text-xs text-gray-500 flex items-center gap-1">
                                                     <Sparkles className="w-3 h-3" style={{ color: primaryColor }} />
                                                     {feature}
                                                 </span>

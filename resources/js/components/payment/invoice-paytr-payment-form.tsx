@@ -107,7 +107,7 @@ export function InvoicePayTRPaymentForm({
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="w-full h-[600px] border rounded-lg overflow-hidden">
+                    <div className="w-full h-[37.5rem] border rounded-lg overflow-hidden">
                         <iframe
                             ref={iframeRef}
                             src={iframeUrl}

@@ -457,7 +457,7 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                             {/* Mapping Table */}
                             <div className="space-y-2">
                                 {/* Header */}
-                                <div className="grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-1">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-1">
                                     <div className="col-span-4">{t('Facebook Form Field')}</div>
                                     <div className="col-span-4">{t('CRM Field')}</div>
                                     <div className="col-span-3">{t('Default Value')}</div>
@@ -471,7 +471,7 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                                     </div>
                                 ) : (
                                     mappingRows.map((row, index) => (
-                                        <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                                        <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
                                             <div className="col-span-4">
                                                 <Input
                                                     placeholder={t('e.g. full_name, email, budget')}

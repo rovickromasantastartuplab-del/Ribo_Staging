@@ -97,12 +97,12 @@ export function SimpleMultiSelect({
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => setIsOpen(true)}
           placeholder={selected.length === 0 ? placeholder : ''}
-          className="flex-1 outline-none bg-transparent min-w-[50px]"
+          className="flex-1 outline-none bg-transparent min-w-0"
         />
       </div>
       
       {isOpen && filteredOptions.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-[200px] overflow-y-auto">
+        <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-52 overflow-y-auto">
           {filteredOptions.map(option => (
             <div
               key={option.value}

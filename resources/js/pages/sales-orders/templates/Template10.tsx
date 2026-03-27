@@ -71,7 +71,7 @@ export default function Template10({ salesOrder, items, taxesData, settings, col
                                 {logoDark && (
                                     <img
                                         src={settings.salesOrderLogo || logoDark}
-                                        style={{ maxWidth: '150px',maxHeight:'150px' }}
+                                        className="max-w-[150px] max-h-[150px] object-contain"
                                         alt="Logo"
                                     />
                                 )}

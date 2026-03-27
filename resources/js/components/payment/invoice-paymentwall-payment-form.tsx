@@ -140,7 +140,7 @@ export function InvoicePaymentWallPaymentForm({
                 </div>
             </div>
 
-            <div id="paymentwall-form-container" ref={paymentFormRef} className="min-h-[300px]">
+            <div id="paymentwall-form-container" ref={paymentFormRef} className="min-h-[18.75rem]">
                 {!brickLoaded && (
                     <div className="flex items-center justify-center h-32">
                         <Loader2 className="h-6 w-6 animate-spin mr-2" />

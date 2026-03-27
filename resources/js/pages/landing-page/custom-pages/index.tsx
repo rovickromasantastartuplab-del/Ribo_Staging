@@ -306,7 +306,7 @@ const breadcrumbs = [
                 content={data.content}
                 onChange={(content) => setData('content', content)}
                 placeholder="Page content..."
-                className="min-h-[200px]"
+                className="min-h-[12.5rem]"
               />
               {errors.content && <p className="text-red-600 text-sm">{errors.content}</p>}
             </div>
@@ -377,7 +377,7 @@ const breadcrumbs = [
                 content={data.content}
                 onChange={(content) => setData('content', content)}
                 placeholder="Page content..."
-                className="min-h-[200px]"
+                className="min-h-[12.5rem]"
               />
               {errors.content && <p className="text-red-600 text-sm">{errors.content}</p>}
             </div>

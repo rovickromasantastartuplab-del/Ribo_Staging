@@ -273,7 +273,7 @@ export default function ManageLanguagePage() {
                         ) : (
                             <form onSubmit={(e) => { e.preventDefault(); handleSave(e); return false; }}>
                                 <div className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                                         {Object.entries(labels)
                                             .filter(([key, value]) =>
                                                 key.toLowerCase().includes(search.toLowerCase()) ||

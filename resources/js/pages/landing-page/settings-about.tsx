@@ -242,7 +242,7 @@ export default function AboutSection({ data, setData, errors, handleInputChange,
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-3">
                   <Label htmlFor={`about_stat_${index}_value`}>{t("Value")}</Label>
                   <Input
@@ -344,7 +344,7 @@ export default function AboutSection({ data, setData, errors, handleInputChange,
                 </Button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-3">
                   <Label htmlFor={`about_value_${index}_title`}>{t("Title")}</Label>
                   <Input
@@ -427,7 +427,7 @@ export default function AboutSection({ data, setData, errors, handleInputChange,
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-3">
             <Label htmlFor="about_image_title">{t("Image Title")}</Label>
             <Input

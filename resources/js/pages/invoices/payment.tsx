@@ -190,7 +190,7 @@ export default function InvoicePayment({ invoice, paymentMethod, amount, payment
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">{t('Payment Type')}</p>
                                     <p className="font-semibold capitalize">{t('{{paymentType}} Payment', { paymentType })}</p>

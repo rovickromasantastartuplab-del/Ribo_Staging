@@ -120,7 +120,7 @@ export default function Template1({ salesOrder, items, taxesData, settings, colo
                                 <td style={styles.headerCell}>
                                     <img
                                         src={settings.salesOrderLogo || logoDark}
-                                        style={{ maxWidth: '150px',maxHeight:'150px' }}
+                                        className="max-w-[150px] max-h-[150px] object-contain"
                                         alt="Logo"
                                     />
                                 </td>

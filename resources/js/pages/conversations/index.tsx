@@ -130,7 +130,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
 
 /* ── Full sidebar for xl+ screens ──────────────────────────── */
 const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose, onCanCompose }: any) => (
-    <div className="hidden xl:flex w-[180px] border-r flex-col bg-muted/30 shrink-0">
+    <div className="hidden xl:flex w-44 border-r flex-col bg-muted/30 shrink-0">
         <div className="p-3 flex-1">
             <div className="flex items-center justify-between mb-3 px-1">
                 <span className="text-sm font-semibold">{t('Conversations')}</span>
@@ -273,7 +273,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         content: composeBody,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm focus:outline-none max-w-none min-h-[250px] p-6 text-sm leading-relaxed'
+                class: 'prose prose-sm focus:outline-none max-w-none min-h-[15.625rem] p-6 text-sm leading-relaxed'
             }
         },
         onUpdate: ({ editor }) => {
@@ -295,7 +295,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         content: replyBody,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm focus:outline-none max-w-none min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm leading-relaxed'
+                class: 'prose prose-sm focus:outline-none max-w-none min-h-[3.75rem] lg:min-h-[5rem] p-2.5 text-xs lg:text-sm leading-relaxed'
             }
         },
         onUpdate: ({ editor }) => {
@@ -987,7 +987,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 the PageTemplate header (~48px) + padding (p-4 = 16px top/bottom + gap-4 = 16px).
                 Total overhead ≈ 56 + 40 + 48 + 32 + 16 = ~192px. Use 200px for safety.
             */}
-            <div className="flex flex-col h-[calc(100vh-200px)] min-h-[400px] border rounded-xl bg-background shadow-sm overflow-hidden relative">
+            <div className="flex flex-col h-[calc(100vh-200px)] min-h-[25rem] border rounded-xl bg-background shadow-sm overflow-hidden relative">
 
                 {/* Mobile folder tabs: visible below xl where the sidebar is hidden */}
                 <div className="xl:hidden border-b shrink-0">
@@ -1085,7 +1085,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             <h2 className="text-lg font-bold tracking-tight">{t('Communication History')}</h2>
                                             <p className="text-xs text-muted-foreground">{t('Browse activities by contact')}</p>
                                         </div>
-                                        <div className="relative w-64">
+                                        <div className="relative w-full md:w-64">
                                             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                                             <Input
                                                 placeholder={t('Search contacts...')}
@@ -1123,7 +1123,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             <h4 className="font-bold text-sm truncate mb-0.5 group-hover:text-primary transition-colors">
                                                                 {p.name}
                                                             </h4>
-                                                            <p className="text-[11px] text-muted-foreground truncate mb-2">
+                                                            <p className="text-xs text-muted-foreground truncate mb-2">
                                                                 {p.email}
                                                             </p>
                                                             <div className="flex items-center justify-between mt-auto pt-2 border-t">
@@ -1207,7 +1207,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         <AlertCircle className="h-6 w-6 text-primary" />
                                                     </div>
                                                     <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
-                                                    <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
+                                                    <p className="text-xs text-muted-foreground mb-4 max-w-xs">
                                                         {isOwner
                                                             ? t('Connect your Gmail account in settings to start managing conversations.')
                                                             : t('Please ask your Company Owner to connect a Gmail account in settings.')}
@@ -1223,7 +1223,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 <div className="flex flex-col items-center justify-center text-center px-4 py-10">
                                                     <AlertCircle className="h-10 w-10 text-destructive mb-3" />
                                                     <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
-                                                    <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
+                                                    <p className="text-xs text-muted-foreground mb-4 max-w-xs">
                                                         {gmailAccount.sync_error || t('An error occurred while syncing.')}
                                                     </p>
                                                     <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
@@ -1266,7 +1266,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 <div className={`text-xs truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
                                                                     {thread.subject || t('(No Subject)')}
                                                                 </div>
-                                                                <div className="text-[11px] text-muted-foreground/70 truncate">
+                                                                <div className="text-xs text-muted-foreground/70 truncate">
                                                                     {thread.snippet}
                                                                 </div>
                                                                 <div className="mt-1.5 flex flex-wrap gap-1 items-center">
@@ -1342,13 +1342,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         <Inbox className="h-6 w-6 text-muted-foreground/30" />
                                                     </div>
                                                     <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
-                                                    <p className="text-xs text-muted-foreground mb-4 max-w-[180px]">
+                                                    <p className="text-xs text-muted-foreground mb-4 max-w-44">
                                                         {gmailAccount?.sync_status === 'syncing'
                                                             ? t('We are currently syncing your inbox...')
                                                             : t('Try clicking the sync button to fetch your latest emails.')}
                                                     </p>
                                                     {gmailAccount?.sync_error && (
-                                                        <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-[200px]">
+                                                        <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-xs">
                                                             <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
                                                             {gmailAccount.sync_error}
                                                         </div>
@@ -1392,8 +1392,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     <h2 className="text-sm font-semibold truncate">
                                                         {selectedThread.subject || t('(No Subject)')}
                                                     </h2>
-                                                    <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                                                        <span className="truncate max-w-[200px]">{selectedThread.participants?.join(', ')}</span>
+                                                    <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                        <span className="truncate max-w-xs">{selectedThread.participants?.join(', ')}</span>
                                                         <span>·</span>
                                                         <span className="shrink-0">{selectedThread.message_count} {t('messages')}</span>
                                                     </div>
@@ -1403,7 +1403,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 {/* Status Picker */}
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-1.5 px-2.5">
+                                                        <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-1.5 px-2.5">
                                                             <Badge className={`w-2 h-2 rounded-full p-0 ${selectedThread.status === 'Closed' ? 'bg-gray-400' : 'bg-green-500'}`} />
                                                             {selectedThread.status || t('Open')}
                                                         </Button>
@@ -1569,7 +1569,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                 <img
                                                                                     src={thumbUrl || file.original_url}
                                                                                     alt={file.name}
-                                                                                    className="max-w-[180px] max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity"
+                                                                                    className="max-w-44 max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity"
                                                                                 />
                                                                             </a>
                                                                         ) : (
@@ -1606,7 +1606,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                         {/* Reply box */}
                                         <div className="border-t bg-background shrink-0 p-2 lg:p-3">
-                                            <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Archive' ? 'min-h-[160px]' : ''}`}>
+                                            <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Archive' ? 'min-h-[10rem]' : ''}`}>
                                                 {selectedThread.status === 'Archive' && (
                                                     <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center">
                                                         <div className="flex flex-col items-center gap-2 text-center p-4">
@@ -1616,7 +1616,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             <p className="text-sm font-medium text-foreground">
                                                                 {t('This thread is archived')}
                                                             </p>
-                                                            <p className="text-xs text-muted-foreground max-w-[240px]">
+                                                            <p className="text-xs text-muted-foreground max-w-60">
                                                                 {t('Restore it to inbox to reply or send messages.')}
                                                             </p>
                                                             <Button
@@ -1633,7 +1633,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 )}
                                                 {/* Staff assignment/permission check overlay */}
                                                 {selectedThread.status !== 'Archive' && !isOwner && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
-                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[160px]">
+                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[10rem]">
                                                         <div className="flex flex-col items-center gap-2 text-center p-4">
                                                             <div className="p-2 rounded-full bg-amber-50 text-amber-600">
                                                                 <AlertCircle className="w-5 h-5" />
@@ -1643,7 +1643,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     ? t('You do not have permission to reply')
                                                                     : t('You are not assigned to this thread')}
                                                             </p>
-                                                            <p className="text-xs text-muted-foreground max-w-[240px]">
+                                                            <p className="text-xs text-muted-foreground max-w-60">
                                                                 {!hasPermission(permissions, 'reply-conversations')
                                                                     ? t('Contact your administrator to request reply access.')
                                                                     : t('Ask a manager to assign you to this thread to reply.')}
@@ -1665,7 +1665,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 )}
 
                                                 <div 
-                                                    className="w-full min-h-[60px] lg:min-h-[80px] cursor-text bg-background"
+                                                    className="w-full min-h-[3.75rem] lg:min-h-[5rem] cursor-text bg-background"
                                                     onClick={() => replyEditor?.commands.focus()}
                                                 >
                                                     <EditorContent editor={replyEditor} />
@@ -1720,7 +1720,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                             }
                                                                         }
                                                                     }}
-                                                                    className="flex-1 min-w-[80px] bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
+                                                                    className="flex-1 min-w-0 bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
                                                                 />
                                                             </div>
                                                         </div>
@@ -1772,7 +1772,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         }
                                                                     }
                                                                 }}
-                                                                className="flex-1 min-w-[80px] bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
+                                                                className="flex-1 min-w-0 bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
                                                             />
                                                         </div>
                                                         </div>
@@ -1925,7 +1925,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     <h4 className="font-bold text-sm truncate w-full">
                                                         {contactName}
                                                     </h4>
-                                                    <p className="text-[11px] text-muted-foreground truncate w-full">
+                                                    <p className="text-xs text-muted-foreground truncate w-full">
                                                         {externalParticipant}
                                                     </p>
                                                 </>
@@ -1943,7 +1943,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         {selectedThread.leads[0].lead_status?.name || selectedThread.leads[0].status || t('Active')}
                                                     </span>
                                                 </div>
-                                                <div className="space-y-1.5 text-[11px]">
+                                                <div className="space-y-1.5 text-xs">
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">{t('Value')}:</span>
                                                         <span className="font-semibold">{selectedThread.leads[0].value ? `$${selectedThread.leads[0].value}` : t('N/A')}</span>
@@ -1956,7 +1956,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </div>
                                                 </div>
                                                 <a href={route('leads.show', selectedThread.leads[0].id)}>
-                                                    <Button variant="link" size="sm" className="p-0 h-auto mt-3 text-[11px] font-semibold">
+                                                    <Button variant="link" size="sm" className="p-0 h-auto mt-3 text-xs font-semibold">
                                                         {t('View Full Lead Record')}
                                                     </Button>
                                                 </a>
@@ -1972,7 +1972,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 <AlertCircle className="h-3 w-3" />
                                                                 {t('Existing Lead Found')}
                                                             </p>
-                                                            <p className="text-[11px] text-amber-900 font-medium">
+                                                            <p className="text-xs text-amber-900 font-medium">
                                                                 {selectedThread.suggested_leads[0].name}
                                                             </p>
                                                             <p className="text-[10px] text-amber-600 truncate">
@@ -1994,7 +1994,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="w-full text-[11px] h-7 border-dashed"
+                                                            className="w-full text-xs h-7 border-dashed"
                                                             onClick={() => handleAddAsLead()}
                                                             disabled={!canManage}
                                                         >
@@ -2003,13 +2003,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <p className="text-[11px] text-muted-foreground mb-3 text-center">
+                                                        <p className="text-xs text-muted-foreground mb-3 text-center">
                                                             {t('This contact is not yet linked to a Lead or Contact record.')}
                                                         </p>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="w-full text-[11px] h-7"
+                                                            className="w-full text-xs h-7"
                                                             onClick={() => handleAddAsLead()}
                                                             disabled={!canManage}
                                                         >
@@ -2028,14 +2028,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             <div className="space-y-2">
                                                 <div className="flex gap-2 items-start">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5 shrink-0 shadow-[0_0_6px_rgba(34,197,94,0.4)]" />
-                                                    <p className="text-[11px]">
+                                                    <p className="text-xs">
                                                         <span className="font-semibold">{t('Last Contact')}:</span>{' '}
                                                         {timeAgo(selectedThread.last_message_at) || t('N/A')}
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-2 items-start">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-muted mt-1.5 shrink-0" />
-                                                    <p className="text-[11px]">
+                                                    <p className="text-xs">
                                                         <span className="font-semibold">{t('Created')}:</span>{' '}
                                                         {timeAgo(selectedThread.created_at) || t('N/A')}
                                                     </p>
@@ -2061,7 +2061,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     </DialogHeader>
                     <div className="flex flex-col bg-background">
                         <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
-                            <Label htmlFor="compose-to" className="w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('To')}</Label>
+                            <Label htmlFor="compose-to" className="w-16 text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('To')}</Label>
                             <Input
                                 id="compose-to"
                                 value={composeTo}
@@ -2081,7 +2081,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         {showComposeCcBcc && (
                             <div className="animate-in fade-in slide-in-from-top-1 duration-200">
                                 <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
-                                    <Label htmlFor="compose-cc" className="w-[72px] text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Cc')}</Label>
+                                    <Label htmlFor="compose-cc" className="w-16 text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Cc')}</Label>
                                     <Input
                                         id="compose-cc"
                                         value={composeCc}
@@ -2091,7 +2091,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     />
                                 </div>
                                 <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
-                                    <Label htmlFor="compose-bcc" className="w-[72px] text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Bcc')}</Label>
+                                    <Label htmlFor="compose-bcc" className="w-16 text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Bcc')}</Label>
                                     <Input
                                         id="compose-bcc"
                                         value={composeBcc}
@@ -2103,7 +2103,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             </div>
                         )}
                         <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
-                            <Label htmlFor="compose-subject" className="w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('Subject')}</Label>
+                            <Label htmlFor="compose-subject" className="w-16 text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('Subject')}</Label>
                             <Input
                                 id="compose-subject"
                                 value={composeSubject}
@@ -2113,7 +2113,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             />
                         </div>
                         <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
-                            <div className="min-h-[250px] cursor-text" onClick={() => composeEditor?.commands.focus()}>
+                            <div className="min-h-[15.625rem] cursor-text" onClick={() => composeEditor?.commands.focus()}>
                                 <EditorContent editor={composeEditor} />
                             </div>
                             {/* Compose attachment previews */}

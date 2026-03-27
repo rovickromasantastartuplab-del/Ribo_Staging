@@ -357,7 +357,7 @@ export default function MediaLibraryModal({
               </div>
             ) : (
               <div className="p-4">
-                <div className="grid grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                   {currentMedia.map((item) => (
                     <div
                       key={item.id}

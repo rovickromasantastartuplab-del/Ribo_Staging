@@ -162,7 +162,7 @@ export default function Login({ status, canResetPassword, demoBusinesses = [] }:
                             checked={data.remember}
                             onClick={() => setData('remember', !data.remember)}
                             tabIndex={3}
-                            className="w-[14px] h-[14px] border border-gray-300 rounded"
+                            className="w-3.5 h-3.5 border border-gray-300 rounded"
                         />
                         <Label htmlFor="remember" className="ml-2 text-sm text-gray-600">{t("Remember me")}</Label>
                     </div>
@@ -230,7 +230,7 @@ export default function Login({ status, canResetPassword, demoBusinesses = [] }:
                                         });
                                     }}
                                     disabled={recaptchaEnabled && !recaptchaToken}
-                                    className="group relative py-2 px-4 border text-[13px] font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                                    className="group relative py-2 px-4 border text-sm font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]"
                                     style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
                                 >
                                     {t('Login as Super Admin')}
@@ -248,7 +248,7 @@ export default function Login({ status, canResetPassword, demoBusinesses = [] }:
                                         });
                                     }}
                                     disabled={recaptchaEnabled && !recaptchaToken}
-                                    className="group relative py-2 px-4 border text-[13px] font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                                    className="group relative py-2 px-4 border text-sm font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]"
                                     style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
                                 >
                                     {t('Login as Company')}
@@ -266,7 +266,7 @@ export default function Login({ status, canResetPassword, demoBusinesses = [] }:
                                         });
                                     }}
                                     disabled={recaptchaEnabled && !recaptchaToken}
-                                    className="group relative py-2 px-4 border text-[13px] font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                                    className="group relative py-2 px-4 border text-sm font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]"
                                     style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
                                 >
                                     {t('Login as User')}

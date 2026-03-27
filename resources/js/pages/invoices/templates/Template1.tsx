@@ -126,7 +126,7 @@ export default function Template1({ invoice, items, taxesData, settings, color, 
                                 <td style={styles.headerCell}>
                                     <img
                                         src={settings.invoiceLogo || logoDark}
-                                        style={{ maxWidth: '150px', maxHeight: '150px' }}
+                                        className="max-w-[150px] max-h-[150px] object-contain"
                                         alt="Logo"
                                     />
                                 </td>

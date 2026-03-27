@@ -117,7 +117,7 @@ export default function Template2({ quote, items, taxesData, settings, color, qr
                                 <td style={styles.headerCell}>
                                     <img
                                         src={settings.quoteLogo || logoDark}
-                                        style={{ maxWidth: '150px',maxHeight:'150px' }}
+                                        className="max-w-[150px] max-h-[150px] object-contain"
                                         alt="Logo"
                                     />
                                 </td>

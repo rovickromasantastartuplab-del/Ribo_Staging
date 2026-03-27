@@ -447,7 +447,7 @@ export function PageCrudWrapper({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <form onSubmit={handleSearch} className="flex gap-2">
-                <div className="relative w-64">
+                <div className="relative w-full md:w-64">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder={`Search ${entity.name}...`}

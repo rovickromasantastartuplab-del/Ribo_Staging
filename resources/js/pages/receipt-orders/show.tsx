@@ -256,7 +256,7 @@ export default function ShowReceiptOrder() {
 
               {/* Totals */}
               <div className="flex justify-end">
-                <div className="w-64 space-y-2">
+                <div className="w-full md:w-64 space-y-2">
                   <div className="flex justify-between text-base">
                     <span className="font-semibold text-gray-600">{t('Subtotal')}:</span>
                     <span className="font-semibold">{formatCurrency(receiptOrder.subtotal)}</span>

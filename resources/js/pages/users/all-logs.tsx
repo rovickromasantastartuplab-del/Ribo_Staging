@@ -269,7 +269,7 @@ export default function AllUserLogs({ loginHistories, filters: pageFilters = {} 
           </DialogHeader>
           <div className="space-y-4">
             {selectedLogDetails && Object.entries(formatDetailsForDisplay(selectedLogDetails)).map(([key, value]) => (
-              <div key={key} className="grid grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-700">
+              <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-700">
                 <div className="font-medium text-gray-700 dark:text-gray-300 capitalize">
                   {key.replace(/_/g, ' ')}
                 </div>

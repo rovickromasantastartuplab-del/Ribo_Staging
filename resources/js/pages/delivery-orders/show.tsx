@@ -190,7 +190,7 @@ export default function DeliveryOrderShow() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-8">
               {deliveryOrder.sales_order && (
                 <div className="p-6 bg-blue-50 rounded-xl border border-blue-200 hover:shadow-md transition-shadow">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Sales Order')}</p>

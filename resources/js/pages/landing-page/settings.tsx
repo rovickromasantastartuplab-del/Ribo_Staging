@@ -226,7 +226,7 @@ const breadcrumbs = [
           </Button>
         }
       >
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="lg:col-span-3 space-y-6">
             {/* Tab Navigation */}
             <div className="flex border-b border-gray-200 mb-8">
@@ -359,7 +359,7 @@ const breadcrumbs = [
 
                   <div className="mt-6 p-4 bg-gradient-to-r rounded-lg border" style={{ backgroundColor: brandColor + '10', borderColor: brandColor + '30' }}>
                     <h4 className="text-sm font-medium mb-3" style={{ color: brandColor }}>{t('Theme Colors')}</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-3">
                         <Label htmlFor="general_primary_color">{t('Primary Color')}</Label>
                         <div className="flex gap-2">
@@ -1125,7 +1125,7 @@ const breadcrumbs = [
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-3">
                             <Label htmlFor={`reason_${index}_title`}>{t('Title')}</Label>
                             <Input
@@ -1232,7 +1232,7 @@ const breadcrumbs = [
 
                   <div className="space-y-4">
                     {(getSectionData('why_choose_us').stats || []).map((stat, index) => (
-                      <div key={index} className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
                         <div className="space-y-3">
                           <Label htmlFor={`stat_${index}_value`}>{t("Value")}</Label>
                           <Input
@@ -1664,7 +1664,7 @@ const breadcrumbs = [
                     </div>
 
                     {(getSectionData('testimonials').trust_stats || []).map((stat, index) => (
-                      <div key={index} className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
                         <div className="space-y-3">
                           <Label htmlFor={`trust_stat_${index}_value`}>{t("Value")}</Label>
                           <Input
@@ -2187,7 +2187,7 @@ const breadcrumbs = [
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-3">
                             <Label htmlFor={`benefit_${index}_icon`}>{t('Icon (Emoji)')}</Label>
                             <Input
@@ -2550,7 +2550,7 @@ const breadcrumbs = [
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-3">
                             <Label htmlFor={`social_${index}_name`}>{t("Name")}</Label>
                             <Input
@@ -2727,7 +2727,7 @@ const breadcrumbs = [
                   </div>
                   <Separator className="my-2" />
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-3">
                       <Label htmlFor="primary_color">{t("Primary Color")}</Label>
                       <div className="flex gap-2">

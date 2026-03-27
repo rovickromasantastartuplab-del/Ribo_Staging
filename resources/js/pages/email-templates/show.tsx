@@ -106,7 +106,7 @@ export default function EmailTemplateShow({ template, languages, variables }: Pr
     >
       <Head title={`Edit Template - ${template.name}`} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
@@ -223,7 +223,7 @@ export default function EmailTemplateShow({ template, languages, variables }: Pr
                           value={templateLangs[language.code]?.content || ''}
                           onChange={(content) => handleContentChange(language.code, content)}
                           placeholder={t("Write your email content here. You can use HTML formatting and variables...")}
-                          className="min-h-[300px]"
+                          className="min-h-[18.75rem]"
                         />
                         <p className="text-xs text-muted-foreground">
                           💡 {t("Tip: Use the variables from the sidebar to personalize your emails")}

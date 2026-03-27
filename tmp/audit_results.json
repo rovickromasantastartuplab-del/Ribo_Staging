@@ -17,14 +17,6 @@
   },
   {
     "file": "resources/js/components/app-header.tsx",
-    "issue": "Hardcoded px value used for dimensions: h-[34px], w-[34px]",
-    "severity": "High",
-    "line": 57,
-    "code": "<Button variant=\"ghost\" size=\"icon\" className=\"mr-2 h-[34px] w-[34px]\">",
-    "fix": "Replace h-[34px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/app-header.tsx",
     "issue": "Fixed width (w-64) without responsive fallback. May overflow on small mobile screens.",
     "severity": "Medium",
     "line": 61,
@@ -46,14 +38,6 @@
     "line": 48,
     "code": "<img",
     "fix": "Add className=\"max-w-full h-auto\" or \"object-cover\" constraints."
-  },
-  {
-    "file": "resources/js/components/CrudTable.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-w-[900px]",
-    "severity": "High",
-    "line": 317,
-    "code": "<Table className=\"w-full max-w-full min-w-[900px]\">",
-    "fix": "Replace min-w-[900px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/components/CrudTable.tsx",
@@ -120,36 +104,12 @@
     "fix": "Use w-full md:w-48 to allow scaling on small screens."
   },
   {
-    "file": "resources/js/components/kanban/ProjectTaskKanbanBoard.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
-    "severity": "High",
-    "line": 172,
-    "code": "<div key={status.id} className=\"flex-shrink-0\" style={{ minWidth: '380px', width: '380px' }}>",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
-  },
-  {
     "file": "resources/js/components/language-switcher.tsx",
     "issue": "Fixed width (w-56) without responsive fallback. May overflow on small mobile screens.",
     "severity": "Medium",
     "line": 138,
     "code": "<DropdownMenuContent className=\"w-56\" align=\"end\" forceMount>",
     "fix": "Use w-full md:w-56 to allow scaling on small screens."
-  },
-  {
-    "file": "resources/js/components/MediaLibraryModal.tsx",
-    "issue": "Multiple grid columns (grid-cols-6) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 360,
-    "code": "<div className=\"grid grid-cols-6 gap-3\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-6 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/components/MediaPicker.tsx",
-    "issue": "Multiple grid columns (grid-cols-4) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 134,
-    "code": "<div className=\"grid grid-cols-4 gap-2 mt-2\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-4 to enable vertical stacking on mobile."
   },
   {
     "file": "resources/js/components/nav-main.tsx",
@@ -160,62 +120,6 @@
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
-    "file": "resources/js/components/PageCrudWrapper.tsx",
-    "issue": "Fixed width (w-64) without responsive fallback. May overflow on small mobile screens.",
-    "severity": "Medium",
-    "line": 450,
-    "code": "<div className=\"relative w-64\">",
-    "fix": "Use w-full md:w-64 to allow scaling on small screens."
-  },
-  {
-    "file": "resources/js/components/payment/authorizenet-payment-form.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 230,
-    "code": "<div className=\"grid grid-cols-3 gap-4\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/components/payment/invoice-authorizenet-payment-form.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 217,
-    "code": "<div className=\"grid grid-cols-3 gap-4\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/components/payment/invoice-paymentwall-payment-form.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[300px]",
-    "severity": "High",
-    "line": 143,
-    "code": "<div id=\"paymentwall-form-container\" ref={paymentFormRef} className=\"min-h-[300px]\">",
-    "fix": "Replace min-h-[300px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/payment/invoice-paytr-payment-form.tsx",
-    "issue": "Hardcoded px value used for dimensions: h-[600px]",
-    "severity": "High",
-    "line": 110,
-    "code": "<div className=\"w-full h-[600px] border rounded-lg overflow-hidden\">",
-    "fix": "Replace h-[600px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/payment/paymentwall-payment-form.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[300px]",
-    "severity": "High",
-    "line": 190,
-    "code": "<div id=\"paymentwall-form-container\" ref={paymentFormRef} className=\"min-h-[300px]\">",
-    "fix": "Replace min-h-[300px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/payment/paytr-payment-form.tsx",
-    "issue": "Hardcoded px value used for dimensions: h-[600px]",
-    "severity": "High",
-    "line": 112,
-    "code": "<div className=\"w-full h-[600px] border rounded-lg overflow-hidden\">",
-    "fix": "Replace h-[600px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
     "file": "resources/js/components/profile-menu.tsx",
     "issue": "Fixed width (w-56) without responsive fallback. May overflow on small mobile screens.",
     "severity": "Medium",
@@ -224,44 +128,12 @@
     "fix": "Use w-full md:w-56 to allow scaling on small screens."
   },
   {
-    "file": "resources/js/components/sidebar-style-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 77,
-    "code": "<div className=\"grid grid-cols-3 gap-2\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/components/sidebar-style-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 99,
-    "code": "<div className=\"grid grid-cols-3 gap-2\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
     "file": "resources/js/components/simple-multi-select.tsx",
     "issue": "Hardcoded px value used for dimensions: min-h-[38px]",
     "severity": "High",
     "line": 73,
     "code": "className=\"flex flex-wrap gap-1 p-2 border rounded-md min-h-[38px] cursor-text\"",
     "fix": "Replace min-h-[38px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/simple-multi-select.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-w-[50px]",
-    "severity": "High",
-    "line": 100,
-    "code": "className=\"flex-1 outline-none bg-transparent min-w-[50px]\"",
-    "fix": "Replace min-w-[50px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/simple-multi-select.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-h-[200px]",
-    "severity": "High",
-    "line": 105,
-    "code": "<div className=\"absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-[200px] overflow-y-auto\">",
-    "fix": "Replace max-h-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/components/theme-preview.tsx",
@@ -288,44 +160,12 @@
     "fix": "Replace w-[240px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
-    "file": "resources/js/components/ui/rich-text-editor.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[200px]",
-    "severity": "High",
-    "line": 270,
-    "code": "className=\"w-full p-4 min-h-[200px] font-mono text-sm border-0 resize-none focus:outline-none bg-gray-50\"",
-    "fix": "Replace min-h-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/ui/rich-text-editor.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[200px]",
-    "severity": "High",
-    "line": 276,
-    "code": "className=\"prose prose-sm max-w-none p-4 min-h-[200px] focus-within:outline-none\"",
-    "fix": "Replace min-h-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/ui/search-and-filter-bar.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-w-[200px]",
-    "severity": "High",
-    "line": 86,
-    "code": "<div className=\"relative flex-1 sm:w-64 min-w-[200px]\">",
-    "fix": "Replace min-w-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
     "file": "resources/js/components/ui/sidebar.tsx",
     "issue": "Hardcoded px value used for dimensions: w-[2px]",
     "severity": "High",
     "line": 293,
     "code": "\"hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex\",",
     "fix": "Replace w-[2px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/components/ui/textarea.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[80px]",
-    "severity": "High",
-    "line": 13,
-    "code": "\"flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50\",",
-    "fix": "Replace min-h-[80px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/components/UpgradePlanModal.tsx",
@@ -416,46 +256,6 @@
     "fix": "Add className=\"max-w-full h-auto\" or \"object-cover\" constraints."
   },
   {
-    "file": "resources/js/pages/auth/login.tsx",
-    "issue": "Hardcoded px value used for dimensions: w-[14px], h-[14px]",
-    "severity": "High",
-    "line": 165,
-    "code": "className=\"w-[14px] h-[14px] border border-gray-300 rounded\"",
-    "fix": "Replace w-[14px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/auth/login.tsx",
-    "issue": "Hardcoded px value used for font size: text-[13px]",
-    "severity": "Medium",
-    "line": 233,
-    "code": "className=\"group relative py-2 px-4 border text-[13px] font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]\"",
-    "fix": "Replace text-[13px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/auth/login.tsx",
-    "issue": "Hardcoded px value used for font size: text-[13px]",
-    "severity": "Medium",
-    "line": 251,
-    "code": "className=\"group relative py-2 px-4 border text-[13px] font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]\"",
-    "fix": "Replace text-[13px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/auth/login.tsx",
-    "issue": "Hardcoded px value used for font size: text-[13px]",
-    "severity": "Medium",
-    "line": 269,
-    "code": "className=\"group relative py-2 px-4 border text-[13px] font-medium text-white transition-all duration-200 rounded-md shadow-sm hover:shadow-md transform hover:scale-[1.02]\"",
-    "fix": "Replace text-[13px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/auth/register.tsx",
-    "issue": "Hardcoded px value used for dimensions: w-[14px], h-[14px]",
-    "severity": "High",
-    "line": 120,
-    "code": "className=\"w-[14px] h-[14px] border border-gray-300 rounded\"",
-    "fix": "Replace w-[14px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
     "file": "resources/js/pages/campaigns/index.tsx",
     "issue": "Fixed width (w-48) without responsive fallback. May overflow on small mobile screens.",
     "severity": "Medium",
@@ -486,14 +286,6 @@
     "line": 513,
     "code": "<DropdownMenuContent align=\"end\" className=\"w-48 z-50\" sideOffset={5}>",
     "fix": "Use w-full md:w-48 to allow scaling on small screens."
-  },
-  {
-    "file": "resources/js/pages/conversations/components/conversations-calendar.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 79,
-    "code": "<p className=\"text-[11px] text-muted-foreground\">{t('Upcoming follow-ups')}</p>",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
     "file": "resources/js/pages/conversations/components/conversations-calendar.tsx",
@@ -529,35 +321,11 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: w-[180px]",
-    "severity": "High",
-    "line": 133,
-    "code": "<div className=\"hidden xl:flex w-[180px] border-r flex-col bg-muted/30 shrink-0\">",
-    "fix": "Replace w-[180px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 171,
     "code": "<span className={`text-[10px] px-1.5 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[250px]",
-    "severity": "High",
-    "line": 276,
-    "code": "class: 'prose prose-sm focus:outline-none max-w-none min-h-[250px] p-6 text-sm leading-relaxed'",
-    "fix": "Replace min-h-[250px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[60px], min-h-[80px]",
-    "severity": "High",
-    "line": 298,
-    "code": "class: 'prose prose-sm focus:outline-none max-w-none min-h-[60px] lg:min-h-[80px] p-2.5 text-xs lg:text-sm leading-relaxed'",
-    "fix": "Replace min-h-[60px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -585,14 +353,6 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[400px]",
-    "severity": "High",
-    "line": 990,
-    "code": "<div className=\"flex flex-col h-[calc(100vh-200px)] min-h-[400px] border rounded-xl bg-background shadow-sm overflow-hidden relative\">",
-    "fix": "Replace min-h-[400px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for dimensions: max-w-[120px]",
     "severity": "High",
     "line": 1035,
@@ -614,22 +374,6 @@
     "line": 1036,
     "code": "<p className=\"text-[10px] text-muted-foreground truncate max-w-[120px] lg:max-w-none\">{selectedParticipant.email}</p>",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Fixed width (w-64) without responsive fallback. May overflow on small mobile screens.",
-    "severity": "Medium",
-    "line": 1088,
-    "code": "<div className=\"relative w-64\">",
-    "fix": "Use w-full md:w-64 to allow scaling on small screens."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1126,
-    "code": "<p className=\"text-[11px] text-muted-foreground truncate mb-2\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -665,22 +409,6 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[200px]",
-    "severity": "High",
-    "line": 1210,
-    "code": "<p className=\"text-xs text-muted-foreground mb-4 max-w-[200px]\">",
-    "fix": "Replace max-w-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[200px]",
-    "severity": "High",
-    "line": 1226,
-    "code": "<p className=\"text-xs text-muted-foreground mb-4 max-w-[200px]\">",
-    "fix": "Replace max-w-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 1245,
@@ -710,14 +438,6 @@
     "line": 1262,
     "code": "<span className=\"text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right\">",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1269,
-    "code": "<div className=\"text-[11px] text-muted-foreground/70 truncate\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -777,51 +497,11 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[180px]",
-    "severity": "High",
-    "line": 1345,
-    "code": "<p className=\"text-xs text-muted-foreground mb-4 max-w-[180px]\">",
-    "fix": "Replace max-w-[180px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[200px]",
-    "severity": "High",
-    "line": 1351,
-    "code": "<div className=\"p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-[200px]\">",
-    "fix": "Replace max-w-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 1351,
-    "code": "<div className=\"p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-[200px]\">",
+    "code": "<div className=\"p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-xs\">",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1395,
-    "code": "<div className=\"text-[11px] text-muted-foreground flex items-center gap-1.5\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[200px]",
-    "severity": "High",
-    "line": 1396,
-    "code": "<span className=\"truncate max-w-[200px]\">{selectedThread.participants?.join(', ')}</span>",
-    "fix": "Replace max-w-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1406,
-    "code": "<Button variant=\"outline\" size=\"sm\" className=\"h-8 text-[11px] font-bold gap-1.5 px-2.5\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -913,11 +593,11 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[180px], max-h-[140px]",
+    "issue": "Hardcoded px value used for dimensions: max-h-[140px]",
     "severity": "High",
     "line": 1572,
-    "code": "className=\"max-w-[180px] max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity\"",
-    "fix": "Replace max-w-[180px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
+    "code": "className=\"max-w-44 max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity\"",
+    "fix": "Replace max-h-[140px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -937,46 +617,6 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[160px]",
-    "severity": "High",
-    "line": 1609,
-    "code": "<div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Archive' ? 'min-h-[160px]' : ''}`}>",
-    "fix": "Replace min-h-[160px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[240px]",
-    "severity": "High",
-    "line": 1619,
-    "code": "<p className=\"text-xs text-muted-foreground max-w-[240px]\">",
-    "fix": "Replace max-w-[240px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[160px]",
-    "severity": "High",
-    "line": 1636,
-    "code": "<div className=\"absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[160px]\">",
-    "fix": "Replace min-h-[160px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[240px]",
-    "severity": "High",
-    "line": 1646,
-    "code": "<p className=\"text-xs text-muted-foreground max-w-[240px]\">",
-    "fix": "Replace max-w-[240px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[60px], min-h-[80px]",
-    "severity": "High",
-    "line": 1668,
-    "code": "className=\"w-full min-h-[60px] lg:min-h-[80px] cursor-text bg-background\"",
-    "fix": "Replace min-h-[60px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 1676,
@@ -985,27 +625,11 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-w-[80px]",
-    "severity": "High",
-    "line": 1723,
-    "code": "className=\"flex-1 min-w-[80px] bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none\"",
-    "fix": "Replace min-w-[80px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 1728,
     "code": "<span className=\"w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground\">BCC</span>",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-w-[80px]",
-    "severity": "High",
-    "line": 1775,
-    "code": "className=\"flex-1 min-w-[80px] bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none\"",
-    "fix": "Replace min-w-[80px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -1025,14 +649,6 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1928,
-    "code": "<p className=\"text-[11px] text-muted-foreground truncate w-full\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 1941,
@@ -1049,14 +665,6 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1946,
-    "code": "<div className=\"space-y-1.5 text-[11px]\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[9px]",
     "severity": "Medium",
     "line": 1953,
@@ -1065,27 +673,11 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1959,
-    "code": "<Button variant=\"link\" size=\"sm\" className=\"p-0 h-auto mt-3 text-[11px] font-semibold\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 1971,
     "code": "<p className=\"text-[10px] text-amber-700 font-bold uppercase mb-1 flex items-center gap-1\">",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1975,
-    "code": "<p className=\"text-[11px] text-amber-900 font-medium\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -1105,51 +697,11 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 1997,
-    "code": "className=\"w-full text-[11px] h-7 border-dashed\"",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 2006,
-    "code": "<p className=\"text-[11px] text-muted-foreground mb-3 text-center\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 2012,
-    "code": "className=\"w-full text-[11px] h-7\"",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 2025,
     "code": "<h4 className=\"text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2\">",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 2031,
-    "code": "<p className=\"text-[11px]\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 2038,
-    "code": "<p className=\"text-[11px]\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -1161,51 +713,11 @@
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: w-[72px]",
-    "severity": "High",
-    "line": 2064,
-    "code": "<Label htmlFor=\"compose-to\" className=\"w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors\">{t('To')}</Label>",
-    "fix": "Replace w-[72px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 2076,
     "code": "className=\"h-7 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-tight\"",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: w-[72px]",
-    "severity": "High",
-    "line": 2084,
-    "code": "<Label htmlFor=\"compose-cc\" className=\"w-[72px] text-xs font-bold text-muted-foreground group-focus-within:text-foreground\">{t('Cc')}</Label>",
-    "fix": "Replace w-[72px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: w-[72px]",
-    "severity": "High",
-    "line": 2094,
-    "code": "<Label htmlFor=\"compose-bcc\" className=\"w-[72px] text-xs font-bold text-muted-foreground group-focus-within:text-foreground\">{t('Bcc')}</Label>",
-    "fix": "Replace w-[72px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: w-[72px]",
-    "severity": "High",
-    "line": 2106,
-    "code": "<Label htmlFor=\"compose-subject\" className=\"w-[72px] text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors\">{t('Subject')}</Label>",
-    "fix": "Replace w-[72px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/conversations/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[250px]",
-    "severity": "High",
-    "line": 2116,
-    "code": "<div className=\"min-h-[250px] cursor-text\" onClick={() => composeEditor?.commands.focus()}>",
-    "fix": "Replace min-h-[250px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/conversations/index.tsx",
@@ -1264,20 +776,12 @@
     "fix": "Use w-full md:w-48 to allow scaling on small screens."
   },
   {
-    "file": "resources/js/pages/email-templates/show.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[300px]",
-    "severity": "High",
-    "line": 226,
-    "code": "className=\"min-h-[300px]\"",
-    "fix": "Replace min-h-[300px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
     "file": "resources/js/pages/invoices/templates/Template1.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 129,
-    "code": "style={{ maxWidth: '150px', maxHeight: '150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template1.tsx",
@@ -1353,11 +857,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template10.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 79,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template10.tsx",
@@ -1457,11 +961,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template2.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 126,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template2.tsx",
@@ -1537,11 +1041,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template3.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 137,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template3.tsx",
@@ -1617,11 +1121,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template4.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 69,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template4.tsx",
@@ -1697,11 +1201,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template5.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 90,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template5.tsx",
@@ -1777,11 +1281,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template6.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 61,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template6.tsx",
@@ -1873,11 +1377,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template7.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 53,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template7.tsx",
@@ -1969,11 +1473,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template8.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 53,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template8.tsx",
@@ -2097,11 +1601,11 @@
   },
   {
     "file": "resources/js/pages/invoices/templates/Template9.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 77,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/invoices/templates/Template9.tsx",
@@ -2216,76 +1720,12 @@
     "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
   },
   {
-    "file": "resources/js/pages/landing-page/components/HeroSection.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 79,
-    "code": "<div className=\"grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pt-8 sm:pt-12\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/landing-page/components/NewsletterSection.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-w-[120px]",
-    "severity": "High",
-    "line": 117,
-    "code": "className=\"text-white px-8 py-3 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[120px]\"",
-    "fix": "Replace min-w-[120px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
     "file": "resources/js/pages/landing-page/components/TemplatePreviewCard.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 39,
     "code": "<span className=\"inline-block px-1.5 py-0.5 rounded-full text-[10px] capitalize\"",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/landing-page/custom-pages/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[200px]",
-    "severity": "High",
-    "line": 309,
-    "code": "className=\"min-h-[200px]\"",
-    "fix": "Replace min-h-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/landing-page/custom-pages/index.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[200px]",
-    "severity": "High",
-    "line": 380,
-    "code": "className=\"min-h-[200px]\"",
-    "fix": "Replace min-h-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/landing-page/settings-about.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 245,
-    "code": "<div className=\"grid grid-cols-3 gap-4\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/landing-page/settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 1235,
-    "code": "<div key={index} className=\"grid grid-cols-3 gap-4 p-4 border rounded-lg\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/landing-page/settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 1667,
-    "code": "<div key={index} className=\"grid grid-cols-3 gap-4 p-4 border rounded-lg\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/landing-page/settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 2730,
-    "code": "<div className=\"grid grid-cols-3 gap-4\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
   },
   {
     "file": "resources/js/pages/leads/index.tsx",
@@ -2312,22 +1752,6 @@
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
-    "file": "resources/js/pages/notification-templates/show.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-h-[200px]",
-    "severity": "High",
-    "line": 197,
-    "code": "className=\"min-h-[200px] focus:ring-2 focus:ring-primary\"",
-    "fix": "Replace min-h-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/onboarding/plan.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-h-[400px]",
-    "severity": "High",
-    "line": 79,
-    "code": "<div className=\"space-y-3 mb-6 max-h-[400px] overflow-y-auto pr-1\">",
-    "fix": "Replace max-h-[400px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
     "file": "resources/js/pages/onboarding/plan.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
@@ -2344,44 +1768,12 @@
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
-    "file": "resources/js/pages/onboarding/plan.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 151,
-    "code": "<span key={idx} className=\"text-[11px] text-gray-500 flex items-center gap-1\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
     "file": "resources/js/pages/onboarding/roles.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
     "line": 285,
     "code": "<span className=\"text-[10px] px-1.5 py-0.5 rounded-full font-medium\" style={{",
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/onboarding/roles.tsx",
-    "issue": "Hardcoded px value used for font size: text-[11px]",
-    "severity": "Medium",
-    "line": 312,
-    "code": "<span className=\"text-[11px] text-gray-600\">",
-    "fix": "Replace text-[11px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
-  },
-  {
-    "file": "resources/js/pages/onboarding/roles.tsx",
-    "issue": "Hardcoded px value used for dimensions: min-w-[120px]",
-    "severity": "High",
-    "line": 375,
-    "code": "className=\"text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 min-w-[120px]\"",
-    "fix": "Replace min-w-[120px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/opportunities/index.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
-    "severity": "High",
-    "line": 764,
-    "code": "style={{ minWidth: '300px', width: '300px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
   },
   {
     "file": "resources/js/pages/opportunities/index.tsx",
@@ -2457,11 +1849,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template1.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 123,
-    "code": "style={{ maxWidth: '150px', maxHeight: '150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template1.tsx",
@@ -2521,11 +1913,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template10.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 74,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template10.tsx",
@@ -2609,11 +2001,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template2.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 120,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template2.tsx",
@@ -2673,11 +2065,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template3.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 132,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template3.tsx",
@@ -2737,11 +2129,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template4.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 64,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template4.tsx",
@@ -2801,11 +2193,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template5.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 85,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template5.tsx",
@@ -2865,11 +2257,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template6.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 56,
-    "code": "style={{ maxWidth: '150px', maxHeight: '150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template6.tsx",
@@ -2945,11 +2337,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template7.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 48,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template7.tsx",
@@ -3025,11 +2417,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template8.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 48,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template8.tsx",
@@ -3137,11 +2529,11 @@
   },
   {
     "file": "resources/js/pages/quotes/templates/Template9.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 72,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/quotes/templates/Template9.tsx",
@@ -3200,20 +2592,12 @@
     "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
   },
   {
-    "file": "resources/js/pages/receipt-orders/show.tsx",
-    "issue": "Fixed width (w-64) without responsive fallback. May overflow on small mobile screens.",
-    "severity": "Medium",
-    "line": 259,
-    "code": "<div className=\"w-64 space-y-2\">",
-    "fix": "Use w-full md:w-64 to allow scaling on small screens."
-  },
-  {
     "file": "resources/js/pages/sales-orders/templates/Template1.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 123,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template1.tsx",
@@ -3273,11 +2657,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template10.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 74,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template10.tsx",
@@ -3361,11 +2745,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template2.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 120,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template2.tsx",
@@ -3425,11 +2809,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template3.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 132,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template3.tsx",
@@ -3489,11 +2873,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template4.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 64,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template4.tsx",
@@ -3553,11 +2937,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template5.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 85,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template5.tsx",
@@ -3617,11 +3001,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template6.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 56,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template6.tsx",
@@ -3697,11 +3081,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template7.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 48,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template7.tsx",
@@ -3777,11 +3161,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template8.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 48,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template8.tsx",
@@ -3889,11 +3273,11 @@
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template9.tsx",
-    "issue": "Inline style using strict px values which breaks responsiveness.",
+    "issue": "Hardcoded px value used for dimensions: max-w-[150px], max-h-[150px]",
     "severity": "High",
     "line": 72,
-    "code": "style={{ maxWidth: '150px',maxHeight:'150px' }}",
-    "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
+    "code": "className=\"max-w-[150px] max-h-[150px] object-contain\"",
+    "fix": "Replace max-w-[150px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
   },
   {
     "file": "resources/js/pages/sales-orders/templates/Template9.tsx",
@@ -3952,54 +3336,6 @@
     "fix": "Move inline style to standard Tailwind classes, or use 100% / relative units like rem/em."
   },
   {
-    "file": "resources/js/pages/settings/components/brand-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-6) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 559,
-    "code": "<div className=\"grid grid-cols-6 gap-2\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-6 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/brand-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 630,
-    "code": "<div className=\"grid grid-cols-3 gap-3\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/brand-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 655,
-    "code": "<div className=\"grid grid-cols-3 gap-3\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/brand-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 740,
-    "code": "<div className=\"grid grid-cols-3 gap-2\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/currency-settings.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-w-[200px]",
-    "severity": "High",
-    "line": 183,
-    "code": "<div className=\"w-full md:w-auto md:max-w-[200px]\">",
-    "fix": "Replace max-w-[200px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/settings/components/currency-settings.tsx",
-    "issue": "Hardcoded px value used for dimensions: max-h-[300px]",
-    "severity": "High",
-    "line": 222,
-    "code": "<div className=\"max-h-[300px] overflow-y-auto\">",
-    "fix": "Replace max-h-[300px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
     "file": "resources/js/pages/settings/components/integrations-settings.tsx",
     "issue": "Hardcoded px value used for font size: text-[10px]",
     "severity": "Medium",
@@ -4008,76 +3344,12 @@
     "fix": "Replace text-[10px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
-    "file": "resources/js/pages/settings/components/integrations-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-12) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 460,
-    "code": "<div className=\"grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-1\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-12 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/integrations-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-12) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 474,
-    "code": "<div key={index} className=\"grid grid-cols-12 gap-2 items-center\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-12 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/invoice-template-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-6) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 308,
-    "code": "<div className=\"grid grid-cols-6 gap-1 w-50\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-6 to enable vertical stacking on mobile."
-  },
-  {
     "file": "resources/js/pages/settings/components/payment-settings.tsx",
     "issue": "Hardcoded px value used for dimensions: w-[140px]",
     "severity": "High",
     "line": 424,
     "code": "<SelectTrigger className=\"w-[140px]\">",
     "fix": "Replace w-[140px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/settings/components/quote-template-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-6) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 327,
-    "code": "<div className=\"grid grid-cols-6 gap-1 w-50\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-6 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/sales-order-template-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-6) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 319,
-    "code": "<div className=\"grid grid-cols-6 gap-1 w-50\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-6 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/storage-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-4) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 285,
-    "code": "<div className=\"grid grid-cols-4 gap-2 p-4 border rounded-md max-h-48 overflow-y-auto\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-4 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/settings/components/storage-settings.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 500,
-    "code": "<TabsList className=\"grid w-full grid-cols-3\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
-  },
-  {
-    "file": "resources/js/pages/users/all-logs.tsx",
-    "issue": "Multiple grid columns (grid-cols-3) enforced on mobile without responsive stacking.",
-    "severity": "High",
-    "line": 272,
-    "code": "<div key={key} className=\"grid grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-700\">",
-    "fix": "Change to grid-cols-1 md:grid-cols-3 to enable vertical stacking on mobile."
   },
   {
     "file": "resources/js/pages/users/index.tsx",
@@ -4102,14 +3374,6 @@
     "line": 44,
     "code": "<main className=\"flex w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row\">",
     "fix": "Replace max-w-[335px] with a responsive rem-based tailwind class (e.g., w-full md:w-64) or standard scaling class."
-  },
-  {
-    "file": "resources/js/pages/welcome.tsx",
-    "issue": "Hardcoded px value used for font size: text-[13px]",
-    "severity": "Medium",
-    "line": 45,
-    "code": "<div className=\"flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]\">",
-    "fix": "Replace text-[13px] with a Tailwind typography class (e.g., text-sm, text-base) which uses relative rem units."
   },
   {
     "file": "resources/js/pages/welcome.tsx",

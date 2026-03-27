@@ -74,7 +74,7 @@ export function SidebarStyleSettings() {
         {/* Variant Selection */}
         <div className="mt-4">
           <h4 className="text-sm font-medium mb-2">{t("Sidebar Variant")}</h4>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <VariantButton 
               variant="sidebar"
               isActive={settings.variant === 'sidebar'}
@@ -96,7 +96,7 @@ export function SidebarStyleSettings() {
         {/* Collapsible Selection */}
         <div className="mt-4">
           <h4 className="text-sm font-medium mb-2">{t("Sidebar Collapse Mode")}</h4>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <CollapsibleButton 
               mode="offcanvas"
               isActive={settings.collapsible === 'offcanvas'}

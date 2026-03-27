@@ -66,7 +66,7 @@ export default function Template4({ invoice, items, taxesData, settings, color, 
                                 {logoDark && (
                                     <img
                                         src={settings.invoiceLogo || logoDark}
-                                        style={{ maxWidth: '150px',maxHeight:'150px' }}
+                                        className="max-w-[150px] max-h-[150px] object-contain"
                                         alt="Logo"
                                     />
                                 )}

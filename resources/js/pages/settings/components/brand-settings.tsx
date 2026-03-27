@@ -371,7 +371,7 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
                 </Button>
             }
         >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <div className="flex space-x-2 mb-6">
                         <Button
@@ -556,7 +556,7 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
                                     </div>
                                     <Separator className="my-2" />
 
-                                    <div className="grid grid-cols-6 gap-2">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                                         {Object.entries({ blue: '#3b82f6', green: '#10b77f', purple: '#8b5cf6', orange: '#f97316', red: '#ef4444' }).map(([color, hex]) => (
                                             <Button
                                                 key={color}
@@ -627,7 +627,7 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
                                     <div className="space-y-6">
                                         <div>
                                             <Label className="mb-2 block">{t("Sidebar Variant")}</Label>
-                                            <div className="grid grid-cols-3 gap-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                                 {['inset', 'floating', 'minimal'].map((variant) => (
                                                     <Button
                                                         key={variant}
@@ -652,7 +652,7 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
 
                                         <div>
                                             <Label className="mb-2 block">{t("Sidebar Style")}</Label>
-                                            <div className="grid grid-cols-3 gap-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                                 {[
                                                     { id: 'plain', name: 'Plain' },
                                                     { id: 'colored', name: 'Colored' },
@@ -737,7 +737,7 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
                                     <Separator className="my-2" />
 
                                     <div className="space-y-2">
-                                        <div className="grid grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                             <Button
                                                 type="button"
                                                 variant={settings.themeMode === "light" ? "default" : "outline"}

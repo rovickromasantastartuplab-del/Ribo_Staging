@@ -114,7 +114,7 @@ export default function NewsletterSection({ flash, settings, sectionData, brandC
               <button
                 type="submit"
                 disabled={processing}
-                className="text-white px-8 py-3 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[120px]"
+                className="text-white px-8 py-3 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[7.5rem]"
                 style={{ backgroundColor: brandColor }}
                 aria-label={processing ? t('Subscribing to newsletter') : t('Subscribe to newsletter')}
               >
@@ -132,7 +132,7 @@ export default function NewsletterSection({ flash, settings, sectionData, brandC
 
           {/* Benefits */}
           {sectionData?.benefits && sectionData.benefits.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12">
               {sectionData.benefits.map((benefit, index) => (
                 <div key={index} className="text-center">
                   <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">

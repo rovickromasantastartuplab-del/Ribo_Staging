@@ -117,7 +117,7 @@ export default function Register({ referralCode, planId, settings }: { referralC
                             checked={data.terms}
                             onClick={() => setData('terms', !data.terms)}
                             tabIndex={5}
-                            className="w-[14px] h-[14px] border border-gray-300 rounded"
+                            className="w-3.5 h-3.5 border border-gray-300 rounded"
                         />
                         <Label htmlFor="terms" className="ml-2 text-gray-600 dark:text-gray-400 text-sm">{t("I agree to the")}{' '}
                             <a

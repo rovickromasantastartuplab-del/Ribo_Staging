@@ -314,7 +314,7 @@ export function CrudTable({
       )}
 
       <div className="border-collapse dark:bg-gray-900 overflow-x-auto w-full rounded-md border">
-        <Table className="w-full max-w-full min-w-[900px]">
+        <Table className="w-full max-w-full">
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-gray-800 border-b">
               {hasBulkActions && (

@@ -166,7 +166,7 @@ export default function TemplatesSection({ settings, sectionData, brandColor }: 
                     className="flex-shrink-0"
                     style={{ width: `${100 / totalSlides}%` }}
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
+                    <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6 px-4">
                       {templates_list
                         .slice(slideIndex * templatesPerSlide, (slideIndex + 1) * templatesPerSlide)
                         .filter(template => template && template.name)
