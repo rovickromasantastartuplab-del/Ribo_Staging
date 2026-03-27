@@ -307,8 +307,8 @@ export default function Dashboard({
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-[320px] text-muted-foreground">
-                    <BarChart3 className="h-12 w-12 mb-2 opacity-20" />
+                  <div className="flex flex-col items-center justify-center h-64 md:h-80 text-muted-foreground">
+                    <BarChart3 className="h-10 w-10 text-muted-foreground/30 mb-2" />
                     <p className="text-sm">{t('No sales data available')}</p>
                   </div>
                 )}
@@ -456,8 +456,8 @@ export default function Dashboard({
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-[320px] text-muted-foreground">
-                    <Target className="h-12 w-12 mb-2 opacity-20" />
+                  <div className="flex flex-col items-center justify-center h-64 md:h-80 text-muted-foreground">
+                    <Target className="h-10 w-10 text-muted-foreground/30 mb-2" />
                     <p className="text-sm">{t('No conversion data available')}</p>
                   </div>
                 )}

@@ -1002,7 +1002,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 </div>
 
                 {/* Main flex row: sidebar + list + detail */}
-                <div className="flex flex-1 min-h-0 overflow-hidden">
+                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
 
                     {/* Pane 1: Folder sidebar (xl+ only) */}
                     <FolderSidebar
@@ -1899,7 +1899,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none"
                             onClick={() => setShowContactSidebar(false)}
                         />
-                        <div className="absolute right-0 top-0 bottom-0 z-30 w-[280px] max-w-[85vw] border-l flex flex-col bg-background shadow-2xl overflow-y-auto">
+                        <div className="absolute right-0 top-0 bottom-0 z-30 w-full md:w-[280px] max-w-[85vw] border-l flex flex-col bg-background shadow-2xl overflow-y-auto">
                             <ScrollArea className="flex-1 min-h-0">
                                 <div className="p-4 md:p-5">
                                     <div className="flex items-center justify-between mb-5">

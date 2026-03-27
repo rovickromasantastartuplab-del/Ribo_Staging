@@ -186,7 +186,7 @@ export default function CalendarIndex() {
             breadcrumbs={breadcrumbs}
             actions={pageActions}
         >
-            <Card className="p-4">
+            <Card className="p-4 min-w-0 overflow-x-auto">
                 <div className="mb-4 flex flex-wrap gap-4 justify-end">
                     <div className="flex flex-wrap gap-4">
                         <div className="flex items-center gap-2">
