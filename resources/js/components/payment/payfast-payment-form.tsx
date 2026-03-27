@@ -129,7 +129,7 @@ export function PayfastPaymentForm({
           <input type="hidden" name="plan_id" value={planId} />
           <input type="hidden" name="billing_cycle" value={billingCycle} />
           <input type="hidden" name="coupon_code" value={couponCode || ''} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">{t('First Name')}</Label>
               <Input
