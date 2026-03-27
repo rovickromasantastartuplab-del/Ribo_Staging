@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Store expanded menu state in localStorage
 const STORAGE_KEY = 'nav_expanded_items';
@@ -12,6 +13,8 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
     const { t } = useTranslation();
     const page = usePage();
     const { state, toggleSidebar } = useSidebar();
+    const isMobile = useIsMobile();
+    const isExpanded = isMobile || state !== 'collapsed';
 
     // Check if the document is in RTL mode
     const isRtl = document.documentElement.dir === 'rtl';
@@ -129,7 +132,7 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                     >
                                         <div className={`flex items-center gap-2 ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}>
                                             <span>{child.title}</span>
-                                            {state !== "collapsed" && (
+                                            {isExpanded && (
                                                 expandedItems[`${level}-${child.title}`] ?
                                                     <ChevronDown className="h-3 w-3 ml-auto" /> :
                                                     <ChevronRight className="h-3 w-3 ml-auto" />
@@ -185,9 +188,9 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         <div className={`flex items-center gap-2 w-full ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}>
                                             {effectivePosition === 'right' ? (
                                                 <>
-                                                    <span>{state !== "collapsed" ? item.title : ""}</span>
+                                                    <span>{isExpanded ? item.title : ""}</span>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                                                    {state !== "collapsed" && (
+                                                    {isExpanded && (
                                                         expandedItems[item.title] ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
                                                     )}
                                                 </>
@@ -195,14 +198,14 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                                 <>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                     <div className="flex items-center gap-1">
-                                                        {state !== "collapsed" && <span>{item.title}</span>}
-                                                        {state !== "collapsed" && item.badge && (
+                                                        {isExpanded && <span>{item.title}</span>}
+                                                        {isExpanded && item.badge && (
                                                             <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-primary text-white">
                                                                 {item.badge.label}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    {state !== "collapsed" && (
+                                                    {isExpanded && (
                                                         expandedItems[item.title] ? <ChevronDown className="h-3 w-3 ml-auto" /> : <ChevronRight className="h-3 w-3 ml-auto" />
                                                     )}
                                                 </>
@@ -212,7 +215,7 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                 </SidebarMenuItem>
 
                                 {/* Child items */}
-                                {state !== "collapsed" && expandedItems[item.title] && renderSubMenu(item.children)}
+                                {isExpanded && expandedItems[item.title] && renderSubMenu(item.children)}
                             </>
                         ) : (
                             // Regular item without children
@@ -227,13 +230,13 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         >
                                             {effectivePosition === 'right' ? (
                                                 <>
-                                                    {state !== "collapsed" && <span>{item.title}</span>}
+                                                    {isExpanded && <span>{item.title}</span>}
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                 </>
                                             ) : (
                                                 <>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                                                    {state !== "collapsed" && <span>{item.title}</span>}
+                                                    {isExpanded && <span>{item.title}</span>}
                                                 </>
                                             )}
                                         </a>
@@ -245,13 +248,13 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         >
                                             {effectivePosition === 'right' ? (
                                                 <>
-                                                    {state !== "collapsed" && <span>{item.title}</span>}
+                                                    {isExpanded && <span>{item.title}</span>}
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                 </>
                                             ) : (
                                                 <>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                                                    {state !== "collapsed" && <span>{item.title}</span>}
+                                                    {isExpanded && <span>{item.title}</span>}
                                                 </>
                                             )}
                                         </Link>
