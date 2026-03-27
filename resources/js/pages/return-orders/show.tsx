@@ -64,12 +64,12 @@ export default function ReturnOrderShow() {
       <div className="mx-auto space-y-6">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-lg font-bold">{returnOrder.name}</h1>
               <p className="text-base text-gray-600 mt-2 leading-relaxed max-w-3xl">{returnOrder.description || t('No description provided')}</p>
             </div>
-            <div className="text-right ml-6">
+            <div className="text-left sm:text-right sm:ml-6">
               {getStatusBadge(returnOrder.status)}
               <p className="text-sm font-medium text-gray-700 mt-2 font-mono">{returnOrder.return_number}</p>
             </div>
@@ -205,7 +205,7 @@ export default function ReturnOrderShow() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {returnOrder.sales_order && (
                 <div className="p-6 bg-purple-50 rounded-xl border border-purple-200 hover:shadow-md transition-shadow">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Sales Order')}</p>
@@ -283,7 +283,7 @@ export default function ReturnOrderShow() {
           </CardHeader>
           <CardContent className="p-0">
             {returnOrder.products && returnOrder.products.length > 0 ? (
-              <div className="overflow-hidden">
+              <div className="overflow-x-auto min-w-0">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-100">

@@ -82,12 +82,12 @@ export default function OpportunityShow() {
       <div className="mx-auto space-y-6">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-lg font-bold text-gray-900 leading-tight">{opportunity.name}</h1>
               <p className="text-sm text-gray-600 mt-2">{opportunity.description || t('No description provided')}</p>
             </div>
-            <div className="text-right ml-6">
+            <div className="text-left sm:text-right sm:ml-6">
               {getStatusBadge(opportunity.status)}
             </div>
           </div>
@@ -463,7 +463,7 @@ export default function OpportunityShow() {
         {/* Activity Stream */}
         <Card className="shadow-sm">
           <CardHeader className="bg-gray-50 border-b px-8 py-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle className="flex items-center text-lg font-semibold">
                 <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
                 {t('Activity Stream')}

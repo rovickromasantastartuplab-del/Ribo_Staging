@@ -616,24 +616,24 @@ export default function Invoices() {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('Pending Invoice Payments')}</h3>
           <div className="space-y-3">
             {pendingPayments.map((payment: any) => (
-              <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4">
-                    <div>
-                      <p className="font-medium text-gray-900">
+              <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 border rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 truncate">
                         Invoice #{payment.invoice.invoice_number}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 truncate">
                         {payment.payment_method === 'bank' ? t('Bank Transfer') : payment.payment_method} -
                         {formatCurrency(Number(payment.amount))} ({payment.payment_type})
                       </p>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 sm:ml-auto whitespace-nowrap">
                       {t('Requested')}: {window.appSettings?.formatDateTime(payment.created_at, false) || new Date(payment.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 self-start sm:self-auto shrink-0">
                   <Button
                     size="sm"
                     variant="outline"

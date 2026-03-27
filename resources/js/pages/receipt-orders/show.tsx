@@ -53,7 +53,7 @@ export default function ShowReceiptOrder() {
         {/* Header Information */}
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg font-bold">{receiptOrder.name}</CardTitle>
                 <p className="text-base text-gray-600 mt-2 leading-relaxed">{receiptOrder.description || receiptOrder.receipt_number}</p>

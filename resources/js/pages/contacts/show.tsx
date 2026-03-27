@@ -50,12 +50,12 @@ export default function ContactShow() {
       <div className="mx-auto space-y-6">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-lg font-bold text-gray-900">{contact.name}</h1>
               <p className="text-sm text-gray-600 mt-2">{contact.position || t('No position specified')}</p>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               {getStatusBadge(contact.status)}
             </div>
           </div>

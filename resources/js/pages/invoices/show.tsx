@@ -143,12 +143,12 @@ export default function InvoiceShow() {
       <div className="mx-auto space-y-6">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-lg font-bold">{invoice.name}</h1>
               <p className="text-base text-gray-600 mt-2 leading-relaxed max-w-3xl">{invoice.description || t('No description provided')}</p>
             </div>
-            <div className="text-right ml-6">
+            <div className="text-left sm:text-right sm:ml-6">
               {getStatusBadge(invoice.status)}
               <p className="text-sm font-medium text-gray-700 mt-2 font-mono">{invoice.invoice_number}</p>
             </div>
@@ -156,7 +156,7 @@ export default function InvoiceShow() {
         </div>
 
         {/* Payment Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -201,7 +201,7 @@ export default function InvoiceShow() {
         </div>
 
         {/* Invoice Details Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -301,7 +301,7 @@ export default function InvoiceShow() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {invoice.account && (
                 <div className="p-6 bg-green-50 rounded-xl border border-green-200 hover:shadow-md transition-shadow">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Account')}</p>
@@ -673,7 +673,7 @@ export default function InvoiceShow() {
         {/* Activity Stream */}
         <Card className="shadow-sm">
           <CardHeader className="bg-gray-50 border-b">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle className="flex items-center text-lg font-semibold">
                 <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
                 {t('Activity Stream')}

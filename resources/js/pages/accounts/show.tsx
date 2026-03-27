@@ -68,12 +68,12 @@ export default function AccountShow() {
       <div className="mx-auto space-y-6">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-lg font-bold">{account.name}</h1>
               <p className="text-sm text-muted-foreground mt-2">{account.account_type?.name || t('No type specified')}</p>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               {getStatusBadge(account.status)}
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function AccountShow() {
         {/* Activity Stream */}
         <Card className="shadow-sm">
           <CardHeader className="bg-gray-50 border-b">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle className="flex items-center text-lg font-semibold">
                 <Calendar className="h-5 w-5 mr-3" />
                 {t('Activity Stream')}
