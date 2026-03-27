@@ -107,7 +107,7 @@ export default function EmailTemplateShow({ template, languages, variables }: Pr
       <Head title={`Edit Template - ${template.name}`} />
 
       <div className="grid gap-6 md:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="md:col-span-2 min-w-0 space-y-6">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
@@ -237,7 +237,7 @@ export default function EmailTemplateShow({ template, languages, variables }: Pr
           </Card>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

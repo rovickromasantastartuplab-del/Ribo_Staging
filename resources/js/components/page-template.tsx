@@ -50,7 +50,7 @@ export function PageTemplate({
         <div className="flex items-center justify-between flex-wrap gap-y-2">
           <h1 className="text-xl font-semibold">{title}</h1>
           {actions && actions.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {actions.map((action, index) => (
                 <Button
                   key={index}

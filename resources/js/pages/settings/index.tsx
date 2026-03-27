@@ -363,7 +363,7 @@ export default function Settings() {
             url="/settings"
             breadcrumbs={breadcrumbs}
         >
-            <div className={`flex flex-col md:flex-row gap-8`} dir={position === 'right' ? 'rtl' : 'ltr'}>
+            <div className={`flex flex-col md:flex-row gap-4 md:gap-8`} dir={position === 'right' ? 'rtl' : 'ltr'}>
                 {/* <div className={`flex flex-col md:flex-row gap-8 ${position === 'right' ? 'md:flex-row-reverse' : ''}`}> */}
                 {/* <div className="flex flex-col md:flex-row gap-8"> */}
                 {/* Sidebar Navigation */}

@@ -178,7 +178,8 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                     <SidebarMenuButton
                                         isActive={isChildActive(item.children)}
                                         tooltip={{ children: item.title }}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.stopPropagation();
                                             if (state === 'collapsed') {
                                                 toggleSidebar();
                                             }
