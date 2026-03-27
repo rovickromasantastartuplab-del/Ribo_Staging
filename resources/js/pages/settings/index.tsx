@@ -396,7 +396,7 @@ export default function Settings() {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     {/* System Settings Section */}
                     {(auth.permissions?.includes('manage-system-settings') || auth.roles?.includes('superadmin')) && (
                         <section id="system-settings" ref={systemSettingsRef} className="mb-8">
