@@ -11,8 +11,8 @@ export function AppContent({ variant = 'header', children, ...props }: AppConten
 
     if (variant === 'sidebar') {
         return (
-            <SidebarInset {...props}>
-                <div dir={position === 'right' ? 'rtl' : 'ltr'}>
+            <SidebarInset className="min-w-0 w-full overflow-x-hidden" {...props}>
+                <div className="min-w-0 w-full overflow-x-hidden" dir={position === 'right' ? 'rtl' : 'ltr'}>
                     {children}
                 </div>
             </SidebarInset>

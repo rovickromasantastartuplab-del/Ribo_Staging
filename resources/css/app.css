@@ -195,6 +195,7 @@ html[dir='rtl'] [data-sonner-toast][data-styled='true'] [data-close-button],
 
     body {
         @apply bg-background text-foreground;
+        overflow-x: hidden;
     }
 
     /* Custom thin scrollbar */
