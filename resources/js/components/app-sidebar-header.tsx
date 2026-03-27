@@ -15,7 +15,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
         <>
             <header className="border-sidebar-border/50 flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-3">
                 <div className="flex w-full items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 overflow-hidden">
                         {position === 'left' && <SidebarTrigger className="-ml-1" />}
                         <Breadcrumbs items={breadcrumbs.map(b => ({ label: b.title, href: b.href }))} />
                     </div>

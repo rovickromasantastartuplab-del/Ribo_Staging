@@ -44,10 +44,10 @@ export function PageTemplate({
     <AppLayout breadcrumbs={pageBreadcrumbs}>
       <Head title={`${title} - ${(usePage().props as any).globalSettings?.titleText || 'Sales SaaS'}`} />
 
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex w-full max-w-full flex-1 flex-col gap-4 overflow-x-hidden p-4 md:p-6 lg:p-8">
         {/* <div className="flex h-full flex-1 flex-col gap-4 p-4"> */}
         {/* Header with action buttons */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-y-2">
           <h1 className="text-xl font-semibold">{title}</h1>
           {actions && actions.length > 0 && (
             <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export function PageTemplate({
         </div>
 
         {/* Content */}
-        <div className={noPadding ? "" : "rounded-xl border p-6"}>
+        <div className={noPadding ? "" : "rounded-xl border p-4 md:p-6"}>
           {children}
         </div>
       </div>

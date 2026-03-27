@@ -444,8 +444,8 @@ export function PageCrudWrapper({
       {/* Search and filters section */}
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow mb-4">
         <div className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <form onSubmit={handleSearch} className="flex gap-2">
                 <div className="relative w-full md:w-64">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

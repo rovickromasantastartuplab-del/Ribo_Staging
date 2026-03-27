@@ -131,7 +131,7 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         onClick={() => toggleExpand(`${level}-${child.title}`)}
                                     >
                                         <div className={`flex items-center gap-2 ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}>
-                                            <span>{child.title}</span>
+                                            <span className="truncate">{child.title}</span>
                                             {isExpanded && (
                                                 expandedItems[`${level}-${child.title}`] ?
                                                     <ChevronDown className="h-3 w-3 ml-auto" /> :
@@ -154,7 +154,7 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         target={child.target}
                                         className={`flex items-center gap-2 ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}
                                     >
-                                        <span>{child.title}</span>
+                                        <span className="truncate">{child.title}</span>
                                     </Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -188,7 +188,7 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         <div className={`flex items-center gap-2 w-full ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}>
                                             {effectivePosition === 'right' ? (
                                                 <>
-                                                    <span>{isExpanded ? item.title : ""}</span>
+                                                    <span className="truncate">{isExpanded ? item.title : ""}</span>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                     {isExpanded && (
                                                         expandedItems[item.title] ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
@@ -198,7 +198,7 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                                 <>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                     <div className="flex items-center gap-1">
-                                                        {isExpanded && <span>{item.title}</span>}
+                                                        {isExpanded && <span className="truncate">{item.title}</span>}
                                                         {isExpanded && item.badge && (
                                                             <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-primary text-white">
                                                                 {item.badge.label}
@@ -230,13 +230,13 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         >
                                             {effectivePosition === 'right' ? (
                                                 <>
-                                                    {isExpanded && <span>{item.title}</span>}
+                                                    {isExpanded && <span className="truncate">{item.title}</span>}
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                 </>
                                             ) : (
                                                 <>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                                                    {isExpanded && <span>{item.title}</span>}
+                                                    {isExpanded && <span className="truncate">{item.title}</span>}
                                                 </>
                                             )}
                                         </a>
@@ -248,13 +248,13 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                         >
                                             {effectivePosition === 'right' ? (
                                                 <>
-                                                    {isExpanded && <span>{item.title}</span>}
+                                                    {isExpanded && <span className="truncate">{item.title}</span>}
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                                 </>
                                             ) : (
                                                 <>
                                                     {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                                                    {isExpanded && <span>{item.title}</span>}
+                                                    {isExpanded && <span className="truncate">{item.title}</span>}
                                                 </>
                                             )}
                                         </Link>

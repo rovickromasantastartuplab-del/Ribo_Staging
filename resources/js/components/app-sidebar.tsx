@@ -1,6 +1,7 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { cn } from '@/lib/utils';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useLayout } from '@/contexts/LayoutContext';
 import { useSidebarSettings } from '@/contexts/SidebarContext';
@@ -654,7 +655,7 @@ export function AppSidebar() {
             side={effectivePosition}
             collapsible={collapsible}
             variant={variant}
-            className={style !== 'plain' ? 'sidebar-custom-style' : ''}
+            className={cn('hidden lg:block', style !== 'plain' ? 'sidebar-custom-style' : '')}
         >
             <SidebarHeader className={style !== 'plain' ? 'sidebar-styled' : ''} style={sidebarStyle}>
                 <div className="flex justify-center items-center p-2">

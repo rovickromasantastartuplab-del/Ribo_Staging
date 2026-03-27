@@ -35,13 +35,13 @@ export function NavFooter({
                                 >
                                     {effectivePosition === 'right' ? (
                                         <>
-                                            <span>{item.title}</span>
+                                            <span className="truncate">{item.title}</span>
                                             {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
                                         </>
                                     ) : (
                                         <>
                                             {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                                            <span>{item.title}</span>
+                                            <span className="truncate">{item.title}</span>
                                         </>
                                     )}
                                 </a>

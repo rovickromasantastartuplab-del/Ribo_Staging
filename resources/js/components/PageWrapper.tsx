@@ -59,7 +59,7 @@ export function PageWrapper({
       actions={filteredActions}
       breadcrumbs={pageBreadcrumbs}
     >
-      <div className="space-y-4">
+      <div className="space-y-4 min-w-0 w-full">
         {children}
       </div>
     </PageTemplate>

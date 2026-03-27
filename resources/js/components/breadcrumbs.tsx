@@ -8,7 +8,7 @@ export function Breadcrumbs({ items }: { items: Array<{ label: string; href?: st
         <>
             {items && items.length > 0 && (
                 <Breadcrumb>
-                    <BreadcrumbList>
+                    <BreadcrumbList className="flex-wrap overflow-hidden">
                         {items.map((item, index) => {
                             const isLast = index === items.length - 1;
                             return (
