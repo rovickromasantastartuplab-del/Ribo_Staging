@@ -58,7 +58,7 @@ export function DatePicker({
         type="date"
         value={date}
         onChange={handleDateChange}
-        className="pl-9 w-[240px]"
+        className="pl-9 w-full"
         disabled={disabled}
       />
     </div>
