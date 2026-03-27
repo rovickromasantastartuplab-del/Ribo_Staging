@@ -44,8 +44,8 @@ export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps
 
   return (
     <Card className="mb-6 p-4">
-      <form onSubmit={handleFilterSubmit} className="flex items-end gap-4">
-        <div className="flex-1">
+      <form onSubmit={handleFilterSubmit} className="flex flex-col sm:flex-row sm:items-end flex-wrap gap-2 sm:gap-4">
+        <div className="w-full sm:w-auto sm:flex-1">
           <Label htmlFor="date_from">{t('From Date')}</Label>
           <Input
             id="date_from"
@@ -54,7 +54,7 @@ export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps
             onChange={(e) => setDateFrom(e.target.value)}
           />
         </div>
-        <div className="flex-1">
+        <div className="w-full sm:w-auto sm:flex-1">
           <Label htmlFor="date_to">{t('To Date')}</Label>
           <Input
             id="date_to"
@@ -64,8 +64,8 @@ export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps
           />
         </div>
         {additionalFilters}
-        <Button type="submit">{t('Apply Filters')}</Button>
-        <Button type="button" variant="outline" onClick={handleClearFilters}>{t('Clear Filters')}</Button>
+        <Button type="submit" className="w-full sm:w-auto">{t('Apply Filters')}</Button>
+        <Button type="button" variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">{t('Clear Filters')}</Button>
       </form>
     </Card>
   );
