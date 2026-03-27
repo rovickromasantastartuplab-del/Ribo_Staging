@@ -217,7 +217,7 @@ export default function Login({ status, canResetPassword, demoBusinesses = [] }:
 
                         <div>
                             <h3 className="text-sm font-medium text-gray-900 tracking-wider mb-4 text-center">{t('Quick Access')}</h3>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <Button
                                     type="button"
                                     onClick={() => {
