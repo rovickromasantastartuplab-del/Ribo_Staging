@@ -100,7 +100,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
         { key: 'archive', icon: Archive, label: t('Archive'), count: 0 },
     ];
     return (
-        <div className="flex gap-1 p-2 overflow-x-auto items-center">
+        <div className="flex gap-1 p-2 overflow-x-auto scrollbar-hide flex-nowrap items-center">
             {onCanCompose && (
             <Button size="sm" onClick={onCompose} className="h-7 px-3 text-xs gap-1.5 shrink-0 mr-1.5 text-primary-foreground">
                 <PenBox className="h-3.5 w-3.5" />
@@ -987,7 +987,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 the PageTemplate header (~48px) + padding (p-4 = 16px top/bottom + gap-4 = 16px).
                 Total overhead ≈ 56 + 40 + 48 + 32 + 16 = ~192px. Use 200px for safety.
             */}
-            <div className="flex flex-col h-[calc(100vh-200px)] min-h-[25rem] border rounded-xl bg-background shadow-sm overflow-hidden relative">
+            <div className="flex flex-col h-screen overflow-hidden lg:h-[calc(100vh-200px)] min-h-[25rem] border rounded-xl bg-background shadow-sm relative">
 
                 {/* Mobile folder tabs: visible below xl where the sidebar is hidden */}
                 <div className="xl:hidden border-b shrink-0">
@@ -1002,7 +1002,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 </div>
 
                 {/* Main flex row: sidebar + list + detail */}
-                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
+                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
 
                     {/* Pane 1: Folder sidebar (xl+ only) */}
                     <FolderSidebar
@@ -1199,7 +1199,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         </div>
 
                                         {/* Thread list scroll area */}
-                                        <ScrollArea className="flex-1 min-h-0 [&_[data-radix-scroll-area-viewport]>div]:!block">
+                                        <ScrollArea className="flex-1 min-h-0 overflow-y-auto [&_[data-radix-scroll-area-viewport]>div]:!block">
                                             {!gmailAccount ? (
                                                 /* No Gmail account */
                                                 <div className="flex flex-col items-center justify-center text-center px-4 py-10">
@@ -1524,7 +1524,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 {(msg.sender?.name || msg.from_email)?.charAt(0).toUpperCase()}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <div className="flex-1 min-w-0 space-y-1.5">
+                                                        <div className="flex-1 min-w-0 max-w-full space-y-1.5">
                                                             <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
                                                                 <span className="text-xs font-semibold truncate flex-1 min-w-0">
                                                                     {msg.from_name && msg.from_name !== msg.from_email 
@@ -1549,7 +1549,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     </Button>
                                                                 </span>
                                                             </div>
-                                                            <div className="bg-background border rounded-lg p-3 shadow-sm text-xs lg:text-sm leading-relaxed overflow-hidden break-words [overflow-wrap:anywhere]">
+                                                            <div className="bg-background border rounded-lg p-3 shadow-sm text-xs lg:text-sm leading-relaxed overflow-hidden break-words w-full [overflow-wrap:anywhere]">
                                                                 {msg.body_html ? (
                                                                     <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
                                                                 ) : (
