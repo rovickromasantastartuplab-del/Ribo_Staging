@@ -959,8 +959,7 @@ export default function Leads() {
                     return (
                       <div
                         key={status.id}
-                        className="flex-shrink-0"
-                        style={{ minWidth: 'calc(20% - 16px)', width: 'calc(20% - 16px)' }}
+                        style={{ minWidth: '280px', width: '280px' }}
                         onDrop={(e) => {
                           e.preventDefault();
                           e.currentTarget.classList.remove('bg-blue-50');

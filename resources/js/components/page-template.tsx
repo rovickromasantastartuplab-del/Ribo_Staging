@@ -15,12 +15,13 @@ export interface PageAction {
 
 export interface PageTemplateProps {
   title: string;
-  description: string;
-  url: string;
+  description?: string;
+  url?: string;
   actions?: PageAction[];
   children: ReactNode;
   noPadding?: boolean;
   breadcrumbs?: BreadcrumbItem[];
+  className?: string;
 }
 
 export function PageTemplate({
@@ -30,7 +31,8 @@ export function PageTemplate({
   actions,
   children,
   noPadding = false,
-  breadcrumbs
+  breadcrumbs,
+  className
 }: PageTemplateProps) {
   // Default breadcrumbs if none provided
   const pageBreadcrumbs: BreadcrumbItem[] = breadcrumbs || [
@@ -44,7 +46,7 @@ export function PageTemplate({
     <AppLayout breadcrumbs={pageBreadcrumbs}>
       <Head title={`${title} - ${(usePage().props as any).globalSettings?.titleText || 'Sales SaaS'}`} />
 
-      <div className="flex w-full max-w-full flex-1 flex-col gap-4 overflow-x-hidden p-4 md:p-6 lg:p-8">
+      <div className={`flex w-full max-w-full flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 ${className || 'overflow-x-hidden'}`}>
         {/* <div className="flex h-full flex-1 flex-col gap-4 p-4"> */}
         {/* Header with action buttons */}
         <div className="flex items-center justify-between flex-wrap gap-y-2">

@@ -315,8 +315,7 @@ export default function ProjectKanban() {
               const statusTasks = Object.values(filteredKanbanData).find((column: any) => column.status?.id === status.id)?.tasks || [];
               return (
                 <div
-                  key={status.id}
-                  className="flex-shrink-0 min-w-[280px] w-[280px] sm:min-w-[calc(20%-16px)] sm:w-[calc(20%-16px)]"
+                  className="flex-shrink-0 min-w-[280px] w-[280px]"
                   onDrop={(e) => {
                     e.preventDefault();
                     e.currentTarget.classList.remove('bg-blue-50');

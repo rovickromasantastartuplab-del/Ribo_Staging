@@ -56,8 +56,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
   return (
     <div
-      className="flex-shrink-0"
-      style={{ minWidth: 'min(calc(20% - 16px), calc(100vw - 2rem))', width: 'min(calc(20% - 16px), calc(100vw - 2rem))' }}
+      style={{ minWidth: '280px', width: '280px' }}
     >
       <div className="bg-gray-100 rounded-lg h-full flex flex-col">
         {/* Column Header */}

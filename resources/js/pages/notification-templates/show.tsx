@@ -92,9 +92,9 @@ export default function NotificationTemplateShow({ template, languages, variable
         >
             <Head title={`${template.name} - Notification Templates`} />
 
-            <div className="grid gap-6 md:grid-cols-3">
-                <div className="lg:col-span-2 space-y-6">
-                    <Card>
+            <div className="grid gap-6 md:grid-cols-3 w-full max-w-full overflow-x-hidden">
+                <div className="md:col-span-2 min-w-0 space-y-6">
+                    <Card className="w-full">
                         <CardHeader>
                             <div className="flex justify-between items-center">
                                 <CardTitle>{t("Template Settings")}</CardTitle>
@@ -113,7 +113,7 @@ export default function NotificationTemplateShow({ template, languages, variable
                     </Card>
 
 
-                    <Card>
+                    <Card className="w-full">
                         <CardHeader>
                             <div className="flex justify-between items-center">
                                 <div>
@@ -144,7 +144,7 @@ export default function NotificationTemplateShow({ template, languages, variable
                         <CardContent>
                             <Tabs defaultValue={Object.keys(languages)[0]} onValueChange={setCurrentLang} className="w-full">
                                 <div className="mb-4">
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto scrollbar-hide flex-nowrap">
                                         <TabsList className="inline-flex h-auto p-1 w-max">
                                             {Object.entries(languages).map(([code, name]) => (
                                                 <TabsTrigger
@@ -189,14 +189,16 @@ export default function NotificationTemplateShow({ template, languages, variable
                                                 <Label htmlFor={`content-${code}`} className="text-sm font-medium">
                                                     {t("Notification Content")}
                                                 </Label>
-                                                <Textarea
-                                                    id={`content-${code}`}
-                                                    value={templateLangs[code]?.content || ''}
-                                                    onChange={(e) => handleContentChange(code, e.target.value)}
-                                                    placeholder={t("Write your notification content here. You can use variables...")}
-                                                    className="min-h-[12.5rem] focus:ring-2 focus:ring-primary"
-                                                    rows={8}
-                                                />
+                                                <div className="w-full min-w-0 overflow-hidden">
+                                                    <Textarea
+                                                        id={`content-${code}`}
+                                                        value={templateLangs[code]?.content || ''}
+                                                        onChange={(e) => handleContentChange(code, e.target.value)}
+                                                        placeholder={t("Write your notification content here. You can use variables...")}
+                                                        className="min-h-[12.5rem] focus:ring-2 focus:ring-primary w-full"
+                                                        rows={8}
+                                                    />
+                                                </div>
                                                 <p className="text-xs text-muted-foreground">
                                                     💡 {t("Tip: Use the variables from the sidebar to personalize your notifications")}
                                                 </p>
@@ -209,8 +211,8 @@ export default function NotificationTemplateShow({ template, languages, variable
                     </Card>
                 </div>
 
-                <div>
-                    <Card>
+                <div className="min-w-0">
+                    <Card className="w-full">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <span>{t("Available Variables")}</span>
@@ -227,7 +229,7 @@ export default function NotificationTemplateShow({ template, languages, variable
                                 {Object.entries(variables).map(([variable, description]) => (
                                     <div
                                         key={variable}
-                                        className="group p-3 bg-muted/50 rounded-lg border hover:bg-muted/80 cursor-pointer transition-colors"
+                                        className="group p-3 bg-muted/50 rounded-lg border hover:bg-muted/80 cursor-pointer transition-colors w-full"
                                         onClick={() => {
                                             navigator.clipboard.writeText(variable)
                                             toast.success(t('Variable copied to clipboard'))

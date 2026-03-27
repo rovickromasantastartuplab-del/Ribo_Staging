@@ -20,7 +20,7 @@ export type User = NonNullable<SharedData['auth']['user']>;
 export interface NavItem {
     title: string;
     href?: string;
-    icon?: React.ReactNode;
+    icon?: React.ElementType;
     permission?: string;
     children?: NavItem[];
     target?: string;

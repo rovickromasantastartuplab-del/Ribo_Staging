@@ -211,7 +211,7 @@ export const CommonKanbanBoard: React.FC<CommonKanbanBoardProps> = ({
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 120px)', width: '100%' }}>
           {statuses.map((status) => (
-            <div key={status.id} className="flex-shrink-0" style={{ minWidth: 'min(calc(20% - 16px), calc(100vw - 2rem))', width: 'min(calc(20% - 16px), calc(100vw - 2rem))' }}>
+            <div key={status.id} className="flex-shrink-0" style={{ minWidth: '280px', width: '280px' }}>
               <div className="bg-gray-100 rounded-lg h-full flex flex-col">
                 <div className="p-3 border-b border-gray-200">
                   <div className="flex items-center justify-between">

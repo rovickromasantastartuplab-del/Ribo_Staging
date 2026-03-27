@@ -218,7 +218,7 @@ export const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 280px)', width: '100%' }}>
           {opportunityStages.map((stage) => (
-            <div key={stage.id} className="flex-shrink-0" style={{ minWidth: 'min(calc(20% - 16px), calc(100vw - 2rem))', width: 'min(calc(20% - 16px), calc(100vw - 2rem))' }}>
+            <div key={stage.id} className="flex-shrink-0" style={{ minWidth: '280px', width: '280px' }}>
               <div className="bg-gray-100 rounded-lg h-full flex flex-col">
                 <div className="p-3 border-b border-gray-200">
                   <div className="flex items-center justify-between">

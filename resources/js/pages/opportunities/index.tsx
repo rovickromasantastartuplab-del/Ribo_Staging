@@ -760,8 +760,7 @@ export default function Opportunities() {
                     return (
                       <div
                         key={stage.id}
-                        className="flex-shrink-0"
-                        style={{ minWidth: 'min(300px, calc(100vw - 2rem))', width: 'min(300px, calc(100vw - 2rem))' }}
+                        style={{ minWidth: '280px', width: '280px' }}
                         onDrop={(e) => {
                           e.preventDefault();
                           e.currentTarget.classList.remove('bg-blue-50');
