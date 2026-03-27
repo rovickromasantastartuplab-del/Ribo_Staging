@@ -131,7 +131,7 @@ export default function MediaPicker({
 
             {/* Preview */}
             {showPreview && imageUrls.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                     {imageUrls.map((url, index) => (
                         <div key={index} className="relative">
                             <img

@@ -8,7 +8,7 @@ interface ImagePreviewProps {
   height?: number;
 }
 
-export function ImagePreview({ src, alt = 'Image', className = 'h-16 w-20 rounded-md object-cover shadow-sm', width, height }: ImagePreviewProps) {
+export function ImagePreview({ src, alt = 'Image', className = 'max-w-full h-auto rounded-md object-contain shadow-sm', width, height }: ImagePreviewProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   
   useEffect(() => {

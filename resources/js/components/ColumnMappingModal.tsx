@@ -119,7 +119,7 @@ export function ColumnMappingModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal={false}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>{t('Import Customers')}</DialogTitle>
           </DialogHeader>
@@ -133,7 +133,7 @@ export function ColumnMappingModal({
 
           <div className="flex-1 overflow-auto">
             <h3 className="text-sm font-semibold mb-3">{t('Map Excel Columns to Database Fields')}</h3>
-            <div className="border rounded-lg">
+            <div className="border rounded-lg overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
                   <tr>
@@ -210,7 +210,7 @@ export function ColumnMappingModal({
 
       {/* Skipped Rows Summary Dialog */}
       <Dialog open={showSkippedRows} onOpenChange={(open) => !open && handleCloseSkippedRows()}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -226,7 +226,7 @@ export function ColumnMappingModal({
           </Alert>
 
           <div className="flex-1 overflow-auto">
-            <div className="border rounded-lg">
+            <div className="border rounded-lg overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b sticky top-0">
                   <tr>

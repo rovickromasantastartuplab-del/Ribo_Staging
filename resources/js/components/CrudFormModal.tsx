@@ -1173,7 +1173,7 @@ export function CrudFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${getModalSizeClass()} max-h-[90vh]`} modalId={modalId}>
+      <DialogContent className={`w-[95vw] ${getModalSizeClass()} max-h-[90vh]`} modalId={modalId}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description || " "}</DialogDescription>

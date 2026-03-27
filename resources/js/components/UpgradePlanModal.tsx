@@ -236,7 +236,7 @@ export function UpgradePlanModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="w-[95vw] sm:max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
           <div className="px-6 py-6 pb-2">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">{t("Upgrade Plan for")} {companyName}</DialogTitle>

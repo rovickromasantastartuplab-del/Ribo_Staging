@@ -21,7 +21,7 @@ export function CrudDeleteModal({
   const { t } = useTranslation();
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t("Delete")} {entityName}</DialogTitle>
           <DialogDescription>

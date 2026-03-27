@@ -245,7 +245,7 @@ export default function MediaLibraryModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
         <DialogHeader className="p-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <ImageIcon className="h-5 w-5" />
