@@ -22,9 +22,10 @@ class MediaController extends Controller
             if ($user->isSuperAdmin()) {
                 // No user_id filter for superadmin
             }
-            // Users with manage-any-media can see all media
-            elseif ($user->hasPermissionTo('manage-any-media')) {
-                // No user_id filter for manage-any-media
+            // Company owners and users with manage-any-media can see all media in their company
+            elseif ($user->type === 'company' || $user->hasPermissionTo('manage-any-media')) {
+                $companyUserIds = $this->getCompanyUserIds($user);
+                $mediaQuery = $mediaQuery->whereIn('user_id', $companyUserIds);
             }
             // Others can only see their own media
             else {
@@ -267,9 +268,16 @@ class MediaController extends Controller
         $user = auth()->user();
         $query = Media::where('id', $id);
 
-        // SuperAdmin and users with manage-any-media can download any media
-        if ($user->type !== 'superadmin' && !$user->hasPermissionTo('manage-any-media')) {
-            $query->where('user_id', $user->id);
+        // SuperAdmin can download any media
+        if ($user->type !== 'superadmin') {
+            if ($user->type === 'company' || $user->hasPermissionTo('manage-any-media')) {
+                // Company owners and users with manage-any-media can download any media in their company
+                $companyUserIds = $this->getCompanyUserIds($user);
+                $query->whereIn('user_id', $companyUserIds);
+            } else {
+                // Others can only download their own media
+                $query->where('user_id', $user->id);
+            }
         }
 
         $media = $query->firstOrFail();
@@ -316,9 +324,16 @@ class MediaController extends Controller
         $user = auth()->user();
         $query = Media::where('id', $id);
 
-        // SuperAdmin and users with manage-any-media can delete any media
-        if ($user->type !== 'superadmin' && !$user->hasPermissionTo('manage-any-media')) {
-            $query->where('user_id', $user->id);
+        // SuperAdmin can delete any media
+        if ($user->type !== 'superadmin') {
+            if ($user->type === 'company' || $user->hasPermissionTo('manage-any-media')) {
+                // Company owners and users with manage-any-media can delete any media in their company
+                $companyUserIds = $this->getCompanyUserIds($user);
+                $query->whereIn('user_id', $companyUserIds);
+            } else {
+                // Others can only delete their own media
+                $query->where('user_id', $user->id);
+            }
         }
 
         $media = $query->firstOrFail();
@@ -383,25 +398,26 @@ class MediaController extends Controller
         return null;
     }
 
-    private function getUserStorageUsage($user)
+    private function getCompanyUserIds($user)
     {
         if ($user->type === 'company') {
-            // Get storage usage for company and all its staff
-            $companyUsers = User::where('created_by', $user->id)->pluck('id')->push($user->id);
-            return Media::whereIn('user_id', $companyUsers)->sum('size');
+            return User::where('created_by', $user->id)->pluck('id')->push($user->id);
         }
 
         if ($user->created_by) {
-            // Get storage usage for entire company
             $company = User::find($user->created_by);
             if ($company) {
-                $companyUsers = User::where('created_by', $company->id)->pluck('id')->push($company->id);
-                return Media::whereIn('user_id', $companyUsers)->sum('size');
+                return User::where('created_by', $company->id)->pluck('id')->push($company->id);
             }
         }
 
-        // Individual user storage usage
-        return Media::where('user_id', $user->id)->sum('size');
+        return collect([$user->id]);
+    }
+
+    private function getUserStorageUsage($user)
+    {
+        $companyUsers = $this->getCompanyUserIds($user);
+        return Media::whereIn('user_id', $companyUsers)->sum('size');
     }
 
     private function updateStorageUsage($user, $size)
