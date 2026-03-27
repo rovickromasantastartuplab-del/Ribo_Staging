@@ -316,8 +316,7 @@ export default function ProjectKanban() {
               return (
                 <div
                   key={status.id}
-                  className="flex-shrink-0"
-                  style={{ minWidth: 'calc(20% - 16px)', width: 'calc(20% - 16px)' }}
+                  className="flex-shrink-0 min-w-[280px] w-[280px] sm:min-w-[calc(20%-16px)] sm:w-[calc(20%-16px)]"
                   onDrop={(e) => {
                     e.preventDefault();
                     e.currentTarget.classList.remove('bg-blue-50');

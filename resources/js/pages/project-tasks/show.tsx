@@ -65,7 +65,7 @@ export default function ProjectTaskShow() {
         {/* Task Overview */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 {t('Task Overview')}
@@ -283,7 +283,7 @@ export default function ProjectTaskShow() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {task.estimated_hours || 0}h

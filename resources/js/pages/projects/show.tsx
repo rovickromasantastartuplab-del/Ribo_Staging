@@ -74,7 +74,7 @@ export default function ProjectShow() {
       <div className="space-y-6">
         {/* Project Header */}
         <Card className="p-6">
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <div>
               <h1 className="text-lg font-bold mb-2">
                 {project.name}

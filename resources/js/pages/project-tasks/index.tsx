@@ -477,7 +477,7 @@ export default function ProjectTasks() {
       </div>
 
       {activeView === 'list' ? (
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-x-auto">
           <CrudTable
             columns={columns}
             actions={actions}

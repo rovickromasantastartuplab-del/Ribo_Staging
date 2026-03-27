@@ -477,7 +477,7 @@ export default function ProjectGantt() {
 
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <div className="border-b border-gray-200 p-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <h6 className="text-lg font-semibold text-gray-900 dark:text-white">{t('Gantt Chart')}</h6>
             <div className="flex gap-1">
               {[
@@ -503,7 +503,7 @@ export default function ProjectGantt() {
           </div>
         </div>
 
-        <div className="gantt-container" style={{ overflow: 'scroll', width: 'calc(100vw - 300px)', height: 'calc(100vh - 300px)' }}>
+        <div className="gantt-container" style={{ overflow: 'scroll', width: '100%', height: 'calc(100vh - 300px)' }}>
           <GanttChart tasks={filteredTasks} timeScale={timeScale} onTaskClick={setSelectedTask} />
         </div>
       </div>
