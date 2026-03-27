@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { RichTextField } from '@/components/ui/rich-text-field'
-import { Save } from 'lucide-react'
+import { Save, ArrowLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from '@/components/custom-toast'
 
@@ -87,11 +87,19 @@ export default function EmailTemplateShow({ template, languages, variables }: Pr
     { title: template.name }
   ]
 
-  const pageActions: any[] = []
+  const pageActions = [
+    {
+      label: t('Back to Email Templates'),
+      icon: <ArrowLeft className="h-4 w-4 mr-2" />,
+      variant: 'outline' as const,
+      onClick: () => router.get(route('email-templates.index'))
+    }
+  ];
 
   return (
     <PageTemplate
       title={template.name}
+      description={t("Customize email content for different languages")}
       url={route('email-templates.show', template.id)}
       breadcrumbs={breadcrumbs}
       actions={pageActions}
