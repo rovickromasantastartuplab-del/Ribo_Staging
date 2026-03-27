@@ -507,7 +507,7 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
                             </div>
                             <div className="p-0">
                                 {invoice.products && invoice.products.length > 0 ? (
-                                    <div className="overflow-hidden">
+                                    <div className="overflow-x-auto">
                                         <table className="min-w-full">
                                             <thead>
                                                 <tr style={{ backgroundColor: template.primary }}>
@@ -617,7 +617,7 @@ export default function PublicInvoice({ invoice, templateId = 'template1', color
                                         {t('Payment History')}
                                     </h3>
                                 </div>
-                                <div className="p-0">
+                                <div className="p-0 overflow-x-auto">
                                     <table className="min-w-full">
                                         <thead>
                                             <tr style={{ backgroundColor: template.primary }}>

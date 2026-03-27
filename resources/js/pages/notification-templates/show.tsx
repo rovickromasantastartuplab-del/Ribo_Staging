@@ -92,7 +92,7 @@ export default function NotificationTemplateShow({ template, languages, variable
         >
             <Head title={`${template.name} - Notification Templates`} />
 
-            <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
                     <Card>
                         <CardHeader>

@@ -106,7 +106,7 @@ export default function EmailTemplateShow({ template, languages, variables }: Pr
     >
       <Head title={`Edit Template - ${template.name}`} />
 
-      <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>

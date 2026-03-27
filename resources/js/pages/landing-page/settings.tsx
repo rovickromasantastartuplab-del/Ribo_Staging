@@ -229,7 +229,7 @@ const breadcrumbs = [
         <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="lg:col-span-3 space-y-6">
             {/* Tab Navigation */}
-            <div className="flex border-b border-gray-200 mb-8">
+            <div className="flex flex-wrap border-b border-gray-200 mb-8">
               {[
                 { key: 'setup', label: t('Setup'), sections: ['general', 'order', 'advanced'] },
                 { key: 'layout', label: t('Layout'), sections: ['header', 'hero', 'footer'] },

@@ -464,7 +464,7 @@ export default function PublicSalesOrder({ salesOrder, templateId = 'template1',
                             </div>
                             <div className="p-0">
                                 {salesOrder.products && salesOrder.products.length > 0 ? (
-                                    <div className="overflow-hidden">
+                                    <div className="overflow-x-auto">
                                         <table className="min-w-full">
                                             <thead>
                                                 <tr style={{ backgroundColor: template.primary }}>

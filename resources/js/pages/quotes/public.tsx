@@ -552,7 +552,7 @@ export default function PublicQuote({ quote, templateId = 'template1', color = '
                             </div>
                             <div className="p-0">
                                 {quote.products && quote.products.length > 0 ? (
-                                    <div className="overflow-hidden">
+                                    <div className="overflow-x-auto">
                                         <table className="min-w-full">
                                             <thead>
                                                 <tr style={{ backgroundColor: template.primary }}>
