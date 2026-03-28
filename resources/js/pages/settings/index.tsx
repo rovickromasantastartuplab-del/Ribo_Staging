@@ -377,8 +377,8 @@ export default function Settings() {
         >
             <div className={`flex flex-col md:flex-row gap-4 md:gap-8 items-start`} dir={position === 'right' ? 'rtl' : 'ltr'}>
                 {/* Sidebar Navigation */}
-                <div className="md:w-64 flex-shrink-0 md:sticky md:top-20">
-                        <ScrollArea className="h-[calc(100vh-5rem)]">
+                <div className="md:w-64 flex-shrink-0 sticky top-4 self-start max-h-screen">
+                        <ScrollArea className="max-h-[calc(100vh-6rem)] overflow-y-auto">
                             <div className={`space-y-1 ${position === 'right' ? 'pl-4' : 'pr-4'}`}>
                                 {/* <div className="pr-4 space-y-1"> */}
                                 {filteredSidebarNavItems

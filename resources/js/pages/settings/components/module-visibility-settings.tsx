@@ -29,15 +29,19 @@ export default function ModuleVisibilitySettings() {
                 onSuccess: (page) => {
                     setToggling(null);
                     const successMessage = (page.props as any).flash?.success;
+                    const errorMessage = (page.props as any).flash?.error;
+                    
                     if (successMessage) {
-                        toast.success(t(successMessage));
+                        toast.success(successMessage);
+                    } else if (errorMessage) {
+                        toast.error(errorMessage);
                     } else {
                         toast.success(t('Module visibility updated'));
                     }
                 },
                 onError: (errors) => {
                     setToggling(null);
-                    const errorMessage = Object.values(errors).join(', ') || t('Failed to update module visibility');
+                    const errorMessage = errors.error || Object.values(errors).join(', ') || t('Failed to update module visibility');
                     toast.error(errorMessage);
                 },
             }
