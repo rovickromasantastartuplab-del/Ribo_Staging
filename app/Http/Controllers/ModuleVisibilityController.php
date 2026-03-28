@@ -56,7 +56,7 @@ class ModuleVisibilityController extends Controller
         }
 
         ModuleVisibilityService::setDisabledModules($disabled);
-
-        return response()->json(['success' => true]);
+ 
+        return redirect()->back()->with('success', 'Module visibility updated successfully.');
     }
 }

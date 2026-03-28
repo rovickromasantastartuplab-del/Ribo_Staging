@@ -187,6 +187,7 @@ export default function Settings() {
         // Hard block for non-superadmin users
         if (!isSuperAdmin) {
             if (item.href === '#currency-settings') return false;
+            if (item.href === '#module-visibility-settings') return false;
             // Removed: if (item.href === '#email-settings') return false;
             // Removed email-notification-settings
             // Removed twilio-notification-settings

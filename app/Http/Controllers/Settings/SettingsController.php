@@ -156,6 +156,16 @@ class SettingsController extends Controller
             'fieldMappings' => $fieldMappings,
             'gmailAccount' => $gmailAccount,
             'googleSettings' => $googleSettings,
+            'moduleVisibility' => $user->isSuperAdmin() ? [
+                'modules' => array_map(function ($key, $label) use ($user) {
+                    $disabled = \App\Services\ModuleVisibilityService::getDisabledModules();
+                    return [
+                        'key' => $key,
+                        'label' => $label,
+                        'enabled' => !in_array($key, $disabled),
+                    ];
+                }, array_keys(\App\Services\ModuleVisibilityService::modules()), \App\Services\ModuleVisibilityService::modules()),
+            ] : null,
             'isDemoMode' => config('app.is_demo', false),
         ]);
     }
