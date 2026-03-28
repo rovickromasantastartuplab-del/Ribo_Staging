@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { Switch } from '@/components/ui/switch';
 import { useTranslation } from 'react-i18next';
+import { toast } from '@/components/custom-toast';
  
 interface Module {
     key: string;
@@ -25,11 +26,19 @@ export default function ModuleVisibilitySettings() {
             { module_key: moduleKey, enabled: newEnabled },
             {
                 preserveScroll: true,
-                onSuccess: () => {
+                onSuccess: (page) => {
                     setToggling(null);
+                    const successMessage = (page.props as any).flash?.success;
+                    if (successMessage) {
+                        toast.success(t(successMessage));
+                    } else {
+                        toast.success(t('Module visibility updated'));
+                    }
                 },
-                onError: () => {
+                onError: (errors) => {
                     setToggling(null);
+                    const errorMessage = Object.values(errors).join(', ') || t('Failed to update module visibility');
+                    toast.error(errorMessage);
                 },
             }
         );

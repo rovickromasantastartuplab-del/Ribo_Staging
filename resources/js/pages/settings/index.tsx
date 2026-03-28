@@ -375,12 +375,9 @@ export default function Settings() {
             url="/settings"
             breadcrumbs={breadcrumbs}
         >
-            <div className={`flex flex-col md:flex-row gap-4 md:gap-8`} dir={position === 'right' ? 'rtl' : 'ltr'}>
-                {/* <div className={`flex flex-col md:flex-row gap-8 ${position === 'right' ? 'md:flex-row-reverse' : ''}`}> */}
-                {/* <div className="flex flex-col md:flex-row gap-8"> */}
+            <div className={`flex flex-col md:flex-row gap-4 md:gap-8 items-start`} dir={position === 'right' ? 'rtl' : 'ltr'}>
                 {/* Sidebar Navigation */}
-                <div className="md:w-64 flex-shrink-0">
-                    <div className="sticky top-20">
+                <div className="md:w-64 flex-shrink-0 md:sticky md:top-20">
                         <ScrollArea className="h-[calc(100vh-5rem)]">
                             <div className={`space-y-1 ${position === 'right' ? 'pl-4' : 'pr-4'}`}>
                                 {/* <div className="pr-4 space-y-1"> */}
@@ -404,7 +401,6 @@ export default function Settings() {
                                     })}
                             </div>
                         </ScrollArea>
-                    </div>
                 </div>
 
                 {/* Main Content */}
