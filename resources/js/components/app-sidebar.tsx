@@ -27,6 +27,7 @@ export function AppSidebar() {
     const userRole = auth.user?.type || auth.user?.role;
     const permissions = auth?.permissions || [];
     const companyFeatures = auth?.company_features || [];
+    const disabledModules: string[] = auth?.disabled_modules || [];
 
     // Get current direction
     const isRtl = document.documentElement.dir === 'rtl';
@@ -167,6 +168,7 @@ export function AppSidebar() {
 
         // 3. Lead Management
         const leadChildren = [];
+        if (!disabledModules.includes('leads')) {
         if (hasPermission(permissions, 'manage-lead-statuses')) {
             leadChildren.push({
                 title: t('Lead Statuses'),
@@ -192,9 +194,11 @@ export function AppSidebar() {
                 children: leadChildren
             });
         }
+        } // end !disabledModules.includes('leads')
 
         // 4. Opportunity Management
         const opportunityChildren = [];
+        if (!disabledModules.includes('opportunities')) {
         if (hasPermission(permissions, 'manage-opportunity-stages')) {
             opportunityChildren.push({
                 title: t('Opportunity Stages'),
@@ -220,9 +224,11 @@ export function AppSidebar() {
                 children: opportunityChildren
             });
         }
+        } // end !disabledModules.includes('opportunities')
 
         // 5. Account Management
         const accountChildren = [];
+        if (!disabledModules.includes('accounts')) {
         if (hasPermission(permissions, 'manage-account-types')) {
             accountChildren.push({
                 title: t('Account Types'),
@@ -248,9 +254,10 @@ export function AppSidebar() {
                 children: accountChildren
             });
         }
+        } // end !disabledModules.includes('accounts')
 
         // 6. Contacts
-        if (hasPermission(permissions, 'manage-contacts')) {
+        if (!disabledModules.includes('contacts') && hasPermission(permissions, 'manage-contacts')) {
             items.push({
                 title: t('Contacts'),
                 href: route('contacts.index'),
@@ -259,7 +266,7 @@ export function AppSidebar() {
         }
 
         // Conversations (Moved below Contacts)
-        if (hasPermission(permissions, 'view-conversations')) {
+        if (!disabledModules.includes('conversations') && hasPermission(permissions, 'view-conversations')) {
             items.push({
                 title: t('Conversations'),
                 href: route('conversations.index'),
@@ -311,7 +318,7 @@ export function AppSidebar() {
         }
 
         // 8. Products
-        if (hasPermission(permissions, 'manage-products')) {
+        if (!disabledModules.includes('products') && hasPermission(permissions, 'manage-products')) {
             items.push({
                 title: t('Products'),
                 href: route('products.index'),
@@ -320,7 +327,7 @@ export function AppSidebar() {
         }
 
         // 9. Quotes
-        if (hasPermission(permissions, 'manage-quotes')) {
+        if (!disabledModules.includes('quotes') && hasPermission(permissions, 'manage-quotes')) {
             items.push({
                 title: t('Quotes'),
                 href: route('quotes.index'),
@@ -329,7 +336,7 @@ export function AppSidebar() {
         }
 
         // 10. Sales Orders
-        if (hasPermission(permissions, 'manage-sales-orders')) {
+        if (!disabledModules.includes('sales_orders') && hasPermission(permissions, 'manage-sales-orders')) {
             items.push({
                 title: t('Sales Orders'),
                 href: route('sales-orders.index'),
@@ -338,7 +345,7 @@ export function AppSidebar() {
         }
 
         // 11. Invoices
-        if (hasPermission(permissions, 'manage-invoices')) {
+        if (!disabledModules.includes('invoices') && hasPermission(permissions, 'manage-invoices')) {
             items.push({
                 title: t('Invoices'),
                 href: route('invoices.index'),
@@ -347,7 +354,7 @@ export function AppSidebar() {
         }
 
         // 12. Delivery Orders
-        if (hasPermission(permissions, 'manage-delivery-orders')) {
+        if (!disabledModules.includes('delivery_orders') && hasPermission(permissions, 'manage-delivery-orders')) {
             items.push({
                 title: t('Delivery Orders'),
                 href: route('delivery-orders.index'),
@@ -356,7 +363,7 @@ export function AppSidebar() {
         }
 
         // 13. Return Orders
-        if (hasPermission(permissions, 'view-return-orders')) {
+        if (!disabledModules.includes('return_orders') && hasPermission(permissions, 'view-return-orders')) {
             items.push({
                 title: t('Return Orders'),
                 href: route('return-orders.index'),
@@ -365,7 +372,7 @@ export function AppSidebar() {
         }
 
         // 14. Receipt Orders
-        if (hasPermission(permissions, 'manage-receipt-orders')) {
+        if (!disabledModules.includes('receipt_orders') && hasPermission(permissions, 'manage-receipt-orders')) {
             items.push({
                 title: t('Receipt Orders'),
                 href: route('receipt-orders.index'),
@@ -374,7 +381,7 @@ export function AppSidebar() {
         }
 
         // 15. Purchase Orders
-        if (hasPermission(permissions, 'manage-purchase-orders')) {
+        if (!disabledModules.includes('purchase_orders') && hasPermission(permissions, 'manage-purchase-orders')) {
             items.push({
                 title: t('Purchase Orders'),
                 href: route('purchase-orders.index'),
@@ -384,6 +391,7 @@ export function AppSidebar() {
 
         // 17. Document Management
         const documentChildren = [];
+        if (!disabledModules.includes('documents')) {
         if (hasPermission(permissions, 'manage-document-folders')) {
             documentChildren.push({
                 title: t('Folders'),
@@ -409,9 +417,11 @@ export function AppSidebar() {
                 children: documentChildren
             });
         }
+        } // end !disabledModules.includes('documents')
 
         // 18. Campaign Management
         const campaignChildren = [];
+        if (!disabledModules.includes('campaigns')) {
         if (hasPermission(permissions, 'manage-campaign-types')) {
             campaignChildren.push({
                 title: t('Campaign Types'),
@@ -437,9 +447,11 @@ export function AppSidebar() {
                 children: campaignChildren
             });
         }
+        } // end !disabledModules.includes('campaigns')
 
         // 19. Project Management
         const projectChildren = [];
+        if (!disabledModules.includes('projects')) {
         if (hasPermission(permissions, 'manage-task-statuses')) {
             projectChildren.push({
                 title: t('Task Statuses'),
@@ -465,9 +477,10 @@ export function AppSidebar() {
                 children: projectChildren
             });
         }
+        } // end !disabledModules.includes('projects')
 
         // 20. Calendar
-        if (hasPermission(permissions, 'manage-meetings') || hasPermission(permissions, 'manage-calls') || hasPermission(permissions, 'manage-project-tasks')) {
+        if (!disabledModules.includes('calendar') && (hasPermission(permissions, 'manage-meetings') || hasPermission(permissions, 'manage-calls') || hasPermission(permissions, 'manage-project-tasks'))) {
             items.push({
                 title: t('Calendar'),
                 href: route('calendar.index'),
@@ -476,7 +489,7 @@ export function AppSidebar() {
         }
 
         // 21. Cases
-        if (hasPermission(permissions, 'manage-cases')) {
+        if (!disabledModules.includes('cases') && hasPermission(permissions, 'manage-cases')) {
             items.push({
                 title: t('Cases'),
                 href: route('cases.index'),
@@ -485,7 +498,7 @@ export function AppSidebar() {
         }
 
         // 22. Meetings
-        if (hasPermission(permissions, 'manage-meetings')) {
+        if (!disabledModules.includes('meetings') && hasPermission(permissions, 'manage-meetings')) {
             items.push({
                 title: t('Meetings'),
                 href: route('meetings.index'),
@@ -494,7 +507,7 @@ export function AppSidebar() {
         }
 
         // 23. Calls
-        if (hasPermission(permissions, 'manage-calls')) {
+        if (!disabledModules.includes('calls') && hasPermission(permissions, 'manage-calls')) {
             items.push({
                 title: t('Calls'),
                 href: route('calls.index'),
@@ -503,7 +516,7 @@ export function AppSidebar() {
         }
 
         // 24. Reports
-        if (hasPermission(permissions, 'manage-reports')) {
+        if (!disabledModules.includes('reports') && hasPermission(permissions, 'manage-reports')) {
             items.push({
                 title: t('Reports'),
                 icon: TrendingUp,
@@ -572,7 +585,7 @@ export function AppSidebar() {
         }
 
         // 27. Referral Program
-        if (hasPermission(permissions, 'manage-referral')) {
+        if (!disabledModules.includes('referral') && hasPermission(permissions, 'manage-referral')) {
             items.push({
                 title: t('Referral Program'),
                 href: route('referral.index'),
@@ -581,7 +594,7 @@ export function AppSidebar() {
         }
 
         // 28. Media Library
-        if (hasPermission(permissions, 'manage-media')) {
+        if (!disabledModules.includes('media_library') && hasPermission(permissions, 'manage-media')) {
             items.push({
                 title: t('Media Library'),
                 href: route('media-library'),
@@ -590,7 +603,7 @@ export function AppSidebar() {
         }
 
         // 29. Notification Templates
-        if (hasPermission(permissions, 'manage-notification-templates')) {
+        if (!disabledModules.includes('notification_templates') && hasPermission(permissions, 'manage-notification-templates')) {
             items.push({
                 title: t('Notification Templates'),
                 href: route('notification-templates.index'),

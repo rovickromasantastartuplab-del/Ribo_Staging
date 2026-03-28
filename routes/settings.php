@@ -76,6 +76,14 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::post('settings/system', [SystemSettingsController::class, 'update'])->name('settings.system.update');
     Route::post('settings/brand', [SystemSettingsController::class, 'updateBrand'])->middleware('plan.feature:branding')->name('settings.brand.update');
 
+    // Module Visibility (Superadmin only)
+    Route::get('settings/module-visibility', [\App\Http\Controllers\ModuleVisibilityController::class, 'index'])
+        ->middleware('App\Http\Middleware\SuperAdminMiddleware')
+        ->name('settings.module-visibility.index');
+    Route::post('settings/module-visibility/toggle', [\App\Http\Controllers\ModuleVisibilityController::class, 'toggle'])
+        ->middleware('App\Http\Middleware\SuperAdminMiddleware')
+        ->name('settings.module-visibility.toggle');
+
     // Company System Settings routes
     Route::post('settings/company/system', [CompanySystemSettingsController::class, 'update'])->name('settings.company.system.update');
     Route::post('settings/company/integrations', [IntegrationsSettingsController::class, 'update'])->name('settings.company.integrations.update');
