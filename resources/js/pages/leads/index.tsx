@@ -1052,7 +1052,10 @@ export default function Leads() {
                                   if (!leadId) return;
                                   (e.currentTarget as any)._touchDragLeadId = null;
                                   const touch = e.changedTouches[0];
+                                  const cardEl = e.currentTarget as HTMLElement;
+                                  cardEl.style.visibility = 'hidden';
                                   const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                                  cardEl.style.visibility = '';
                                   const col = el?.closest('[data-status-id]');
                                   if (!col) return;
                                   const statusId = parseInt(col.getAttribute('data-status-id') || '0');
