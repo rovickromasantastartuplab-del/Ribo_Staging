@@ -486,7 +486,7 @@ export default function Opportunities() {
       key: 'close_date',
       label: t('Close Date'),
       sortable: true,
-      render: (value: string) => window.appSettings?.formatDateTime(value, false) || new Date(value).toLocaleDateString()
+      render: (value: string) => value ? (window.appSettings?.formatDateTime(value, false) || new Date(value).toLocaleDateString()) : '-'
     },
     {
       key: 'opportunity_stage',
@@ -925,8 +925,7 @@ export default function Opportunities() {
                                           {opportunity.close_date
                                             ? (window.appSettings?.formatDateTime(opportunity.close_date, false)
                                               || new Date(opportunity.close_date).toLocaleDateString())
-                                            : (window.appSettings?.formatDateTime(opportunity.created_at, false)
-                                              || new Date(opportunity.created_at).toLocaleDateString())
+                                            : '-'
                                           }
                                         </span>
                                       </div>
@@ -1033,9 +1032,9 @@ export default function Opportunities() {
                     </div>
                     <div className="mb-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('Close Date')}: {opportunity.close_date || opportunity.created_at
-                          ? (window.appSettings?.formatDateTime(opportunity.close_date || opportunity.created_at, false)
-                            || new Date(opportunity.close_date || opportunity.created_at).toLocaleDateString())
+                        {t('Close Date')}: {opportunity.close_date
+                          ? (window.appSettings?.formatDateTime(opportunity.close_date, false)
+                            || new Date(opportunity.close_date).toLocaleDateString())
                           : t('-')}
                       </span>
                     </div>
