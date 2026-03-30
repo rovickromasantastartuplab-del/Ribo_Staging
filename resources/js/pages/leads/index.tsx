@@ -959,6 +959,7 @@ export default function Leads() {
                     return (
                       <div
                         key={status.id}
+                        data-status-id={status.id.toString()}
                         style={{ minWidth: '280px', width: '280px' }}
                         onDrop={(e) => {
                           e.preventDefault();
@@ -1033,6 +1034,31 @@ export default function Leads() {
                                 }}
                                 onDragEnd={(e) => {
                                   e.currentTarget.classList.remove('opacity-50', 'scale-95');
+                                }}
+                                onTouchStart={(e) => {
+                                  if (!hasPermission(permissions, 'edit-leads')) return;
+                                  const touch = e.touches[0];
+                                  (e.currentTarget as any)._touchDragLeadId = lead.id.toString();
+                                  (e.currentTarget as any)._touchStartX = touch.clientX;
+                                  (e.currentTarget as any)._touchStartY = touch.clientY;
+                                }}
+                                onTouchMove={(e) => {
+                                  const leadId = (e.currentTarget as any)._touchDragLeadId;
+                                  if (!leadId) return;
+                                  e.preventDefault();
+                                }}
+                                onTouchEnd={(e) => {
+                                  const leadId = (e.currentTarget as any)._touchDragLeadId;
+                                  if (!leadId) return;
+                                  (e.currentTarget as any)._touchDragLeadId = null;
+                                  const touch = e.changedTouches[0];
+                                  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                                  const col = el?.closest('[data-status-id]');
+                                  if (!col) return;
+                                  const statusId = parseInt(col.getAttribute('data-status-id') || '0');
+                                  if (!statusId) return;
+                                  if (statusId === lead.lead_status_id) return;
+                                  handleMoveTo(lead, statusId);
                                 }}
                                 className={`transition-all duration-200 ${hasPermission(permissions, 'edit-leads') ? 'cursor-move' : 'cursor-default'}`}
                               >
