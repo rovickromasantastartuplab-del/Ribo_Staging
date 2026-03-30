@@ -16,6 +16,7 @@ import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 import { useInitials } from '@/hooks/use-initials';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/utils/currency';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 
 export default function Opportunities() {
@@ -405,6 +406,37 @@ export default function Opportunities() {
     }
   }, [loadKanbanData]);
 
+  const handleDragEnd = (result: any) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    if (!hasPermission(permissions, 'edit-opportunities')) {
+      toast.error(t('Permission denied.'));
+      return;
+    }
+
+    const currentOpportunity = Object.values(kanbanData)
+      .flatMap((column: any) => column.items)
+      .find((opportunity: any) => opportunity.id.toString() === draggableId);
+
+    if (currentOpportunity) {
+      const destStageId = parseInt(destination.droppableId, 10);
+      const currentStageId = currentOpportunity.opportunity_stage_id || currentOpportunity.opportunity_stage?.id;
+
+      if (parseInt(currentStageId) !== destStageId) {
+        handleMoveToStage(currentOpportunity, destStageId);
+      }
+    }
+  };
+
   // Define page actions
   const pageActions = [];
 
@@ -754,67 +786,19 @@ export default function Opportunities() {
                   </div>
                 </div>
               ) : kanbanData ? (
-                <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 280px)' }}>
-                  {opportunityStages.map((stage) => {
-                    const stageOpportunities = Object.values(kanbanData).find((column: any) => column.status?.id === stage.id)?.items || [];
-                    return (
-                      <div
-                        key={stage.id}
-                        style={{ minWidth: '280px', width: '280px' }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.classList.remove('bg-blue-50');
-                          const opportunityId = e.dataTransfer.getData('opportunityId');
-                          if (opportunityId) {
-                            // Check permission before updating
-                            if (!hasPermission(permissions, 'edit-opportunities')) {
-                              toast.error(t('Permission denied.'));
-                              return;
-                            }
-
-                            // Find the opportunity to get current data
-                            const currentOpportunity = Object.values(kanbanData)
-                              .flatMap((column: any) => column.items)
-                              .find((opportunity: any) => opportunity.id.toString() === opportunityId);
-
-                            if (currentOpportunity) {
-                              const currentStageId = currentOpportunity.opportunity_stage_id || currentOpportunity.opportunity_stage?.id;
-
-                              if (parseInt(currentStageId) !== parseInt(stage.id)) {
-                                toast.loading(t('Updating opportunity stage...'));
-                                router.put(route('opportunities.update-status', opportunityId), {
-                                  opportunity_stage_id: stage.id
-                                }, {
-                                  preserveState: true,
-                                  preserveScroll: true,
-                                  onSuccess: (page) => {
-                                    toast.dismiss();
-                                    if (page.props.flash?.success) {
-                                      toast.success(t(page.props.flash.success));
-                                    } else if (page.props.flash.error) {
-                                      toast.error(t(page.props.flash.error));
-                                    }
-                                    router.reload({ only: ['opportunities'] });
-                                  },
-                                  onError: () => {
-                                    toast.dismiss();
-                                    toast.error(t('Failed to update opportunity stage'));
-                                    loadKanbanData();
-                                  }
-                                });
-                              }
-                            }
-                          }
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.classList.add('bg-blue-50');
-                        }}
-                        onDragLeave={(e) => {
-                          e.currentTarget.classList.remove('bg-blue-50');
-                        }}
-                      >
-                        <div className="bg-gray-100 rounded-lg h-full flex flex-col">
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 280px)' }}>
+                    {opportunityStages.map((stage) => {
+                      const stageOpportunities = Object.values(kanbanData).find((column: any) => column.status?.id === stage.id)?.items || [];
+                      return (
+                        <Droppable key={stage.id} droppableId={stage.id.toString()}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              style={{ minWidth: '280px', width: '280px' }}
+                            >
+                              <div className={`bg-gray-100 rounded-lg h-full flex flex-col transition-colors ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}>
                           <div className="p-3 border-b border-gray-200">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
@@ -836,23 +820,21 @@ export default function Opportunities() {
                             )}
                           </div>
                           <div className="p-2 space-y-2 overflow-y-auto flex-1" style={{ maxHeight: 'calc(100vh - 350px)' }}>
-                            {stageOpportunities.map((opportunity) => (
-                              <div
+                            {stageOpportunities.map((opportunity: any, index: number) => (
+                              <Draggable
                                 key={opportunity.id}
-                                draggable={hasPermission(permissions, 'edit-opportunities')}
-                                onDragStart={(e) => {
-                                  if (!hasPermission(permissions, 'edit-opportunities')) {
-                                    e.preventDefault();
-                                    return;
-                                  }
-                                  e.dataTransfer.setData('opportunityId', opportunity.id.toString());
-                                  e.currentTarget.classList.add('opacity-50', 'scale-95');
-                                }}
-                                onDragEnd={(e) => {
-                                  e.currentTarget.classList.remove('opacity-50', 'scale-95');
-                                }}
-                                className={`transition-all duration-200 ${hasPermission(permissions, 'edit-opportunities') ? 'cursor-move' : 'cursor-default'}`}
+                                draggableId={opportunity.id.toString()}
+                                index={index}
+                                isDragDisabled={!hasPermission(permissions, 'edit-opportunities')}
                               >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`transition-all duration-200 ${hasPermission(permissions, 'edit-opportunities') ? 'cursor-move' : 'cursor-default'} ${snapshot.isDragging ? 'opacity-70 scale-105 z-50' : ''}`}
+                                    style={{ ...provided.draggableProps.style }}
+                                  >
                                 <Card className="hover:shadow-md transition-all duration-200 border-l-4 hover:scale-105" style={{ borderLeftColor: stage.color }}>
                                   <div className="p-3">
                                     <div className="space-y-2">
@@ -951,8 +933,11 @@ export default function Opportunities() {
                                     </div>
                                   </div>
                                 </Card>
-                              </div>
+                                  </div>
+                                )}
+                              </Draggable>
                             ))}
+                            {provided.placeholder}
                             {stageOpportunities.length === 0 && (
                               <div className="text-center py-8 text-gray-400">
                                 <Building2 className="h-8 w-8 mx-auto mb-2" />
@@ -960,11 +945,14 @@ export default function Opportunities() {
                               </div>
                             )}
                           </div>
-                        </div>
-                      </div>
+                              </div>
+                            </div>
+                          )}
+                        </Droppable>
                     );
                   })}
-                </div>
+                  </div>
+                </DragDropContext>
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-gray-500 dark:text-gray-400">{t('No data available')}</p>

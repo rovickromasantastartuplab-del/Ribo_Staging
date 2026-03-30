@@ -12,6 +12,7 @@ import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { toast } from '@/components/custom-toast';
 import { hasPermission } from '@/utils/authorization';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 export default function ProjectKanban() {
   const { t } = useTranslation();
@@ -208,6 +209,54 @@ export default function ProjectKanban() {
     });
   };
 
+  const handleDragEnd = (result: any) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    if (!hasPermission(permissions, 'edit-project-tasks')) {
+      toast.error(t('Permission denied.'));
+      return;
+    }
+
+    const currentTask = Object.values(filteredKanbanData)
+      .flatMap((column: any) => column.tasks)
+      .find((task: any) => task.id.toString() === draggableId);
+
+    if (currentTask) {
+      const destStatusId = destination.droppableId;
+      const currentStatusId = currentTask.task_status_id || currentTask.task_status?.id;
+
+      if (parseInt(currentStatusId) !== parseInt(destStatusId)) {
+        toast.loading(t('Updating task status...'));
+        router.put(route('project-tasks.update-status', draggableId), {
+          task_status_id: destStatusId
+        }, {
+          preserveState: true,
+          preserveScroll: true,
+          onSuccess: (page) => {
+            toast.dismiss();
+            if (page.props.flash?.success) {
+              toast.success(t(page.props.flash.success));
+            }
+            router.reload();
+          },
+          onError: () => {
+            toast.dismiss();
+            toast.error(t('Failed to update task status'));
+          }
+        });
+      }
+    }
+  };
+
   const pageActions = [
     {
       label: t('Back to Project'),
@@ -310,61 +359,19 @@ export default function ProjectKanban() {
 
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <div className="bg-gray-50 p-4 rounded-lg overflow-hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 250px)', width: '100%' }}>
-            {statuses.map((status) => {
-              const statusTasks = Object.values(filteredKanbanData).find((column: any) => column.status?.id === status.id)?.tasks || [];
-              return (
-                <div
-                  className="flex-shrink-0 min-w-[280px] w-[280px]"
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.remove('bg-blue-50');
-                    const taskId = e.dataTransfer.getData('taskId');
-                    if (taskId) {
-                      if (!hasPermission(permissions, 'edit-project-tasks')) {
-                        toast.error(t('Permission denied.'));
-                        return;
-                      }
-
-                      const currentTask = Object.values(filteredKanbanData)
-                        .flatMap((column: any) => column.tasks)
-                        .find((task: any) => task.id.toString() === taskId);
-
-                      if (currentTask) {
-                        const currentStatusId = currentTask.task_status_id || currentTask.task_status?.id;
-
-                        if (parseInt(currentStatusId) !== parseInt(status.id)) {
-                          toast.loading('Updating task status...');
-                          router.put(route('project-tasks.update-status', taskId), {
-                            task_status_id: status.id
-                          }, {
-                            preserveState: true,
-                            preserveScroll: true,
-                            onSuccess: (page) => {
-                              toast.dismiss();
-                              if (page.props.flash?.success) {
-                                toast.success(t(page.props.flash.success));
-                              }
-                              router.reload();
-                            },
-                            onError: () => {
-                              toast.dismiss();
-                              toast.error('Failed to update task status');
-                            }
-                          });
-                        }
-                      }
-                    }
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.add('bg-blue-50');
-                  }}
-                  onDragLeave={(e) => {
-                    e.currentTarget.classList.remove('bg-blue-50');
-                  }}
-                >
-                  <div className="bg-gray-100 rounded-lg h-full flex flex-col">
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 250px)', width: '100%' }}>
+              {statuses.map((status: any) => {
+                const statusTasks = Object.values(filteredKanbanData).find((column: any) => column.status?.id === status.id)?.tasks || [];
+                return (
+                  <Droppable key={status.id} droppableId={status.id.toString()}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="flex-shrink-0 min-w-[280px] w-[280px]"
+                      >
+                        <div className={`bg-gray-100 rounded-lg h-full flex flex-col transition-colors ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}>
                     <div className="p-3 border-b border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -386,24 +393,21 @@ export default function ProjectKanban() {
                       )}
                     </div>
                     <div className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll" style={{ maxHeight: 'calc(100vh - 320px)' }}>
-                      {statusTasks.map((task) => (
-                        <div
+                      {statusTasks.map((task: any, index: number) => (
+                        <Draggable
                           key={task.id}
-                          draggable={hasPermission(permissions, 'edit-project-tasks')}
-                          onDragStart={(e) => {
-                            if (!hasPermission(permissions, 'edit-project-tasks')) {
-                              e.preventDefault();
-                              return;
-                            }
-                            e.dataTransfer.setData('taskId', task.id.toString());
-                            e.currentTarget.classList.add('opacity-50', 'scale-95');
-                          }}
-                          onDragEnd={(e) => {
-                            e.currentTarget.classList.remove('opacity-50', 'scale-95');
-                          }}
-                          className={`transition-all duration-200 ${hasPermission(permissions, 'edit-project-tasks') ? 'cursor-move' : 'cursor-default'
-                            }`}
+                          draggableId={task.id.toString()}
+                          index={index}
+                          isDragDisabled={!hasPermission(permissions, 'edit-project-tasks')}
                         >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`transition-all duration-200 ${hasPermission(permissions, 'edit-project-tasks') ? 'cursor-move' : 'cursor-default'} ${snapshot.isDragging ? 'opacity-70 scale-105 z-50' : ''}`}
+                              style={{ ...provided.draggableProps.style }}
+                            >
                           <Card className="bg-white border-l-4 border-t border-r border-b border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 group" style={{ borderLeftColor: status.color }}>
                             <div className="p-3">
                               <div className="flex items-center justify-between mb-2">
@@ -491,8 +495,11 @@ export default function ProjectKanban() {
                               )}
                             </div>
                           </Card>
-                        </div>
+                            </div>
+                          )}
+                        </Draggable>
                       ))}
+                      {provided.placeholder}
                       {statusTasks.length === 0 && (
                         <div className="text-center py-8 text-gray-400">
                           <Building2 className="h-8 w-8 mx-auto mb-2" />
@@ -502,9 +509,12 @@ export default function ProjectKanban() {
                     </div>
                   </div>
                 </div>
+                )}
+              </Droppable>
               );
             })}
-          </div>
+            </div>
+          </DragDropContext>
         </div>
       </div>
 
