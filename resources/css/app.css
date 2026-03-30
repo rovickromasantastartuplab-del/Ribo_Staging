@@ -199,7 +199,7 @@ html[dir='rtl'] [data-sonner-toast][data-styled='true'] [data-close-button],
     }
 
     [data-rbd-drag-handle-draggable-id] {
-        touch-action: none;
+        touch-action: none !important;
     }
 
     /* Custom thin scrollbar */
