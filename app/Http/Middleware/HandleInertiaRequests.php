@@ -283,7 +283,7 @@ class HandleInertiaRequests extends Middleware
                         return [];
                     }
 
-                    return \App\Services\ModuleVisibilityService::getDisabledModules();
+                    return \App\Services\ModuleVisibilityService::getEffectiveDisabledModules($user);
                 },
                 'debug_plan' => function () use ($request) {
                     $user = $request->user();

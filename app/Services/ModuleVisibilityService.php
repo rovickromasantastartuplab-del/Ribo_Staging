@@ -56,6 +56,31 @@ class ModuleVisibilityService
     }
 
     /**
+     * Get the effective disabled modules for a specific user, considering plan overrides.
+     */
+    public static function getEffectiveDisabledModules(?\App\Models\User $user): array
+    {
+        $disabled = self::getDisabledModules();
+
+        if (!$user) {
+            return $disabled;
+        }
+
+        // E-commerce feature overrides visibility for specific modules
+        if ($user->hasFeature('ecommerce')) {
+            $ecommerceModules = [
+                'delivery_orders',
+                'purchase_orders',
+                'receipt_orders',
+                'return_orders',
+            ];
+            $disabled = array_values(array_diff($disabled, $ecommerceModules));
+        }
+
+        return $disabled;
+    }
+
+    /**
      * Persist the disabled modules list globally.
      */
     public static function setDisabledModules(array $disabled): void

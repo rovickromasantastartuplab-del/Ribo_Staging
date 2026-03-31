@@ -324,6 +324,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
         return <Sparkles className="h-4 w-4" />;
       case 'Wedding Suppliers':
         return <Store className="h-4 w-4" />;
+      case 'E-commerce':
+        return <Store className="h-4 w-4" />;
       case 'Analytics':
         return <BarChart2 className="h-4 w-4" />;
       case 'Email Support':
@@ -380,7 +382,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
   const commonFeatures = [
     'AI Integration',
     'Branding',
-    'Wedding Suppliers'
+    'Wedding Suppliers',
+    'E-commerce'
   ];
 
   // Define stat icons

@@ -20,8 +20,8 @@ class ModuleVisibilityController extends Controller
         $visibility = [];
         foreach ($modules as $key => $label) {
             $visibility[$key] = [
-                'key'     => $key,
-                'label'   => $label,
+                'key' => $key,
+                'label' => $label,
                 'enabled' => !in_array($key, $disabled),
             ];
         }
@@ -40,7 +40,7 @@ class ModuleVisibilityController extends Controller
     {
         $validated = $request->validate([
             'module_key' => 'required|string|in:' . implode(',', array_keys(ModuleVisibilityService::modules())),
-            'enabled'    => 'required|boolean',
+            'enabled' => 'required|boolean',
         ]);
 
         $disabled = ModuleVisibilityService::getDisabledModules();
@@ -48,7 +48,8 @@ class ModuleVisibilityController extends Controller
         if ($validated['enabled']) {
             // Remove from disabled list
             $disabled = array_values(array_filter($disabled, fn($k) => $k !== $validated['module_key']));
-        } else {
+        }
+        else {
             // Add to disabled list if not already there
             if (!in_array($validated['module_key'], $disabled)) {
                 $disabled[] = $validated['module_key'];
@@ -56,7 +57,32 @@ class ModuleVisibilityController extends Controller
         }
 
         ModuleVisibilityService::setDisabledModules($disabled);
- 
+
+        return redirect()->back()->with('success', 'Module visibility updated successfully.');
+    }
+
+    /**
+     * Update all module visibility settings at once.
+     *
+     * @param  Request  $request  { modules: array }
+     */
+    public function updateAll(Request $request)
+    {
+        $validated = $request->validate([
+            'modules' => 'required|array',
+            'modules.*.key' => 'required|string|in:' . implode(',', array_keys(ModuleVisibilityService::modules())),
+            'modules.*.enabled' => 'required|boolean',
+        ]);
+
+        $disabled = [];
+        foreach ($validated['modules'] as $module) {
+            if (!$module['enabled']) {
+                $disabled[] = $module['key'];
+            }
+        }
+
+        ModuleVisibilityService::setDisabledModules($disabled);
+
         return redirect()->back()->with('success', 'Module visibility updated successfully.');
     }
 }
