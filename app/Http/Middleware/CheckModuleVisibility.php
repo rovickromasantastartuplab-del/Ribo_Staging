@@ -26,7 +26,7 @@ class CheckModuleVisibility
             return $next($request);
         }
 
-        $disabled = ModuleVisibilityService::getDisabledModules();
+        $disabled = ModuleVisibilityService::getEffectiveDisabledModules($user);
 
         if (in_array($moduleKey, $disabled)) {
             abort(403, 'This module is not available.');

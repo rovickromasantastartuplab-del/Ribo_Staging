@@ -66,6 +66,38 @@ class ModuleVisibilityService
             return $disabled;
         }
 
+        // Resolve the company: if the user is a company, use them directly.
+        // If the user is a staff member, use their creator (the company).
+        $company = $user->type === 'company'
+            ? $user
+            : \App\Models\User::find($user->created_by);
+
+        // Apply per-company module overrides from CompanyFeatureFlag
+        if ($company) {
+            $allModuleKeys = array_keys(self::modules());
+
+            $flags = \App\Models\CompanyFeatureFlag::where('company_id', $company->id)
+                ->whereIn('feature_key', $allModuleKeys)
+                ->get()
+                ->keyBy('feature_key');
+
+            foreach ($allModuleKeys as $key) {
+                if ($flags->has($key)) {
+                    $isEnabled = $flags->get($key)->is_enabled;
+                    if ($isEnabled) {
+                        // Remove from disabled if the override enables it
+                        $disabled = array_values(array_filter($disabled, fn($k) => $k !== $key));
+                    } else {
+                        // Add to disabled if the override disables it
+                        if (!in_array($key, $disabled)) {
+                            $disabled[] = $key;
+                        }
+                    }
+                }
+                // No flag row = keep global default as-is
+            }
+        }
+
         // E-commerce feature overrides visibility for specific modules
         if ($user->hasFeature('ecommerce')) {
             $ecommerceModules = [

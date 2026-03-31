@@ -464,6 +464,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('companies/{company}/toggle-status', [CompanyController::class, 'toggleStatus'])->middleware('permission:toggle-status-companies')->name('companies.toggle-status');
             Route::get('companies/{company}/plans', [CompanyController::class, 'getPlans'])->middleware('permission:manage-plans-companies')->name('companies.plans');
             Route::put('companies/{company}/upgrade-plan', [CompanyController::class, 'upgradePlan'])->middleware('permission:upgrade-plan-companies')->name('companies.upgrade-plan');
+            Route::get('companies/{company}/module-overrides', [CompanyController::class, 'getModuleOverrides'])->name('companies.module-overrides.index');
+            Route::post('companies/{company}/module-overrides', [CompanyController::class, 'saveModuleOverrides'])->name('companies.module-overrides.save');
         });
 
 
