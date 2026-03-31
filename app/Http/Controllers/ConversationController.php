@@ -979,7 +979,7 @@ class ConversationController extends Controller
 
         if ($request->has('stages') && is_array($request->stages)) {
             foreach ($request->stages as $index => $stageData) {
-                ThreadFollowUpStage::create([
+                $stage = ThreadFollowUpStage::create([
                     'email_thread_id' => $thread->id,
                     'stage_number' => $index + 1,
                     'trigger_type' => $stageData['trigger_type'],
@@ -987,6 +987,33 @@ class ConversationController extends Controller
                     'subject' => $stageData['subject'],
                     'body' => $stageData['body'],
                 ]);
+
+                // Auto-kickoff for Stage 1
+                if ($index === 0) {
+                    // Find the latest message in this thread to act as the anchor
+                    // We typically follow up based on our last message to them
+                    $lastMessage = $thread->messages()->whereNotNull('gmail_message_id')->latest('sent_at')->first();
+                    
+                    if ($lastMessage) {
+                        // Determine recipient: if we sent the last message, send to 'to_emails'
+                        // If they sent the last message, send to 'from_email'
+                        $myEmail = $thread->gmailAccount->email;
+                        $recipient = $lastMessage->from_email === $myEmail 
+                            ? ($lastMessage->to_emails[0] ?? null) 
+                            : $lastMessage->from_email;
+
+                        if ($recipient) {
+                            ThreadFollowUpQueue::create([
+                                'thread_follow_up_stage_id' => $stage->id,
+                                'recipient_email' => $recipient,
+                                'gmail_thread_id' => $thread->gmail_thread_id,
+                                'gmail_message_id' => $lastMessage->gmail_message_id,
+                                'status' => 'pending',
+                                'scheduled_at' => ($lastMessage->sent_at ?? now())->addDays($stage->delay_days),
+                            ]);
+                        }
+                    }
+                }
             }
         }
 

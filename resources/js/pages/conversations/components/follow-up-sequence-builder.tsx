@@ -53,6 +53,7 @@ interface Template {
 
 interface Props {
     threadId: number;
+    lastMessageAt?: string | null;
 }
 
 const TRIGGER_OPTIONS = [
@@ -64,7 +65,7 @@ const TRIGGER_OPTIONS = [
 
 const MERGE_TAGS = ['{FirstName}', '{LastName}', '{Company}', '{Email}', '{SenderName}'];
 
-export function FollowUpSequenceBuilder({ threadId }: Props) {
+export function FollowUpSequenceBuilder({ threadId, lastMessageAt }: Props) {
     const { t } = useTranslation();
     const [stages, setStages] = useState<Stage[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -189,6 +190,17 @@ export function FollowUpSequenceBuilder({ threadId }: Props) {
             default:
                 return <Badge variant="outline" className="text-[10px] px-2 py-0.5">{status}</Badge>;
         }
+    };
+
+    const getEstimatedDateLabel = (index: number) => {
+        const anchor = lastMessageAt ? new Date(lastMessageAt) : new Date();
+        let totalDelay = 0;
+        for (let i = 0; i <= index; i++) {
+            totalDelay += (stages[i]?.delay_days || 0);
+        }
+        
+        const estDate = new Date(anchor.getTime() + totalDelay * 24 * 60 * 60 * 1000);
+        return estDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     if (loading) {
@@ -358,7 +370,12 @@ export function FollowUpSequenceBuilder({ threadId }: Props) {
 
                                                         {/* Delay */}
                                                         <div className="space-y-1.5">
-                                                            <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">{t('Delay (Days)')}</label>
+                                                            <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">
+                                                                {t('Delay (Days)')}
+                                                                <span className="ml-2 text-primary lowercase font-normal italic">
+                                                                    {t('Est:')} {getEstimatedDateLabel(index)}
+                                                                </span>
+                                                            </label>
                                                             <div className="flex items-center">
                                                                 <Input
                                                                     type="number"

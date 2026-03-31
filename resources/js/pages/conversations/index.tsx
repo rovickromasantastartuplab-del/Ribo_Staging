@@ -2219,7 +2219,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         </DialogTitle>
                     </DialogHeader>
                     <div className="bg-background max-h-[85vh] overflow-hidden">
-                        <FollowUpSequenceBuilder threadId={selectedThread?.id} />
+                        <FollowUpSequenceBuilder 
+                            threadId={selectedThread?.id} 
+                            lastMessageAt={selectedThread?.last_message_at}
+                        />
                     </div>
                 </DialogContent>
             </Dialog>
