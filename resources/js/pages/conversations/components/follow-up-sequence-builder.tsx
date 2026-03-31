@@ -14,6 +14,8 @@ import {
     Check,
     XCircle,
     ChevronDown,
+    CheckCircle,
+    Calendar,
 } from 'lucide-react';
 import {
     DropdownMenu,
