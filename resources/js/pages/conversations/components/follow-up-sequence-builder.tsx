@@ -41,24 +41,6 @@ interface QueueItem {
     cancelled_reason: string | null;
 }
 
-interface Stage {
-    id?: number;
-    stage_number: number;
-    trigger_type: string;
-    delay_days: number;
-    subject: string;
-    body: string;
-    queue_items?: QueueItem[];
-}
-
-interface QueueItem {
-    id: number;
-    status: 'pending' | 'sent' | 'cancelled' | 'skipped';
-    scheduled_at: string;
-    sent_at: string | null;
-    cancelled_reason: string | null;
-}
-
 interface Template {
     id: string;
     name: string;
@@ -182,176 +164,242 @@ export function FollowUpSequenceBuilder({ threadId }: Props) {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'sent':
-                return <Badge className="bg-green-100 text-green-700 text-[9px] px-1.5 py-0"><Check className="h-2.5 w-2.5 mr-0.5" />{t('Sent')}</Badge>;
+                return <Badge className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5"><Check className="h-3 w-3 mr-1" />{t('Sent')}</Badge>;
             case 'pending':
-                return <Badge className="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0"><Clock className="h-2.5 w-2.5 mr-0.5" />{t('Pending')}</Badge>;
+                return <Badge className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5"><Clock className="h-3 w-3 mr-1" />{t('Pending')}</Badge>;
             case 'cancelled':
-                return <Badge className="bg-gray-100 text-gray-600 text-[9px] px-1.5 py-0"><XCircle className="h-2.5 w-2.5 mr-0.5" />{t('Cancelled')}</Badge>;
+                return <Badge className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5"><XCircle className="h-3 w-3 mr-1" />{t('Cancelled')}</Badge>;
             default:
-                return <Badge variant="outline" className="text-[9px] px-1.5 py-0">{status}</Badge>;
+                return <Badge variant="outline" className="text-[10px] px-2 py-0.5">{status}</Badge>;
         }
     };
 
     if (loading) {
         return (
-            <div className="p-3 text-center text-muted-foreground text-xs">
-                <RefreshCw className="h-3.5 w-3.5 animate-spin mx-auto mb-1" />
-                {t('Loading sequence...')}
+            <div className="p-8 text-center text-muted-foreground text-sm">
+                <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />
+                {t('Loading follow-up sequence...')}
             </div>
         );
     }
 
     return (
-        <div className="border-t">
-            <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Mail className="h-3 w-3" />
-                    {t('Auto Follow-ups')}
-                </span>
+        <div className="flex flex-col h-full bg-background">
+            <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-b">
+                <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+                        {t('Sequence Configuration')}
+                    </span>
+                </div>
                 {!isEditing ? (
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => { if (stages.length === 0) handleAddStage(); else setIsEditing(true); }}>
-                        {stages.length === 0 ? t('+ Add') : t('Edit')}
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 px-3 text-xs font-semibold shadow-sm" 
+                        onClick={() => { if (stages.length === 0) handleAddStage(); else setIsEditing(true); }}
+                    >
+                        {stages.length === 0 ? t('Start Sequence') : t('Edit Sequence')}
                     </Button>
                 ) : (
-                    <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => { setIsEditing(false); fetchStages(); }}>
+                    <div className="flex gap-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 px-3 text-xs" 
+                            onClick={() => { setIsEditing(false); fetchStages(); }}
+                        >
                             {t('Cancel')}
                         </Button>
-                        <Button size="sm" className="h-6 px-2 text-[10px]" onClick={handleSave} disabled={saving}>
-                            {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : t('Save')}
+                        <Button 
+                            size="sm" 
+                            className="h-8 px-4 text-xs font-bold shadow-md" 
+                            onClick={handleSave} 
+                            disabled={saving}
+                        >
+                            {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : t('Save Changes')}
                         </Button>
                     </div>
                 )}
             </div>
 
-            {stages.length === 0 && !isEditing ? (
-                <div className="px-3 py-4 text-center text-muted-foreground text-[10px]">
-                    {t('No automated follow-ups configured.')}
-                </div>
-            ) : (
-                <ScrollArea className="max-h-60">
-                    <div className="p-2 space-y-2">
-                        {stages.map((stage, index) => (
-                            <div key={index} className="border rounded-md p-2 bg-background space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-muted-foreground">
-                                        {t('Stage')} {index + 1}
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        {/* Queue status badges (read-only view) */}
-                                        {stage.queue_items?.map((qi) => (
-                                            <span key={qi.id}>{getStatusBadge(qi.status)}</span>
-                                        ))}
-                                        {isEditing && (
-                                            <div className="flex items-center gap-1">
-                                                {templates.length > 0 && (
+            <ScrollArea className="flex-1 max-h-[65vh]">
+                <div className="p-4 space-y-4">
+                    {stages.length === 0 && !isEditing ? (
+                        <div className="py-12 text-center">
+                            <div className="bg-primary/5 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Clock className="h-6 w-6 text-primary/40" />
+                            </div>
+                            <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
+                                {t('No automated follow-ups configured for this thread yet.')}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {stages.map((stage, index) => (
+                                <div key={index} className="relative border rounded-xl p-4 bg-muted/5 hover:bg-muted/10 transition-colors space-y-3 group">
+                                    <div className="flex items-center justify-between border-b pb-3 mb-1">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold">
+                                                {index + 1}
+                                            </div>
+                                            <span className="text-xs font-bold text-foreground">
+                                                {t('Stage')} {index + 1}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {stage.queue_items?.map((qi) => (
+                                                <div key={qi.id}>{getStatusBadge(qi.status)}</div>
+                                            ))}
+                                            {isEditing && (
+                                                <div className="flex items-center gap-2">
+                                                    {templates.length > 0 && (
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-primary hover:text-primary/80 bg-primary/5">
+                                                                    {t('Load Template')}
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-56">
+                                                                {templates.map(tmpl => (
+                                                                    <DropdownMenuItem key={tmpl.id} onClick={() => handleApplyTemplate(index, tmpl)} className="text-xs py-2">
+                                                                        {tmpl.name}
+                                                                    </DropdownMenuItem>
+                                                                ))}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    )}
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-7 w-7 text-destructive/40 hover:text-destructive hover:bg-destructive/5 transition-colors" 
+                                                        onClick={() => handleRemoveStage(index)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {isEditing ? (
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {/* Trigger */}
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">{t('Send Trigger')}</label>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[9px] font-bold text-primary hover:text-primary/80">
-                                                                {t('Template')}
+                                                            <Button variant="outline" size="sm" className="w-full h-9 text-xs justify-between bg-background px-3 font-medium">
+                                                                {TRIGGER_OPTIONS.find(o => o.value === stage.trigger_type)?.label || stage.trigger_type}
+                                                                <ChevronDown className="h-4 w-4 opacity-50" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-48">
-                                                            {templates.map(tmpl => (
-                                                                <DropdownMenuItem key={tmpl.id} onClick={() => handleApplyTemplate(index, tmpl)} className="text-xs">
-                                                                    {tmpl.name}
+                                                        <DropdownMenuContent className="w-[200px]">
+                                                            {TRIGGER_OPTIONS.map(opt => (
+                                                                <DropdownMenuItem key={opt.value} onClick={() => handleUpdateStage(index, 'trigger_type', opt.value)} className="text-xs py-2">
+                                                                    {opt.label}
                                                                 </DropdownMenuItem>
                                                             ))}
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
-                                                )}
-                                                <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive/60 hover:text-destructive" onClick={() => handleRemoveStage(index)}>
-                                                    <Trash2 className="h-3 w-3" />
-                                                </Button>
+                                                </div>
+
+                                                {/* Delay */}
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">{t('Delay (Days)')}</label>
+                                                    <div className="flex items-center">
+                                                        <Input
+                                                            type="number"
+                                                            min={1}
+                                                            max={90}
+                                                            value={stage.delay_days}
+                                                            onChange={(e) => handleUpdateStage(index, 'delay_days', parseInt(e.target.value) || 1)}
+                                                            className="h-9 w-full text-xs text-center font-medium bg-background"
+                                                        />
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
+
+                                            {/* Subject */}
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">{t('Email Subject')}</label>
+                                                <Input
+                                                    value={stage.subject}
+                                                    onChange={(e) => handleUpdateStage(index, 'subject', e.target.value)}
+                                                    placeholder={t('Re: {Subject}')}
+                                                    className="h-9 text-xs font-medium bg-background px-3"
+                                                />
+                                            </div>
+
+                                            {/* Body */}
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center justify-between ml-1">
+                                                    <label className="text-[10px] font-bold text-muted-foreground uppercase">{t('Message Content')}</label>
+                                                    <span className="text-[9px] text-muted-foreground opacity-60 italic">{t('HTML Supported')}</span>
+                                                </div>
+                                                <textarea
+                                                    value={stage.body}
+                                                    onChange={(e) => handleUpdateStage(index, 'body', e.target.value)}
+                                                    placeholder={t('Type your follow-up message here...')}
+                                                    className="w-full min-h-[120px] text-sm border rounded-lg p-3 resize-none bg-background focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                                                />
+                                            </div>
+
+                                            {/* Merge Tag Chips */}
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">{t('Personalization Tags')}</label>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {MERGE_TAGS.map(tag => (
+                                                        <button
+                                                            key={tag}
+                                                            type="button"
+                                                            onClick={() => insertMergeTag(index, tag)}
+                                                            className="text-[10px] px-2.5 py-1 rounded-md bg-primary/5 text-primary border border-primary/10 hover:bg-primary/10 transition-colors font-medium shadow-sm"
+                                                        >
+                                                            {tag}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-start">
+                                            <div className="space-y-1.5">
+                                                <div className="text-xs font-bold truncate pr-4">{stage.subject}</div>
+                                                <div className="text-[11px] text-muted-foreground line-clamp-2 italic opacity-80" dangerouslySetInnerHTML={{ __html: stage.body.substring(0, 150) }} />
+                                            </div>
+                                            <div className="flex sm:flex-col items-center sm:items-end gap-2 text-[10px] text-muted-foreground font-semibold bg-muted/30 px-2 py-1 rounded-md">
+                                                <div className="flex items-center gap-1">
+                                                    <CheckCircle className="h-3 w-3 text-primary" />
+                                                    {TRIGGER_OPTIONS.find(o => o.value === stage.trigger_type)?.label}
+                                                </div>
+                                                <div className="hidden sm:block w-full h-[1px] bg-muted-foreground/10" />
+                                                <div className="flex items-center gap-1">
+                                                    <Calendar className="h-3 w-3" />
+                                                    {stage.delay_days} {t('days delay')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                            ))}
 
-                                {isEditing ? (
-                                    <>
-                                        {/* Trigger */}
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" size="sm" className="w-full h-7 text-[10px] justify-between">
-                                                    {TRIGGER_OPTIONS.find(o => o.value === stage.trigger_type)?.label || stage.trigger_type}
-                                                    <ChevronDown className="h-3 w-3 ml-1" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent className="w-48">
-                                                {TRIGGER_OPTIONS.map(opt => (
-                                                    <DropdownMenuItem key={opt.value} onClick={() => handleUpdateStage(index, 'trigger_type', opt.value)} className="text-xs">
-                                                        {opt.label}
-                                                    </DropdownMenuItem>
-                                                ))}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-
-                                        {/* Delay */}
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-[10px] text-muted-foreground shrink-0">{t('Wait')}</span>
-                                            <Input
-                                                type="number"
-                                                min={1}
-                                                max={90}
-                                                value={stage.delay_days}
-                                                onChange={(e) => handleUpdateStage(index, 'delay_days', parseInt(e.target.value) || 1)}
-                                                className="h-6 w-14 text-[10px] text-center"
-                                            />
-                                            <span className="text-[10px] text-muted-foreground">{t('days')}</span>
-                                        </div>
-
-                                        {/* Subject */}
-                                        <Input
-                                            value={stage.subject}
-                                            onChange={(e) => handleUpdateStage(index, 'subject', e.target.value)}
-                                            placeholder={t('Subject')}
-                                            className="h-6 text-[10px]"
-                                        />
-
-                                        {/* Body */}
-                                        <textarea
-                                            value={stage.body}
-                                            onChange={(e) => handleUpdateStage(index, 'body', e.target.value)}
-                                            placeholder={t('Email body (HTML supported)')}
-                                            className="w-full h-16 text-[10px] border rounded-md p-1.5 resize-none bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                                        />
-
-                                        {/* Merge Tag Chips */}
-                                        <div className="flex flex-wrap gap-1">
-                                            {MERGE_TAGS.map(tag => (
-                                                <button
-                                                    key={tag}
-                                                    type="button"
-                                                    onClick={() => insertMergeTag(index, tag)}
-                                                    className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                                >
-                                                    {tag}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="space-y-0.5">
-                                        <div className="text-[10px] text-muted-foreground">
-                                            <span className="font-medium">{TRIGGER_OPTIONS.find(o => o.value === stage.trigger_type)?.label}</span>
-                                            {' · '}{stage.delay_days}d delay
-                                        </div>
-                                        <div className="text-[10px] truncate">{stage.subject}</div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
-                        {isEditing && (
-                            <Button variant="outline" size="sm" className="w-full h-7 text-[10px] gap-1" onClick={handleAddStage}>
-                                <Plus className="h-3 w-3" />
-                                {t('Add Stage')}
-                            </Button>
-                        )}
-                    </div>
-                </ScrollArea>
-            )}
+                            {isEditing && (
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="w-full h-10 text-xs gap-2 border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-background shadow-sm" 
+                                    onClick={handleAddStage}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    {t('Add Next Sequential Stage')}
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </ScrollArea>
         </div>
     );
 }
