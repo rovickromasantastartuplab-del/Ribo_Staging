@@ -10,6 +10,8 @@ use App\Models\ThreadFollowUpStage;
 use App\Models\EmailOpenLog;
 use App\Models\EmailClickLog;
 use App\Notifications\ConversationFollowUp;
+use App\Notifications\AutomatedFollowUpSent;
+use Illuminate\Support\Facades\Notification;
 use App\Services\GmailService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -186,6 +188,32 @@ class ProcessFollowUps extends Command
                 if ($newMessageId) {
                     $item->update(['status' => 'sent', 'sent_at' => now()]);
                     $this->info("Queue #{$item->id}: sent (stage {$stage->stage_number}).");
+
+                    // Notify assigned staff and company owner
+                    try {
+                        $recipients = collect();
+                        
+                        // Add all assigned users
+                        $assignedUsers = $thread->assignments()->get();
+                        $recipients = $recipients->merge($assignedUsers);
+
+                        // Add the creator (Company Owner)
+                        $creator = User::find($thread->created_by);
+                        if ($creator) {
+                            $recipients->push($creator);
+                        }
+
+                        // Remove duplicates and notify
+                        $recipients = $recipients->unique('id');
+                        
+                        if ($recipients->isNotEmpty()) {
+                            Notification::send($recipients, new AutomatedFollowUpSent($thread, $item));
+                        }
+                    } catch (\Exception $ne) {
+                        Log::error("Failed to send internal notification for automated follow-up queue #{$item->id}", [
+                            'error' => $ne->getMessage()
+                        ]);
+                    }
 
                     // Chain to next stage if one exists
                     $this->scheduleNextStage($stage, $item, $newMessageId);
