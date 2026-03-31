@@ -967,7 +967,7 @@ class ConversationController extends Controller
         }
 
         $request->validate([
-            'stages' => 'required|array|min:1',
+            'stages' => 'array',
             'stages.*.trigger_type' => 'required|in:no_reply,no_open,no_click,drip',
             'stages.*.delay_days' => 'required|integer|min:1|max:90',
             'stages.*.subject' => 'required|string|max:255',
@@ -977,15 +977,17 @@ class ConversationController extends Controller
         // Replace all existing stages for this thread
         $thread->followUpStages()->delete();
 
-        foreach ($request->stages as $index => $stageData) {
-            ThreadFollowUpStage::create([
-                'email_thread_id' => $thread->id,
-                'stage_number' => $index + 1,
-                'trigger_type' => $stageData['trigger_type'],
-                'delay_days' => $stageData['delay_days'],
-                'subject' => $stageData['subject'],
-                'body' => $stageData['body'],
-            ]);
+        if ($request->has('stages') && is_array($request->stages)) {
+            foreach ($request->stages as $index => $stageData) {
+                ThreadFollowUpStage::create([
+                    'email_thread_id' => $thread->id,
+                    'stage_number' => $index + 1,
+                    'trigger_type' => $stageData['trigger_type'],
+                    'delay_days' => $stageData['delay_days'],
+                    'subject' => $stageData['subject'],
+                    'body' => $stageData['body'],
+                ]);
+            }
         }
 
         return response()->json([
