@@ -96,6 +96,12 @@ class NotificationTemplateController extends Controller
                 '{attendee_count}' => 'Attendee Count',
                 '{company_name}' => 'Company Name'
             ];
+        } elseif ($template->name === 'Automated Follow-up Sent') {
+            $variables = [
+                '{stage}' => 'Stage Number',
+                '{recipient}' => 'Recipient Email',
+                '{subject}' => 'Thread Subject'
+            ];
         }
 
         return Inertia::render('notification-templates/show', [
