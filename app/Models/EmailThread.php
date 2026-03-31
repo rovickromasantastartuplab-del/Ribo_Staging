@@ -97,4 +97,12 @@ class EmailThread extends BaseModel
             ->withPivot('matched_via')
             ->withTimestamps();
     }
+
+    /**
+     * Automated follow-up stages configured for this thread.
+     */
+    public function followUpStages(): HasMany
+    {
+        return $this->hasMany(ThreadFollowUpStage::class)->orderBy('stage_number');
+    }
 }

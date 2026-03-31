@@ -1197,4 +1197,101 @@ class GmailService
             ]);
         }
     }
+
+    /**
+     * Check if a Gmail thread has received a reply (more than 1 message).
+     * Fails open: returns false on API error so we never cancel a follow-up due to connectivity.
+     */
+    public function hasReply(string $gmailThreadId): bool
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+
+            $thread = $this->gmail->users_threads->get('me', $gmailThreadId, [
+                'format' => 'minimal',
+            ]);
+
+            $messages = $thread->getMessages() ?? [];
+
+            return count($messages) > 1;
+        } catch (\Exception $e) {
+            Log::warning('hasReply check failed, failing open (no cancel)', [
+                'gmail_thread_id' => $gmailThreadId,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send an automated follow-up reply in an existing Gmail thread.
+     * Constructs proper In-Reply-To and References headers for correct threading.
+     *
+     * @return string|null  The new Gmail message ID on success, null on failure.
+     */
+    public function sendFollowUpReply(\App\Models\ThreadFollowUpQueue $item, string $body): ?string
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+
+            // Fetch the original message to get threading headers
+            $originalMessage = $this->gmail->users_messages->get('me', $item->gmail_message_id, [
+                'format' => 'metadata',
+                'metadataHeaders' => ['Subject', 'Message-ID', 'References'],
+            ]);
+
+            $subject = $this->extractHeader($originalMessage, 'Subject') ?? '';
+            $messageId = $this->extractHeader($originalMessage, 'Message-ID');
+            $references = $this->extractHeader($originalMessage, 'References');
+
+            // Ensure subject starts with "Re:" for proper threading
+            if (!preg_match('/^Re:\s/i', $subject)) {
+                $subject = 'Re: ' . $subject;
+            }
+
+            // Build References chain: existing references + the message we're replying to
+            $referencesChain = trim(($references ? $references . ' ' : '') . ($messageId ?? ''));
+
+            // Build the raw RFC 2822 message
+            $rawMessage = "From: {$this->account->gmail_address}\r\n";
+            $rawMessage .= "To: {$item->recipient_email}\r\n";
+            $rawMessage .= "Subject: {$subject}\r\n";
+            $rawMessage .= "Content-Type: text/html; charset=utf-8\r\n";
+            $rawMessage .= "MIME-Version: 1.0\r\n";
+
+            if ($messageId) {
+                $rawMessage .= "In-Reply-To: {$messageId}\r\n";
+            }
+            if ($referencesChain) {
+                $rawMessage .= "References: {$referencesChain}\r\n";
+            }
+
+            $rawMessage .= "\r\n{$body}";
+
+            // Encode and send
+            $gmailMessage = new \Google\Service\Gmail\Message();
+            $gmailMessage->setRaw(strtr(base64_encode($rawMessage), '+/', '-_'));
+            $gmailMessage->setThreadId($item->gmail_thread_id);
+
+            $sentMessage = $this->gmail->users_messages->send('me', $gmailMessage);
+
+            // Record locally
+            $this->recordSentMessage($sentMessage, $item->recipient_email, $subject, $body);
+
+            Log::info('Follow-up reply sent', [
+                'gmail_thread_id' => $item->gmail_thread_id,
+                'recipient' => $item->recipient_email,
+                'new_message_id' => $sentMessage->getId(),
+            ]);
+
+            return $sentMessage->getId();
+        } catch (\Exception $e) {
+            Log::error('Failed to send follow-up reply', [
+                'queue_id' => $item->id,
+                'gmail_thread_id' => $item->gmail_thread_id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
 }

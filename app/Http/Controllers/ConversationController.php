@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\GmailAccount;
 use App\Models\EmailThread;
 use App\Models\EmailMessage;
+use App\Models\ThreadFollowUpStage;
+use App\Models\ThreadFollowUpQueue;
 use App\Services\GmailService;
 use App\Models\LeadStatus;
 use App\Models\LeadSource;
@@ -953,5 +955,90 @@ class ConversationController extends Controller
         }
 
         return $unreadCountQuery->count();
+    }
+
+    /**
+     * Save follow-up stages for a thread.
+     */
+    public function storeFollowUpStages(Request $request, EmailThread $thread)
+    {
+        if ($thread->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'stages' => 'required|array|min:1',
+            'stages.*.trigger_type' => 'required|in:no_reply,no_open,no_click,drip',
+            'stages.*.delay_days' => 'required|integer|min:1|max:90',
+            'stages.*.subject' => 'required|string|max:255',
+            'stages.*.body' => 'required|string',
+        ]);
+
+        // Replace all existing stages for this thread
+        $thread->followUpStages()->delete();
+
+        foreach ($request->stages as $index => $stageData) {
+            ThreadFollowUpStage::create([
+                'email_thread_id' => $thread->id,
+                'stage_number' => $index + 1,
+                'trigger_type' => $stageData['trigger_type'],
+                'delay_days' => $stageData['delay_days'],
+                'subject' => $stageData['subject'],
+                'body' => $stageData['body'],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Follow-up stages saved.',
+            'stages' => $thread->followUpStages()->get(),
+        ]);
+    }
+
+    /**
+     * Get follow-up stages and queue status for a thread.
+     */
+    public function getFollowUpStages(EmailThread $thread)
+    {
+        if ($thread->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $stages = $thread->followUpStages()->with(['queueItems' => function ($q) {
+            $q->orderBy('scheduled_at');
+        }])->get();
+
+        return response()->json([
+            'stages' => $stages,
+        ]);
+    }
+
+    /**
+     * Get default follow-up templates for the frontend.
+     */
+    public function getFollowUpTemplates()
+    {
+        return response()->json([
+            'templates' => [
+                [
+                    'id' => 'nudge',
+                    'name' => 'Gentle Nudge',
+                    'subject' => 'Re: {Subject}',
+                    'body' => view('emails.followups.nudge')->render(),
+                ],
+                [
+                    'id' => 'value_add',
+                    'name' => 'Value Add',
+                    'subject' => 'Quick resource for {Company}',
+                    'body' => view('emails.followups.value_add')->render(),
+                ],
+                [
+                    'id' => 'breakup',
+                    'name' => 'Break-up',
+                    'subject' => 'Closing files',
+                    'body' => view('emails.followups.breakup')->render(),
+                ],
+            ]
+        ]);
     }
 }

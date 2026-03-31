@@ -159,6 +159,9 @@ Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhoo
 Route::match(['GET', 'POST'], 'api/webhooks/gmail', [\App\Http\Controllers\GmailWebhookController::class, 'handle'])->name('webhooks.gmail')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 
+// Email open tracking pixel (public — loaded by recipient's email client)
+Route::get('t/{messageId}', [\App\Http\Controllers\TrackingController::class, 'pixel'])->name('tracking.pixel')->withoutMiddleware($webhookExcludedMiddleware);
+
 // Health check endpoint for external plugins to verify connection
 Route::get('api/health', function (\Illuminate\Http\Request $request) {
     if ($apiKey = $request->header('X-WP-API-Key')) {
@@ -633,6 +636,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('api/conversations/threads/{thread}/link-to-lead', [ConversationController::class, 'linkToLead'])
                 ->middleware('permission:manage-conversations')
                 ->name('api.conversations.link_to_lead');
+            Route::get('api/conversations/threads/{thread}/follow-up-stages', [ConversationController::class, 'getFollowUpStages'])
+                ->name('api.conversations.follow_up_stages.index');
+            Route::post('api/conversations/threads/{thread}/follow-up-stages', [ConversationController::class, 'storeFollowUpStages'])
+                ->name('api.conversations.follow_up_stages.store');
+            Route::get('api/conversations/follow-up-templates', [ConversationController::class, 'getFollowUpTemplates'])
+                ->name('api.conversations.follow_up_templates');
         });
 
         Route::middleware('permission:manage-lead-statuses')->group(function () {

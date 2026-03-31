@@ -48,6 +48,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ConversationsCalendar, ConversationsCalendarHandle } from './components/conversations-calendar';
+import { FollowUpSequenceBuilder } from './components/follow-up-sequence-builder';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/custom-toast';
@@ -2038,6 +2039,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Auto Follow-up Sequence Builder */}
+                                        <FollowUpSequenceBuilder threadId={selectedThread.id} />
                                     </div>
                                 </div>
                             </ScrollArea>
