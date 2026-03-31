@@ -251,6 +251,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
 
     const [showCompose, setShowCompose] = useState(false);
+    const [showFollowUpModal, setShowFollowUpModal] = useState(false);
     const [composeTo, setComposeTo] = useState('');
     const [composeCc, setComposeCc] = useState('');
     const [composeBcc, setComposeBcc] = useState('');
@@ -1429,6 +1430,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
 
+                                                {/* Follow-up Trigger */}
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="icon" 
+                                                    className="h-8 w-8 text-primary border-primary/20 hover:bg-primary/5"
+                                                    onClick={() => setShowFollowUpModal(true)}
+                                                    title={t('Auto Follow-ups')}
+                                                >
+                                                    <Clock className="h-4 w-4" />
+                                                </Button>
+
                                                 {/* Assignment Picker */}
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -2039,9 +2051,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Auto Follow-up Sequence Builder */}
-                                        <FollowUpSequenceBuilder threadId={selectedThread.id} />
                                     </div>
                                 </div>
                             </ScrollArea>
@@ -2197,6 +2206,21 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             </Button>
                         </div>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Follow-up Sequence Dialog */}
+            <Dialog open={showFollowUpModal} onOpenChange={setShowFollowUpModal}>
+                <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none shadow-2xl rounded-xl">
+                    <DialogHeader className="px-6 py-4 bg-primary/5 border-b">
+                        <DialogTitle className="text-lg font-semibold flex items-center text-primary">
+                            <Clock className="w-5 h-5 mr-2" />
+                            {t('Auto Follow-up Sequence')}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="bg-background max-h-[80vh] overflow-hidden">
+                        <FollowUpSequenceBuilder threadId={selectedThread?.id} />
+                    </div>
                 </DialogContent>
             </Dialog>
 
