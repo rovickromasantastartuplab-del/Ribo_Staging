@@ -39,7 +39,14 @@ class AutomatedFollowUpSent extends Notification implements ShouldQueue
         $channels = ['database'];
 
         // Check if the company owner has enabled email for this template (Staff inherit owner settings)
-        if ($this->template && isNotificationTemplateEnabled($this->template->name, $notifiable->creatorId())) {
+        // FALLBACK: If the template is not found in the database (e.g. seeder not run yet), 
+        // we default to sending the email to ensure critical follow-up alerts are NOT missed.
+        $isEnabled = true; 
+        if ($this->template) {
+            $isEnabled = isNotificationTemplateEnabled($this->template->name, $notifiable->creatorId());
+        }
+
+        if ($isEnabled) {
             $channels[] = 'mail';
         }
 
