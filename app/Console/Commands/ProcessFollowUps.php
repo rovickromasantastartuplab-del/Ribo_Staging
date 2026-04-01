@@ -89,7 +89,7 @@ class ProcessFollowUps extends Command
                                     'Conversation Follow Up',
                                     $variables,
                                     $user->email,
-                                    $business,
+                                    null,
                                     $user->name
                                 );
                                 $this->info('Follow-up email sent to: ' . $user->email);
