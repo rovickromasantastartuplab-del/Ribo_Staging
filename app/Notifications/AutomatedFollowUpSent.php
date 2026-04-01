@@ -11,7 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AutomatedFollowUpSent extends Notification implements ShouldQueue
+class AutomatedFollowUpSent extends Notification
 {
     use Queueable;
 
@@ -38,17 +38,35 @@ class AutomatedFollowUpSent extends Notification implements ShouldQueue
     {
         $channels = ['database'];
 
+        \Illuminate\Support\Facades\Log::info("Checking notification channels for user", [
+            'user_id' => $notifiable->id,
+            'email' => $notifiable->email,
+            'template_found' => !is_null($this->template)
+        ]);
+
         // Check if the company owner has enabled email for this template (Staff inherit owner settings)
         // FALLBACK: If the template is not found in the database (e.g. seeder not run yet), 
         // we default to sending the email to ensure critical follow-up alerts are NOT missed.
         $isEnabled = true; 
         if ($this->template) {
             $isEnabled = isNotificationTemplateEnabled($this->template->name, $notifiable->creatorId());
+            \Illuminate\Support\Facades\Log::info("Preference check for template", [
+                'template_name' => $this->template->name,
+                'owner_id' => $notifiable->creatorId(),
+                'is_enabled' => $isEnabled
+            ]);
+        } else {
+            \Illuminate\Support\Facades\Log::info("No template record found in DB, defaulting to ENABLED for safety");
         }
 
         if ($isEnabled) {
             $channels[] = 'mail';
         }
+
+        \Illuminate\Support\Facades\Log::info("Final notification channels", [
+            'user_id' => $notifiable->id,
+            'channels' => $channels
+        ]);
 
         return $channels;
     }

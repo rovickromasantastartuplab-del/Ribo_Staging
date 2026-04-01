@@ -206,8 +206,15 @@ class ProcessFollowUps extends Command
                         // Remove duplicates and notify
                         $recipients = $recipients->unique('id');
                         
+                        Log::info("Automated follow-up notification dispatch", [
+                            'item_id' => $item->id,
+                            'recipient_count' => $recipients->count(),
+                            'emails' => $recipients->pluck('email')->toArray()
+                        ]);
+
                         if ($recipients->isNotEmpty()) {
                             Notification::send($recipients, new AutomatedFollowUpSent($thread, $item));
+                            Log::info("Notification::send called successfully for follow-up queue #{$item->id}");
                         }
                     } catch (\Exception $ne) {
                         Log::error("Failed to send internal notification for automated follow-up queue #{$item->id}", [
