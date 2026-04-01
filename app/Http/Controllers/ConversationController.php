@@ -205,14 +205,19 @@ class ConversationController extends Controller
     {
         $companyId = auth()->user()->creatorId();
         
-        $threads = EmailThread::where('created_by', $companyId)
-            ->whereNotNull('follow_up_at')
-            ->get(['id', 'subject', 'participants', 'follow_up_at', 'status']);
+        // Fetch pending automated follow-ups from the queue
+        $queueItems = ThreadFollowUpQueue::where('status', 'pending')
+            ->whereNotNull('scheduled_at')
+            ->whereHas('stage.thread', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })
+            ->with(['stage.thread'])
+            ->get();
 
-        $events = $threads->map(function ($thread) {
-            $title = $thread->subject ?: 'Follow up (No Subject)';
+        $events = $queueItems->map(function ($item) {
+            $thread = $item->stage->thread;
+            $title = $thread->subject ?: 'Automated Follow up (No Subject)';
             if (empty($thread->subject) && is_array($thread->participants) && count($thread->participants) > 0) {
-                // Try to extract just the name or email from "Name <email@example.com>"
                 $firstParticipant = $thread->participants[0];
                 if (preg_match('/^(.*)</', $firstParticipant, $matches)) {
                     $title = trim($matches[1]) ?: $title;
@@ -223,10 +228,11 @@ class ConversationController extends Controller
             
             return [
                 'id' => $thread->id,
-                'title' => $title,
-                'start' => $thread->follow_up_at->toIso8601String(),
-                'allDay' => true,
-                'type' => 'follow_up',
+                'queue_id' => $item->id,
+                'title' => $title . " (Stage " . $item->stage->stage_number . ")",
+                'start' => $item->scheduled_at->toIso8601String(),
+                'allDay' => false,
+                'type' => 'automated_follow_up',
                 'status' => $thread->status
             ];
         });
@@ -246,7 +252,6 @@ class ConversationController extends Controller
         $validated = $request->validate([
             'status' => 'nullable|string|in:Open,Closed,Archive',
             'priority' => 'nullable|string|in:Low,Medium,High',
-            'follow_up_at' => 'nullable|date',
         ]);
 
         $statusChanged = isset($validated['status']) && $validated['status'] !== $thread->status;

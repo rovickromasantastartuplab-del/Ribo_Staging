@@ -23,7 +23,6 @@ class EmailThread extends BaseModel
         'created_by',
         'status',
         'priority',
-        'follow_up_at',
     ];
 
     protected function casts(): array
@@ -33,7 +32,6 @@ class EmailThread extends BaseModel
             'labels' => 'array',
             'last_message_at' => 'datetime',
             'is_read' => 'boolean',
-            'follow_up_at' => 'datetime',
         ];
     }
 

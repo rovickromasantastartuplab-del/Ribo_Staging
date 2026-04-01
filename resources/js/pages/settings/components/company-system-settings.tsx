@@ -33,8 +33,7 @@ export default function CompanySystemSettings({
     defaultLanguage: 'en',
     dateFormat: 'MM/DD/YYYY',
     timeFormat: '12h',
-    defaultTimezone: 'UTC',
-    conversation_follow_up_enabled: 'on'
+    defaultTimezone: 'UTC'
   };
   
   // Combine settings from props and page props
@@ -48,7 +47,6 @@ export default function CompanySystemSettings({
     dateFormat: settingsData.dateFormat || defaultSettings.dateFormat,
     timeFormat: settingsData.timeFormat || defaultSettings.timeFormat,
     defaultTimezone: settingsData.defaultTimezone || defaultSettings.defaultTimezone,
-    conversation_follow_up_enabled: settingsData.conversation_follow_up_enabled || defaultSettings.conversation_follow_up_enabled
   }));
   
   // Update state when settings change
@@ -56,7 +54,7 @@ export default function CompanySystemSettings({
     if (Object.keys(settingsData).length > 0) {
       // Create merged settings object
       const mergedSettings = Object.keys(defaultSettings).reduce((acc, key) => {
-        acc[key] = settingsData[key] || defaultSettings[key];
+        acc[key] = settingsData[key] || (defaultSettings as any)[key];
         return acc;
       }, {} as Record<string, string>);
       
@@ -85,7 +83,6 @@ export default function CompanySystemSettings({
       dateFormat: systemSettings.dateFormat,
       timeFormat: systemSettings.timeFormat,
       defaultTimezone: systemSettings.defaultTimezone,
-      conversation_follow_up_enabled: systemSettings.conversation_follow_up_enabled
     };
     
     // Submit to backend using Inertia
@@ -262,22 +259,8 @@ export default function CompanySystemSettings({
             </Select>
           </div>
 
-          <div className="grid gap-2 md:col-span-2 mt-4 pt-4 border-t">
-            <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                    <Label>{t("Enable Conversation Follow-up")}</Label>
-                    <p className="text-sm text-muted-foreground">
-                        {t("Automatically send email reminders and notifications for conversation follow-up dates.")}
-                    </p>
-                </div>
-                <Switch
-                    checked={systemSettings.conversation_follow_up_enabled === 'on'}
-                    onCheckedChange={(checked) => handleSystemSettingsChange('conversation_follow_up_enabled', checked ? 'on' : 'off')}
-                />
-            </div>
           </div>
-        </div>
-      </form>
-    </SettingsSection>
+        </form>
+      </SettingsSection>
   );
 }

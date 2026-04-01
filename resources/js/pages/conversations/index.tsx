@@ -937,10 +937,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             setSelectedThread(response.data.thread);
             // Refresh thread list to show new metadata (like closed)
             fetchThreads(false, true);
-            // If follow-up date changed (set or cleared), refresh the calendar view
-            if ('follow_up_at' in updates) {
-                calendarRef.current?.refresh();
-            }
             toast.success(t('Conversation updated'));
         } catch (error) {
             toast.error(t('Failed to update conversation'));
@@ -1500,14 +1496,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
                                                             </DropdownMenuItem>
                                                         ))}
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Follow-up Date')}</DropdownMenuLabel>
-                                                        <div className="px-2 py-1.5">
-                                                            <DatePicker
-                                                                selected={selectedThread.follow_up_at ? new Date(selectedThread.follow_up_at) : undefined}
-                                                                onChange={(date: Date | undefined) => handleUpdateMetadata({ follow_up_at: date ? date.toISOString() : null })}
-                                                            />
-                                                        </div>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
 
