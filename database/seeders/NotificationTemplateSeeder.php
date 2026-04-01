@@ -444,11 +444,11 @@ class NotificationTemplateSeeder extends Seeder
             ],
             // Automated Follow-up Sent
             [
-                'name' => 'Automated Follow-up Sent',
+                'name' => 'Conversation Follow Up',
                 'type' => 'twilio',
                 'translations' => [
                     'en' => [
-                        'title' => 'Automated Follow-up Sent',
+                        'title' => 'Conversation Follow Up',
                         'content' => 'Automated follow-up (Stage {stage}) sent to {recipient} for thread: {subject}'
                     ],
                     'es' => [

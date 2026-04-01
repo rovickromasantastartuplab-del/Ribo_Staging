@@ -26,7 +26,7 @@ class AutomatedFollowUpSent extends Notification implements ShouldQueue
     {
         $this->thread = $thread;
         $this->queueItem = $queueItem;
-        $this->template = NotificationTemplate::where('name', 'Automated Follow-up Sent')->first();
+        $this->template = NotificationTemplate::where('name', 'Conversation Follow Up')->first();
     }
 
     /**
@@ -38,8 +38,8 @@ class AutomatedFollowUpSent extends Notification implements ShouldQueue
     {
         $channels = ['database'];
 
-        // Check if the user has enabled email for this template
-        if ($this->template && isNotificationTemplateEnabled($this->template->name, $notifiable->id)) {
+        // Check if the company owner has enabled email for this template (Staff inherit owner settings)
+        if ($this->template && isNotificationTemplateEnabled($this->template->name, $notifiable->creatorId())) {
             $channels[] = 'mail';
         }
 
@@ -84,8 +84,8 @@ class AutomatedFollowUpSent extends Notification implements ShouldQueue
     protected function getResolvedContent(object $notifiable): array
     {
         $langCode = $notifiable->lang ?? 'en';
-        $companyId = $this->thread->created_by; // The company owner ID
-
+        $companyId = $notifiable->creatorId(); // Always resolve to the roots account (Company Owner)
+ 
         $templateLang = NotificationTemplateLang::where('parent_id', $this->template->id)
             ->where('lang', $langCode)
             ->where('created_by', $companyId)
