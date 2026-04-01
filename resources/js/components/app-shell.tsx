@@ -27,9 +27,11 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
         return (
             <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden">
                 {children}
-                <FloatingChatGpt />
-                <CookieConsentBanner />
-                <ChatWidgetToggle />
+                <div className="print:hidden">
+                    <FloatingChatGpt />
+                    <CookieConsentBanner />
+                    <ChatWidgetToggle />
+                </div>
                 <CustomToast />
             </div>
         );
@@ -41,9 +43,11 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
         <SidebarProvider defaultOpen={isOpen} open={isOpen} onOpenChange={handleSidebarChange}>
             <div className={cn('flex w-full max-w-full min-w-0 overflow-hidden', position === 'right' ? 'flex-row-reverse' : 'flex-row')}>
                 {children}
-                <FloatingChatGpt />
-                <CookieConsentBanner />
-                <ChatWidgetToggle />
+                <div className="print:hidden">
+                    <FloatingChatGpt />
+                    <CookieConsentBanner />
+                    <ChatWidgetToggle />
+                </div>
                 <CustomToast />
             </div>
         </SidebarProvider>
