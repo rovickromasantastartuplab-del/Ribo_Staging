@@ -78,12 +78,10 @@ class ProcessFollowUps extends Command
                             // Send stylized email via EmailTemplateService
                             try {
                                 $templateService = app(\App\Services\EmailTemplateService::class);
-                                $business = \App\Models\Business::where('user_id', $owner->id)->first();
-                                
                                 $variables = [
                                     '{thread_subject}' => $thread->subject ?: 'Conversation Follow Up',
                                     '{assigned_user_name}' => $user->name,
-                                    '{company_name}' => $business ? $business->name : getSetting('company_name', 'Company', $owner->id),
+                                    '{company_name}' => getSetting('company_name', 'Company', $owner->id),
                                     '{view_link}' => url('/conversations?thread_id=' . $thread->id)
                                 ];
 
