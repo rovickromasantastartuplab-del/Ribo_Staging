@@ -1202,21 +1202,58 @@ class GmailService
      * Check if a Gmail thread has received a reply (more than 1 message).
      * Fails open: returns false on API error so we never cancel a follow-up due to connectivity.
      */
-    public function hasReply(string $gmailThreadId): bool
+    public function hasReply(string $gmailThreadId, string $recipientEmail): bool
     {
         try {
             $this->refreshTokenIfNeeded();
 
+            // Fetch the entire thread to see all messages
             $thread = $this->gmail->users_threads->get('me', $gmailThreadId, [
-                'format' => 'minimal',
+                'format' => 'metadata',
+                'metadataHeaders' => ['From'],
             ]);
 
             $messages = $thread->getMessages() ?? [];
 
-            return count($messages) > 1;
+            // If only one message exists, no reply is possible (it's the original outreach)
+            if (count($messages) <= 1) {
+                return false;
+            }
+
+            foreach ($messages as $message) {
+                $payload = $message->getPayload();
+                $headers = $payload ? $payload->getHeaders() : [];
+                $fromHeader = '';
+
+                foreach ($headers as $header) {
+                    if (strtolower($header->getName()) === 'from') {
+                        $fromHeader = $header->getValue();
+                        break;
+                    }
+                }
+
+                if (empty($fromHeader)) {
+                    continue;
+                }
+
+                // Extract email from "Name <email@example.com>" or just "email@example.com"
+                $email = $fromHeader;
+                if (preg_match('/<([^>]+)>/', $fromHeader, $matches)) {
+                    $email = $matches[1];
+                }
+
+                // If this message was sent by the client, it counts as a reply.
+                // We ignore messages from our own Gmail account address.
+                if (strtolower(trim($email)) === strtolower(trim($recipientEmail))) {
+                    return true;
+                }
+            }
+
+            return false;
         } catch (\Exception $e) {
             Log::warning('hasReply check failed, failing open (no cancel)', [
                 'gmail_thread_id' => $gmailThreadId,
+                'recipient' => $recipientEmail,
                 'error' => $e->getMessage(),
             ]);
             return false;

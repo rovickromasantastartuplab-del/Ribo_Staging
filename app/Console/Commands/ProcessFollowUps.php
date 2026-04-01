@@ -236,7 +236,7 @@ class ProcessFollowUps extends Command
     private function evaluateTrigger(string $triggerType, ThreadFollowUpQueue $item, GmailService $gmailService): bool
     {
         return match ($triggerType) {
-            'no_reply' => $gmailService->hasReply($item->gmail_thread_id),
+            'no_reply' => $gmailService->hasReply($item->gmail_thread_id, $item->recipient_email),
             'no_open'  => EmailOpenLog::where('gmail_message_id', $item->gmail_message_id)->exists(),
             'no_click' => EmailClickLog::where('gmail_message_id', $item->gmail_message_id)->exists(),
             'drip'     => false, // Always send
