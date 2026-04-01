@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\NotificationTemplate;
 use App\Models\NotificationTemplateLang;
+use App\Models\UserNotificationTemplate;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class NotificationTemplateSeeder extends Seeder
@@ -544,6 +546,19 @@ class NotificationTemplateSeeder extends Seeder
                         'content' => $translation['content'],
                         'created_by' => $company->id
                     ]);
+                }
+
+                // Seed user_notification_templates for company owner and all their staff
+                // so isNotificationTemplateEnabled() returns true for this template by default.
+                $usersToSeed = User::where('created_by', $company->id)
+                    ->orWhere('id', $company->id)
+                    ->get();
+
+                foreach ($usersToSeed as $user) {
+                    UserNotificationTemplate::updateOrCreate(
+                        ['user_id' => $user->id, 'template_id' => $template->id],
+                        ['is_active' => true]
+                    );
                 }
             }
             // Create content for global template
