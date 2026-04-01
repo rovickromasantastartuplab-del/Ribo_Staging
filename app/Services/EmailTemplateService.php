@@ -3,14 +3,13 @@
 namespace App\Services;
 
 use App\Models\EmailTemplate;
-use App\Models\Business;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
 use Exception;
 
 class EmailTemplateService
 {
-    public function sendTemplateEmail(string $templateName, array $variables, string $toEmail, Business $business = null, string $toName = null, string $attachmentPath = null, string $attachmentName = null)
+    public function sendTemplateEmail(string $templateName, array $variables, string $toEmail, $business = null, string $toName = null, string $attachmentPath = null, string $attachmentName = null)
     {
         try {
             // Get email template
@@ -58,7 +57,7 @@ class EmailTemplateService
             $finalFromName = getSetting('email_from_name') ? $this->replaceVariables(getSetting('email_from_name'), $variables) : $fromName;
 
             // Send email using NotificationMail class
-            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath, $attachmentName));
+            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath));
 
             return true;
         } catch (Exception $e) {
@@ -132,7 +131,7 @@ class EmailTemplateService
             $finalFromName = getSetting('email_from_name') ? $this->replaceVariables(getSetting('email_from_name'), $variables) : $fromName;
 
             // Send email using NotificationMail class
-            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath, $attachmentName));
+            Mail::to($toEmail, $toName)->send(new \App\Mail\EmailTemplate($subject, $content, $fromEmail, $finalFromName, $attachmentPath));
 
             return true;
         } catch (Exception $e) {
@@ -141,7 +140,7 @@ class EmailTemplateService
         }
     }
 
-    private function configureBusinessSMTP(?Business $business = null)
+    private function configureBusinessSMTP($business = null)
     {
         // Get email settings from settings table
         $emailDriver = getSetting('email_driver', 'smtp');
