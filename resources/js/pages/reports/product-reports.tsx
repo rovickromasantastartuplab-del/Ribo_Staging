@@ -2,16 +2,18 @@ import { PageTemplate } from '@/components/page-template';
 import { usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Package, CheckCircle, DollarSign, Award } from 'lucide-react';
+import { Package, CheckCircle, DollarSign, Award, Printer } from 'lucide-react';
 import { ReportFilters } from '@/components/reports/report-filters';
 import { SummaryCards } from '@/components/reports/summary-cards';
 import { ChartCard } from '@/components/reports/chart-card';
 import { Card } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/currency';
+import { useReportPrint } from '@/hooks/use-report-print';
 
 export default function ProductReports() {
   const { t } = useTranslation();
   const { filters, summary, productSales } = usePage().props as any;
+  const { contentRef, handlePrint } = useReportPrint(t('Product Reports'));
 
   const breadcrumbs = [
     { title: t('Dashboard'), href: route('dashboard') },
@@ -49,60 +51,75 @@ export default function ProductReports() {
   const topProducts = productSales.slice(0, 10);
 
   return (
-    <PageTemplate title={t("Product Reports")} url={route('reports.product-reports')} breadcrumbs={breadcrumbs} noPadding>
+    <PageTemplate
+      title={t("Product Reports")}
+      url={route('reports.product-reports')}
+      breadcrumbs={breadcrumbs}
+      noPadding
+      actions={[
+        {
+          label: t('Print PDF'),
+          icon: <Printer className="h-4 w-4" />,
+          variant: 'outline',
+          onClick: handlePrint,
+        }
+      ]}
+    >
       <ReportFilters filters={filters} />
       
-      <SummaryCards cards={summaryCards} />
+      <div ref={contentRef}>
+        <SummaryCards cards={summaryCards} />
 
-      <div className="grid grid-cols-1 gap-6 mb-6">
-        <ChartCard title={t('Top Products by Revenue')}>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={topProducts} layout="vertical" margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="name" type="category" width={150} />
-              <Tooltip formatter={(value) => [formatCurrency(Number(value)), t('Revenue')]} />
-              <Bar dataKey="revenue" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">{t('Product Performance')}</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('Product Name')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('Quantity Sold')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('Revenue')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {productSales.map((product: any, index: number) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {product.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {product.quantity.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
-                    {formatCurrency(product.revenue)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          <ChartCard title={t('Top Products by Revenue')}>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={topProducts} layout="vertical" margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={150} />
+                <Tooltip formatter={(value) => [formatCurrency(Number(value)), t('Revenue')]} />
+                <Bar dataKey="revenue" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
         </div>
-      </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">{t('Product Performance')}</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('Product Name')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('Quantity Sold')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('Revenue')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {productSales.map((product: any, index: number) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {product.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {product.quantity.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
+                      {formatCurrency(product.revenue)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
     </PageTemplate>
   );
 }
