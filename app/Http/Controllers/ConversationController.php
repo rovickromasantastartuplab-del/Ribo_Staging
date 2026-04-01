@@ -999,7 +999,7 @@ class ConversationController extends Controller
                         if ($lastMessage) {
                             // Determine recipient: if we sent the last message, send to 'to_emails'
                             // If they sent the last message, send to 'from_email'
-                            $myEmail = $thread->gmailAccount->email;
+                            $myEmail = $thread->gmailAccount->gmail_address;
                             $recipient = $lastMessage->from_email === $myEmail 
                                 ? ($lastMessage->to_emails[0] ?? null) 
                                 : $lastMessage->from_email;
