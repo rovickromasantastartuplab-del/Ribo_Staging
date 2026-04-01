@@ -15,6 +15,7 @@ use App\Models\Campaign;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ConversationController extends Controller
@@ -967,55 +968,57 @@ class ConversationController extends Controller
         }
 
         $request->validate([
-            'stages' => 'array',
+            'stages' => 'array|max:3',
             'stages.*.trigger_type' => 'required|in:no_reply,no_open,no_click,drip',
             'stages.*.delay_days' => 'required|integer|min:1|max:90',
             'stages.*.subject' => 'required|string|max:255',
             'stages.*.body' => 'required|string',
         ]);
 
-        // Replace all existing stages for this thread
-        $thread->followUpStages()->delete();
+        // Replace all existing stages for this thread (wrapped in transaction to prevent partial state)
+        DB::transaction(function () use ($thread, $request) {
+            $thread->followUpStages()->delete();
 
-        if ($request->has('stages') && is_array($request->stages)) {
-            foreach ($request->stages as $index => $stageData) {
-                $stage = ThreadFollowUpStage::create([
-                    'email_thread_id' => $thread->id,
-                    'stage_number' => $index + 1,
-                    'trigger_type' => $stageData['trigger_type'],
-                    'delay_days' => $stageData['delay_days'],
-                    'subject' => $stageData['subject'],
-                    'body' => $stageData['body'],
-                ]);
+            if ($request->has('stages') && is_array($request->stages)) {
+                foreach ($request->stages as $index => $stageData) {
+                    $stage = ThreadFollowUpStage::create([
+                        'email_thread_id' => $thread->id,
+                        'stage_number' => $index + 1,
+                        'trigger_type' => $stageData['trigger_type'],
+                        'delay_days' => $stageData['delay_days'],
+                        'subject' => $stageData['subject'],
+                        'body' => $stageData['body'],
+                    ]);
 
-                // Auto-kickoff for Stage 1
-                if ($index === 0) {
-                    // Find the latest message in this thread to act as the anchor
-                    // We typically follow up based on our last message to them
-                    $lastMessage = $thread->messages()->whereNotNull('gmail_message_id')->latest('sent_at')->first();
-                    
-                    if ($lastMessage) {
-                        // Determine recipient: if we sent the last message, send to 'to_emails'
-                        // If they sent the last message, send to 'from_email'
-                        $myEmail = $thread->gmailAccount->email;
-                        $recipient = $lastMessage->from_email === $myEmail 
-                            ? ($lastMessage->to_emails[0] ?? null) 
-                            : $lastMessage->from_email;
+                    // Auto-kickoff for Stage 1
+                    if ($index === 0) {
+                        // Find the latest message in this thread to act as the anchor
+                        // We typically follow up based on our last message to them
+                        $lastMessage = $thread->messages()->whereNotNull('gmail_message_id')->latest('sent_at')->first();
+                        
+                        if ($lastMessage) {
+                            // Determine recipient: if we sent the last message, send to 'to_emails'
+                            // If they sent the last message, send to 'from_email'
+                            $myEmail = $thread->gmailAccount->email;
+                            $recipient = $lastMessage->from_email === $myEmail 
+                                ? ($lastMessage->to_emails[0] ?? null) 
+                                : $lastMessage->from_email;
 
-                        if ($recipient) {
-                            ThreadFollowUpQueue::create([
-                                'thread_follow_up_stage_id' => $stage->id,
-                                'recipient_email' => $recipient,
-                                'gmail_thread_id' => $thread->gmail_thread_id,
-                                'gmail_message_id' => $lastMessage->gmail_message_id,
-                                'status' => 'pending',
-                                'scheduled_at' => ($lastMessage->sent_at ?? now())->addDays($stage->delay_days),
-                            ]);
+                            if ($recipient) {
+                                ThreadFollowUpQueue::create([
+                                    'thread_follow_up_stage_id' => $stage->id,
+                                    'recipient_email' => $recipient,
+                                    'gmail_thread_id' => $thread->gmail_thread_id,
+                                    'gmail_message_id' => $lastMessage->gmail_message_id,
+                                    'status' => 'pending',
+                                    'scheduled_at' => ($lastMessage->sent_at ?? now())->addDays($stage->delay_days),
+                                ]);
+                            }
                         }
                     }
                 }
             }
-        }
+        });
 
         return response()->json([
             'success' => true,
