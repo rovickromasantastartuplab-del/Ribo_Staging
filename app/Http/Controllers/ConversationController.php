@@ -208,14 +208,14 @@ class ConversationController extends Controller
         // Fetch pending automated follow-ups from the queue
         $queueItems = ThreadFollowUpQueue::where('status', 'pending')
             ->whereNotNull('scheduled_at')
-            ->whereHas('stage.thread', function($q) use ($companyId) {
+            ->whereHas('stage.emailThread', function($q) use ($companyId) {
                 $q->where('created_by', $companyId);
             })
-            ->with(['stage.thread'])
+            ->with(['stage.emailThread'])
             ->get();
 
         $events = $queueItems->map(function ($item) {
-            $thread = $item->stage->thread;
+            $thread = $item->stage->emailThread;
             $title = $thread->subject ?: 'Automated Follow up (No Subject)';
             if (empty($thread->subject) && is_array($thread->participants) && count($thread->participants) > 0) {
                 $firstParticipant = $thread->participants[0];
