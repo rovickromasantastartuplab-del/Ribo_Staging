@@ -1553,7 +1553,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     <span className="whitespace-pre-wrap">{msg.body_preview}</span>
                                                                 )}
                                                             </div>
-                                                            {/* Attachments */}
+                                                            {/* Local Storage Attachments */}
                                                             {msg.media && msg.media.length > 0 && (
                                                                 <div className="flex flex-wrap gap-2 mt-2">
                                                                     {msg.media.map((file: any) => {
@@ -1583,6 +1583,25 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                             </a>
                                                                         );
                                                                     })}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Live Proxy Attachments (Gmail Cloud Storage) */}
+                                                            {msg.live_attachments && msg.live_attachments.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                                    {msg.live_attachments.map((file: any) => (
+                                                                        <a
+                                                                            key={file.attachment_id}
+                                                                            href={`/api/conversations/messages/${msg.id}/attachments/${file.attachment_id}/download?filename=${encodeURIComponent(file.file_name)}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors max-w-[220px] group"
+                                                                        >
+                                                                            <FileText className="h-4 w-4 text-primary shrink-0" />
+                                                                            <span className="text-xs truncate flex-1 min-w-0 font-medium group-hover:underline">{file.file_name}</span>
+                                                                            <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                                        </a>
+                                                                    ))}
                                                                 </div>
                                                             )}
                                                         </div>

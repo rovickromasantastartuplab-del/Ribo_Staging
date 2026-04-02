@@ -633,6 +633,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('api.conversations.compose');
             Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])
                 ->name('api.conversations.reply');
+            Route::get('api/conversations/messages/{message}/attachments/{attachmentId}/download', [ConversationController::class, 'downloadAttachment'])
+                ->name('api.conversations.attachments.download');
             Route::post('api/conversations/threads/{thread}/link-to-lead', [ConversationController::class, 'linkToLead'])
                 ->middleware('permission:manage-conversations')
                 ->name('api.conversations.link_to_lead');

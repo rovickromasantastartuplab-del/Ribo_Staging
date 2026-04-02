@@ -985,52 +985,75 @@ class GmailService
      */
     private function syncAttachments(EmailMessage $emailMessage, $gmailMessage): void
     {
-        // Skip if this message already has attachments synced
-        if ($emailMessage->getMedia('attachments')->count() > 0) {
-            return;
-        }
+        // NO-OP: We no longer store attachments locally to save space.
+        // Attachments are now proxied live from the Gmail API on demand.
+        return;
+    }
 
-        $payload = $gmailMessage->getPayload();
-        if (!$payload) {
-            return;
-        }
+    /**
+     * Fetch attachment metadata for a message directly from the Gmail API.
+     */
+    public function getMessageAttachmentsInfo(string $gmailMessageId): array
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+            
+            // Use 'metadata' format with only parts/filename fields to keep the request lightweight
+            $message = $this->gmail->users_messages->get('me', $gmailMessageId, [
+                'format' => 'full', 
+            ]);
 
-        $parts = $this->collectAttachmentParts($payload->getParts() ?? []);
-
-        foreach ($parts as $part) {
-            try {
-                $attachmentId = $part->getBody()?->getAttachmentId();
-                $filename = $part->getFilename();
-
-                if (!$attachmentId || !$filename) {
-                    continue;
-                }
-
-                // Download the attachment data from Gmail
-                $attachmentData = $this->gmail->users_messages_attachments->get(
-                    'me',
-                    $gmailMessage->getId(),
-                    $attachmentId
-                );
-
-                $rawData = $this->decodeBody($attachmentData->getData());
-
-                // Save to a temp file and add to Spatie Media Library
-                $tempPath = tempnam(sys_get_temp_dir(), 'gmail_attach_');
-                file_put_contents($tempPath, $rawData);
-
-                $emailMessage->addMedia($tempPath)
-                    ->usingFileName($filename)
-                    ->usingName(pathinfo($filename, PATHINFO_FILENAME))
-                    ->toMediaCollection('attachments');
-
-            } catch (\Exception $e) {
-                Log::warning('Failed to sync attachment', [
-                    'gmail_message_id' => $gmailMessage->getId(),
-                    'filename' => $filename ?? 'unknown',
-                    'error' => $e->getMessage(),
-                ]);
+            $payload = $message->getPayload();
+            if (!$payload) {
+                return [];
             }
+
+            $parts = $this->collectAttachmentParts($payload->getParts() ?? []);
+            $attachments = [];
+
+            foreach ($parts as $part) {
+                $attachmentId = $part->getBody()?->getAttachmentId();
+                if ($attachmentId) {
+                    $attachments[] = [
+                        'attachment_id' => $attachmentId,
+                        'file_name' => $part->getFilename(),
+                        'mime_type' => $part->getMimeType(),
+                        'size' => $part->getBody()?->getSize(),
+                    ];
+                }
+            }
+
+            return $attachments;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to fetch Gmail attachment info', [
+                'gmail_message_id' => $gmailMessageId,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Download the raw data for a specific attachment from the Gmail API.
+     */
+    public function downloadAttachmentRaw(string $gmailMessageId, string $attachmentId): ?array
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+
+            $attachment = $this->gmail->users_messages_attachments->get('me', $gmailMessageId, $attachmentId);
+            
+            return [
+                'data' => $this->decodeBody($attachment->getData()),
+                'size' => $attachment->getSize(),
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to download raw Gmail attachment', [
+                'gmail_message_id' => $gmailMessageId,
+                'attachment_id' => $attachmentId,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 

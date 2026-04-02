@@ -729,8 +729,18 @@ class ConversationController extends Controller
             ->reorder('sent_at', 'desc')
             ->paginate($perPage);
 
+        $service = new GmailService($thread->gmailAccount);
+
         // Return newest to oldest for flex-col-reverse display
         $messages = collect($messagesPaginated->items())->values();
+
+        // Inject live attachment metadata from Gmail for messages without local storage
+        $messages->each(function($msg) use ($service) {
+            if ($msg->media->isEmpty()) {
+                // This is a lightweight call to fetch only the file names/IDs from Gmail
+                $msg->live_attachments = $service->getMessageAttachmentsInfo($msg->gmail_message_id);
+            }
+        });
 
         $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
         
@@ -752,6 +762,30 @@ class ConversationController extends Controller
             ],
             'unread_count' => $this->getGlobalUnreadCount($thread->created_by, $thread->gmailAccount),
         ]);
+    }
+
+    /**
+     * Proxy a download request directly from the Gmail API to the user's browser.
+     * This avoids storing the file on the CRM's server.
+     */
+    public function downloadAttachment(Request $request, EmailMessage $message, string $attachmentId)
+    {
+        if ($message->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $filename = $request->query('filename', 'attachment');
+
+        $service = new GmailService($message->thread->gmailAccount);
+        $result = $service->downloadAttachmentRaw($message->gmail_message_id, $attachmentId);
+
+        if (!$result) {
+            abort(404, 'Attachment not found or failed to download from Gmail.');
+        }
+
+        return response()->streamDownload(function () use ($result) {
+            echo $result['data'];
+        }, $filename);
     }
 
     /**
