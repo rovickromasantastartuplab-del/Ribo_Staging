@@ -39,10 +39,9 @@ class AutomatedFollowUpSent extends Notification
         $channels = [];
 
         // Check if the company owner has enabled email for this template (Staff inherit owner settings)
-        // FALLBACK: If the template is not found in the database (e.g. seeder not run yet), 
-        // we default to sending the email to ensure critical follow-up alerts are NOT missed.
+        // For anonymous on-demand notifications (direct email), we default to enabled.
         $isEnabled = true; 
-        if ($this->template) {
+        if ($this->template && method_exists($notifiable, 'creatorId')) {
             $isEnabled = isNotificationTemplateEnabled($this->template->name, $notifiable->creatorId());
         }
 
@@ -90,13 +89,13 @@ class AutomatedFollowUpSent extends Notification
      */
     protected function getResolvedContent(object $notifiable): array
     {
-        $langCode = $notifiable->lang ?? 'en';
-        $companyId = $notifiable->creatorId(); // Always resolve to the roots account (Company Owner)
+        $langCode = $notifiable->lang ?? config('app.locale', 'en');
+        $companyId = method_exists($notifiable, 'creatorId') ? $notifiable->creatorId() : 1;
  
-        $templateLang = NotificationTemplateLang::where('parent_id', $this->template->id)
+        $templateLang = NotificationTemplateLang::where('parent_id', $this->template?->id)
             ->where('lang', $langCode)
             ->where('created_by', $companyId)
-            ->first() ?? NotificationTemplateLang::where('parent_id', $this->template->id)
+            ->first() ?? NotificationTemplateLang::where('parent_id', $this->template?->id)
                 ->where('lang', 'en')
                 ->where('created_by', 1) // Fallback to global English
                 ->first();

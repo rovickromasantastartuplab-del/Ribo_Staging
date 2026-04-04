@@ -106,7 +106,7 @@ class ProcessFollowUps extends Command
                     $item->update(['status' => 'sent', 'sent_at' => now()]);
                     $this->info("Queue #{$item->id}: sent (stage {$stage->stage_number}).");
 
-                    // Notify assigned staff and company owner
+                    // Notify assigned staff, company owner, and the connected Gmail account
                     try {
                         $recipients = collect();
                         
@@ -120,11 +120,23 @@ class ProcessFollowUps extends Command
                             $recipients->push($creator);
                         }
 
-                        // Remove duplicates and notify
+                        // Remove duplicates and notify registered users
                         $recipients = $recipients->unique('id');
                         
                         if ($recipients->isNotEmpty()) {
                             Notification::send($recipients, new AutomatedFollowUpSent($thread, $item));
+                        }
+
+                        // Also notify the connected Gmail account if it's not one of the registered recipients
+                        $connectedEmail = $thread->gmailAccount?->gmail_address;
+                        if ($connectedEmail) {
+                            $isAlreadyNotified = $recipients->contains(function ($user) use ($connectedEmail) {
+                                return strtolower($user->email) === strtolower($connectedEmail);
+                            });
+
+                            if (!$isAlreadyNotified) {
+                                Notification::route('mail', $connectedEmail)->notify(new AutomatedFollowUpSent($thread, $item));
+                            }
                         }
                     } catch (\Exception $ne) {
                         Log::error("Failed to send internal notification for automated follow-up queue #{$item->id}", [
