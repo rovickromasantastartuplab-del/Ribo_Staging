@@ -1851,7 +1851,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             <div className="flex border-b shrink-0">
                                 {[
                                     { key: 'lead' as const, label: t('Lead'), icon: User },
-                                    { key: 'opportunities' as const, label: t('Opps'), icon: Briefcase },
+                                    { key: 'opportunities' as const, label: t('Opportunity'), icon: Briefcase },
                                 ].map(tab => (
                                     <button
                                         key={tab.key}
@@ -1988,7 +1988,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                 {rawDesc ? (
                                                                                     descIsHtml ? (
                                                                                         <div
-                                                                                            className="text-[10px] text-muted-foreground mt-1 line-clamp-2 prose prose-sm max-w-none"
+                                                                                            className="text-[10px] text-muted-foreground mt-1 line-clamp-2 [&_p]:my-0 [&_*]:text-[10px]"
                                                                                             dangerouslySetInnerHTML={{
                                                                                                 __html: sanitizeHtml(String(rawDesc)),
                                                                                             }}
@@ -2159,7 +2159,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         <span className="text-muted-foreground flex items-center gap-1">
                                                                             <Calendar className="h-3 w-3" />{t('Close Date')}
                                                                         </span>
-                                                                        <span className="font-medium">{opp.close_date}</span>
+                                                                        <span className="font-medium">{new Date(opp.close_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                                                     </div>
                                                                 )}
                                                                 {(() => {
@@ -2217,7 +2217,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                                     {rawDesc ? (
                                                                                                         descIsHtml ? (
                                                                                                             <div
-                                                                                                                className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2 prose prose-sm max-w-none"
+                                                                                                                className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2 [&_p]:my-0 [&_*]:text-[9px]"
                                                                                                                 dangerouslySetInnerHTML={{
                                                                                                                     __html: sanitizeHtml(String(rawDesc)),
                                                                                                                 }}
