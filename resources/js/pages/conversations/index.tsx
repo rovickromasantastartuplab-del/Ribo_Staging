@@ -243,7 +243,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [selectedThread, setSelectedThread] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [showContactSidebar, setShowContactSidebar] = useState(false);
+    const [showCrmModal, setShowCrmModal] = useState(false);
     const [replyBody, setReplyBody] = useState('');
     const [replyCc, setReplyCc] = useState('');
     const [replyBcc, setReplyBcc] = useState('');
@@ -970,7 +970,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const handleBack = () => {
         setSelectedThread(null);
         setActiveReplyMessage(null);
-        setShowContactSidebar(false);
+        setShowCrmModal(false);
     };
 
     const handleUpdateMetadata = async (updates: any) => {
@@ -1392,8 +1392,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
 
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowContactSidebar(!showContactSidebar)}>
-                                                <User className={`h-4 w-4 ${showContactSidebar ? 'text-primary' : ''}`} />
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowCrmModal(true)}>
+                                                <User className={`h-4 w-4 ${showCrmModal ? 'text-primary' : ''}`} />
                                             </Button>
                                         </div>
                                     </div>
@@ -1797,82 +1797,64 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             )}
                         </div>
                     </>
-                    {/* Pane 4: CRM Context Sidebar */}
+                    {/* Pane 4: CRM Context Modal */}
                     {selectedThread && (
-                        <>
-                            {/* Backdrop for mobile */}
-                            <div
-                                className={cn(
-                                    "absolute inset-0 z-20 bg-black/20 lg:bg-transparent xl:hidden transition-opacity duration-300 ease-in-out",
-                                    showContactSidebar ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-                                )}
-                                onClick={() => setShowContactSidebar(false)}
-                            />
-                            <div
-                                className={cn(
-                                    "absolute right-0 top-0 bottom-0 z-30 w-[300px] min-w-0 min-h-0 max-w-[88vw] border-l flex flex-col bg-background shadow-2xl overflow-hidden",
-                                    "transition-all duration-300 ease-in-out",
-                                    "xl:relative xl:z-10 xl:max-w-none xl:shadow-none xl:h-[calc(100vh-116px)] xl:self-stretch xl:min-h-0",
-                                    showContactSidebar 
-                                        ? "translate-x-0 xl:flex-shrink-0 xl:w-[300px] opacity-100" 
-                                        : "translate-x-full xl:translate-x-0 xl:flex-shrink xl:w-0 opacity-0 xl:opacity-100 xl:border-l-0"
-                                )}
-                            >
-
-                            {/* ── Sidebar Header ────────────────────────── */}
-                            <div className="flex items-center justify-between gap-2 min-w-0 px-4 py-3 border-b shrink-0">
-                                <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                                    {(() => {
-                                        const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
-                                        const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
-                                        return (
-                                            <>
-                                                <Avatar className="h-7 w-7 border shrink-0">
-                                                    <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">
-                                                        {String(contactName).charAt(0).toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-semibold truncate leading-tight">{contactName}</p>
-                                                    <p className="text-xs text-muted-foreground truncate leading-tight">
-                                                        {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
-                                                    </p>
-                                                </div>
-                                            </>
-                                        );
-                                    })()}
+                        <Dialog open={showCrmModal} onOpenChange={setShowCrmModal}>
+                            <DialogContent className="max-w-[900px] w-[92vw] max-h-[85vh] p-0 overflow-hidden flex flex-col">
+                                {/* Modal Header */}
+                                <div className="flex items-center justify-between gap-3 min-w-0 px-5 py-4 border-b">
+                                    <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
+                                        {(() => {
+                                            const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
+                                            const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
+                                            return (
+                                                <>
+                                                    <Avatar className="h-8 w-8 border shrink-0">
+                                                        <AvatarFallback className="text-[12px] font-bold bg-primary/10 text-primary">
+                                                            {String(contactName).charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-base font-semibold truncate leading-tight">{contactName}</p>
+                                                        <p className="text-sm text-muted-foreground truncate leading-tight">
+                                                            {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setShowCrmModal(false)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setShowContactSidebar(false)}>
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </div>
 
-                            {/* ── Section Tabs ──────────────────────────── */}
-                            <div className="flex border-b shrink-0">
-                                {[
-                                    { key: 'lead' as const, label: t('Lead'), icon: User },
-                                    { key: 'opportunities' as const, label: t('Opportunity'), icon: Briefcase },
-                                ].map(tab => (
-                                    <button
-                                        key={tab.key}
-                                        onClick={() => setActiveSidebarSection(tab.key)}
-                                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${activeSidebarSection === tab.key
-                                                ? 'border-primary text-primary bg-primary/5'
-                                                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                                            }`}
-                                    >
-                                        <tab.icon className="h-4 w-4" />
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
+                                {/* Section Tabs */}
+                                <div className="flex border-b shrink-0">
+                                    {[
+                                        { key: 'lead' as const, label: t('Lead'), icon: User },
+                                        { key: 'opportunities' as const, label: t('Opportunity'), icon: Briefcase },
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.key}
+                                            onClick={() => setActiveSidebarSection(tab.key)}
+                                            className={`flex-1 flex flex-col items-center gap-1.5 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${activeSidebarSection === tab.key
+                                                    ? 'border-primary text-primary bg-primary/5'
+                                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                                                }`}
+                                        >
+                                            <tab.icon className="h-4 w-4" />
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
 
-                            {/* ── Section Body ──────────────────────────── */}
-                            <ScrollArea className="flex-1 min-h-0 transition-all duration-300 ease-in-out">
+                                {/* Section Body */}
+                                <ScrollArea className="flex-1 min-h-0 transition-all duration-300 ease-in-out">
 
                                 {/* ═══════════════ LEAD SECTION ═══════════════ */}
                                 {activeSidebarSection === 'lead' && (
-                                    <div className="p-4 space-y-4 transition-all duration-300 ease-in-out">
+                                    <div className="p-6 space-y-5 transition-all duration-300 ease-in-out">
                                         {selectedThread.leads?.length > 0 ? (
                                             <>
                                                 {selectedThread.leads.map((lead: any) => {
@@ -2065,7 +2047,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                 {/* ═══════════════ OPPORTUNITIES SECTION ═══════════════ */}
                                 {activeSidebarSection === 'opportunities' && (
-                                    <div className="p-4 space-y-3 transition-all duration-300 ease-in-out">
+                                    <div className="p-6 space-y-5 transition-all duration-300 ease-in-out">
                                         {(() => {
                                             const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
 
@@ -2257,9 +2239,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 )}
 
                                 {/* स्टैंडअलोन गतिविधि अनुभाग हटा दिया गया (लीड्स और ऑप्स में विलय कर दिया गया) */}
-                            </ScrollArea>
-                        </div>
-                        </>
+                                </ScrollArea>
+                            </DialogContent>
+                        </Dialog>
                     )}
             </div>
 
