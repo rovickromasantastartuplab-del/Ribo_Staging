@@ -1800,7 +1800,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     {/* Pane 4: CRM Context Modal */}
                     {selectedThread && (
                         <Dialog open={showCrmModal} onOpenChange={setShowCrmModal}>
-                            <DialogContent className="max-w-2xl w-[96vw] max-h-[90vh] md:max-h-[85vh] p-0 overflow-hidden flex flex-col [&>button.absolute]:hidden rounded-2xl shadow-2xl border-primary/10">
+                            <DialogContent className="max-w-2xl w-[96vw] h-[90vh] md:h-[85vh] p-0 overflow-hidden !flex !flex-col [&>button.absolute]:hidden rounded-2xl shadow-2xl border-primary/10">
                                 {/* Modal Header */}
                                 <div className="flex items-center justify-between gap-3 min-w-0 px-5 py-4 border-b shrink-0 bg-gradient-to-b from-background to-muted/30">
                                     <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
