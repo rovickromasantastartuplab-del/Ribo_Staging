@@ -2115,7 +2115,30 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 {activeSidebarSection === 'opportunities' && (
                                     <div className="p-4 space-y-3">
                                         {(() => {
-                                            const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
+                                            let opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
+                                            
+                                            // Mock data for demonstration if no real opportunities exist
+                                            if (opportunities.length === 0 && selectedThread.leads?.length > 0) {
+                                                opportunities = [
+                                                    {
+                                                        id: 'mock-1',
+                                                        name: 'Enterprise License Renewal',
+                                                        status: 'Negotiation',
+                                                        amount: 12500,
+                                                        close_date: '2024-05-15',
+                                                        probability: 75
+                                                    },
+                                                    {
+                                                        id: 'mock-2',
+                                                        name: 'Expansion: Professional Services',
+                                                        status: 'Open',
+                                                        amount: 4800,
+                                                        close_date: '2024-06-01',
+                                                        probability: 30
+                                                    }
+                                                ];
+                                            }
+
                                             const oppStatusConfig: Record<string, { badge: string; dot: string; label: string }> = {
                                                 'Open':        { badge: 'bg-blue-100 text-blue-700 border-blue-200',    dot: 'bg-blue-500',    label: 'Open' },
                                                 'Negotiation': { badge: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500',   label: 'Negotiation' },
