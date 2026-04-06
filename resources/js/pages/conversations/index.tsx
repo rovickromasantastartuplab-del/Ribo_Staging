@@ -1797,21 +1797,27 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             )}
                         </div>
                     </>
-                    {/* Pane 4: CRM Context Sidebar — ALWAYS an absolute overlay */}
-                    {selectedThread && showContactSidebar && (
+                    {/* Pane 4: CRM Context Sidebar */}
+                    {selectedThread && (
                         <>
                             {/* Backdrop for mobile */}
                             <div
-                                className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none xl:hidden transition-all duration-300 ease-in-out"
-                            onClick={() => setShowContactSidebar(false)}
-                        />
-                        <div
-                            className={cn(
-                                "absolute right-0 top-0 bottom-0 z-30 w-[300px] min-w-0 min-h-0 max-w-[88vw] border-l flex flex-col bg-background shadow-2xl",
-                                "transition-all duration-300 ease-in-out",
-                                "xl:relative xl:z-10 xl:flex-shrink-0 xl:w-[300px] xl:max-w-none xl:border-l xl:shadow-none xl:h-[calc(100vh-116px)] xl:self-stretch xl:min-h-0"
-                            )}
-                        >
+                                className={cn(
+                                    "absolute inset-0 z-20 bg-black/20 lg:bg-transparent xl:hidden transition-opacity duration-300 ease-in-out",
+                                    showContactSidebar ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                                )}
+                                onClick={() => setShowContactSidebar(false)}
+                            />
+                            <div
+                                className={cn(
+                                    "absolute right-0 top-0 bottom-0 z-30 w-[300px] min-w-0 min-h-0 max-w-[88vw] border-l flex flex-col bg-background shadow-2xl overflow-hidden",
+                                    "transition-all duration-300 ease-in-out",
+                                    "xl:relative xl:z-10 xl:max-w-none xl:shadow-none xl:h-[calc(100vh-116px)] xl:self-stretch xl:min-h-0",
+                                    showContactSidebar 
+                                        ? "translate-x-0 xl:flex-shrink-0 xl:w-[300px] opacity-100" 
+                                        : "translate-x-full xl:translate-x-0 xl:flex-shrink xl:w-0 opacity-0 xl:opacity-100 xl:border-l-0"
+                                )}
+                            >
 
                             {/* ── Sidebar Header ────────────────────────── */}
                             <div className="flex items-center justify-between gap-2 min-w-0 px-4 py-3 border-b shrink-0">
