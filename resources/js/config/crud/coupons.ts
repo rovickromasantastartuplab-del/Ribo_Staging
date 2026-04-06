@@ -5,6 +5,7 @@ import { columnRenderers } from '@/utils/columnRenderers';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/custom-toast';
 import { t } from '@/utils/i18n';
+import axios from '@/utils/axios-config';
 
 export const couponsConfig: CrudConfig = {
   entity: {
@@ -72,31 +73,19 @@ export const couponsConfig: CrudConfig = {
             
             const handleToggle = async () => {
               try {
-                const response = await fetch(route('coupons.toggle-status', row.id), {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    'Accept': 'application/json'
-                  }
-                });
+                const response = await axios.put(route('coupons.toggle-status', row.id));
+                const data = response.data;
                 
-                if (response.ok) {
-                  const data = await response.json();
-                  setIsChecked(data.status);
-                  row.status = data.status;
-                  toast.success(data.message || 'Status updated successfully');
+                setIsChecked(data.status);
+                row.status = data.status;
+                toast.success(data.message || 'Status updated successfully');
+              } catch (error: any) {
+                if (error.response?.data?.demo_mode) {
+                  toast.error(error.response.data.message || 'This action is disabled in demo mode');
                 } else {
-                  const errorData = await response.json();
-                  if (errorData.demo_mode) {
-                    toast.error(errorData.message || 'This action is disabled in demo mode');
-                  } else {
-                    toast.error('Failed to update status');
-                  }
+                  console.error('Toggle error:', error);
+                  toast.error('Failed to update status');
                 }
-              } catch (error) {
-                console.error('Network error:', error);
-                toast.error('Network error updating status');
               }
             };
             
