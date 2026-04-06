@@ -1807,9 +1807,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         />
                         <div
                             className={cn(
-                                "absolute right-0 top-0 bottom-0 z-30 w-[300px] min-w-0 max-w-[88vw] border-l flex flex-col bg-background shadow-2xl",
+                                "absolute right-0 top-0 bottom-0 z-30 w-[300px] min-w-0 min-h-0 max-w-[88vw] border-l flex flex-col bg-background shadow-2xl",
                                 "transition-all duration-300 ease-in-out",
-                                "xl:relative xl:z-10 xl:flex-shrink-0 xl:w-[300px] xl:max-w-none xl:border-l xl:shadow-none"
+                                "xl:relative xl:z-10 xl:flex-shrink-0 xl:w-[300px] xl:max-w-none xl:border-l xl:shadow-none xl:h-[calc(100vh-116px)] xl:self-stretch xl:min-h-0"
                             )}
                         >
 
@@ -1862,11 +1862,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             </div>
 
                             {/* ── Section Body ──────────────────────────── */}
-                            <ScrollArea className="flex-1 min-h-0">
+                            <ScrollArea className="flex-1 min-h-0 transition-all duration-300 ease-in-out">
 
                                 {/* ═══════════════ LEAD SECTION ═══════════════ */}
                                 {activeSidebarSection === 'lead' && (
-                                    <div className="p-4 space-y-4">
+                                    <div className="p-4 space-y-4 transition-all duration-300 ease-in-out">
                                         {selectedThread.leads?.length > 0 ? (
                                             <>
                                                 {selectedThread.leads.map((lead: any) => {
@@ -2059,7 +2059,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                 {/* ═══════════════ OPPORTUNITIES SECTION ═══════════════ */}
                                 {activeSidebarSection === 'opportunities' && (
-                                    <div className="p-4 space-y-3">
+                                    <div className="p-4 space-y-3 transition-all duration-300 ease-in-out">
                                         {(() => {
                                             const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
 
