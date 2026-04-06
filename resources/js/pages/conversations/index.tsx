@@ -84,7 +84,9 @@ const getLeadStreamPreviewDotClass = (activity: { activity_type?: string; field_
         case 'created':
             return 'bg-emerald-500 ring-emerald-50';
         case 'updated':
-            return activity.field_changed === 'lead_status_id' ? 'bg-violet-500 ring-violet-50' : 'bg-blue-500 ring-blue-50';
+            return activity.field_changed === 'lead_status_id' || activity.field_changed === 'opportunity_stage_id'
+                ? 'bg-violet-500 ring-violet-50'
+                : 'bg-blue-500 ring-blue-50';
         case 'assigned':
             return 'bg-purple-500 ring-purple-50';
         case 'converted':
@@ -2150,21 +2152,52 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                             <h5 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
                                                                                 {t('Opp Activity')}
                                                                             </h5>
-                                                                            <div className="space-y-2.5">
-                                                                                <div className="flex gap-2.5">
-                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                                                                                    <div className="min-w-0">
-                                                                                        <p className="text-[10px] font-bold leading-tight">{t('Status updated')}</p>
-                                                                                        <p className="text-[9px] text-muted-foreground mt-0.5">{t('Successfully moved to')} {stageName}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div className="flex gap-2.5">
-                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500/40 mt-1.5 shrink-0" />
-                                                                                    <div className="min-w-0">
-                                                                                        <p className="text-[10px] font-bold leading-tight text-muted-foreground/80">{t('Quote generated')}</p>
-                                                                                        <p className="text-[9px] text-muted-foreground mt-0.5">{t('Initial pricing shared')}</p>
-                                                                                    </div>
-                                                                                </div>
+                                                                            <div className="space-y-3 relative">
+                                                                                <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border/60" />
+                                                                                {(() => {
+                                                                                    const preview = opp.recent_stream_preview ?? [];
+                                                                                    if (preview.length === 0) {
+                                                                                        return (
+                                                                                            <p className="text-[9px] text-muted-foreground pl-6">{t('No activities yet')}</p>
+                                                                                        );
+                                                                                    }
+                                                                                    return preview.map((activity: any, idx: number) => {
+                                                                                        const dot = getLeadStreamPreviewDotClass(activity);
+                                                                                        const rawDesc = activity.description;
+                                                                                        const descIsHtml =
+                                                                                            typeof rawDesc === 'string' && /<[^>]+>/.test(rawDesc);
+                                                                                        return (
+                                                                                            <div key={String(activity.id ?? idx)} className="flex gap-3 group pl-0.5">
+                                                                                                <div className="relative shrink-0 mt-0.5">
+                                                                                                    <div className={`h-2.5 w-2.5 rounded-full ring-2 shadow-sm ${dot}`} />
+                                                                                                </div>
+                                                                                                <div className="min-w-0 pb-0.5">
+                                                                                                    <p className="text-[10px] font-bold leading-tight group-hover:text-primary transition-colors">
+                                                                                                        {activity.title}
+                                                                                                    </p>
+                                                                                                    {rawDesc ? (
+                                                                                                        descIsHtml ? (
+                                                                                                            <div
+                                                                                                                className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2 prose prose-sm max-w-none"
+                                                                                                                dangerouslySetInnerHTML={{
+                                                                                                                    __html: sanitizeHtml(String(rawDesc)),
+                                                                                                                }}
+                                                                                                            />
+                                                                                                        ) : (
+                                                                                                            <p className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2">
+                                                                                                                {rawDesc}
+                                                                                                            </p>
+                                                                                                        )
+                                                                                                    ) : null}
+                                                                                                    <p className="text-[9px] font-semibold text-muted-foreground/60 mt-1 flex items-center gap-1">
+                                                                                                        <Clock className="h-2 w-2" />
+                                                                                                        {activity.created_at ? timeAgo(activity.created_at) : '—'}
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        );
+                                                                                    });
+                                                                                })()}
                                                                             </div>
                                                                         </div>
                                                                         <a href={route('opportunities.show', opp.id)} target="_blank" rel="noopener noreferrer">

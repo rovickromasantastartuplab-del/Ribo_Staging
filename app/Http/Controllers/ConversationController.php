@@ -17,6 +17,7 @@ use App\Models\Account;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use App\Services\LeadActivityStreamService;
+use App\Services\OpportunityActivityStreamService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +107,19 @@ class ConversationController extends Controller
         $service = app(LeadActivityStreamService::class);
         foreach ($thread->leads as $lead) {
             $lead->setAttribute('recent_stream_preview', $service->previewItems($lead, 3));
+        }
+    }
+
+    /**
+     * Latest 3 items from the same opportunity activity stream as the Opportunity Detail page (per linked opportunity).
+     */
+    protected function attachOpportunityRecentStreamPreview(EmailThread $thread): void
+    {
+        $service = app(OpportunityActivityStreamService::class);
+        foreach ($thread->leads as $lead) {
+            foreach ($lead->opportunities ?? [] as $opp) {
+                $opp->setAttribute('recent_stream_preview', $service->previewItems($opp, 3));
+            }
         }
     }
 
@@ -339,6 +353,7 @@ class ConversationController extends Controller
         ]);
         $this->attachLeadOpportunities($thread);
         $this->attachLeadRecentStreamPreview($thread);
+        $this->attachOpportunityRecentStreamPreview($thread);
 
         return response()->json([
             'success' => true,
@@ -375,6 +390,7 @@ class ConversationController extends Controller
         ]);
         $this->attachLeadOpportunities($thread);
         $this->attachLeadRecentStreamPreview($thread);
+        $this->attachOpportunityRecentStreamPreview($thread);
 
         return response()->json([
             'success' => true,
@@ -649,6 +665,7 @@ class ConversationController extends Controller
         $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
         $this->attachLeadOpportunities($thread);
         $this->attachLeadRecentStreamPreview($thread);
+        $this->attachOpportunityRecentStreamPreview($thread);
 
         // Ensure relations are attached so they are serialized in the response
         $thread->setRelation('messages', $messages);
