@@ -13,6 +13,9 @@ use App\Models\LeadSource;
 use App\Models\AccountIndustry;
 use App\Models\Campaign;
 use App\Models\User;
+use App\Models\Account;
+use App\Models\Opportunity;
+use App\Models\OpportunityStage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -63,7 +66,35 @@ class ConversationController extends Controller
             'campaigns' => Campaign::where('created_by', createdBy())->where('status', 'active')
                 ->get(['id', 'name']),
             'users' => User::where('created_by', createdBy())->where('status', 'active')->get(['id', 'name', 'email']),
+            'opportunityStages' => OpportunityStage::where('created_by', createdBy())->where('status', 'active')
+                ->orderBy('order', 'asc')->orderBy('id', 'asc')
+                ->get(['id', 'name', 'color', 'probability']),
         ]);
+    }
+
+    /**
+     * Attach opportunities to each linked lead (matched by account email = lead email).
+     */
+    protected function attachLeadOpportunities(EmailThread $thread): void
+    {
+        $companyId = $thread->created_by;
+        foreach ($thread->leads as $lead) {
+            $opps = collect();
+            if ($lead->email) {
+                $email = strtolower(trim($lead->email));
+                $accountIds = Account::where('created_by', $companyId)
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->pluck('id');
+                if ($accountIds->isNotEmpty()) {
+                    $opps = Opportunity::whereIn('account_id', $accountIds)
+                        ->where('created_by', $companyId)
+                        ->with('opportunityStage')
+                        ->orderByDesc('updated_at')
+                        ->get();
+                }
+            }
+            $lead->setRelation('opportunities', $opps);
+        }
     }
 
     /**
@@ -285,18 +316,21 @@ class ConversationController extends Controller
             }
         }
 
+        $thread->load([
+            'messages' => function ($query) {
+                $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
+            },
+            'leads.leadStatus',
+            'contacts',
+            'assignments:id,name,avatar',
+            'gmailAccount',
+        ]);
+        $this->attachLeadOpportunities($thread);
+
         return response()->json([
             'success' => true,
             'message' => 'Thread updated successfully.',
-            'thread' => $thread->load([
-                'messages' => function($query) {
-                    $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
-                },
-                'leads.leadStatus', 
-                'contacts', 
-                'assignments:id,name,avatar', 
-                'gmailAccount'
-            ])
+            'thread' => $thread,
         ]);
     }
 
@@ -317,18 +351,21 @@ class ConversationController extends Controller
         $thread->assignments()->sync($request->user_ids);
         $thread = $thread->fresh();
 
+        $thread->load([
+            'messages' => function ($query) {
+                $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
+            },
+            'leads.leadStatus',
+            'contacts',
+            'assignments:id,name,avatar',
+            'gmailAccount',
+        ]);
+        $this->attachLeadOpportunities($thread);
+
         return response()->json([
             'success' => true,
             'message' => 'Thread assignments updated.',
-            'thread' => $thread->load([
-                'messages' => function($query) {
-                    $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
-                },
-                'leads.leadStatus', 
-                'contacts', 
-                'assignments:id,name,avatar', 
-                'gmailAccount'
-            ])
+            'thread' => $thread,
         ]);
     }
 
@@ -596,7 +633,8 @@ class ConversationController extends Controller
         });
 
         $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
-        
+        $this->attachLeadOpportunities($thread);
+
         // Ensure relations are attached so they are serialized in the response
         $thread->setRelation('messages', $messages);
 

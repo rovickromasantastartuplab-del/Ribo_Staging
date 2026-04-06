@@ -181,10 +181,12 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
 /* ── Main component ────────────────────────────────────────── */
 export default function ConversationsIndex({ gmailAccount, companyId, isOwner, unreadCount: initialUnreadCount, selectedThreadId }: { gmailAccount: any, companyId: number, isOwner: boolean, unreadCount?: number, selectedThreadId?: number | null }) {
     const { t } = useTranslation();
-    const { auth, leadStatuses = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
+    const { auth, leadStatuses = [], opportunityStages = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
     const permissions = auth?.permissions || [];
     const canCompose = isOwner || hasPermission(permissions, 'send-conversations');
     const canManage = isOwner || hasPermission(permissions, 'manage-conversations');
+    const canEditLeadStatus = isOwner || hasPermission(permissions, 'edit-leads');
+    const canEditOpportunityStage = isOwner || hasPermission(permissions, 'edit-opportunities');
     const isStaff = auth?.user?.type === 'staff';
     const [selectedFolder, setSelectedFolder] = useState('inbox');
     const [threads, setThreads] = useState<any[]>([]);
@@ -235,7 +237,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [activeSidebarSection, setActiveSidebarSection] = useState<'lead' | 'opportunities' | 'activity'>('lead');
     const [expandedOpportunityId, setExpandedOpportunityId] = useState<number | null>(null);
     const [localLeadStatuses, setLocalLeadStatuses] = useState<Record<number, string>>({});
-    const [localOppStatuses, setLocalOppStatuses] = useState<Record<string, string>>({});
+    const [localOppStatuses, setLocalOppStatuses] = useState<Record<number, string>>({});
+    const [savingLeadId, setSavingLeadId] = useState<number | null>(null);
+    const [savingOppId, setSavingOppId] = useState<number | null>(null);
 
     // Internal thread message pagination
     const [messagesPage, setMessagesPage] = useState(1);
@@ -643,6 +647,128 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             onSuccess: () => { setIsSyncing(false); fetchThreads(); },
             onError: () => { setIsSyncing(false); toast.error(t('Failed to synchronize inbox')); }
         });
+    };
+
+    const jsonCrmHeaders = { headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } };
+
+    useEffect(() => {
+        setLocalLeadStatuses({});
+        setLocalOppStatuses({});
+    }, [selectedThread?.id]);
+
+    const persistLeadStatus = async (lead: any, statusName: string) => {
+        const leadId = lead.id;
+        const ls = leadStatuses.find((x: any) => x.name === statusName);
+        if (!ls) {
+            toast.error(t('Invalid status'));
+            return;
+        }
+        const previousName = localLeadStatuses[leadId] ?? lead.lead_status?.name ?? lead.leadStatus?.name;
+        setLocalLeadStatuses((prev) => ({ ...prev, [leadId]: statusName }));
+        setSavingLeadId(leadId);
+        try {
+            const { data } = await axios.put(
+                route('leads.update-status', leadId),
+                { lead_status_id: ls.id },
+                jsonCrmHeaders
+            );
+            const updated = data.lead;
+            setSelectedThread((prev: any) => {
+                if (!prev?.leads) return prev;
+                return {
+                    ...prev,
+                    leads: prev.leads.map((l: any) =>
+                        l.id === leadId
+                            ? {
+                                  ...l,
+                                  ...updated,
+                                  lead_status: updated.lead_status ?? updated.leadStatus ?? l.lead_status,
+                                  leadStatus: updated.leadStatus ?? updated.lead_status ?? l.leadStatus,
+                              }
+                            : l
+                    ),
+                };
+            });
+            setLocalLeadStatuses((prev) => {
+                const next = { ...prev };
+                delete next[leadId];
+                return next;
+            });
+            if (data.message) toast.success(data.message);
+        } catch (e: any) {
+            if (previousName !== undefined && previousName !== null) {
+                setLocalLeadStatuses((prev) => ({ ...prev, [leadId]: previousName }));
+            } else {
+                setLocalLeadStatuses((prev) => {
+                    const next = { ...prev };
+                    delete next[leadId];
+                    return next;
+                });
+            }
+            const msg = e?.response?.data?.message;
+            toast.error(msg ? String(msg) : t('Failed to update lead status'));
+        } finally {
+            setSavingLeadId(null);
+        }
+    };
+
+    const persistOpportunityStage = async (opp: any, stageName: string) => {
+        const oppId = opp.id;
+        const st = opportunityStages.find((x: any) => x.name === stageName);
+        if (!st) {
+            toast.error(t('Invalid stage'));
+            return;
+        }
+        const previousName = localOppStatuses[oppId] ?? opp.opportunity_stage?.name ?? opp.opportunityStage?.name;
+        setLocalOppStatuses((prev) => ({ ...prev, [oppId]: stageName }));
+        setSavingOppId(oppId);
+        try {
+            const { data } = await axios.put(
+                route('opportunities.update-status', oppId),
+                { opportunity_stage_id: st.id },
+                jsonCrmHeaders
+            );
+            const updated = data.opportunity;
+            setSelectedThread((prev: any) => {
+                if (!prev?.leads) return prev;
+                return {
+                    ...prev,
+                    leads: prev.leads.map((l: any) => ({
+                        ...l,
+                        opportunities: (l.opportunities ?? []).map((o: any) =>
+                            o.id === oppId
+                                ? {
+                                      ...o,
+                                      ...updated,
+                                      opportunity_stage: updated.opportunity_stage ?? updated.opportunityStage ?? o.opportunity_stage,
+                                      opportunityStage: updated.opportunityStage ?? updated.opportunity_stage ?? o.opportunityStage,
+                                  }
+                                : o
+                        ),
+                    })),
+                };
+            });
+            setLocalOppStatuses((prev) => {
+                const next = { ...prev };
+                delete next[oppId];
+                return next;
+            });
+            if (data.message) toast.success(data.message);
+        } catch (e: any) {
+            if (previousName !== undefined && previousName !== null) {
+                setLocalOppStatuses((prev) => ({ ...prev, [oppId]: previousName }));
+            } else {
+                setLocalOppStatuses((prev) => {
+                    const next = { ...prev };
+                    delete next[oppId];
+                    return next;
+                });
+            }
+            const msg = e?.response?.data?.message;
+            toast.error(msg ? String(msg) : t('Failed to update opportunity stage'));
+        } finally {
+            setSavingOppId(null);
+        }
     };
 
     const handleSelectThread = async (thread: any, page = 1) => {
@@ -1687,7 +1813,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         {selectedThread.leads?.length > 0 ? (
                                             <>
                                                 {selectedThread.leads.map((lead: any) => {
-                                                    const currentStatus = localLeadStatuses[lead.id] ?? (lead.lead_status?.name || lead.status || 'New');
+                                                    const currentStatus = localLeadStatuses[lead.id] ?? lead.lead_status?.name ?? lead.leadStatus?.name ?? leadStatuses[0]?.name ?? '';
                                                     const statusConfig: Record<string, { color: string; dot: string }> = {
                                                         'New':         { color: 'text-blue-700 bg-blue-50 border-blue-200', dot: 'bg-blue-500' },
                                                         'Contacted':   { color: 'text-violet-700 bg-violet-50 border-violet-200', dot: 'bg-violet-500' },
@@ -1732,21 +1858,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
                                                                         {t('Status')}
                                                                     </p>
-                                                                    {canManage ? (
+                                                                    {canEditLeadStatus && leadStatuses.length > 0 ? (
                                                                         <Select
                                                                             value={currentStatus}
-                                                                            onValueChange={(val) => {
-                                                                                setLocalLeadStatuses(prev => ({ ...prev, [lead.id]: val }));
-                                                                            }}
+                                                                            onValueChange={(val) => persistLeadStatus(lead, val)}
+                                                                            disabled={savingLeadId === lead.id}
                                                                         >
                                                                             <SelectTrigger className={`h-7 text-xs font-semibold border rounded-md px-2.5 w-full ${sc.color}`}>
-                                                                                <SelectValue />
+                                                                                <SelectValue placeholder={t('Status')} />
                                                                             </SelectTrigger>
                                                                             <SelectContent>
-                                                                                {['New', 'Contacted', 'Qualified', 'Unqualified'].map(s => (
-                                                                                    <SelectItem key={s} value={s} className="text-xs">{t(s)}</SelectItem>
-                                                                                ))}
-                                                                                {leadStatuses?.filter((ls: any) => !['New','Contacted','Qualified','Unqualified'].includes(ls.name)).map((ls: any) => (
+                                                                                {leadStatuses.map((ls: any) => (
                                                                                     <SelectItem key={ls.id} value={ls.name} className="text-xs">{ls.name}</SelectItem>
                                                                                 ))}
                                                                             </SelectContent>
@@ -1865,29 +1987,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 {activeSidebarSection === 'opportunities' && (
                                     <div className="p-4 space-y-3">
                                         {(() => {
-                                            let opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
-                                            
-                                            // Mock data for demonstration if no real opportunities exist
-                                            if (opportunities.length === 0 && selectedThread.leads?.length > 0) {
-                                                opportunities = [
-                                                    {
-                                                        id: 'mock-1',
-                                                        name: 'Enterprise License Renewal',
-                                                        status: 'Negotiation',
-                                                        amount: 12500,
-                                                        close_date: '2024-05-15',
-                                                        probability: 75
-                                                    },
-                                                    {
-                                                        id: 'mock-2',
-                                                        name: 'Expansion: Professional Services',
-                                                        status: 'Open',
-                                                        amount: 4800,
-                                                        close_date: '2024-06-01',
-                                                        probability: 30
-                                                    }
-                                                ];
-                                            }
+                                            const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
 
                                             const oppStatusConfig: Record<string, { badge: string; dot: string; label: string }> = {
                                                 'Open':        { badge: 'bg-blue-100 text-blue-700 border-blue-200',    dot: 'bg-blue-500',    label: 'Open' },
@@ -1913,8 +2013,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             }
 
                                             return opportunities.map((opp: any) => {
-                                                const currentStatus = localOppStatuses[opp.id] ?? opp.status;
-                                                const sc = oppStatusConfig[currentStatus] ?? oppStatusConfig['Open'];
+                                                const stageName =
+                                                    localOppStatuses[opp.id] ??
+                                                    opp.opportunity_stage?.name ??
+                                                    opp.opportunityStage?.name ??
+                                                    opportunityStages[0]?.name ??
+                                                    '';
+                                                const sc = oppStatusConfig[stageName] ?? { badge: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground', label: stageName };
                                                 const isExpanded = expandedOpportunityId === opp.id;
                                                 return (
                                                     <div key={opp.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -1928,25 +2033,24 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 <span className="text-xs font-semibold truncate">{opp.name || opp.title}</span>
                                                             </button>
                                                             <div className="flex items-center gap-1.5 shrink-0 ml-1">
-                                                                {canManage ? (
+                                                                {canEditOpportunityStage && opportunityStages.length > 0 ? (
                                                                     <Select
-                                                                        value={currentStatus}
-                                                                        onValueChange={(val) => {
-                                                                            setLocalOppStatuses(prev => ({ ...prev, [opp.id]: val }));
-                                                                        }}
+                                                                        value={stageName}
+                                                                        onValueChange={(val) => persistOpportunityStage(opp, val)}
+                                                                        disabled={savingOppId === opp.id}
                                                                     >
                                                                         <SelectTrigger className={`h-6 text-[10px] font-bold border rounded-md px-1.5 min-w-[70px] ${sc.badge}`}>
-                                                                            <SelectValue />
+                                                                            <SelectValue placeholder={t('Stage')} />
                                                                         </SelectTrigger>
                                                                         <SelectContent>
-                                                                            {['Open', 'Negotiation', 'Won', 'Lost'].map(s => (
-                                                                                <SelectItem key={s} value={s} className="text-xs">{t(s)}</SelectItem>
+                                                                            {opportunityStages.map((st: any) => (
+                                                                                <SelectItem key={st.id} value={st.name} className="text-xs">{st.name}</SelectItem>
                                                                             ))}
                                                                         </SelectContent>
                                                                     </Select>
                                                                 ) : (
                                                                     <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${sc.badge}`}>
-                                                                        {t(sc.label)}
+                                                                        {stageName || '—'}
                                                                     </span>
                                                                 )}
                                                                 <button 
@@ -1977,22 +2081,29 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         <span className="font-medium">{opp.close_date}</span>
                                                                     </div>
                                                                 )}
-                                                                {opp.probability !== undefined && opp.probability !== null && (
+                                                                {(() => {
+                                                                    const prob =
+                                                                        opp.opportunity_stage?.probability ??
+                                                                        opp.opportunityStage?.probability ??
+                                                                        opp.probability;
+                                                                    if (prob === undefined || prob === null) return null;
+                                                                    return (
                                                                     <div className="space-y-1">
                                                                         <div className="flex items-center justify-between text-xs">
                                                                             <span className="text-muted-foreground flex items-center gap-1">
                                                                                 <TrendingUp className="h-3 w-3" />{t('Probability')}
                                                                             </span>
-                                                                            <span className="font-semibold">{opp.probability}%</span>
+                                                                            <span className="font-semibold">{prob}%</span>
                                                                         </div>
                                                                         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                                                                             <div
                                                                                 className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                                                                                style={{ width: `${opp.probability}%` }}
+                                                                                style={{ width: `${Math.min(100, Number(prob))}%` }}
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                )}
+                                                                    );
+                                                                })()}
                                                                 {opp.id && (
                                                                     <div className="pt-2">
                                                                         <div className="mb-4 pt-3 border-t">
