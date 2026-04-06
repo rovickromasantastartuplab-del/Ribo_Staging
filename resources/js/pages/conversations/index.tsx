@@ -1803,7 +1803,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             {/* Backdrop for mobile */}
                             <div
                                 className={cn(
-                                    "absolute inset-0 z-20 bg-black/20 lg:bg-transparent xl:hidden transition-opacity duration-300 ease-in-out",
+                                    "absolute inset-0 z-20 bg-black/20 2xl:hidden transition-opacity duration-300 ease-in-out",
                                     showContactSidebar ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                                 )}
                                 onClick={() => setShowContactSidebar(false)}
@@ -1812,10 +1812,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 className={cn(
                                     "absolute right-0 top-0 bottom-0 z-30 w-[300px] min-w-0 min-h-0 max-w-[88vw] border-l flex flex-col bg-background shadow-2xl overflow-hidden",
                                     "transition-all duration-300 ease-in-out",
-                                    "xl:relative xl:z-10 xl:max-w-none xl:shadow-none xl:h-[calc(100vh-116px)] xl:self-stretch xl:min-h-0",
+                                    "2xl:relative 2xl:z-10 2xl:max-w-none 2xl:shadow-none 2xl:h-[calc(100vh-116px)] 2xl:self-stretch 2xl:min-h-0",
                                     showContactSidebar 
-                                        ? "translate-x-0 xl:flex-shrink-0 xl:w-[300px] opacity-100" 
-                                        : "translate-x-full xl:translate-x-0 xl:flex-shrink xl:w-0 opacity-0 xl:opacity-100 xl:border-l-0"
+                                        ? "translate-x-0 2xl:flex-shrink-0 2xl:w-[300px] opacity-100" 
+                                        : "translate-x-full 2xl:translate-x-0 2xl:flex-shrink 2xl:w-0 opacity-0 2xl:opacity-100 2xl:border-l-0"
                                 )}
                             >
 
