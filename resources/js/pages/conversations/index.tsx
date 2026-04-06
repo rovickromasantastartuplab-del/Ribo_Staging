@@ -34,7 +34,7 @@ import {
     Underline,
     MoreHorizontal,
     CornerDownLeft,
-    Check
+    Check,
 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -75,6 +75,29 @@ import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp
 const parseUTC = (dateStr: string) => {
     if (!dateStr) return new Date();
     return dateStr.endsWith('Z') ? new Date(dateStr) : new Date(dateStr + 'Z');
+};
+
+/** Dot colors aligned with `leads/show.tsx` stream type styling (getActivityColor / badge semantics). */
+const getLeadStreamPreviewDotClass = (activity: { activity_type?: string; field_changed?: string | null }) => {
+    const ty = activity.activity_type || '';
+    switch (ty) {
+        case 'created':
+            return 'bg-emerald-500 ring-emerald-50';
+        case 'updated':
+            return activity.field_changed === 'lead_status_id' ? 'bg-violet-500 ring-violet-50' : 'bg-blue-500 ring-blue-50';
+        case 'assigned':
+            return 'bg-purple-500 ring-purple-50';
+        case 'converted':
+            return 'bg-orange-500 ring-orange-50';
+        case 'comment':
+            return 'bg-indigo-500 ring-indigo-50';
+        case 'email':
+            return 'bg-sky-500 ring-sky-50';
+        case 'message':
+            return 'bg-teal-500 ring-teal-50';
+        default:
+            return 'bg-muted-foreground ring-muted/40';
+    }
 };
 
 const timeAgo = (dateStr: string) => {
@@ -1892,7 +1915,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     );
                                                 })}
 
-                                                {/* Lead/Contact Contextual Activity Stream */}
+                                                {/* Global lead activity stream preview (same source as Lead Detail page) */}
                                                 <div className="mt-6 pt-6 border-t space-y-4">
                                                     <div>
                                                         <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center justify-between">
@@ -1900,36 +1923,53 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             <Clock className="h-3 w-3 opacity-50" />
                                                         </h4>
                                                         <div className="space-y-4 relative">
-                                                            {/* Vertical line connecting events */}
                                                             <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border/60" />
-                                                            
-                                                            <div className="flex gap-4 group">
-                                                                <div className="relative shrink-0 mt-1">
-                                                                    <div className="h-3 w-3 rounded-full bg-emerald-500 ring-4 ring-emerald-50 shadow-sm" />
-                                                                </div>
-                                                                <div className="min-w-0 pb-1">
-                                                                    <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors">{t('Last Message Received')}</p>
-                                                                    <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 italic">"{selectedThread.snippet}"</p>
-                                                                    <p className="text-[10px] font-semibold text-muted-foreground/60 mt-2 flex items-center gap-1">
-                                                                        <Clock className="h-2.5 w-2.5" />
-                                                                        {timeAgo(selectedThread.last_message_at)}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div className="flex gap-4 group">
-                                                                <div className="relative shrink-0 mt-1">
-                                                                    <div className="h-3 w-3 rounded-full bg-blue-500 ring-4 ring-blue-50 shadow-sm" />
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors">{t('Lead Context Created')}</p>
-                                                                    <p className="text-[10px] text-muted-foreground mt-1">{selectedThread.message_count} {t('messages in thread')}</p>
-                                                                    <p className="text-[10px] font-semibold text-muted-foreground/60 mt-2 flex items-center gap-1">
-                                                                        <Clock className="h-2.5 w-2.5" />
-                                                                        {timeAgo(selectedThread.created_at)}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
+                                                            {(() => {
+                                                                const preview = selectedThread.leads?.[0]?.recent_stream_preview ?? [];
+                                                                if (preview.length === 0) {
+                                                                    return (
+                                                                        <p className="text-[10px] text-muted-foreground pl-6">{t('No activities yet')}</p>
+                                                                    );
+                                                                }
+                                                                return preview.map((activity: any, idx: number) => {
+                                                                    const dot = getLeadStreamPreviewDotClass(activity);
+                                                                    const rawDesc = activity.description;
+                                                                    const descIsHtml =
+                                                                        typeof rawDesc === 'string' && /<[^>]+>/.test(rawDesc);
+                                                                    return (
+                                                                        <div key={String(activity.id ?? idx)} className="flex gap-4 group">
+                                                                            <div className="relative shrink-0 mt-1">
+                                                                                <div className={`h-3 w-3 rounded-full ring-4 shadow-sm ${dot}`} />
+                                                                            </div>
+                                                                            <div className="min-w-0 pb-1">
+                                                                                <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors">
+                                                                                    {activity.title}
+                                                                                </p>
+                                                                                {rawDesc ? (
+                                                                                    descIsHtml ? (
+                                                                                        <div
+                                                                                            className="text-[10px] text-muted-foreground mt-1 line-clamp-2 prose prose-sm max-w-none"
+                                                                                            dangerouslySetInnerHTML={{
+                                                                                                __html: sanitizeHtml(String(rawDesc)),
+                                                                                            }}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                                                                                            {rawDesc}
+                                                                                        </p>
+                                                                                    )
+                                                                                ) : null}
+                                                                                <p className="text-[10px] font-semibold text-muted-foreground/60 mt-2 flex items-center gap-1">
+                                                                                    <Clock className="h-2.5 w-2.5" />
+                                                                                    {activity.created_at
+                                                                                        ? timeAgo(activity.created_at)
+                                                                                        : '—'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                });
+                                                            })()}
                                                         </div>
                                                     </div>
 

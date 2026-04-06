@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
+use App\Services\LeadActivityStreamService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -94,6 +95,17 @@ class ConversationController extends Controller
                 }
             }
             $lead->setRelation('opportunities', $opps);
+        }
+    }
+
+    /**
+     * Attach the latest 3 items from the same global lead activity stream as the Lead Detail page.
+     */
+    protected function attachLeadRecentStreamPreview(EmailThread $thread): void
+    {
+        $service = app(LeadActivityStreamService::class);
+        foreach ($thread->leads as $lead) {
+            $lead->setAttribute('recent_stream_preview', $service->previewItems($lead, 3));
         }
     }
 
@@ -326,6 +338,7 @@ class ConversationController extends Controller
             'gmailAccount',
         ]);
         $this->attachLeadOpportunities($thread);
+        $this->attachLeadRecentStreamPreview($thread);
 
         return response()->json([
             'success' => true,
@@ -361,6 +374,7 @@ class ConversationController extends Controller
             'gmailAccount',
         ]);
         $this->attachLeadOpportunities($thread);
+        $this->attachLeadRecentStreamPreview($thread);
 
         return response()->json([
             'success' => true,
@@ -634,6 +648,7 @@ class ConversationController extends Controller
 
         $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
         $this->attachLeadOpportunities($thread);
+        $this->attachLeadRecentStreamPreview($thread);
 
         // Ensure relations are attached so they are serialized in the response
         $thread->setRelation('messages', $messages);
