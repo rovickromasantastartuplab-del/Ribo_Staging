@@ -13,9 +13,9 @@ export function insertNewNode<Data>(
     data?: Data;
   },
 ): {allNodes: StoredNode[]; newNodes: StoredNode[]} {
-  let {type, parentId, asNewBranch, data} = props;
+  const {type, parentId, asNewBranch, data} = props;
 
-  let newNodes = nodeConfig[type].createNewStoredNode(
+  const newNodes = nodeConfig[type].createNewStoredNode(
     parentId,
     data as any,
   ) as StoredNode[];

@@ -63,7 +63,7 @@ export default function ProjectKanban() {
   };
 
   const applyFilters = () => {
-    let filtered = { ...currentKanbanData };
+    const filtered = { ...currentKanbanData };
 
     Object.keys(filtered).forEach(statusId => {
       const column = filtered[statusId];

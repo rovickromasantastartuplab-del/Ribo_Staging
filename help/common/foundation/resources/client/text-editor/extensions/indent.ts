@@ -54,7 +54,7 @@ export const Indent = Extension.create({
         const nextLevel = (node.attrs.indent || 0) + delta;
         const {minLevel, maxLevel} = this.options;
         const indent =
-          // eslint-disable-next-line no-nested-ternary
+           
           nextLevel < minLevel
             ? minLevel
             : nextLevel > maxLevel

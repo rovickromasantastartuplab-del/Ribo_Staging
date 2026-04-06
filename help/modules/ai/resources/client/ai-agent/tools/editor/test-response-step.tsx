@@ -186,7 +186,7 @@ function LiveResponseSection() {
 
   return (
     <div className="mt-24">
-      {!!attributesUsed?.length ? (
+      {attributesUsed?.length ? (
         <Fragment>
           <div className="mb-12 text-sm">
             <Trans message="Enter values for attributes configured in the request." />

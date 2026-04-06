@@ -202,7 +202,7 @@ const createEditorStore = (initialTool: AiAgentTool | null) => {
       set({
         [step]: {
           ...state,
-          isValid: !!Object.keys(errors).length ? false : state.isValid,
+          isValid: Object.keys(errors).length ? false : state.isValid,
           errors,
         },
       });

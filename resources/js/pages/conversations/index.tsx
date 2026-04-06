@@ -1265,7 +1265,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                         {/* Pane 3: Thread detail + reply */}
                         <div className={`
-                        flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/5
+                        flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/5 transition-all duration-300 ease-in-out
                         ${!selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
                             {selectedThread ? (
@@ -1797,17 +1797,21 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             )}
                         </div>
                     </>
-                </div>
-
-                {/* Pane 4: CRM Context Sidebar — ALWAYS an absolute overlay */}
-                {selectedThread && showContactSidebar && (
-                    <>
-                        {/* Backdrop for mobile */}
-                        <div
-                            className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none"
+                    {/* Pane 4: CRM Context Sidebar — ALWAYS an absolute overlay */}
+                    {selectedThread && showContactSidebar && (
+                        <>
+                            {/* Backdrop for mobile */}
+                            <div
+                                className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none xl:hidden transition-all duration-300 ease-in-out"
                             onClick={() => setShowContactSidebar(false)}
                         />
-                        <div className="absolute right-0 top-0 bottom-0 z-30 w-full min-w-0 md:w-[300px] max-w-[88vw] border-l flex flex-col bg-background shadow-2xl">
+                        <div
+                            className={cn(
+                                "absolute right-0 top-0 bottom-0 z-30 w-[300px] min-w-0 max-w-[88vw] border-l flex flex-col bg-background shadow-2xl",
+                                "transition-all duration-300 ease-in-out",
+                                "xl:relative xl:z-10 xl:flex-shrink-0 xl:w-[300px] xl:max-w-none xl:border-l xl:shadow-none"
+                            )}
+                        >
 
                             {/* ── Sidebar Header ────────────────────────── */}
                             <div className="flex items-center justify-between gap-2 min-w-0 px-4 py-3 border-b shrink-0">
@@ -2249,8 +2253,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 {/* स्टैंडअलोन गतिविधि अनुभाग हटा दिया गया (लीड्स और ऑप्स में विलय कर दिया गया) */}
                             </ScrollArea>
                         </div>
-                    </>
-                )}
+                        </>
+                    )}
             </div>
 
             {/* Compose Dialog */}
@@ -2493,6 +2497,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 title={t('Add New Lead')}
                 mode="create"
             />
+
+            </div>
 
         </PageTemplate>
     );

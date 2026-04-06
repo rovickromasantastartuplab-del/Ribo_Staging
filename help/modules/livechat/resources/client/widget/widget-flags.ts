@@ -2,7 +2,7 @@ import {addGlobalHeaderToApiClient} from '@common/http/query-client';
 import {getWidgetBootstrapData} from '@livechat/widget/hooks/use-widget-bootstrap-data';
 
 let activeAiAgentId: string | null = null;
-let activeKnowledgeScopeTag: string | null = null;
+const activeKnowledgeScopeTag: string | null = null;
 
 const setHeadersForLiveMode = () => {
   addGlobalHeaderToApiClient('X-Chat-Widget', 'true');
