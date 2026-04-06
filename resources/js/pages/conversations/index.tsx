@@ -251,6 +251,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [activeSidebarSection, setActiveSidebarSection] = useState<'lead' | 'opportunities' | 'activity'>('lead');
     const [expandedOpportunityId, setExpandedOpportunityId] = useState<number | null>(null);
     const [localLeadStatuses, setLocalLeadStatuses] = useState<Record<number, string>>({});
+    const [localOppStatuses, setLocalOppStatuses] = useState<Record<string, string>>({});
 
     // Internal thread message pagination
     const [messagesPage, setMessagesPage] = useState(1);
@@ -2163,26 +2164,50 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             }
 
                                             return opportunities.map((opp: any) => {
-                                                const sc = oppStatusConfig[opp.status] ?? oppStatusConfig['Open'];
+                                                const currentStatus = localOppStatuses[opp.id] ?? opp.status;
+                                                const sc = oppStatusConfig[currentStatus] ?? oppStatusConfig['Open'];
                                                 const isExpanded = expandedOpportunityId === opp.id;
                                                 return (
                                                     <div key={opp.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
                                                         {/* Opportunity row — click to expand */}
-                                                        <button
-                                                            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/40 transition-colors text-left"
-                                                            onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
-                                                        >
-                                                            <div className="flex items-center gap-2 min-w-0">
+                                                        <div className="flex items-center justify-between px-3 py-2 hover:bg-muted/40 transition-colors">
+                                                            <button
+                                                                className="flex-1 flex items-center gap-2 min-w-0 py-1.5 text-left"
+                                                                onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
+                                                            >
                                                                 <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
                                                                 <span className="text-xs font-semibold truncate">{opp.name || opp.title}</span>
+                                                            </button>
+                                                            <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                                                                {canManage ? (
+                                                                    <Select
+                                                                        value={currentStatus}
+                                                                        onValueChange={(val) => {
+                                                                            setLocalOppStatuses(prev => ({ ...prev, [opp.id]: val }));
+                                                                        }}
+                                                                    >
+                                                                        <SelectTrigger className={`h-6 text-[10px] font-bold border rounded-md px-1.5 min-w-[70px] ${sc.badge}`}>
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {['Open', 'Negotiation', 'Won', 'Lost'].map(s => (
+                                                                                <SelectItem key={s} value={s} className="text-xs">{t(s)}</SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                ) : (
+                                                                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${sc.badge}`}>
+                                                                        {t(sc.label)}
+                                                                    </span>
+                                                                )}
+                                                                <button 
+                                                                    onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
+                                                                    className="p-1 hover:bg-muted rounded"
+                                                                >
+                                                                    {isExpanded ? <ChevronUpIcon className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                                                                </button>
                                                             </div>
-                                                            <div className="flex items-center gap-2 shrink-0 ml-1">
-                                                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${sc.badge}`}>
-                                                                    {t(sc.label)}
-                                                                </span>
-                                                                {isExpanded ? <ChevronUpIcon className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
-                                                            </div>
-                                                        </button>
+                                                        </div>
 
                                                         {/* Expanded detail view */}
                                                         {isExpanded && (
