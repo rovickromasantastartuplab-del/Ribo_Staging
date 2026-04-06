@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ReactNode } from 'react';
 import { FloatingChatGpt } from '@/components/FloatingChatGpt';
+import { cn } from '@/lib/utils';
 
 export interface PageAction {
   label: string;
@@ -20,6 +21,8 @@ export interface PageTemplateProps {
   actions?: PageAction[];
   children: ReactNode;
   noPadding?: boolean;
+  /** When true, removes page-level p-4/md:p-6/lg:p-8 so full-bleed children (e.g. Conversations Hub) align with the main column edges. Title row keeps horizontal padding. */
+  noOuterPadding?: boolean;
   breadcrumbs?: BreadcrumbItem[];
   className?: string;
 }
@@ -31,6 +34,7 @@ export function PageTemplate({
   actions,
   children,
   noPadding = false,
+  noOuterPadding = false,
   breadcrumbs,
   className
 }: PageTemplateProps) {
@@ -46,10 +50,21 @@ export function PageTemplate({
     <AppLayout breadcrumbs={pageBreadcrumbs}>
       <Head title={`${title} - ${(usePage().props as any).globalSettings?.titleText || 'Sales SaaS'}`} />
 
-      <div className={`flex w-full max-w-full flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 ${className || 'overflow-x-hidden'}`}>
+      <div
+        className={cn(
+          'flex w-full max-w-full flex-1 flex-col overflow-x-hidden',
+          noOuterPadding ? 'gap-0 p-0' : 'gap-4 p-4 md:p-6 lg:p-8',
+          className
+        )}
+      >
         {/* <div className="flex h-full flex-1 flex-col gap-4 p-4"> */}
         {/* Header with action buttons */}
-        <div className="flex items-center justify-between flex-wrap gap-y-2 print:hidden">
+        <div
+          className={cn(
+            'flex items-center justify-between flex-wrap gap-y-2 print:hidden',
+            noOuterPadding && 'px-4 md:px-6 lg:px-8 pt-4 pb-2'
+          )}
+        >
           <h1 className="text-xl font-semibold">{title}</h1>
           {actions && actions.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">

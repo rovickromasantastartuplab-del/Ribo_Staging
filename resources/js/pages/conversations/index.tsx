@@ -145,7 +145,7 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
                     <f.icon className="h-3.5 w-3.5" />
                     {f.label}
                     {f.count > 0 && (
-                        <span className={`text-[10px] px-1 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20'
+                        <span className={`text-xs px-1 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20'
                             }`}>{f.count}</span>
                     )}
                 </button>
@@ -193,7 +193,7 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                             {f.label}
                         </span>
                         {f.count > 0 && (
-                            <span className={`text-[10px] px-1.5 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+                            <span className={`text-xs px-1.5 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
                                 }`}>{f.count}</span>
                         )}
                     </button>
@@ -318,7 +318,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         content: replyBody,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm focus:outline-none max-w-none min-h-[3.75rem] lg:min-h-[5rem] p-2.5 text-xs lg:text-sm leading-relaxed'
+                class: 'prose prose-sm focus:outline-none max-w-none min-h-[3.75rem] lg:min-h-[5rem] p-2.5 text-sm leading-relaxed'
             }
         },
         onUpdate: ({ editor }) => {
@@ -989,17 +989,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             description={t('Unified inbox for all relationships')}
             url="/conversations"
             noPadding
+            noOuterPadding
         >
             <Head title={t('Conversations Hub')} />
 
             {/* 
-                Main container: fills available height.
-                PageTemplate with noPadding gives us the full content area.
-                The outer layout (AppLayout) has a top nav bar (~56px) + breadcrumb (~40px) + 
-                the PageTemplate header (~48px) + padding (p-4 = 16px top/bottom + gap-4 = 16px).
-                Total overhead ≈ 56 + 40 + 48 + 32 + 16 = ~192px. Use 200px for safety.
+                Main container: fills available height (edge-to-edge under PageTemplate title row).
+                AppLayout: top nav (~56px) + breadcrumb (~40px) + PageTemplate title row (~52px).
+                noOuterPadding removes page p-4/md:p-6/lg:p-8 — no extra vertical gutter here.
+                Total overhead ≈ 56 + 40 + 52 = ~148px; use 168px to account for gaps/borders.
             */}
-            <div className="flex flex-col h-screen overflow-hidden lg:h-[calc(100vh-200px)] min-h-[25rem] border rounded-xl bg-background shadow-sm relative">
+            <div className="flex flex-col h-screen overflow-hidden lg:h-[calc(100vh-168px)] min-h-[25rem] bg-background border-b border-border relative">
 
                 {/* Mobile folder tabs: visible below xl where the sidebar is hidden */}
                 <div className="xl:hidden border-b shrink-0">
@@ -1045,7 +1045,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                                                     <Input
                                                         placeholder={t('Search threads...')}
-                                                        className="pl-8 bg-muted/50 border-none h-8 text-xs focus-visible:ring-1"
+                                                        className="pl-8 bg-muted/50 border-none h-8 text-sm focus-visible:ring-1"
                                                         value={searchQuery}
                                                         onChange={(e) => setSearchQuery(e.target.value)}
                                                         onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
@@ -1101,31 +1101,31 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 }`}
                                                         >
                                                             <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
-                                                                <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
+                                                                <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
                                                                     {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
                                                                 </AvatarFallback>
                                                             </Avatar>
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
                                                                     <div className="flex flex-col min-w-0 flex-1">
-                                                                        <span className={`text-xs truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
+                                                                        <span className={`text-sm truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
                                                                             } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
                                                                             {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
                                                                         </span>
                                                                         {(thread.leads?.[0] || thread.contacts?.[0]) && (
-                                                                            <span className="text-[9px] text-muted-foreground truncate opacity-70">
+                                                                            <span className="text-xs text-muted-foreground truncate opacity-70">
                                                                                 {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <span className="text-[10px] text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
+                                                                    <span className="text-xs text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
                                                                         {timeAgoShort(thread.last_message_at)}
                                                                     </span>
                                                                 </div>
-                                                                <div className={`text-xs truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
+                                                                <div className={`text-sm truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
                                                                     {thread.subject || t('(No Subject)')}
                                                                 </div>
-                                                                <div className="text-xs text-muted-foreground/70 truncate">
+                                                                <div className="text-sm text-muted-foreground/70 truncate">
                                                                     {thread.snippet}
                                                                 </div>
                                                                 <div className="mt-1.5 flex flex-wrap gap-1 items-center">
@@ -1178,13 +1178,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     {loading && (
                                                         <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
                                                             <RefreshCw className="h-4 w-4 animate-spin" />
-                                                            <span className="text-[10px] font-medium">{t('Loading more...')}</span>
+                                                            <span className="text-xs font-medium">{t('Loading more...')}</span>
                                                         </div>
                                                     )}
 
                                                     {!hasMoreThreads && !loading && threads.length > 10 && (
                                                         <div className="p-6 text-center bg-muted/5">
-                                                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
+                                                            <p className="text-xs text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1248,10 +1248,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     <ArrowLeft className="h-4 w-4" />
                                                 </Button>
                                                 <div className="min-w-0">
-                                                    <h2 className="text-sm font-semibold truncate">
+                                                    <h2 className="text-base font-semibold truncate">
                                                         {selectedThread.subject || t('(No Subject)')}
                                                     </h2>
-                                                    <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                    <div className="text-sm text-muted-foreground flex items-center gap-1.5">
                                                         <span className="truncate max-w-xs">{selectedThread.participants?.join(', ')}</span>
                                                         <span>·</span>
                                                         <span className="shrink-0">{selectedThread.message_count} {t('messages')}</span>
@@ -1352,7 +1352,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-48">
-                                                        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
+                                                        <DropdownMenuLabel className="text-xs uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
                                                         {['Low', 'Medium', 'High'].map(p => (
                                                             <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
                                                                 <div className={`w-2.5 h-2.5 rounded-full mr-2 ${p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'}`} />
@@ -1381,23 +1381,23 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             {msg.sender?.avatar ? (
                                                                 <AvatarImage src={msg.sender.avatar} />
                                                             ) : null}
-                                                            <AvatarFallback className="bg-muted text-[10px]">
+                                                            <AvatarFallback className="bg-muted text-xs">
                                                                 {(msg.sender?.name || msg.from_email)?.charAt(0).toUpperCase()}
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <div className="flex-1 min-w-0 max-w-full space-y-1.5">
                                                             <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
-                                                                <span className="text-xs font-semibold truncate flex-1 min-w-0">
+                                                                <span className="text-sm font-semibold truncate flex-1 min-w-0">
                                                                     {msg.from_name && msg.from_name !== msg.from_email 
                                                                         ? `${msg.from_name} <${msg.from_email}>` 
                                                                         : msg.from_email}
                                                                     {msg.sender && (
-                                                                        <span className="ml-1 text-[10px] font-normal text-muted-foreground italic">
+                                                                        <span className="ml-1 text-xs font-normal text-muted-foreground italic">
                                                                             sent by {msg.sender.name}
                                                                         </span>
                                                                     )}
                                                                 </span>
-                                                                <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[120px] text-right flex items-center gap-1.5 justify-end">
+                                                                <span className="text-xs text-muted-foreground truncate shrink-0 max-w-[120px] text-right flex items-center gap-1.5 justify-end">
                                                                     {timeAgo(msg.sent_at)}
                                                                     <Button 
                                                                         variant="ghost" 
@@ -1410,7 +1410,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     </Button>
                                                                 </span>
                                                             </div>
-                                                            <div className="bg-background border rounded-lg p-3 shadow-sm text-xs lg:text-sm leading-relaxed overflow-hidden break-words w-full [overflow-wrap:anywhere]">
+                                                            <div className="bg-background border rounded-lg p-3 shadow-sm text-sm leading-relaxed overflow-hidden break-words w-full [overflow-wrap:anywhere]">
                                                                 {msg.body_html ? (
                                                                     <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
                                                                 ) : (
@@ -1473,7 +1473,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 ))}
 
                                                 {loadingMoreMessages && (
-                                                    <div className="flex justify-center items-center py-2 text-muted-foreground text-[10px] italic">
+                                                    <div className="flex justify-center items-center py-2 text-muted-foreground text-xs italic">
                                                         <RefreshCw className="h-3 w-3 animate-spin mr-2" />
                                                         {t('Loading earlier messages...')}
                                                     </div>
@@ -1794,8 +1794,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-semibold truncate leading-tight">{contactName}</p>
-                                                    <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                                                    <p className="text-sm font-semibold truncate leading-tight">{contactName}</p>
+                                                    <p className="text-xs text-muted-foreground truncate leading-tight">
                                                         {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
                                                     </p>
                                                 </div>
@@ -1817,7 +1817,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     <button
                                         key={tab.key}
                                         onClick={() => setActiveSidebarSection(tab.key)}
-                                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 ${
+                                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
                                             activeSidebarSection === tab.key
                                                 ? 'border-primary text-primary bg-primary/5'
                                                 : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
@@ -1852,7 +1852,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             <div className="flex items-center justify-between px-3 py-2.5 bg-muted/30 border-b">
                                                                 <div className="flex items-center gap-2 min-w-0">
                                                                     <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
-                                                                    <span className="text-xs font-semibold truncate">{lead.name}</span>
+                                                                    <span className="text-sm font-semibold truncate">{lead.name}</span>
                                                                 </div>
                                                                 <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0 ml-1">
                                                                     {t('LEAD')}
@@ -1860,7 +1860,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             </div>
 
                                                             {/* Lead detail rows */}
-                                                            <div className="px-3 py-2.5 space-y-2 text-xs">
+                                                            <div className="px-3 py-2.5 space-y-4 text-sm">
                                                                 <div className="flex items-center justify-between gap-2">
                                                                     <span className="text-muted-foreground shrink-0">{t('Company')}</span>
                                                                     <span className="font-medium truncate text-right">{lead.company || '—'}</span>
@@ -2072,7 +2072,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
                                                             >
                                                                 <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
-                                                                <span className="text-xs font-semibold truncate">{opp.name || opp.title}</span>
+                                                                <span className="text-sm font-semibold truncate">{opp.name || opp.title}</span>
                                                             </button>
                                                             <div className="flex items-center gap-1.5 shrink-0 ml-1">
                                                                 {canEditOpportunityStage && opportunityStages.length > 0 ? (
@@ -2106,7 +2106,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                                         {/* Expanded detail view */}
                                                         {isExpanded && (
-                                                            <div className="border-t bg-muted/10 px-3 py-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                            <div className="border-t bg-muted/10 px-3 py-3 space-y-4 animate-in fade-in slide-in-from-top-1 duration-150">
                                                                 <div className="flex items-center justify-between text-xs">
                                                                     <span className="text-muted-foreground flex items-center gap-1">
                                                                         <DollarSign className="h-3 w-3" />{t('Value')}
