@@ -1800,60 +1800,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     {/* Pane 4: CRM Context Modal */}
                     {selectedThread && (
                         <Dialog open={showCrmModal} onOpenChange={setShowCrmModal}>
-                            <DialogContent className="max-w-2xl w-[96vw] max-h-[90vh] md:max-h-[85vh] p-0 overflow-hidden flex flex-col [&>button.absolute]:hidden rounded-2xl shadow-2xl border-primary/10">
-                                {/* Modal Header */}
-                                <div className="flex items-center justify-between gap-3 min-w-0 px-5 py-4 border-b shrink-0 bg-gradient-to-b from-background to-muted/30">
-                                    <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
-                                        {(() => {
-                                            const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
-                                            const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
-                                            return (
-                                                <>
-                                                    <Avatar className="h-8 w-8 border shrink-0">
-                                                        <AvatarFallback className="text-[12px] font-bold bg-primary/10 text-primary">
-                                                            {String(contactName).charAt(0).toUpperCase()}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-base font-semibold truncate leading-tight">{contactName}</p>
-                                                        <p className="text-sm text-muted-foreground truncate leading-tight">
-                                                            {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            );
-                                        })()}
-                                    </div>
-                                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-full hover:bg-muted border-muted-foreground/20" onClick={() => setShowCrmModal(false)}>
-                                        <X className="h-4 w-4 text-muted-foreground" />
-                                    </Button>
-                                </div>
+                            <DialogContent className="max-w-2xl w-[96vw] h-fit max-h-[90vh] md:max-h-[85vh] p-0 overflow-hidden flex flex-col [&>button.absolute]:hidden rounded-2xl shadow-2xl border-primary/10 !gap-0">
+... (around 50 lines later)
+                                <ScrollArea className="flex-1 min-h-0 w-full bg-background/50">
 
-                                {/* Section Tabs */}
-                                <div className="flex border-b shrink-0">
-                                    {[
-                                        { key: 'lead' as const, label: t('Lead'), icon: User },
-                                        { key: 'opportunities' as const, label: t('Opportunity'), icon: Briefcase },
-                                    ].map(tab => (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveSidebarSection(tab.key)}
-                                            className={`flex-1 flex flex-col items-center gap-1.5 py-4 text-[10px] font-bold uppercase tracking-[0.15em] transition-all border-b-2 relative ${activeSidebarSection === tab.key
-                                                    ? 'border-primary text-primary bg-primary/5'
-                                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                                                }`}
-                                        >
-                                            <tab.icon className={cn("h-4 w-4 transition-transform", activeSidebarSection === tab.key && "scale-110")} />
-                                            {tab.label}
-                                            {activeSidebarSection === tab.key && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary animate-in fade-in slide-in-from-bottom-1" />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Section Body */}
-                                <ScrollArea className="flex-1 min-h-0 bg-background/50">
                                     {/* ═══════════════ LEAD SECTION ═══════════════ */}
                                     {activeSidebarSection === 'lead' && (
                                     <div className="p-4 md:p-6 space-y-5 transition-all duration-300 ease-in-out">
