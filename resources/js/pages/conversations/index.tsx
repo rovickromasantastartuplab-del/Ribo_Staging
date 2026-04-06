@@ -1799,15 +1799,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     </>
                 </div>
 
-                {/* Pane 4: CRM Context Sidebar — ALWAYS an absolute overlay */}
+                {/* Pane 4: CRM Context Sidebar — Responsive Smart Push */}
                 {selectedThread && showContactSidebar && (
                     <>
-                        {/* Backdrop for mobile */}
+                        {/* Backdrop for mobile (hidden on xl when pushed) */}
                         <div
-                            className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none"
+                            className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none xl:hidden"
                             onClick={() => setShowContactSidebar(false)}
                         />
-                        <div className="absolute right-0 top-0 bottom-0 z-30 w-full min-w-0 md:w-[300px] max-w-[88vw] border-l flex flex-col bg-background shadow-2xl">
+                        <div className="absolute xl:static inset-y-0 right-0 z-30 w-full min-w-0 md:w-[300px] max-w-[88vw] xl:max-w-none xl:shrink-0 border-l flex flex-col bg-background shadow-2xl xl:shadow-none transition-all duration-300">
 
                             {/* ── Sidebar Header ────────────────────────── */}
                             <div className="flex items-center justify-between gap-2 min-w-0 px-4 py-3 border-b shrink-0">
