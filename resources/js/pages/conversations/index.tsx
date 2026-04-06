@@ -128,18 +128,18 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
     return (
         <div className="flex gap-1 p-2 overflow-x-auto scrollbar-hide flex-nowrap items-center">
             {onCanCompose && (
-            <Button size="sm" onClick={onCompose} className="h-7 px-3 text-xs gap-1.5 shrink-0 mr-1.5 text-primary-foreground">
-                <PenBox className="h-3.5 w-3.5" />
-                {t('Compose')}
-            </Button>
+                <Button size="sm" onClick={onCompose} className="h-7 px-3 text-xs gap-1.5 shrink-0 mr-1.5 text-primary-foreground">
+                    <PenBox className="h-3.5 w-3.5" />
+                    {t('Compose')}
+                </Button>
             )}
             {folders.map(f => (
                 <button
                     key={f.key}
                     onClick={() => onSelect(f.key)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${selectedFolder === f.key
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:bg-muted'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-muted'
                         }`}
                 >
                     <f.icon className="h-3.5 w-3.5" />
@@ -168,15 +168,15 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                         {t('Conversations')}
                     </button>
                 )}
-                
+
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSync} disabled={isSyncing} title={t('Sync')}>
                     <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
                 </Button>
             </div>
 
             {onCanCompose && (
-                <Button 
-                    className={`nav-compose w-full mb-4 shadow-sm transition-all ${isCollapsed ? 'h-10 p-0 rounded-xl flex items-center justify-center' : 'h-8 text-xs font-semibold gap-1.5'}`} 
+                <Button
+                    className={`nav-compose w-full mb-4 shadow-sm transition-all ${isCollapsed ? 'h-10 p-0 rounded-xl flex items-center justify-center' : 'h-8 text-xs font-semibold gap-1.5'}`}
                     onClick={onCompose}
                     title={t('Compose')}
                 >
@@ -199,15 +199,13 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                         key={f.key}
                         onClick={() => onSelect(f.key)}
                         title={isCollapsed ? f.label : undefined}
-                        className={`w-full relative flex items-center rounded-md transition-colors ${
-                            isCollapsed 
-                                ? 'justify-center h-10 mb-1' 
+                        className={`w-full relative flex items-center rounded-md transition-colors ${isCollapsed
+                                ? 'justify-center h-10 mb-1'
                                 : 'justify-between px-2.5 py-1.5 text-xs'
-                        } ${
-                            selectedFolder === f.key 
-                                ? 'bg-primary/10 text-primary font-medium' 
+                            } ${selectedFolder === f.key
+                                ? 'bg-primary/10 text-primary font-medium'
                                 : 'hover:bg-muted text-muted-foreground'
-                        }`}
+                            }`}
                     >
                         <span className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'gap-2'}`}>
                             <f.icon className={isCollapsed ? "h-[18px] w-[18px]" : "h-3.5 w-3.5"} />
@@ -355,7 +353,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     });
 
     const [showReplyFormatting, setShowReplyFormatting] = useState(false);
-    
+
     // Inline Reply Feature States
     const [activeReplyMessage, setActiveReplyMessage] = useState<any>(null);
     const [replyCcList, setReplyCcList] = useState<string[]>([]);
@@ -382,9 +380,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const EmojiPicker = ({ onSelect, disabled }: { onSelect: (emoji: string) => void, disabled?: boolean }) => (
         <Popover>
             <PopoverTrigger asChild>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
+                <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
                     disabled={disabled}
                 >
@@ -591,7 +589,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
     }, [selectedFolder, gmailAccount?.id, companyId, searchQuery]);
- 
+
     // Handle deep linking to a specific thread on mount
     useEffect(() => {
         if (selectedThreadId) {
@@ -672,12 +670,12 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     if (syncResponse.data.success && syncResponse.data.stats?.synced > 0) {
                         const newResponse = await axios.get(route('api.conversations.threads', params));
                         const { threads: newThreadsData } = newResponse.data;
-                        
+
                         setThreads(prev => {
                             const combined = [...prev, ...newThreadsData.data];
                             return Array.from(new Map<number, any>(combined.map((item: any) => [item.id, item])).values());
                         });
-                        
+
                         setThreadPage(newThreadsData.current_page);
                         setHasMoreThreads(newThreadsData.current_page < newThreadsData.last_page);
                     }
@@ -733,11 +731,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     leads: prev.leads.map((l: any) =>
                         l.id === leadId
                             ? {
-                                  ...l,
-                                  ...updated,
-                                  lead_status: updated.lead_status ?? updated.leadStatus ?? l.lead_status,
-                                  leadStatus: updated.leadStatus ?? updated.lead_status ?? l.leadStatus,
-                              }
+                                ...l,
+                                ...updated,
+                                lead_status: updated.lead_status ?? updated.leadStatus ?? l.lead_status,
+                                leadStatus: updated.leadStatus ?? updated.lead_status ?? l.leadStatus,
+                            }
                             : l
                     ),
                 };
@@ -791,11 +789,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         opportunities: (l.opportunities ?? []).map((o: any) =>
                             o.id === oppId
                                 ? {
-                                      ...o,
-                                      ...updated,
-                                      opportunity_stage: updated.opportunity_stage ?? updated.opportunityStage ?? o.opportunity_stage,
-                                      opportunityStage: updated.opportunityStage ?? updated.opportunity_stage ?? o.opportunityStage,
-                                  }
+                                    ...o,
+                                    ...updated,
+                                    opportunity_stage: updated.opportunity_stage ?? updated.opportunityStage ?? o.opportunity_stage,
+                                    opportunityStage: updated.opportunityStage ?? updated.opportunity_stage ?? o.opportunityStage,
+                                }
                                 : o
                         ),
                     })),
@@ -901,15 +899,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         try {
             const formData = new FormData();
             formData.append('body', replyBody);
-            
+
             const finalCc = replyCcList.join(', ');
             if (finalCc) formData.append('cc', finalCc);
-            
+
             const finalBcc = replyBccList.join(', ');
             if (finalBcc) formData.append('bcc', finalBcc);
-            
+
             replyFiles.forEach((file) => formData.append('attachments[]', file));
-            
+
             if (activeReplyMessage) {
                 formData.append('reply_to_message_id', activeReplyMessage.id.toString());
                 formData.append('primary_to', activeReplyMessage.from_email);
@@ -1060,583 +1058,583 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     />
 
                     <>
-                            {/* Pane 2: Thread list or Calendar */}
-                            <div
-                                className={`border-r flex flex-col bg-background min-w-0 ${selectedThread ? 'hidden lg:flex' : 'flex'}`}
-                                style={selectedFolder === 'calendar' ? { width: calendarWidth, minWidth: 240, maxWidth: 560, flexShrink: 0 } : { flex: 1, maxWidth: '400px' }}
-                            >
-                                {selectedFolder === 'calendar' ? (
-                                    <ConversationsCalendar ref={calendarRef} onSelectThread={handleSelectThreadById} t={t} />
-                                ) : (
-                                    <>
-                                        {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}
-                                        <div className="p-3 border-b shrink-0">
-                                            <div className="flex gap-2">
-                                                <div className="relative flex-1">
-                                                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                                                    <Input
-                                                        placeholder={t('Search threads...')}
-                                                        className="pl-8 bg-muted/50 border-none h-8 text-sm focus-visible:ring-1"
-                                                        value={searchQuery}
-                                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                                        onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
-                                                    />
+                        {/* Pane 2: Thread list or Calendar */}
+                        <div
+                            className={`border-r flex flex-col bg-background min-w-0 ${selectedThread ? 'hidden lg:flex' : 'flex'}`}
+                            style={selectedFolder === 'calendar' ? { width: calendarWidth, minWidth: 240, maxWidth: 560, flexShrink: 0 } : { flex: 1, maxWidth: '400px' }}
+                        >
+                            {selectedFolder === 'calendar' ? (
+                                <ConversationsCalendar ref={calendarRef} onSelectThread={handleSelectThreadById} t={t} />
+                            ) : (
+                                <>
+                                    {/* Search bar + sync (mobile sync is here since sidebar is hidden) */}
+                                    <div className="p-3 border-b shrink-0">
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                                <Input
+                                                    placeholder={t('Search threads...')}
+                                                    className="pl-8 bg-muted/50 border-none h-8 text-sm focus-visible:ring-1"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') fetchThreads(); }}
+                                                />
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8 shrink-0" onClick={handleSync} disabled={isSyncing}>
+                                                <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Thread list scroll area */}
+                                    <ScrollArea className="flex-1 min-h-0 overflow-y-auto [&_[data-radix-scroll-area-viewport]>div]:!block">
+                                        {!gmailAccount ? (
+                                            /* No Gmail account */
+                                            <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
+                                                    <AlertCircle className="h-6 w-6 text-primary" />
                                                 </div>
-                                                <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8 shrink-0" onClick={handleSync} disabled={isSyncing}>
-                                                    <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
+                                                <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
+                                                <p className="text-xs text-muted-foreground mb-4 max-w-xs">
+                                                    {isOwner
+                                                        ? t('Connect your Gmail account in settings to start managing conversations.')
+                                                        : t('Please ask your Company Owner to connect a Gmail account in settings.')}
+                                                </p>
+                                                {isOwner && (
+                                                    <Button size="sm" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
+                                                        {t('Connect Gmail')}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
+                                            /* Sync error */
+                                            <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                                <AlertCircle className="h-10 w-10 text-destructive mb-3" />
+                                                <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
+                                                <p className="text-xs text-muted-foreground mb-4 max-w-xs">
+                                                    {gmailAccount.sync_error || t('An error occurred while syncing.')}
+                                                </p>
+                                                <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+                                                    <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                                                    {t('Try Again')}
                                                 </Button>
                                             </div>
-                                        </div>
-
-                                        {/* Thread list scroll area */}
-                                        <ScrollArea className="flex-1 min-h-0 overflow-y-auto [&_[data-radix-scroll-area-viewport]>div]:!block">
-                                            {!gmailAccount ? (
-                                                /* No Gmail account */
-                                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                                    <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
-                                                        <AlertCircle className="h-6 w-6 text-primary" />
-                                                    </div>
-                                                    <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
-                                                    <p className="text-xs text-muted-foreground mb-4 max-w-xs">
-                                                        {isOwner
-                                                            ? t('Connect your Gmail account in settings to start managing conversations.')
-                                                            : t('Please ask your Company Owner to connect a Gmail account in settings.')}
-                                                    </p>
-                                                    {isOwner && (
-                                                        <Button size="sm" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
-                                                            {t('Connect Gmail')}
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
-                                                /* Sync error */
-                                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                                    <AlertCircle className="h-10 w-10 text-destructive mb-3" />
-                                                    <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
-                                                    <p className="text-xs text-muted-foreground mb-4 max-w-xs">
-                                                        {gmailAccount.sync_error || t('An error occurred while syncing.')}
-                                                    </p>
-                                                    <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
-                                                        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                                                        {t('Try Again')}
-                                                    </Button>
-                                                </div>
-                                            ) : threads.length > 0 ? (
-                                                /* Thread list */
-                                                <div className="divide-y">
-                                                    {threads.map((thread) => (
-                                                        <button
-                                                            key={thread.id}
-                                                            onClick={() => handleSelectThread(thread)}
-                                                            className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
-                                                                }`}
-                                                        >
-                                                            <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
-                                                                <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                                                                    {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="min-w-0 flex-1">
-                                                                <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
-                                                                    <div className="flex flex-col min-w-0 flex-1">
-                                                                        <span className={`text-sm truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
-                                                                            } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
-                                                                            {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
+                                        ) : threads.length > 0 ? (
+                                            /* Thread list */
+                                            <div className="divide-y">
+                                                {threads.map((thread) => (
+                                                    <button
+                                                        key={thread.id}
+                                                        onClick={() => handleSelectThread(thread)}
+                                                        className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
+                                                            }`}
+                                                    >
+                                                        <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
+                                                            <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                                                                {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex justify-between items-center gap-2 mb-0.5 overflow-hidden">
+                                                                <div className="flex flex-col min-w-0 flex-1">
+                                                                    <span className={`text-sm truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
+                                                                        } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
+                                                                        {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
+                                                                    </span>
+                                                                    {(thread.leads?.[0] || thread.contacts?.[0]) && (
+                                                                        <span className="text-xs text-muted-foreground truncate opacity-70">
+                                                                            {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
                                                                         </span>
-                                                                        {(thread.leads?.[0] || thread.contacts?.[0]) && (
-                                                                            <span className="text-xs text-muted-foreground truncate opacity-70">
-                                                                                {thread.leads?.[0]?.email || thread.contacts?.[0]?.email}
-                                                                            </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-xs text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
+                                                                    {timeAgoShort(thread.last_message_at)}
+                                                                </span>
+                                                            </div>
+                                                            <div className={`text-sm truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
+                                                                {thread.subject || t('(No Subject)')}
+                                                            </div>
+                                                            <div className="text-sm text-muted-foreground/70 truncate">
+                                                                {thread.snippet}
+                                                            </div>
+                                                            <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                                                                {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
+                                                                    <>
+                                                                        {thread.leads?.length > 0 && (
+                                                                            <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
+                                                                                {t('Lead')}
+                                                                            </Badge>
+                                                                        )}
+                                                                        {thread.contacts?.length > 0 && (
+                                                                            <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
+                                                                                {t('Contact')}
+                                                                            </Badge>
+                                                                        )}
+                                                                    </>
+                                                                )}
+
+                                                                {thread.priority && (
+                                                                    <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                                                        thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                                                            'bg-blue-50 text-blue-600 border-blue-100'
+                                                                        }`}>
+                                                                        {t(thread.priority)}
+                                                                    </Badge>
+                                                                )}
+
+                                                                {thread.assignments?.length > 0 && (
+                                                                    <div className="flex items-center gap-0.5 ml-auto">
+                                                                        <div className="flex -space-x-1.5 overflow-hidden">
+                                                                            {thread.assignments.slice(0, 2).map((a: any) => (
+                                                                                <Avatar key={a.id} className="h-4 w-4 border-background border">
+                                                                                    <AvatarFallback className="text-[6px] bg-muted">{a.name.charAt(0)}</AvatarFallback>
+                                                                                </Avatar>
+                                                                            ))}
+                                                                        </div>
+                                                                        {thread.assignments.length > 2 && (
+                                                                            <span className="text-[8px] text-muted-foreground font-bold">+{thread.assignments.length - 2}</span>
                                                                         )}
                                                                     </div>
-                                                                    <span className="text-xs text-muted-foreground/80 truncate shrink-0 max-w-[80px] text-right">
-                                                                        {timeAgoShort(thread.last_message_at)}
-                                                                    </span>
-                                                                </div>
-                                                                <div className={`text-sm truncate mb-0.5 ${!thread.is_read ? 'font-bold text-foreground' : 'text-foreground/80'}`}>
-                                                                    {thread.subject || t('(No Subject)')}
-                                                                </div>
-                                                                <div className="text-sm text-muted-foreground/70 truncate">
-                                                                    {thread.snippet}
-                                                                </div>
-                                                                <div className="mt-1.5 flex flex-wrap gap-1 items-center">
-                                                                    {(thread.leads?.length > 0 || thread.contacts?.length > 0) && (
-                                                                        <>
-                                                                            {thread.leads?.length > 0 && (
-                                                                                <Badge variant="outline" className="text-[9px] bg-blue-50/50 text-blue-700 border-blue-100 font-bold px-1 py-0">
-                                                                                    {t('Lead')}
-                                                                                </Badge>
-                                                                            )}
-                                                                            {thread.contacts?.length > 0 && (
-                                                                                <Badge variant="outline" className="text-[9px] bg-green-50/50 text-green-700 border-green-100 font-bold px-1 py-0">
-                                                                                    {t('Contact')}
-                                                                                </Badge>
-                                                                            )}
-                                                                        </>
-                                                                    )}
-
-                                                                    {thread.priority && (
-                                                                        <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                                                                                thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                                                                    'bg-blue-50 text-blue-600 border-blue-100'
-                                                                            }`}>
-                                                                            {t(thread.priority)}
-                                                                        </Badge>
-                                                                    )}
-
-                                                                    {thread.assignments?.length > 0 && (
-                                                                        <div className="flex items-center gap-0.5 ml-auto">
-                                                                            <div className="flex -space-x-1.5 overflow-hidden">
-                                                                                {thread.assignments.slice(0, 2).map((a: any) => (
-                                                                                    <Avatar key={a.id} className="h-4 w-4 border-background border">
-                                                                                        <AvatarFallback className="text-[6px] bg-muted">{a.name.charAt(0)}</AvatarFallback>
-                                                                                    </Avatar>
-                                                                                ))}
-                                                                            </div>
-                                                                            {thread.assignments.length > 2 && (
-                                                                                <span className="text-[8px] text-muted-foreground font-bold">+{thread.assignments.length - 2}</span>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                                )}
                                                             </div>
-                                                        </button>
-                                                    ))}
-
-                                                    {/* Sentinel for IntersectionObserver */}
-                                                    <div ref={threadObserverTarget} className="h-4 w-full" />
-
-                                                    {loading && (
-                                                        <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
-                                                            <RefreshCw className="h-4 w-4 animate-spin" />
-                                                            <span className="text-xs font-medium">{t('Loading more...')}</span>
                                                         </div>
-                                                    )}
+                                                    </button>
+                                                ))}
 
-                                                    {!hasMoreThreads && !loading && threads.length > 10 && (
-                                                        <div className="p-6 text-center bg-muted/5">
-                                                            <p className="text-xs text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : loading && threads.length === 0 ? (
-                                                /* Initial Loading State */
-                                                <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                                                    <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
-                                                    <p className="text-sm text-muted-foreground">{t('Loading conversations...')}</p>
-                                                </div>
-                                            ) : (
-                                                /* Empty state */
-                                                <div className="flex flex-col items-center justify-center text-center px-4 py-10">
-                                                    <div className="h-12 w-12 bg-muted/50 rounded-full flex items-center justify-center mb-3">
-                                                        <Inbox className="h-6 w-6 text-muted-foreground/30" />
+                                                {/* Sentinel for IntersectionObserver */}
+                                                <div ref={threadObserverTarget} className="h-4 w-full" />
+
+                                                {loading && (
+                                                    <div className="p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse bg-muted/5">
+                                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                                        <span className="text-xs font-medium">{t('Loading more...')}</span>
                                                     </div>
-                                                    <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
-                                                    <p className="text-xs text-muted-foreground mb-4 max-w-44">
-                                                        {gmailAccount?.sync_status === 'syncing'
-                                                            ? t('We are currently syncing your inbox...')
-                                                            : t('Try clicking the sync button to fetch your latest emails.')}
-                                                    </p>
-                                                    {gmailAccount?.sync_error && (
-                                                        <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-xs">
-                                                            <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
-                                                            {gmailAccount.sync_error}
-                                                        </div>
-                                                    )}
-                                                    <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
-                                                        <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                                                        {t('Sync Now')}
-                                                    </Button>
+                                                )}
+
+                                                {!hasMoreThreads && !loading && threads.length > 10 && (
+                                                    <div className="p-6 text-center bg-muted/5">
+                                                        <p className="text-xs text-muted-foreground uppercase tracking-widest">{t('All threads loaded')}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : loading && threads.length === 0 ? (
+                                            /* Initial Loading State */
+                                            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                                                <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
+                                                <p className="text-sm text-muted-foreground">{t('Loading conversations...')}</p>
+                                            </div>
+                                        ) : (
+                                            /* Empty state */
+                                            <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+                                                <div className="h-12 w-12 bg-muted/50 rounded-full flex items-center justify-center mb-3">
+                                                    <Inbox className="h-6 w-6 text-muted-foreground/30" />
                                                 </div>
-                                            )}
-                                        </ScrollArea>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Drag resize handle — only visible when calendar is open alongside the chat pane */}
-                            {selectedFolder === 'calendar' && selectedThread && (
-                                <div
-                                    onMouseDown={handleCalendarResizeMouseDown}
-                                    className="hidden lg:flex w-1.5 cursor-col-resize shrink-0 items-center justify-center group hover:bg-primary/20 transition-colors z-10 select-none"
-                                    title="Drag to resize"
-                                >
-                                    <div className="w-0.5 h-8 rounded-full bg-border group-hover:bg-primary/50 transition-colors" />
-                                </div>
+                                                <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
+                                                <p className="text-xs text-muted-foreground mb-4 max-w-44">
+                                                    {gmailAccount?.sync_status === 'syncing'
+                                                        ? t('We are currently syncing your inbox...')
+                                                        : t('Try clicking the sync button to fetch your latest emails.')}
+                                                </p>
+                                                {gmailAccount?.sync_error && (
+                                                    <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-xs">
+                                                        <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
+                                                        {gmailAccount.sync_error}
+                                                    </div>
+                                                )}
+                                                <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+                                                    <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                                                    {t('Sync Now')}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </ScrollArea>
+                                </>
                             )}
+                        </div>
 
-                            {/* Pane 3: Thread detail + reply */}
-                            <div className={`
+                        {/* Drag resize handle — only visible when calendar is open alongside the chat pane */}
+                        {selectedFolder === 'calendar' && selectedThread && (
+                            <div
+                                onMouseDown={handleCalendarResizeMouseDown}
+                                className="hidden lg:flex w-1.5 cursor-col-resize shrink-0 items-center justify-center group hover:bg-primary/20 transition-colors z-10 select-none"
+                                title="Drag to resize"
+                            >
+                                <div className="w-0.5 h-8 rounded-full bg-border group-hover:bg-primary/50 transition-colors" />
+                            </div>
+                        )}
+
+                        {/* Pane 3: Thread detail + reply */}
+                        <div className={`
                         flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/5
                         ${!selectedThread ? 'hidden lg:flex' : 'flex'}
                     `}>
-                                {selectedThread ? (
-                                    <>
-                                        {/* Thread header */}
-                                        <div className="h-12 lg:h-14 border-b flex items-center justify-between px-3 lg:px-4 bg-background shrink-0">
-                                            <div className="min-w-0 flex-1 flex items-center gap-2">
-                                                <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 shrink-0" onClick={handleBack}>
-                                                    <ArrowLeft className="h-4 w-4" />
-                                                </Button>
-                                                <div className="min-w-0">
-                                                    <h2 className="text-base font-semibold truncate">
-                                                        {selectedThread.subject || t('(No Subject)')}
-                                                    </h2>
-                                                    <div className="text-sm text-muted-foreground flex items-center gap-1.5">
-                                                        <span className="truncate max-w-xs">{selectedThread.participants?.join(', ')}</span>
-                                                        <span>·</span>
-                                                        <span className="shrink-0">{selectedThread.message_count} {t('messages')}</span>
-                                                    </div>
+                            {selectedThread ? (
+                                <>
+                                    {/* Thread header */}
+                                    <div className="h-12 lg:h-14 border-b flex items-center justify-between px-3 lg:px-4 bg-background shrink-0">
+                                        <div className="min-w-0 flex-1 flex items-center gap-2">
+                                            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 shrink-0" onClick={handleBack}>
+                                                <ArrowLeft className="h-4 w-4" />
+                                            </Button>
+                                            <div className="min-w-0">
+                                                <h2 className="text-base font-semibold truncate">
+                                                    {selectedThread.subject || t('(No Subject)')}
+                                                </h2>
+                                                <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                                                    <span className="truncate max-w-xs">{selectedThread.participants?.join(', ')}</span>
+                                                    <span>·</span>
+                                                    <span className="shrink-0">{selectedThread.message_count} {t('messages')}</span>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-1 ml-2 shrink-0">
-                                                {/* Status Picker */}
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-1.5 px-2.5">
-                                                            <Badge className={`w-2 h-2 rounded-full p-0 ${selectedThread.status === 'Closed' ? 'bg-gray-400' : 'bg-green-500'}`} />
-                                                            {selectedThread.status || t('Open')}
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-32">
-                                                        <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })}>
-                                                            <Badge className="w-2 h-2 rounded-full p-0 bg-green-500 mr-2" />
-                                                            {t('Open')}
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Closed' })}>
-                                                            <Badge className="w-2 h-2 rounded-full p-0 bg-gray-400 mr-2" />
-                                                            {t('Closed')}
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        {selectedThread.status === 'Archive' ? (
-                                                            <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })} className="text-primary focus:text-primary">
-                                                                <Inbox className="w-3.5 h-3.5 mr-2" />
-                                                                {t('Restore to Inbox')}
-                                                            </DropdownMenuItem>
-                                                        ) : (
-                                                            <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Archive' })} className="text-muted-foreground">
-                                                                <Archive className="w-3.5 h-3.5 mr-2" />
-                                                                {t('Archive')}
-                                                            </DropdownMenuItem>
-                                                        )}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-
-                                                {/* Follow-up Trigger */}
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="icon" 
-                                                    className="h-8 w-8 text-primary border-primary/20 hover:bg-primary/5"
-                                                    onClick={() => setShowFollowUpModal(true)}
-                                                    title={t('Auto Follow-ups')}
-                                                >
-                                                    <Clock className="h-4 w-4" />
-                                                </Button>
-
-                                                {/* Assignment Picker */}
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="outline" size="icon" className="h-8 w-8 relative">
-                                                            <UserCheck className="h-4 w-4" />
-                                                            {selectedThread.assignments?.length > 0 && (
-                                                                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                                                                    {selectedThread.assignments.length}
-                                                                </span>
-                                                            )}
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden">
-                                                        <div className="p-2 border-b bg-muted/30">
-                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('Assign Staff')}</p>
-                                                        </div>
-                                                        <ScrollArea className="h-48">
-                                                            <div className="p-1">
-                                                                {companyUsers.map((u: any) => (
-                                                                    <DropdownMenuCheckboxItem
-                                                                        key={u.id}
-                                                                        onSelect={(e) => e.preventDefault()}
-                                                                        checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
-                                                                        onCheckedChange={(checked) => {
-                                                                            const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];
-                                                                            const nextIds = checked
-                                                                                ? [...currentIds, u.id]
-                                                                                : currentIds.filter((id: number) => id !== u.id);
-                                                                            handleAssignUsers(nextIds);
-                                                                        }}
-                                                                        className="flex items-center gap-2 text-xs py-2"
-                                                                    >
-                                                                        <Avatar className="h-5 w-5">
-                                                                            <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
-                                                                        </Avatar>
-                                                                        {u.name}
-                                                                    </DropdownMenuCheckboxItem>
-                                                                ))}
-                                                            </div>
-                                                        </ScrollArea>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                            <MoreVertical className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-48">
-                                                        <DropdownMenuLabel className="text-xs uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
-                                                        {['Low', 'Medium', 'High'].map(p => (
-                                                            <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
-                                                                <div className={`w-2.5 h-2.5 rounded-full mr-2 ${p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'}`} />
-                                                                {t(p)}
-                                                                {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
-                                                            </DropdownMenuItem>
-                                                        ))}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-
-                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowContactSidebar(!showContactSidebar)}>
-                                                    <User className={`h-4 w-4 ${showContactSidebar ? 'text-primary' : ''}`} />
-                                                </Button>
                                             </div>
                                         </div>
+                                        <div className="flex items-center gap-1 ml-2 shrink-0">
+                                            {/* Status Picker */}
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-1.5 px-2.5">
+                                                        <Badge className={`w-2 h-2 rounded-full p-0 ${selectedThread.status === 'Closed' ? 'bg-gray-400' : 'bg-green-500'}`} />
+                                                        {selectedThread.status || t('Open')}
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-32">
+                                                    <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })}>
+                                                        <Badge className="w-2 h-2 rounded-full p-0 bg-green-500 mr-2" />
+                                                        {t('Open')}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Closed' })}>
+                                                        <Badge className="w-2 h-2 rounded-full p-0 bg-gray-400 mr-2" />
+                                                        {t('Closed')}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    {selectedThread.status === 'Archive' ? (
+                                                        <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Open' })} className="text-primary focus:text-primary">
+                                                            <Inbox className="w-3.5 h-3.5 mr-2" />
+                                                            {t('Restore to Inbox')}
+                                                        </DropdownMenuItem>
+                                                    ) : (
+                                                        <DropdownMenuItem onClick={() => handleUpdateMetadata({ status: 'Archive' })} className="text-muted-foreground">
+                                                            <Archive className="w-3.5 h-3.5 mr-2" />
+                                                            {t('Archive')}
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
 
-                                        {/* Messages */}
-                                        <ScrollArea className="flex-1 min-h-0">
-                                            <div className="flex flex-col-reverse pt-4 lg:pt-6 px-3 lg:px-4 pb-2 lg:pb-3 space-y-reverse space-y-4 lg:space-y-6 max-w-4xl mx-auto">
-                                                {/* Scroll to bottom target (Native start) */}
-                                                <div ref={messagesEndRef} className="h-0 shrink-0 invisible pointer-events-none" />
+                                            {/* Follow-up Trigger */}
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-8 w-8 text-primary border-primary/20 hover:bg-primary/5"
+                                                onClick={() => setShowFollowUpModal(true)}
+                                                title={t('Auto Follow-ups')}
+                                            >
+                                                <Clock className="h-4 w-4" />
+                                            </Button>
 
-                                                {selectedThread.messages?.map((msg: any) => (
-                                                    <div key={msg.id} className="flex gap-2 lg:gap-3">
-                                                        <Avatar className="h-7 w-7 lg:h-8 lg:w-8 shrink-0 border">
-                                                            {msg.sender?.avatar ? (
-                                                                <AvatarImage src={msg.sender.avatar} />
-                                                            ) : null}
-                                                            <AvatarFallback className="bg-muted text-xs">
-                                                                {(msg.sender?.name || msg.from_email)?.charAt(0).toUpperCase()}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="flex-1 min-w-0 max-w-full space-y-1.5">
-                                                            <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
-                                                                <span className="text-sm font-semibold truncate flex-1 min-w-0">
-                                                                    {msg.from_name && msg.from_name !== msg.from_email 
-                                                                        ? `${msg.from_name} <${msg.from_email}>` 
-                                                                        : msg.from_email}
-                                                                    {msg.sender && (
-                                                                        <span className="ml-1 text-xs font-normal text-muted-foreground italic">
-                                                                            sent by {msg.sender.name}
-                                                                        </span>
-                                                                    )}
-                                                                </span>
-                                                                <span className="text-xs text-muted-foreground truncate shrink-0 max-w-[120px] text-right flex items-center gap-1.5 justify-end">
-                                                                    {timeAgo(msg.sent_at)}
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="icon" 
-                                                                        className="h-6 w-6 rounded-full hover:bg-muted"
-                                                                        onClick={() => handleInlineReply(msg)}
-                                                                        title={t('Reply to this message')}
-                                                                    >
-                                                                        <CornerDownLeft className="h-3.5 w-3.5" />
-                                                                    </Button>
-                                                                </span>
-                                                            </div>
-                                                            <div className="bg-background border rounded-lg p-3 shadow-sm text-sm leading-relaxed overflow-hidden break-words w-full [overflow-wrap:anywhere]">
-                                                                {msg.body_html ? (
-                                                                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
-                                                                ) : (
-                                                                    <span className="whitespace-pre-wrap">{msg.body_preview}</span>
+                                            {/* Assignment Picker */}
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" size="icon" className="h-8 w-8 relative">
+                                                        <UserCheck className="h-4 w-4" />
+                                                        {selectedThread.assignments?.length > 0 && (
+                                                            <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                                                                {selectedThread.assignments.length}
+                                                            </span>
+                                                        )}
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden">
+                                                    <div className="p-2 border-b bg-muted/30">
+                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('Assign Staff')}</p>
+                                                    </div>
+                                                    <ScrollArea className="h-48">
+                                                        <div className="p-1">
+                                                            {companyUsers.map((u: any) => (
+                                                                <DropdownMenuCheckboxItem
+                                                                    key={u.id}
+                                                                    onSelect={(e) => e.preventDefault()}
+                                                                    checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];
+                                                                        const nextIds = checked
+                                                                            ? [...currentIds, u.id]
+                                                                            : currentIds.filter((id: number) => id !== u.id);
+                                                                        handleAssignUsers(nextIds);
+                                                                    }}
+                                                                    className="flex items-center gap-2 text-xs py-2"
+                                                                >
+                                                                    <Avatar className="h-5 w-5">
+                                                                        <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    {u.name}
+                                                                </DropdownMenuCheckboxItem>
+                                                            ))}
+                                                        </div>
+                                                    </ScrollArea>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-48">
+                                                    <DropdownMenuLabel className="text-xs uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
+                                                    {['Low', 'Medium', 'High'].map(p => (
+                                                        <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
+                                                            <div className={`w-2.5 h-2.5 rounded-full mr-2 ${p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                                                            {t(p)}
+                                                            {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowContactSidebar(!showContactSidebar)}>
+                                                <User className={`h-4 w-4 ${showContactSidebar ? 'text-primary' : ''}`} />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Messages */}
+                                    <ScrollArea className="flex-1 min-h-0">
+                                        <div className="flex flex-col-reverse pt-4 lg:pt-6 px-3 lg:px-4 pb-2 lg:pb-3 space-y-reverse space-y-4 lg:space-y-6 max-w-4xl mx-auto">
+                                            {/* Scroll to bottom target (Native start) */}
+                                            <div ref={messagesEndRef} className="h-0 shrink-0 invisible pointer-events-none" />
+
+                                            {selectedThread.messages?.map((msg: any) => (
+                                                <div key={msg.id} className="flex gap-2 lg:gap-3">
+                                                    <Avatar className="h-7 w-7 lg:h-8 lg:w-8 shrink-0 border">
+                                                        {msg.sender?.avatar ? (
+                                                            <AvatarImage src={msg.sender.avatar} />
+                                                        ) : null}
+                                                        <AvatarFallback className="bg-muted text-xs">
+                                                            {(msg.sender?.name || msg.from_email)?.charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0 max-w-full space-y-1.5">
+                                                        <div className="flex items-start justify-between gap-2 overflow-hidden min-w-0">
+                                                            <span className="text-sm font-semibold truncate flex-1 min-w-0">
+                                                                {msg.from_name && msg.from_name !== msg.from_email
+                                                                    ? `${msg.from_name} <${msg.from_email}>`
+                                                                    : msg.from_email}
+                                                                {msg.sender && (
+                                                                    <span className="ml-1 text-xs font-normal text-muted-foreground italic">
+                                                                        sent by {msg.sender.name}
+                                                                    </span>
                                                                 )}
-                                                            </div>
-                                                            {/* Local Storage Attachments */}
-                                                            {msg.media && msg.media.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                                    {msg.media.map((file: any) => {
-                                                                        const isImage = file.mime_type?.startsWith('image/');
-                                                                        const thumbUrl = file.generated_conversions?.thumb
-                                                                            ? (file.original_url?.replace(/\/[^\/]+$/, '/conversions/' + file.name + '-thumb.' + file.file_name?.split('.').pop()))
-                                                                            : null;
-                                                                        return isImage ? (
-                                                                            <a key={file.id} href={file.original_url} target="_blank" rel="noopener noreferrer" className="block">
-                                                                                <img
-                                                                                    src={thumbUrl || file.original_url}
-                                                                                    alt={file.name}
-                                                                                    className="max-w-44 max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity"
-                                                                                />
-                                                                            </a>
-                                                                        ) : (
-                                                                            <a
-                                                                                key={file.id}
-                                                                                href={file.original_url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors max-w-[220px]"
-                                                                            >
-                                                                                <FileText className="h-4 w-4 text-primary shrink-0" />
-                                                                                <span className="text-xs truncate flex-1 min-w-0">{file.file_name}</span>
-                                                                                <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                                                            </a>
-                                                                        );
-                                                                    })}
-                                                                </div>
+                                                            </span>
+                                                            <span className="text-xs text-muted-foreground truncate shrink-0 max-w-[120px] text-right flex items-center gap-1.5 justify-end">
+                                                                {timeAgo(msg.sent_at)}
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6 rounded-full hover:bg-muted"
+                                                                    onClick={() => handleInlineReply(msg)}
+                                                                    title={t('Reply to this message')}
+                                                                >
+                                                                    <CornerDownLeft className="h-3.5 w-3.5" />
+                                                                </Button>
+                                                            </span>
+                                                        </div>
+                                                        <div className="bg-background border rounded-lg p-3 shadow-sm text-sm leading-relaxed overflow-hidden break-words w-full [overflow-wrap:anywhere]">
+                                                            {msg.body_html ? (
+                                                                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body_html) }} />
+                                                            ) : (
+                                                                <span className="whitespace-pre-wrap">{msg.body_preview}</span>
                                                             )}
-
-                                                            {/* Live Proxy Attachments (Gmail Cloud Storage) */}
-                                                            {msg.live_attachments && msg.live_attachments.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                                    {msg.live_attachments.map((file: any) => (
+                                                        </div>
+                                                        {/* Local Storage Attachments */}
+                                                        {msg.media && msg.media.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                                {msg.media.map((file: any) => {
+                                                                    const isImage = file.mime_type?.startsWith('image/');
+                                                                    const thumbUrl = file.generated_conversions?.thumb
+                                                                        ? (file.original_url?.replace(/\/[^\/]+$/, '/conversions/' + file.name + '-thumb.' + file.file_name?.split('.').pop()))
+                                                                        : null;
+                                                                    return isImage ? (
+                                                                        <a key={file.id} href={file.original_url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                            <img
+                                                                                src={thumbUrl || file.original_url}
+                                                                                alt={file.name}
+                                                                                className="max-w-44 max-h-[140px] rounded-md border object-cover hover:opacity-80 transition-opacity"
+                                                                            />
+                                                                        </a>
+                                                                    ) : (
                                                                         <a
-                                                                            key={file.attachment_id}
-                                                                            href={`/api/conversations/messages/${msg.id}/attachments/${file.attachment_id}/download?filename=${encodeURIComponent(file.file_name)}`}
+                                                                            key={file.id}
+                                                                            href={file.original_url}
                                                                             target="_blank"
                                                                             rel="noopener noreferrer"
-                                                                            className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors max-w-[220px] group"
+                                                                            className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors max-w-[220px]"
                                                                         >
                                                                             <FileText className="h-4 w-4 text-primary shrink-0" />
-                                                                            <span className="text-xs truncate flex-1 min-w-0 font-medium group-hover:underline">{file.file_name}</span>
+                                                                            <span className="text-xs truncate flex-1 min-w-0">{file.file_name}</span>
                                                                             <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                                                         </a>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                {loadingMoreMessages && (
-                                                    <div className="flex justify-center items-center py-2 text-muted-foreground text-xs italic">
-                                                        <RefreshCw className="h-3 w-3 animate-spin mr-2" />
-                                                        {t('Loading earlier messages...')}
-                                                    </div>
-                                                )}
-
-                                                {/* Observer target for loading older history (now logically at the end of the reversed list) */}
-                                                <div ref={messagesTopObserverTarget} className="h-1 w-full shrink-0" />
-                                            </div>
-                                        </ScrollArea>
-
-                                        {/* Reply box */}
-                                        <div className="border-t bg-background shrink-0 p-2 lg:p-3">
-                                            <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Archive' ? 'min-h-[10rem]' : ''}`}>
-                                                {selectedThread.status === 'Archive' && (
-                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center">
-                                                        <div className="flex flex-col items-center gap-2 text-center p-4">
-                                                            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
-                                                                <Archive className="w-5 h-5" />
-                                                            </div>
-                                                            <p className="text-sm font-medium text-foreground">
-                                                                {t('This thread is archived')}
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground max-w-60">
-                                                                {t('Restore it to inbox to reply or send messages.')}
-                                                            </p>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="mt-1 h-8"
-                                                                onClick={() => handleUpdateMetadata({ status: 'Open' })}
-                                                            >
-                                                                <Inbox className="w-3.5 h-3.5 mr-2" />
-                                                                {t('Restore to Inbox')}
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {/* Staff assignment/permission check overlay */}
-                                                {selectedThread.status !== 'Archive' && !isOwner && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
-                                                    <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[10rem]">
-                                                        <div className="flex flex-col items-center gap-2 text-center p-4">
-                                                            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
-                                                                <AlertCircle className="w-5 h-5" />
-                                                            </div>
-                                                            <p className="text-sm font-medium text-foreground">
-                                                                {!hasPermission(permissions, 'reply-conversations')
-                                                                    ? t('You do not have permission to reply')
-                                                                    : t('You are not assigned to this thread')}
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground max-w-60">
-                                                                {!hasPermission(permissions, 'reply-conversations')
-                                                                    ? t('Contact your administrator to request reply access.')
-                                                                    : t('Ask a manager to assign you to this thread to reply.')}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {activeReplyMessage && (
-                                                    <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b">
-                                                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                                                            <CornerDownLeft className="h-3.5 w-3.5" />
-                                                            {t('Replying to:')} <strong className="text-foreground">{activeReplyMessage.from_name || activeReplyMessage.from_email}</strong>
-                                                        </span>
-                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => setActiveReplyMessage(null)}>
-                                                            <X className="h-3 w-3" />
-                                                        </Button>
-                                                    </div>
-                                                )}
-
-                                                <div 
-                                                    className="w-full min-h-[3.75rem] lg:min-h-[5rem] cursor-text bg-background"
-                                                    onClick={() => replyEditor?.commands.focus()}
-                                                >
-                                                    <EditorContent editor={replyEditor} />
-                                                </div>
-                                                {showReplyCcBcc && (
-                                                    <div className="border-t bg-muted/5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                        <div className="flex px-2.5 py-1.5 border-b group">
-                                                            <span className="w-10 text-[10px] font-bold text-muted-foreground pt-1.5">CC</span>
-                                                            <div className="flex flex-wrap gap-1.5 flex-1 items-center">
-                                                                {Array.from(new Set([
-                                                                    ...(selectedThread?.participants || []).map((p: string) => {
-                                                                        const emailMatch = p.match(/<([^>]+)>/);
-                                                                        return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
-                                                                    }),
-                                                                    ...replyCcList
-                                                                ].filter((rawEmail: string) => {
-                                                                    const accountEmail = (gmailAccount?.email || '').toLowerCase();
-                                                                    const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
-                                                                    return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
-                                                                }))).map((ccEmail) => {
-                                                                    const isSelected = replyCcList.includes(ccEmail);
-                                                                    return (
-                                                                        <Badge 
-                                                                            key={ccEmail} 
-                                                                            variant={isSelected ? "default" : "outline"}
-                                                                            className="cursor-pointer text-xs px-2 py-0.5"
-                                                                            onClick={() => {
-                                                                                setReplyCcList(prev => 
-                                                                                    prev.includes(ccEmail) 
-                                                                                        ? prev.filter(e => e !== ccEmail) 
-                                                                                        : [...prev, ccEmail]
-                                                                                );
-                                                                            }}
-                                                                        >
-                                                                            {ccEmail}
-                                                                            {isSelected && <Check className="h-3 w-3 ml-1" />}
-                                                                        </Badge>
                                                                     );
                                                                 })}
-                                                                <input
-                                                                    type="email"
-                                                                    placeholder={t('Add CC...')}
-                                                                    value={ccInput}
-                                                                    onChange={(e) => setCcInput(e.target.value)}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
-                                                                            e.preventDefault();
-                                                                            const val = ccInput.trim().replace(/,/g, '');
-                                                                            if (val && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-                                                                                setReplyCcList(prev => prev.includes(val) ? prev : [...prev, val]);
-                                                                                setCcInput('');
-                                                                            }
-                                                                        }
-                                                                    }}
-                                                                    className="flex-1 min-w-0 bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
-                                                                />
                                                             </div>
+                                                        )}
+
+                                                        {/* Live Proxy Attachments (Gmail Cloud Storage) */}
+                                                        {msg.live_attachments && msg.live_attachments.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                                {msg.live_attachments.map((file: any) => (
+                                                                    <a
+                                                                        key={file.attachment_id}
+                                                                        href={`/api/conversations/messages/${msg.id}/attachments/${file.attachment_id}/download?filename=${encodeURIComponent(file.file_name)}`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors max-w-[220px] group"
+                                                                    >
+                                                                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                                                                        <span className="text-xs truncate flex-1 min-w-0 font-medium group-hover:underline">{file.file_name}</span>
+                                                                        <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                                    </a>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                            {loadingMoreMessages && (
+                                                <div className="flex justify-center items-center py-2 text-muted-foreground text-xs italic">
+                                                    <RefreshCw className="h-3 w-3 animate-spin mr-2" />
+                                                    {t('Loading earlier messages...')}
+                                                </div>
+                                            )}
+
+                                            {/* Observer target for loading older history (now logically at the end of the reversed list) */}
+                                            <div ref={messagesTopObserverTarget} className="h-1 w-full shrink-0" />
+                                        </div>
+                                    </ScrollArea>
+
+                                    {/* Reply box */}
+                                    <div className="border-t bg-background shrink-0 p-2 lg:p-3">
+                                        <div className={`max-w-4xl mx-auto border rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden relative ${selectedThread.status === 'Archive' ? 'min-h-[10rem]' : ''}`}>
+                                            {selectedThread.status === 'Archive' && (
+                                                <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center">
+                                                    <div className="flex flex-col items-center gap-2 text-center p-4">
+                                                        <div className="p-2 rounded-full bg-amber-50 text-amber-600">
+                                                            <Archive className="w-5 h-5" />
                                                         </div>
-                                                        <div className="flex items-center px-2.5 py-1.5 group">
-                                                            <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">BCC</span>
+                                                        <p className="text-sm font-medium text-foreground">
+                                                            {t('This thread is archived')}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground max-w-60">
+                                                            {t('Restore it to inbox to reply or send messages.')}
+                                                        </p>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="mt-1 h-8"
+                                                            onClick={() => handleUpdateMetadata({ status: 'Open' })}
+                                                        >
+                                                            <Inbox className="w-3.5 h-3.5 mr-2" />
+                                                            {t('Restore to Inbox')}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {/* Staff assignment/permission check overlay */}
+                                            {selectedThread.status !== 'Archive' && !isOwner && (!hasPermission(permissions, 'reply-conversations') || (isStaff && !selectedThread.assignments?.some((a: any) => a.id === auth?.user?.id))) && (
+                                                <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[1px] flex items-center justify-center min-h-[10rem]">
+                                                    <div className="flex flex-col items-center gap-2 text-center p-4">
+                                                        <div className="p-2 rounded-full bg-amber-50 text-amber-600">
+                                                            <AlertCircle className="w-5 h-5" />
+                                                        </div>
+                                                        <p className="text-sm font-medium text-foreground">
+                                                            {!hasPermission(permissions, 'reply-conversations')
+                                                                ? t('You do not have permission to reply')
+                                                                : t('You are not assigned to this thread')}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground max-w-60">
+                                                            {!hasPermission(permissions, 'reply-conversations')
+                                                                ? t('Contact your administrator to request reply access.')
+                                                                : t('Ask a manager to assign you to this thread to reply.')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {activeReplyMessage && (
+                                                <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b">
+                                                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                                        <CornerDownLeft className="h-3.5 w-3.5" />
+                                                        {t('Replying to:')} <strong className="text-foreground">{activeReplyMessage.from_name || activeReplyMessage.from_email}</strong>
+                                                    </span>
+                                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => setActiveReplyMessage(null)}>
+                                                        <X className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            )}
+
+                                            <div
+                                                className="w-full min-h-[3.75rem] lg:min-h-[5rem] cursor-text bg-background"
+                                                onClick={() => replyEditor?.commands.focus()}
+                                            >
+                                                <EditorContent editor={replyEditor} />
+                                            </div>
+                                            {showReplyCcBcc && (
+                                                <div className="border-t bg-muted/5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    <div className="flex px-2.5 py-1.5 border-b group">
+                                                        <span className="w-10 text-[10px] font-bold text-muted-foreground pt-1.5">CC</span>
+                                                        <div className="flex flex-wrap gap-1.5 flex-1 items-center">
+                                                            {Array.from(new Set([
+                                                                ...(selectedThread?.participants || []).map((p: string) => {
+                                                                    const emailMatch = p.match(/<([^>]+)>/);
+                                                                    return emailMatch ? emailMatch[1].toLowerCase() : p.toLowerCase();
+                                                                }),
+                                                                ...replyCcList
+                                                            ].filter((rawEmail: string) => {
+                                                                const accountEmail = (gmailAccount?.email || '').toLowerCase();
+                                                                const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
+                                                                return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
+                                                            }))).map((ccEmail) => {
+                                                                const isSelected = replyCcList.includes(ccEmail);
+                                                                return (
+                                                                    <Badge
+                                                                        key={ccEmail}
+                                                                        variant={isSelected ? "default" : "outline"}
+                                                                        className="cursor-pointer text-xs px-2 py-0.5"
+                                                                        onClick={() => {
+                                                                            setReplyCcList(prev =>
+                                                                                prev.includes(ccEmail)
+                                                                                    ? prev.filter(e => e !== ccEmail)
+                                                                                    : [...prev, ccEmail]
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        {ccEmail}
+                                                                        {isSelected && <Check className="h-3 w-3 ml-1" />}
+                                                                    </Badge>
+                                                                );
+                                                            })}
+                                                            <input
+                                                                type="email"
+                                                                placeholder={t('Add CC...')}
+                                                                value={ccInput}
+                                                                onChange={(e) => setCcInput(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        const val = ccInput.trim().replace(/,/g, '');
+                                                                        if (val && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                                                                            setReplyCcList(prev => prev.includes(val) ? prev : [...prev, val]);
+                                                                            setCcInput('');
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="flex-1 min-w-0 bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center px-2.5 py-1.5 group">
+                                                        <span className="w-10 text-[10px] font-bold text-muted-foreground group-focus-within:text-foreground">BCC</span>
                                                         <div className="flex flex-wrap gap-1.5 flex-1 items-center">
                                                             {Array.from(new Set([
                                                                 ...(selectedThread?.participants || []).map((p: string) => {
@@ -1686,119 +1684,119 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 className="flex-1 min-w-0 bg-transparent border-none text-xs focus:ring-0 p-0 placeholder:text-muted-foreground/50 h-5 outline-none"
                                                             />
                                                         </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {/* Reply attachment preview */}
+                                            {replyFiles.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
+                                                    {replyFiles.map((file, idx) => (
+                                                        <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
+                                                            <Paperclip className="h-3 w-3 text-muted-foreground" />
+                                                            <span className="truncate max-w-[120px]">{file.name}</span>
+                                                            <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive" disabled={selectedThread.status === 'Archive'}>
+                                                                <X className="h-3 w-3" />
+                                                            </button>
                                                         </div>
-                                                    </div>
-                                                )}
-                                                {/* Reply attachment preview */}
-                                                {replyFiles.length > 0 && (
-                                                    <div className="flex flex-wrap gap-2 px-2.5 py-2 border-t bg-muted/10">
-                                                        {replyFiles.map((file, idx) => (
-                                                            <div key={idx} className="flex items-center gap-1.5 bg-background border rounded-md px-2 py-1 text-xs">
-                                                                <Paperclip className="h-3 w-3 text-muted-foreground" />
-                                                                <span className="truncate max-w-[120px]">{file.name}</span>
-                                                                <button onClick={() => setReplyFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive" disabled={selectedThread.status === 'Archive'}>
-                                                                    <X className="h-3 w-3" />
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {/* Reply Formatting Toolbar */}
-                                                {showReplyFormatting && replyEditor && (
-                                                    <div className="flex items-center gap-0.5 px-2.5 py-1 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
-                                                        <Button
-                                                            variant="ghost" 
-                                                            size="sm" 
-                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('bold') && "bg-muted text-primary")}
-                                                            onClick={() => replyEditor.chain().focus().toggleBold().run()}
-                                                            disabled={selectedThread.status === 'Archive'}
-                                                        >
-                                                            <Bold className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost" 
-                                                            size="sm" 
-                                                            className={cn("h-7 w-7 p-0", replyEditor.isActive('italic') && "bg-muted text-primary")}
-                                                            onClick={() => replyEditor.chain().focus().toggleItalic().run()}
-                                                            disabled={selectedThread.status === 'Archive'}
-                                                        >
-                                                            <Italic className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                        <div className="w-px h-3 bg-border mx-1" />
-                                                        <Button
-                                                            variant="ghost" 
-                                                            size="sm" 
-                                                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                                                            onClick={() => replyEditor.chain().focus().unsetAllMarks().run()}
-                                                            disabled={selectedThread.status === 'Archive'}
-                                                        >
-                                                            <X className="h-3 w-3" />
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
-                                                    <div className="flex items-center gap-1">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className={cn("h-7 w-7 transition-colors rounded-full", showReplyFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
-                                                            onClick={() => setShowReplyFormatting(!showReplyFormatting)}
-                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
-                                                        >
-                                                            <Type className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className={cn("h-7 w-7 transition-colors rounded-full", showReplyCcBcc ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
-                                                            onClick={() => setShowReplyCcBcc(!showReplyCcBcc)}
-                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
-                                                        >
-                                                            <UserPlus className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                        <div className="w-px h-4 bg-border mx-1" />
-                                                        <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Archive'}>
-                                                            <Paperclip className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                        <EmojiPicker 
-                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
-                                                            onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()} 
-                                                        />
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            className="gap-1.5 px-4 h-7 text-xs"
-                                                            onClick={handleSendReply}
-                                                            disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Archive'}
-                                                        >
-                                                            {submittingReply ? (
-                                                                <RefreshCw className="h-3 w-3 animate-spin" />
-                                                            ) : (
-                                                                <Send className="h-3 w-3" />
-                                                            )}
-                                                            {submittingReply ? t('Sending...') : t('Send Reply')}
-                                                        </Button>
-                                                    </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {/* Reply Formatting Toolbar */}
+                                            {showReplyFormatting && replyEditor && (
+                                                <div className="flex items-center gap-0.5 px-2.5 py-1 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className={cn("h-7 w-7 p-0", replyEditor.isActive('bold') && "bg-muted text-primary")}
+                                                        onClick={() => replyEditor.chain().focus().toggleBold().run()}
+                                                        disabled={selectedThread.status === 'Archive'}
+                                                    >
+                                                        <Bold className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className={cn("h-7 w-7 p-0", replyEditor.isActive('italic') && "bg-muted text-primary")}
+                                                        onClick={() => replyEditor.chain().focus().toggleItalic().run()}
+                                                        disabled={selectedThread.status === 'Archive'}
+                                                    >
+                                                        <Italic className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                    <div className="w-px h-3 bg-border mx-1" />
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                                        onClick={() => replyEditor.chain().focus().unsetAllMarks().run()}
+                                                        disabled={selectedThread.status === 'Archive'}
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 border-t">
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={cn("h-7 w-7 transition-colors rounded-full", showReplyFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                                        onClick={() => setShowReplyFormatting(!showReplyFormatting)}
+                                                        disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                    >
+                                                        <Type className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={cn("h-7 w-7 transition-colors rounded-full", showReplyCcBcc ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                                        onClick={() => setShowReplyCcBcc(!showReplyCcBcc)}
+                                                        disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                    >
+                                                        <UserPlus className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                    <div className="w-px h-4 bg-border mx-1" />
+                                                    <input type="file" multiple ref={replyFileRef} className="hidden" onChange={(e) => { if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Archive'}>
+                                                        <Paperclip className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                    <EmojiPicker
+                                                        disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                        onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        className="gap-1.5 px-4 h-7 text-xs"
+                                                        onClick={handleSendReply}
+                                                        disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Archive'}
+                                                    >
+                                                        {submittingReply ? (
+                                                            <RefreshCw className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            <Send className="h-3 w-3" />
+                                                        )}
+                                                        {submittingReply ? t('Sending...') : t('Send Reply')}
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
-                                ) : (
-                                    /* No thread selected (visible on md+) */
-                                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                                        <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-                                            <Inbox className="h-8 w-8 text-muted-foreground/30" />
-                                        </div>
-                                        <h3 className="text-lg font-semibold mb-1">{t('Select a conversation')}</h3>
-                                        <p className="text-sm text-muted-foreground max-w-xs">
-                                            {t('Choose a thread from the list to view the full message history and CRM details.')}
-                                        </p>
                                     </div>
-                                )}
-                            </div>
-                        </>
+                                </>
+                            ) : (
+                                /* No thread selected (visible on md+) */
+                                <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                                    <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                                        <Inbox className="h-8 w-8 text-muted-foreground/30" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold mb-1">{t('Select a conversation')}</h3>
+                                    <p className="text-sm text-muted-foreground max-w-xs">
+                                        {t('Choose a thread from the list to view the full message history and CRM details.')}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </>
                 </div>
 
                 {/* Pane 4: CRM Context Sidebar — ALWAYS an absolute overlay */}
@@ -1809,11 +1807,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none"
                             onClick={() => setShowContactSidebar(false)}
                         />
-                        <div className="absolute right-0 top-0 bottom-0 z-30 w-full md:w-[300px] max-w-[88vw] border-l flex flex-col bg-background shadow-2xl">
+                        <div className="absolute right-0 top-0 bottom-0 z-30 w-full min-w-0 md:w-[300px] max-w-[88vw] border-l flex flex-col bg-background shadow-2xl">
 
                             {/* ── Sidebar Header ────────────────────────── */}
-                            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-                                <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between gap-2 min-w-0 px-4 py-3 border-b shrink-0">
+                                <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
                                     {(() => {
                                         const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
                                         const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
@@ -1824,7 +1822,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         {String(contactName).charAt(0).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
-                                                <div className="min-w-0">
+                                                <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-semibold truncate leading-tight">{contactName}</p>
                                                     <p className="text-xs text-muted-foreground truncate leading-tight">
                                                         {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
@@ -1848,11 +1846,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     <button
                                         key={tab.key}
                                         onClick={() => setActiveSidebarSection(tab.key)}
-                                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
-                                            activeSidebarSection === tab.key
+                                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${activeSidebarSection === tab.key
                                                 ? 'border-primary text-primary bg-primary/5'
                                                 : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                                        }`}
+                                            }`}
                                     >
                                         <tab.icon className="h-4 w-4" />
                                         {tab.label}
@@ -1871,19 +1868,19 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 {selectedThread.leads.map((lead: any) => {
                                                     const currentStatus = localLeadStatuses[lead.id] ?? lead.lead_status?.name ?? lead.leadStatus?.name ?? leadStatuses[0]?.name ?? '';
                                                     const statusConfig: Record<string, { color: string; dot: string }> = {
-                                                        'New':         { color: 'text-blue-700 bg-blue-50 border-blue-200', dot: 'bg-blue-500' },
-                                                        'Contacted':   { color: 'text-violet-700 bg-violet-50 border-violet-200', dot: 'bg-violet-500' },
-                                                        'Qualified':   { color: 'text-emerald-700 bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
+                                                        'New': { color: 'text-blue-700 bg-blue-50 border-blue-200', dot: 'bg-blue-500' },
+                                                        'Contacted': { color: 'text-violet-700 bg-violet-50 border-violet-200', dot: 'bg-violet-500' },
+                                                        'Qualified': { color: 'text-emerald-700 bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
                                                         'Unqualified': { color: 'text-rose-700 bg-rose-50 border-rose-200', dot: 'bg-rose-400' },
                                                     };
                                                     const sc = statusConfig[currentStatus] ?? { color: 'text-muted-foreground bg-muted border-border', dot: 'bg-muted-foreground' };
                                                     return (
                                                         <div key={lead.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
                                                             {/* Lead card header */}
-                                                            <div className="flex items-center justify-between px-3 py-2.5 bg-muted/30 border-b">
-                                                                <div className="flex items-center gap-2 min-w-0">
+                                                            <div className="flex items-center justify-between gap-2 min-w-0 px-3 py-2.5 bg-muted/30 border-b">
+                                                                <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
                                                                     <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
-                                                                    <span className="text-sm font-semibold truncate">{lead.name}</span>
+                                                                    <span className="min-w-0 flex-1 truncate text-sm font-semibold">{lead.name}</span>
                                                                 </div>
                                                                 <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0 ml-1">
                                                                     {t('LEAD')}
@@ -1892,20 +1889,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                                             {/* Lead detail rows */}
                                                             <div className="px-3 py-2.5 space-y-4 text-sm">
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <span className="text-muted-foreground shrink-0">{t('Company')}</span>
-                                                                    <span className="font-medium truncate text-right">{lead.company || '—'}</span>
+                                                                <div className="flex min-w-0 items-center justify-between gap-2">
+                                                                    <span className="shrink-0 text-muted-foreground">{t('Company')}</span>
+                                                                    <span className="min-w-0 flex-1 truncate text-right font-medium">{lead.company || '—'}</span>
                                                                 </div>
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <span className="text-muted-foreground shrink-0">{t('Value')}</span>
-                                                                    <span className="font-semibold text-emerald-600">
+                                                                <div className="flex min-w-0 items-center justify-between gap-2">
+                                                                    <span className="shrink-0 text-muted-foreground">{t('Value')}</span>
+                                                                    <span className="min-w-0 flex-1 text-right font-semibold text-emerald-600">
                                                                         {lead.value ? `$${Number(lead.value).toLocaleString()}` : '—'}
                                                                     </span>
                                                                 </div>
                                                                 {lead.assigned_to_user && (
-                                                                    <div className="flex items-center justify-between gap-2">
-                                                                        <span className="text-muted-foreground shrink-0">{t('Owner')}</span>
-                                                                        <span className="font-medium truncate text-right">{lead.assigned_to_user.name}</span>
+                                                                    <div className="flex min-w-0 items-center justify-between gap-2">
+                                                                        <span className="shrink-0 text-muted-foreground">{t('Owner')}</span>
+                                                                        <span className="min-w-0 flex-1 truncate text-right font-medium">{lead.assigned_to_user.name}</span>
                                                                     </div>
                                                                 )}
 
@@ -1975,7 +1972,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                 <div className={`h-3 w-3 rounded-full ring-4 shadow-sm ${dot}`} />
                                                                             </div>
                                                                             <div className="min-w-0 pb-1">
-                                                                                <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors">
+                                                                                <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2 break-words">
                                                                                     {activity.title}
                                                                                 </p>
                                                                                 {rawDesc ? (
@@ -2030,13 +2027,13 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                                 {selectedThread.suggested_leads?.length > 0 ? (
                                                     <div className="w-full space-y-3">
-                                                        <div className="bg-amber-50/50 border border-amber-200/50 p-3 rounded-xl text-left scale-[0.98] hover:scale-100 transition-transform">
+                                                        <div className="min-w-0 bg-amber-50/50 border border-amber-200/50 p-3 rounded-xl text-left scale-[0.98] hover:scale-100 transition-transform">
                                                             <p className="text-[10px] text-amber-700 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                                                <AlertCircle className="h-3 w-3" />
+                                                                <AlertCircle className="h-3 w-3 shrink-0" />
                                                                 {t('Suggested Match')}
                                                             </p>
-                                                            <p className="text-xs text-amber-900 font-bold leading-none">{selectedThread.suggested_leads[0].name}</p>
-                                                            <p className="text-[10px] text-amber-600/80 truncate mt-1">{selectedThread.suggested_leads[0].email}</p>
+                                                            <p className="text-xs text-amber-900 font-bold leading-none break-words">{selectedThread.suggested_leads[0].name}</p>
+                                                            <p className="text-[10px] text-amber-600/80 truncate mt-1 min-w-0">{selectedThread.suggested_leads[0].email}</p>
                                                         </div>
                                                         <Button size="sm" className="w-full text-xs h-9 font-bold shadow-lg shadow-primary/10 transition-all hover:translate-y-[-1px]" onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)} disabled={!canManage}>
                                                             {t('Link Match to Thread')}
@@ -2063,10 +2060,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
 
                                             const oppStatusConfig: Record<string, { badge: string; dot: string; label: string }> = {
-                                                'Open':        { badge: 'bg-blue-100 text-blue-700 border-blue-200',    dot: 'bg-blue-500',    label: 'Open' },
-                                                'Negotiation': { badge: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500',   label: 'Negotiation' },
-                                                'Won':         { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', label: 'Won' },
-                                                'Lost':        { badge: 'bg-rose-100 text-rose-700 border-rose-200',    dot: 'bg-rose-500',    label: 'Lost' },
+                                                'Open': { badge: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-500', label: 'Open' },
+                                                'Negotiation': { badge: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500', label: 'Negotiation' },
+                                                'Won': { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', label: 'Won' },
+                                                'Lost': { badge: 'bg-rose-100 text-rose-700 border-rose-200', dot: 'bg-rose-500', label: 'Lost' },
                                             };
 
                                             if (opportunities.length === 0) {
@@ -2097,22 +2094,23 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 return (
                                                     <div key={opp.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
                                                         {/* Opportunity row — click to expand */}
-                                                        <div className="flex items-center justify-between px-3 py-2 hover:bg-muted/40 transition-colors">
+                                                        <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
                                                             <button
-                                                                className="flex-1 flex items-center gap-2 min-w-0 py-1.5 text-left"
+                                                                type="button"
+                                                                className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden py-1.5 text-left"
                                                                 onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
                                                             >
-                                                                <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
-                                                                <span className="text-sm font-semibold truncate">{opp.name || opp.title}</span>
+                                                                <div className={`h-2 w-2 shrink-0 rounded-full ${sc.dot}`} />
+                                                                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{opp.name || opp.title}</span>
                                                             </button>
-                                                            <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                                                            <div className="flex shrink-0 items-center gap-1.5 ml-1">
                                                                 {canEditOpportunityStage && opportunityStages.length > 0 ? (
                                                                     <Select
                                                                         value={stageName}
                                                                         onValueChange={(val) => persistOpportunityStage(opp, val)}
                                                                         disabled={savingOppId === opp.id}
                                                                     >
-                                                                        <SelectTrigger className={`h-6 text-[10px] font-bold border rounded-md px-1.5 min-w-[70px] ${sc.badge}`}>
+                                                                        <SelectTrigger className={`h-6 min-w-0 max-w-[7rem] truncate text-[10px] font-bold border rounded-md px-1.5 ${sc.badge}`}>
                                                                             <SelectValue placeholder={t('Stage')} />
                                                                         </SelectTrigger>
                                                                         <SelectContent>
@@ -2126,7 +2124,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         {stageName || '—'}
                                                                     </span>
                                                                 )}
-                                                                <button 
+                                                                <button
                                                                     onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
                                                                     className="p-1 hover:bg-muted rounded"
                                                                 >
@@ -2161,20 +2159,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         opp.probability;
                                                                     if (prob === undefined || prob === null) return null;
                                                                     return (
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center justify-between text-xs">
-                                                                            <span className="text-muted-foreground flex items-center gap-1">
-                                                                                <TrendingUp className="h-3 w-3" />{t('Probability')}
-                                                                            </span>
-                                                                            <span className="font-semibold">{prob}%</span>
+                                                                        <div className="space-y-1">
+                                                                            <div className="flex items-center justify-between text-xs">
+                                                                                <span className="text-muted-foreground flex items-center gap-1">
+                                                                                    <TrendingUp className="h-3 w-3" />{t('Probability')}
+                                                                                </span>
+                                                                                <span className="font-semibold">{prob}%</span>
+                                                                            </div>
+                                                                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                                                <div
+                                                                                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                                                                                    style={{ width: `${Math.min(100, Number(prob))}%` }}
+                                                                                />
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                                                            <div
-                                                                                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                                                                                style={{ width: `${Math.min(100, Number(prob))}%` }}
-                                                                            />
-                                                                        </div>
-                                                                    </div>
                                                                     );
                                                                 })()}
                                                                 {opp.id && (
@@ -2274,10 +2272,10 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 placeholder="recipient@example.com"
                                 className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto break-all bg-transparent text-sm"
                             />
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => setShowComposeCcBcc(!showComposeCcBcc)} 
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowComposeCcBcc(!showComposeCcBcc)}
                                 className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-tight"
                             >
                                 {showComposeCcBcc ? t('Hide CC/BCC') : t('CC/BCC')}
@@ -2343,16 +2341,16 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             {showFormatting && composeEditor && (
                                 <div className="flex items-center gap-0.5 px-5 py-1.5 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
                                     <Button
-                                        variant="ghost" 
-                                        size="sm" 
+                                        variant="ghost"
+                                        size="sm"
                                         className={cn("h-8 w-8 p-0", composeEditor.isActive('bold') && "bg-muted text-primary")}
                                         onClick={() => composeEditor.chain().focus().toggleBold().run()}
                                     >
                                         <Bold className="h-4 w-4" />
                                     </Button>
                                     <Button
-                                        variant="ghost" 
-                                        size="sm" 
+                                        variant="ghost"
+                                        size="sm"
                                         className={cn("h-8 w-8 p-0", composeEditor.isActive('italic') && "bg-muted text-primary")}
                                         onClick={() => composeEditor.chain().focus().toggleItalic().run()}
                                     >
@@ -2360,8 +2358,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </Button>
                                     <div className="w-px h-4 bg-border mx-1" />
                                     <Button
-                                        variant="ghost" 
-                                        size="sm" 
+                                        variant="ghost"
+                                        size="sm"
                                         className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                         onClick={() => composeEditor.chain().focus().unsetAllMarks().run()}
                                     >
@@ -2372,9 +2370,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             {/* Main Toolbar */}
                             <div className="flex items-center justify-between px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
                                 <div className="flex items-center gap-1">
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         className={cn("h-8 w-8 transition-colors rounded-full", showFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
                                         onClick={() => setShowFormatting(!showFormatting)}
                                     >
@@ -2384,8 +2382,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
-                                    <EmojiPicker 
-                                        onSelect={(emoji) => composeEditor?.chain().focus().insertContent(emoji).run()} 
+                                    <EmojiPicker
+                                        onSelect={(emoji) => composeEditor?.chain().focus().insertContent(emoji).run()}
                                     />
                                 </div>
                             </div>
@@ -2415,8 +2413,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         </DialogTitle>
                     </DialogHeader>
                     <div className="bg-background max-h-[85vh] overflow-hidden">
-                        <FollowUpSequenceBuilder 
-                            threadId={selectedThread?.id} 
+                        <FollowUpSequenceBuilder
+                            threadId={selectedThread?.id}
                             lastMessageAt={selectedThread?.last_message_at}
                         />
                     </div>
