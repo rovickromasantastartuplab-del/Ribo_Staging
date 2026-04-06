@@ -2060,12 +2060,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 <span className="text-[10px] text-muted-foreground">
                                                                     {timeAgo(lead.created_at)}
                                                                 </span>
-                                                                <a href={route('leads.show', lead.id)} target="_blank" rel="noopener noreferrer">
-                                                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1 text-primary font-semibold hover:bg-primary/10">
-                                                                        {t('View')}
-                                                                        <ExternalLink className="h-3 w-3" />
-                                                                    </Button>
-                                                                </a>
                                                             </div>
                                                         </div>
                                                     );
@@ -2112,16 +2106,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </div>
                                                     </div>
 
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedFolder('history');
-                                                            setShowContactSidebar(false);
-                                                        }}
+                                                    <a
+                                                        href={route('leads.show', selectedThread.leads[0].id)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
                                                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group"
                                                     >
                                                         <span className="text-[11px] font-bold tracking-tight">{t('Open Full History Stream')}</span>
                                                         <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                                                    </button>
+                                                    </a>
                                                 </div>
                                             </>
                                         ) : (
