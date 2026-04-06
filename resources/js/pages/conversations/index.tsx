@@ -24,7 +24,6 @@ import {
     Link as LinkIcon,
     Type,
     Calendar,
-    History as HistoryIcon,
     ChevronRight,
     Clock,
     UserCheck,
@@ -99,7 +98,6 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
         { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
         { key: 'calendar', icon: Calendar, label: t('Follow-up Calendar'), count: 0 },
         { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
-        { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
         { key: 'archive', icon: Archive, label: t('Archive'), count: 0 },
     ];
     return (
@@ -157,7 +155,6 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                     { key: 'sent', icon: Send, label: t('Sent'), count: 0 },
                     { key: 'calendar', icon: Calendar, label: t('Follow-up Calendar'), count: 0 },
                     { key: 'closed', icon: CheckCircle, label: t('Closed'), count: 0 },
-                    { key: 'history', icon: HistoryIcon, label: t('History'), count: 0 },
                     { key: 'archive', icon: Archive, label: t('Archive'), count: 0 },
                 ].map(f => (
                     <button
@@ -202,22 +199,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [submittingReply, setSubmittingReply] = useState(false);
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount || 0);
     const [searchQuery, setSearchQuery] = useState('');
-    const [historyActivities, setHistoryActivities] = useState<any[]>([]);
-    const [loadingHistory, setLoadingHistory] = useState(false);
-    const [loadingParticipants, setLoadingParticipants] = useState(false);
-    const [historyParticipants, setHistoryParticipants] = useState<any[]>([]);
-
     // Pagination states
     const [threadPage, setThreadPage] = useState(1);
     const [hasMoreThreads, setHasMoreThreads] = useState(false);
-    const [historyPage, setHistoryPage] = useState(1);
-    const [hasMoreHistory, setHasMoreHistory] = useState(false);
-    const [participantsPage, setParticipantsPage] = useState(1);
-    const [hasMoreParticipants, setHasMoreParticipants] = useState(false);
-    const [isSyncingHistory, setIsSyncingHistory] = useState(false);
-    const [gmailPageToken, setGmailPageToken] = useState<string | null | undefined>(undefined); // undefined = haven't checked Gmail yet
-    const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
-    const [searchParticipants, setSearchParticipants] = useState('');
 
     // Feature states
     const [companyUsers, setCompanyUsers] = useState<any[]>([]);
@@ -397,7 +381,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const composeFileRef = React.useRef<HTMLInputElement>(null);
     const replyFileRef = React.useRef<HTMLInputElement>(null);
     const threadObserverTarget = React.useRef<HTMLDivElement>(null);
-    const participantObserverTarget = React.useRef<HTMLDivElement>(null);
     const messagesEndRef = React.useRef<HTMLDivElement>(null);
     const messagesTopObserverTarget = React.useRef<HTMLDivElement>(null);
     const scrollViewportRef = React.useRef<HTMLDivElement>(null);
@@ -525,34 +508,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     useEffect(() => { selectedThreadIdRef.current = selectedThread?.id || null; }, [selectedThread?.id]);
 
     useEffect(() => {
-        if (selectedFolder === 'history') {
-            if (selectedParticipant) {
-                setHistoryPage(1);
-                setGmailPageToken(undefined); // Reset token for new participant
-                fetchParticipantActivities(selectedParticipant, false);
-            } else {
-                setParticipantsPage(1);
-                fetchHistoryParticipants(false);
-            }
-        } else {
-            setThreadPage(1);
-            fetchThreads(false);
-        }
+        setThreadPage(1);
+        fetchThreads(false);
 
         if (!companyId) return;
 
         const channel = getEcho().private(`company.${companyId}`)
             .listen('.gmail.sync.completed', (data: any) => {
                 if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
-                    if (selectedFolder === 'history') {
-                        if (selectedParticipant) {
-                            fetchParticipantActivities(selectedParticipant, false, true);
-                        } else {
-                            fetchHistoryParticipants(false, true);
-                        }
-                    } else {
-                        fetchThreads(false, true);
-                    }
+                    fetchThreads(false, true);
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
                             .then(r => {
@@ -569,7 +533,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 }
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
-    }, [selectedFolder, gmailAccount?.id, companyId, selectedParticipant?.email, searchQuery, searchParticipants]);
+    }, [selectedFolder, gmailAccount?.id, companyId, searchQuery]);
  
     // Handle deep linking to a specific thread on mount
     useEffect(() => {
@@ -609,87 +573,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         return () => observer.disconnect();
     }, [hasMoreThreads, loading]);
 
-    // Participant Infinite Scroll Observer
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            entries => {
-                if (entries[0].isIntersecting && hasMoreParticipants && !loadingParticipants) {
-                    fetchHistoryParticipants(true);
-                }
-            },
-            { threshold: 0.1 }
-        );
-        if (participantObserverTarget.current) observer.observe(participantObserverTarget.current);
-        return () => observer.disconnect();
-    }, [hasMoreParticipants, loadingParticipants]);
-
-    const fetchHistoryParticipants = async (append = false, silent = false) => {
-        if (!silent) {
-            setLoadingParticipants(true);
-            if (!append) setHistoryParticipants([]); // Clear previous on fresh load
-        }
-        try {
-            const page = append ? participantsPage + 1 : 1;
-            const params: any = { page };
-            if (searchParticipants.trim()) params.search = searchParticipants.trim();
-
-            const response = await axios.get(route('api.conversations.history.participants', params));
-            const { data, current_page, last_page } = response.data;
-
-            setHistoryParticipants(prev => {
-                const combined = append ? [...prev, ...data] : data;
-                // Grouping is now done on the backend by pId (Lead ID or Email)
-                // We just need to ensure unique elements in the React state if append is used
-                const unique = Array.from(new Map<string, any>(combined.map((item: any) => [item.id ? `${item.type}_${item.id}` : item.email, item])).values());
-                return unique;
-            });
-            setParticipantsPage(current_page);
-            setHasMoreParticipants(current_page < last_page);
-        } catch (error) {
-            console.error('Failed to fetch history participants:', error);
-            if (!silent) toast.error(t('Failed to load history list'));
-        } finally {
-            if (!silent) setLoadingParticipants(false);
-        }
-    };
-
-    const fetchParticipantActivities = async (participant: any, append = false, silent = false) => {
-        if (!silent) {
-            setLoadingHistory(true);
-            if (!append) setHistoryActivities([]); // Clear previous on fresh load
-        }
-        try {
-            const page = append ? historyPage + 1 : 1;
-            const params: any = { email: participant.email, page };
-            if (participant.type === 'lead') params.lead_id = participant.id;
-            if (participant.type === 'contact') params.contact_id = participant.id;
-
-            const response = await axios.get(route('api.conversations.activities', params));
-            const { data, current_page, last_page } = response.data;
-
-            setHistoryActivities(prev => {
-                const combined = append ? [...prev, ...data] : data;
-                // Unique by ID (now with sync_/crm_/msg_ prefixes from backend)
-                const uniqueMap = new Map<string, any>(combined.map((item: any) => [String(item.id), item]));
-                const unique = Array.from(uniqueMap.values());
-                
-                // Stable sort by created_at DESC then by id DESC
-                return unique.sort((a, b) => {
-                    const dateA = new Date(a.created_at).getTime();
-                    const dateB = new Date(b.created_at).getTime();
-                    if (dateA !== dateB) return dateB - dateA;
-                    return String(b.id).localeCompare(String(a.id));
-                });
-            });
-            setHistoryPage(current_page);
-            setHasMoreHistory(current_page < last_page);
-        } catch (error) {
-            console.error('Failed to fetch participant history:', error);
-            if (!silent) toast.error(t('Failed to load activity timeline'));
-        } finally {
-            if (!silent) setLoadingHistory(false);
-        }
-    };
 
     const fetchThreads = async (append = false, silent = false) => {
         if (!silent) {
@@ -760,30 +643,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             onSuccess: () => { setIsSyncing(false); fetchThreads(); },
             onError: () => { setIsSyncing(false); toast.error(t('Failed to synchronize inbox')); }
         });
-    };
-
-    const handleSeamlessSync = async () => {
-        if (!selectedParticipant?.email || isSyncingHistory) return;
-
-        setIsSyncingHistory(true);
-        try {
-            const response = await axios.post(route('api.conversations.history.sync'), {
-                email: selectedParticipant.email,
-                pageToken: gmailPageToken === undefined ? null : gmailPageToken
-            });
-
-            setGmailPageToken(response.data.nextPageToken || null);
-
-            // Re-fetch local activities to show the newly synced ones
-            // We append to the current view
-            fetchParticipantActivities(selectedParticipant, true, true);
-        } catch (error: any) {
-            console.error('Seamless sync failed:', error);
-            // Silent failure, but stop trying if 401 persists
-            setGmailPageToken(null);
-        } finally {
-            setIsSyncingHistory(false);
-        }
     };
 
     const handleSelectThread = async (thread: any, page = 1) => {
@@ -1018,160 +877,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         onCanCompose={canCompose}
                     />
 
-                    {selectedFolder === 'history' ? (
-                        <div className="flex-1 min-h-0 overflow-hidden bg-muted/5 p-4 lg:p-6 flex flex-col">
-                            {selectedParticipant ? (
-                                <div className="flex flex-col h-full">
-                                    <div className="flex items-center justify-between mb-4 bg-background p-3 rounded-lg border shadow-sm">
-                                        <div className="flex items-center gap-3 shadow-sm p-1 rounded-md">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedParticipant(null)}>
-                                                <ArrowLeft className="h-4 w-4" />
-                                            </Button>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-10 w-10 border shadow-sm">
-                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                                                        {selectedParticipant.name?.charAt(0).toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="min-w-0">
-                                                    <h3 className="text-sm font-bold truncate max-w-[120px] lg:max-w-none">{selectedParticipant.name}</h3>
-                                                    <p className="text-[10px] text-muted-foreground truncate max-w-[120px] lg:max-w-none">{selectedParticipant.email}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <Button variant="outline" size="sm" className="h-8 text-xs font-semibold" onClick={() => {
-                                                setComposeTo(selectedParticipant.email);
-                                                setShowCompose(true);
-                                            }}>
-                                                <Mail className="h-3.5 w-3.5 mr-1.5" />
-                                                {t('Email')}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 min-h-0 overflow-y-auto">
-                                        {loadingHistory && historyActivities.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                                                <div className="relative">
-                                                    <div className="h-12 w-12 rounded-full border-t-2 border-b-2 border-primary animate-spin"></div>
-                                                    <HistoryIcon className="h-4 w-4 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-                                                </div>
-                                                <p className="text-sm font-medium text-muted-foreground animate-pulse">{t('Loading activity timeline...')}</p>
-                                            </div>
-                                        ) : (
-                                            <ActivityStream
-                                                title={t('Activity Timeline')}
-                                                emptyMessage={t('No activities found for this contact.')}
-                                                activities={historyActivities}
-                                                isCompany={isOwner}
-                                                auth={{ user: auth?.user }}
-                                                maxHeight="max-h-full"
-                                                hasMore={hasMoreHistory || (gmailPageToken !== null)}
-                                                onLoadMore={() => {
-                                                    if (hasMoreHistory) {
-                                                        fetchParticipantActivities(selectedParticipant, true);
-                                                    } else if (gmailPageToken !== null) {
-                                                        handleSeamlessSync();
-                                                    }
-                                                }}
-                                                isLoadingMore={loadingHistory || isSyncingHistory}
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col h-full">
-                                    <div className="flex items-center justify-between mb-5">
-                                        <div>
-                                            <h2 className="text-lg font-bold tracking-tight">{t('Communication History')}</h2>
-                                            <p className="text-xs text-muted-foreground">{t('Browse activities by contact')}</p>
-                                        </div>
-                                        <div className="relative w-full md:w-64">
-                                            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                                            <Input
-                                                placeholder={t('Search contacts...')}
-                                                className="pl-8 h-8 text-xs bg-background"
-                                                value={searchParticipants}
-                                                onChange={(e) => setSearchParticipants(e.target.value)}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') fetchHistoryParticipants(); }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {loadingParticipants && !historyParticipants.length ? (
-                                        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                                            <RefreshCw className="h-8 w-8 text-primary/20 animate-spin mb-3" />
-                                            <p className="text-sm text-muted-foreground">{t('Loading contacts...')}</p>
-                                        </div>
-                                    ) : historyParticipants.length > 0 ? (
-                                        <ScrollArea className="flex-1 min-h-0">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-2">
-                                                {historyParticipants.map((p: any) => (
-                                                    <button
-                                                        key={p.type === 'email' ? p.email : `${p.type}_${p.id}`}
-                                                        onClick={() => {
-                                                            setSelectedParticipant(p);
-                                                            fetchParticipantActivities(p);
-                                                        }}
-                                                        className="flex items-start gap-4 p-4 rounded-xl border bg-background hover:border-primary/50 hover:shadow-md transition-all text-left group overflow-hidden"
-                                                    >
-                                                        <Avatar className="h-10 w-10 border group-hover:scale-105 transition-transform">
-                                                            <AvatarFallback className="bg-primary/5 text-primary text-sm font-bold">
-                                                                {p.name?.charAt(0).toUpperCase()}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="flex-1 min-w-0">
-                                                            <h4 className="font-bold text-sm truncate mb-0.5 group-hover:text-primary transition-colors">
-                                                                {p.name}
-                                                            </h4>
-                                                            <p className="text-xs text-muted-foreground truncate mb-2">
-                                                                {p.email}
-                                                            </p>
-                                                            <div className="flex items-center justify-between mt-auto pt-2 border-t">
-                                                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                                                                    <Clock className="h-3 w-3" />
-                                                                    {timeAgoShort(p.last_activity_at)}
-                                                                </div>
-                                                                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                                {/* Sentinel for IntersectionObserver */}
-                                                <div ref={participantObserverTarget} className="h-4 w-full" />
-
-                                                {loadingParticipants && (
-                                                    <div className="col-span-full p-4 flex justify-center items-center gap-2 text-primary/60 animate-pulse">
-                                                        <RefreshCw className="h-4 w-4 animate-spin" />
-                                                        <span className="text-[10px] font-medium">{t('Loading more contacts...')}</span>
-                                                    </div>
-                                                )}
-
-                                                {!hasMoreParticipants && !loadingParticipants && historyParticipants.length > 10 && (
-                                                    <div className="col-span-full p-8 text-center">
-                                                        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4" />
-                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{t('End of contacts')}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </ScrollArea>
-                                    ) : (
-                                        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-background border rounded-2xl border-dashed">
-                                            <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-                                                <HistoryIcon className="h-8 w-8 text-muted-foreground/30" />
-                                            </div>
-                                            <h3 className="text-base font-bold mb-1">{t('No contacts with history')}</h3>
-                                            <p className="text-xs text-muted-foreground max-w-xs mb-6">
-                                                {t('Your communication history will appear here once you start receiving or sending emails.')}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <>
+                    <>
                             {/* Pane 2: Thread list or Calendar */}
                             <div
                                 className={`border-r flex flex-col bg-background min-w-0 ${selectedThread ? 'hidden lg:flex' : 'flex'}`}
@@ -1911,7 +1617,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 )}
                             </div>
                         </>
-                    )}
                 </div>
 
                 {/* Pane 4: CRM Context Sidebar — ALWAYS an absolute overlay */}
@@ -2070,7 +1775,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     <div>
                                                         <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center justify-between">
                                                             {t('Recent Lead Activity')}
-                                                            <HistoryIcon className="h-3 w-3 opacity-50" />
+                                                            <Clock className="h-3 w-3 opacity-50" />
                                                         </h4>
                                                         <div className="space-y-4 relative">
                                                             {/* Vertical line connecting events */}

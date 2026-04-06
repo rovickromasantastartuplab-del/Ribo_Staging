@@ -237,68 +237,6 @@ class GmailService
     }
 
     /**
-     * Perform a deep sync for a specific contact's historical emails (paged).
-     * Fetches ONE page of results and returns the nextPageToken if available.
-     */
-    public function syncContactHistory(string $email, ?string $pageToken = null, int $maxResults = 20): array
-    {
-        $stats = ['synced' => 0, 'errors' => 0, 'nextPageToken' => null];
-        $companyId = $this->resolveCompanyId();
-        
-        $email = trim(strtolower($email));
-
-        try {
-            $params = [
-                'q' => "from:{$email} OR to:{$email} OR cc:{$email}",
-                'maxResults' => $maxResults,
-            ];
-            
-            if ($pageToken) {
-                $params['pageToken'] = $pageToken;
-            }
-
-            $response = $this->gmail->users_threads->listUsersThreads('me', $params);
-            $threads = $response->getThreads();
-            $stats['nextPageToken'] = $response->getNextPageToken();
-
-            if ($threads) {
-                foreach ($threads as $threadMeta) {
-                    try {
-                        // OPTIMIZATION: Skip full fetch if snippet hasn't changed (Fix 2.3)
-                        $existingSnippet = EmailThread::where('gmail_thread_id', $threadMeta->getId())->value('snippet');
-                        if ($existingSnippet === $threadMeta->getSnippet()) {
-                            $stats['synced']++;
-                            continue;
-                        }
-
-                        $thread = $this->getThread($threadMeta->getId());
-                        if ($thread) {
-                            $this->syncSingleThread($thread, $companyId);
-                            $stats['synced']++;
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Failed to sync contact thread during deep sync', [
-                            'email' => $email,
-                            'thread_id' => $threadMeta->getId(),
-                            'error' => $e->getMessage(),
-                        ]);
-                        $stats['errors']++;
-                    }
-                }
-            }
-
-            return $stats;
-
-        } catch (\Exception $e) {
-            Log::error('Deep sync page failed for contact', [
-                'email' => $email,
-                'error' => $e->getMessage(),
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
      * Perform incremental sync using Gmail history.list API.
      * Only fetches changes since the last known historyId.
      * Returns ['synced' => N, 'errors' => N] or null if fallback to full sync is needed.
