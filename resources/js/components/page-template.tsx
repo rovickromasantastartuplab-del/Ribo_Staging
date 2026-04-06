@@ -23,6 +23,8 @@ export interface PageTemplateProps {
   noPadding?: boolean;
   /** When true, removes page-level p-4/md:p-6/lg:p-8 so full-bleed children (e.g. Conversations Hub) align with the main column edges. Title row keeps horizontal padding. */
   noOuterPadding?: boolean;
+  /** When true, the entire page header row (title + actions) is hidden. */
+  hideHeader?: boolean;
   breadcrumbs?: BreadcrumbItem[];
   className?: string;
 }
@@ -35,6 +37,7 @@ export function PageTemplate({
   children,
   noPadding = false,
   noOuterPadding = false,
+  hideHeader = false,
   breadcrumbs,
   className
 }: PageTemplateProps) {
@@ -59,6 +62,7 @@ export function PageTemplate({
       >
         {/* <div className="flex h-full flex-1 flex-col gap-4 p-4"> */}
         {/* Header with action buttons */}
+        {!hideHeader && (
         <div
           className={cn(
             'flex items-center justify-between flex-wrap gap-y-2 print:hidden',
@@ -83,6 +87,7 @@ export function PageTemplate({
             </div>
           )}
         </div>
+        )}
 
         {/* Content */}
         <div className={noPadding ? "" : "rounded-xl border p-4 md:p-6"}>

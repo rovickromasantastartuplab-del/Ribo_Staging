@@ -155,24 +155,37 @@ const FolderTabs = ({ selectedFolder, onSelect, unreadCount, t, onCompose, onCan
 };
 
 /* ── Full sidebar for xl+ screens ──────────────────────────── */
-const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose, onCanCompose }: any) => (
-    <div className="hidden xl:flex w-44 border-r flex-col bg-muted/30 shrink-0">
-        <div className="p-3 flex-1">
-            <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-sm font-semibold">{t('Conversations')}</span>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSync} disabled={isSyncing}>
+const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, onSync, onCompose, onCanCompose, isCollapsed, onToggleCollapse }: any) => (
+    <div className={`hidden xl:flex transition-all duration-300 border-r flex-col bg-muted/30 shrink-0 ${isCollapsed ? 'w-16 items-center px-1' : 'w-48'}`}>
+        <div className="p-3 flex-1 w-full">
+            <div className={`flex items-center mb-3 ${isCollapsed ? 'justify-center flex-col gap-2' : 'justify-between px-1'}`}>
+                {isCollapsed ? (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={onToggleCollapse} title={t('Expand')}>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                ) : (
+                    <button onClick={onToggleCollapse} className="text-sm font-semibold hover:text-primary transition-colors cursor-pointer text-left focus:outline-none flex-1 truncate" title={t('Collapse')}>
+                        {t('Conversations')}
+                    </button>
+                )}
+                
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSync} disabled={isSyncing} title={t('Sync')}>
                     <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
                 </Button>
             </div>
 
             {onCanCompose && (
-            <Button className="w-full mb-4 h-8 text-xs font-semibold gap-1.5 shadow-sm" onClick={onCompose}>
-                <PenBox className="h-3.5 w-3.5" />
-                {t('Compose')}
-            </Button>
+                <Button 
+                    className={`nav-compose w-full mb-4 shadow-sm transition-all ${isCollapsed ? 'h-10 p-0 rounded-xl flex items-center justify-center' : 'h-8 text-xs font-semibold gap-1.5'}`} 
+                    onClick={onCompose}
+                    title={t('Compose')}
+                >
+                    <PenBox className={isCollapsed ? "h-5 w-5" : "h-3.5 w-3.5"} />
+                    {!isCollapsed && t('Compose')}
+                </Button>
             )}
 
-            <div className="space-y-0.5">
+            <div className="space-y-1 w-full">
                 {[
                     { key: 'inbox', icon: Inbox, label: t('Inbox'), count: unreadCount },
                     { key: 'my_assignments', icon: UserCheck, label: t('My Assignments'), count: 0 },
@@ -185,16 +198,30 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                     <button
                         key={f.key}
                         onClick={() => onSelect(f.key)}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md transition-colors ${selectedFolder === f.key ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground'
-                            }`}
+                        title={isCollapsed ? f.label : undefined}
+                        className={`w-full relative flex items-center rounded-md transition-colors ${
+                            isCollapsed 
+                                ? 'justify-center h-10 mb-1' 
+                                : 'justify-between px-2.5 py-1.5 text-xs'
+                        } ${
+                            selectedFolder === f.key 
+                                ? 'bg-primary/10 text-primary font-medium' 
+                                : 'hover:bg-muted text-muted-foreground'
+                        }`}
                     >
-                        <span className="flex items-center gap-2">
-                            <f.icon className="h-3.5 w-3.5" />
-                            {f.label}
+                        <span className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'gap-2'}`}>
+                            <f.icon className={isCollapsed ? "h-[18px] w-[18px]" : "h-3.5 w-3.5"} />
+                            {!isCollapsed && f.label}
                         </span>
-                        {f.count > 0 && (
-                            <span className={`text-xs px-1.5 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
-                                }`}>{f.count}</span>
+                        {!isCollapsed && f.count > 0 && (
+                            <span className={`text-xs px-1.5 py-0 rounded-full ${selectedFolder === f.key ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
+                                {f.count}
+                            </span>
+                        )}
+                        {isCollapsed && f.count > 0 && (
+                            <span className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[8px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full border shadow-sm">
+                                {f.count > 99 ? '99+' : f.count}
+                            </span>
                         )}
                     </button>
                 ))}
@@ -226,6 +253,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [submittingReply, setSubmittingReply] = useState(false);
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount || 0);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     // Pagination states
     const [threadPage, setThreadPage] = useState(1);
     const [hasMoreThreads, setHasMoreThreads] = useState(false);
@@ -990,6 +1018,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
             url="/conversations"
             noPadding
             noOuterPadding
+            hideHeader
         >
             <Head title={t('Conversations Hub')} />
 
@@ -997,9 +1026,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 Main container: fills available height (edge-to-edge under PageTemplate title row).
                 AppLayout: top nav (~56px) + breadcrumb (~40px) + PageTemplate title row (~52px).
                 noOuterPadding removes page p-4/md:p-6/lg:p-8 — no extra vertical gutter here.
-                Total overhead ≈ 56 + 40 + 52 = ~148px; use 168px to account for gaps/borders.
+                Total overhead ≈ 56 + 40 = ~96px; use 116px to account for gaps/borders.
             */}
-            <div className="flex flex-col h-screen overflow-hidden lg:h-[calc(100vh-168px)] min-h-[25rem] bg-background border-b border-border relative">
+            <div className="flex flex-col h-screen overflow-hidden lg:h-[calc(100vh-116px)] min-h-[25rem] bg-background border-b border-border relative">
 
                 {/* Mobile folder tabs: visible below xl where the sidebar is hidden */}
                 <div className="xl:hidden border-b shrink-0">
@@ -1026,6 +1055,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         onSync={handleSync}
                         onCompose={() => setShowCompose(true)}
                         onCanCompose={canCompose}
+                        isCollapsed={isSidebarCollapsed}
+                        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     />
 
                     <>
