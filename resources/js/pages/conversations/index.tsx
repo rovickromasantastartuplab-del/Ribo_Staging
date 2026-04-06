@@ -1498,8 +1498,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
                                                         {['Low', 'Medium', 'High'].map(p => (
                                                             <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
-                                                                <div className={`w-2.5 h-2.5 rounded-full mr-2 ${p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'
-                                                                    }`} />
+                                                                <div className={`w-2.5 h-2.5 rounded-full mr-2 ${p === 'High' ? 'bg-destructive' : p === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'}`} />
                                                                 {t(p)}
                                                                 {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
                                                             </DropdownMenuItem>
@@ -1958,18 +1957,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 {[
                                     { key: 'lead' as const, label: t('Lead'), icon: User },
                                     { key: 'opportunities' as const, label: t('Opps'), icon: Briefcase },
-                                    { key: 'activity' as const, label: t('Activity'), icon: HistoryIcon },
                                 ].map(tab => (
                                     <button
                                         key={tab.key}
                                         onClick={() => setActiveSidebarSection(tab.key)}
-                                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition-colors border-b-2 ${
+                                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 ${
                                             activeSidebarSection === tab.key
-                                                ? 'border-primary text-primary'
+                                                ? 'border-primary text-primary bg-primary/5'
                                                 : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
                                         }`}
                                     >
-                                        <tab.icon className="h-3.5 w-3.5" />
+                                        <tab.icon className="h-4 w-4" />
                                         {tab.label}
                                     </button>
                                 ))}
@@ -2072,40 +2070,93 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         </div>
                                                     );
                                                 })}
+
+                                                {/* Lead/Contact Contextual Activity Stream */}
+                                                <div className="mt-6 pt-6 border-t space-y-4">
+                                                    <div>
+                                                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center justify-between">
+                                                            {t('Recent Lead Activity')}
+                                                            <HistoryIcon className="h-3 w-3 opacity-50" />
+                                                        </h4>
+                                                        <div className="space-y-4 relative">
+                                                            {/* Vertical line connecting events */}
+                                                            <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border/60" />
+                                                            
+                                                            <div className="flex gap-4 group">
+                                                                <div className="relative shrink-0 mt-1">
+                                                                    <div className="h-3 w-3 rounded-full bg-emerald-500 ring-4 ring-emerald-50 shadow-sm" />
+                                                                </div>
+                                                                <div className="min-w-0 pb-1">
+                                                                    <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors">{t('Last Message Received')}</p>
+                                                                    <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 italic">"{selectedThread.snippet}"</p>
+                                                                    <p className="text-[10px] font-semibold text-muted-foreground/60 mt-2 flex items-center gap-1">
+                                                                        <Clock className="h-2.5 w-2.5" />
+                                                                        {timeAgo(selectedThread.last_message_at)}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className="flex gap-4 group">
+                                                                <div className="relative shrink-0 mt-1">
+                                                                    <div className="h-3 w-3 rounded-full bg-blue-500 ring-4 ring-blue-50 shadow-sm" />
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors">{t('Lead Context Created')}</p>
+                                                                    <p className="text-[10px] text-muted-foreground mt-1">{selectedThread.message_count} {t('messages in thread')}</p>
+                                                                    <p className="text-[10px] font-semibold text-muted-foreground/60 mt-2 flex items-center gap-1">
+                                                                        <Clock className="h-2.5 w-2.5" />
+                                                                        {timeAgo(selectedThread.created_at)}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedFolder('history');
+                                                            setShowContactSidebar(false);
+                                                        }}
+                                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group"
+                                                    >
+                                                        <span className="text-[11px] font-bold tracking-tight">{t('Open Full History Stream')}</span>
+                                                        <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                                    </button>
+                                                </div>
                                             </>
                                         ) : (
                                             /* No lead linked */
-                                            <div className="flex flex-col items-center py-8 px-3 text-center">
-                                                <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                                                    <UserPlus className="h-5 w-5 text-muted-foreground/40" />
+                                            <div className="flex flex-col items-center py-12 px-6 text-center">
+                                                <div className="h-14 w-14 rounded-2xl bg-muted/40 flex items-center justify-center mb-4 transition-transform hover:rotate-6">
+                                                    <UserPlus className="h-7 w-7 text-muted-foreground/30" />
                                                 </div>
-                                                <p className="text-xs font-medium text-foreground mb-1">{t('No lead linked')}</p>
+                                                <h5 className="text-sm font-bold text-foreground mb-1.5">{t('No CRM Lead Linked')}</h5>
+                                                <p className="text-xs text-muted-foreground mb-6 leading-relaxed">
+                                                    {t('Contextual lead tracking and opportunity management are unavailable for this conversation.')}
+                                                </p>
 
                                                 {selectedThread.suggested_leads?.length > 0 ? (
-                                                    <div className="w-full space-y-3 mt-3">
-                                                        <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-left">
-                                                            <p className="text-[10px] text-amber-700 font-bold uppercase mb-1 flex items-center gap-1">
+                                                    <div className="w-full space-y-3">
+                                                        <div className="bg-amber-50/50 border border-amber-200/50 p-3 rounded-xl text-left scale-[0.98] hover:scale-100 transition-transform">
+                                                            <p className="text-[10px] text-amber-700 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                                                                 <AlertCircle className="h-3 w-3" />
-                                                                {t('Possible match found')}
+                                                                {t('Suggested Match')}
                                                             </p>
-                                                            <p className="text-xs text-amber-900 font-semibold">{selectedThread.suggested_leads[0].name}</p>
-                                                            <p className="text-[10px] text-amber-600 truncate">{selectedThread.suggested_leads[0].email}</p>
+                                                            <p className="text-xs text-amber-900 font-bold leading-none">{selectedThread.suggested_leads[0].name}</p>
+                                                            <p className="text-[10px] text-amber-600/80 truncate mt-1">{selectedThread.suggested_leads[0].email}</p>
                                                         </div>
-                                                        <Button size="sm" className="w-full text-xs h-8 font-bold shadow-sm" onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)} disabled={!canManage}>
-                                                            {t('Link to This Lead')}
+                                                        <Button size="sm" className="w-full text-xs h-9 font-bold shadow-lg shadow-primary/10 transition-all hover:translate-y-[-1px]" onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)} disabled={!canManage}>
+                                                            {t('Link Match to Thread')}
                                                         </Button>
-                                                        <Button size="sm" variant="outline" className="w-full text-xs h-7 border-dashed" onClick={() => handleAddAsLead()} disabled={!canManage}>
+                                                        <Button size="sm" variant="ghost" className="w-full text-xs h-8 text-muted-foreground font-semibold" onClick={() => handleAddAsLead()} disabled={!canManage}>
                                                             {t('Create New Lead')}
                                                         </Button>
                                                     </div>
                                                 ) : (
-                                                    <>
-                                                        <p className="text-xs text-muted-foreground mb-4">{t('This conversation is not linked to any CRM lead.')}</p>
-                                                        <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => handleAddAsLead()} disabled={!canManage}>
-                                                            <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-                                                            {t('Add as Lead')}
-                                                        </Button>
-                                                    </>
+                                                    <Button size="sm" variant="outline" className="w-full text-xs h-9 font-bold bg-background shadow-sm transition-all hover:bg-muted" onClick={() => handleAddAsLead()} disabled={!canManage}>
+                                                        <UserPlus className="h-4 w-4 mr-2" />
+                                                        {t('Quick Create Lead')}
+                                                    </Button>
                                                 )}
                                             </div>
                                         )}
@@ -2245,10 +2296,31 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     </div>
                                                                 )}
                                                                 {opp.id && (
-                                                                    <div className="pt-1">
+                                                                    <div className="pt-2">
+                                                                        <div className="mb-4 pt-3 border-t">
+                                                                            <h5 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+                                                                                {t('Opp Activity')}
+                                                                            </h5>
+                                                                            <div className="space-y-2.5">
+                                                                                <div className="flex gap-2.5">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                                                                    <div className="min-w-0">
+                                                                                        <p className="text-[10px] font-bold leading-tight">{t('Status updated')}</p>
+                                                                                        <p className="text-[9px] text-muted-foreground mt-0.5">{t('Successfully moved to')} {currentStatus}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="flex gap-2.5">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500/40 mt-1.5 shrink-0" />
+                                                                                    <div className="min-w-0">
+                                                                                        <p className="text-[10px] font-bold leading-tight text-muted-foreground/80">{t('Quote generated')}</p>
+                                                                                        <p className="text-[9px] text-muted-foreground mt-0.5">{t('Initial pricing shared')}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
                                                                         <a href={route('opportunities.show', opp.id)} target="_blank" rel="noopener noreferrer">
-                                                                            <Button variant="ghost" size="sm" className="h-6 w-full text-[10px] gap-1 text-primary font-semibold hover:bg-primary/10">
-                                                                                {t('Open Opportunity')}
+                                                                            <Button variant="ghost" size="sm" className="h-8 w-full text-[10px] gap-1 text-primary font-bold hover:bg-primary/10 border border-primary/10 transition-all active:scale-[0.98]">
+                                                                                {t('View Detailed Opportunity')}
                                                                                 <ExternalLink className="h-3 w-3" />
                                                                             </Button>
                                                                         </a>
@@ -2263,90 +2335,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </div>
                                 )}
 
-                                {/* ═══════════════ ACTIVITY SECTION ═══════════════ */}
-                                {activeSidebarSection === 'activity' && (
-                                    <div className="p-4 space-y-4">
-                                        {/* Primary CTA */}
-                                        <button
-                                            onClick={() => {
-                                                const lead = selectedThread.leads?.[0];
-                                                if (lead) {
-                                                    setSelectedFolder('history');
-                                                    setShowContactSidebar(false);
-                                                } else {
-                                                    setSelectedFolder('history');
-                                                    setShowContactSidebar(false);
-                                                }
-                                            }}
-                                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 group"
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                                                    <HistoryIcon className="h-4 w-4" />
-                                                </div>
-                                                <div className="text-left">
-                                                    <p className="text-xs font-bold leading-tight">{t('Open Activity Stream')}</p>
-                                                    <p className="text-[10px] opacity-75 leading-tight">{t('Full contact history')}</p>
-                                                </div>
-                                            </div>
-                                            <ExternalLink className="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
-                                        </button>
-
-                                        {/* Recent activity preview */}
-                                        <div>
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">
-                                                {t('Recent Activity')}
-                                            </p>
-                                            <div className="space-y-3">
-                                                <div className="flex gap-2.5">
-                                                    <div className="flex flex-col items-center shrink-0 mt-0.5">
-                                                        <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" />
-                                                        <div className="w-px flex-1 bg-border mt-1" />
-                                                    </div>
-                                                    <div className="pb-3 min-w-0">
-                                                        <p className="text-[11px] font-semibold leading-tight">{t('Last Message')}</p>
-                                                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{selectedThread.snippet}</p>
-                                                        <p className="text-[10px] text-muted-foreground/70 mt-1">{timeAgo(selectedThread.last_message_at)}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2.5">
-                                                    <div className="flex flex-col items-center shrink-0 mt-0.5">
-                                                        <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
-                                                    </div>
-                                                    <div className="pb-1 min-w-0">
-                                                        <p className="text-[11px] font-semibold leading-tight">{t('Thread Created')}</p>
-                                                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                                                            {selectedThread.message_count} {t('message(s)')}
-                                                        </p>
-                                                        <p className="text-[10px] text-muted-foreground/70 mt-1">{timeAgo(selectedThread.created_at)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Lead activity quick links */}
-                                        {selectedThread.leads?.length > 0 && (
-                                            <div>
-                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                                                    {t('Lead Activity')}
-                                                </p>
-                                                <div className="space-y-1.5">
-                                                    {[
-                                                        { label: t('Last contact'), value: timeAgo(selectedThread.last_message_at) },
-                                                        { label: t('Thread messages'), value: `${selectedThread.message_count} emails` },
-                                                        { label: t('Lead created'), value: timeAgo(selectedThread.leads[0]?.created_at) },
-                                                    ].map((row, idx) => (
-                                                        <div key={idx} className="flex items-center justify-between text-xs py-1.5 border-b border-dashed last:border-0">
-                                                            <span className="text-muted-foreground">{row.label}</span>
-                                                            <span className="font-medium">{row.value || '—'}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
+                                {/* स्टैंडअलोन गतिविधि अनुभाग हटा दिया गया (लीड्स और ऑप्स में विलय कर दिया गया) */}
                             </ScrollArea>
                         </div>
                     </>
