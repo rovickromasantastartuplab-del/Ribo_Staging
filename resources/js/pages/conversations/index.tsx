@@ -69,6 +69,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon } from 'lucide-react';
 
 /* ── helpers ───────────────────────────────────────────────── */
 const parseUTC = (dateStr: string) => {
@@ -244,6 +246,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         window.addEventListener('mouseup', onMouseUp);
     };
     const [updatingMetadata, setUpdatingMetadata] = useState(false);
+
+    // CRM Sidebar state
+    const [activeSidebarSection, setActiveSidebarSection] = useState<'lead' | 'opportunities' | 'activity'>('lead');
+    const [expandedOpportunityId, setExpandedOpportunityId] = useState<number | null>(null);
+    const [localLeadStatuses, setLocalLeadStatuses] = useState<Record<number, string>>({});
 
     // Internal thread message pagination
     const [messagesPage, setMessagesPage] = useState(1);
@@ -1907,7 +1914,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     )}
                 </div>
 
-                {/* Pane 4: Contact details — ALWAYS an absolute overlay */}
+                {/* Pane 4: CRM Context Sidebar — ALWAYS an absolute overlay */}
                 {selectedThread && showContactSidebar && (
                     <>
                         {/* Backdrop for mobile */}
@@ -1915,151 +1922,383 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             className="absolute inset-0 z-20 bg-black/20 lg:bg-transparent lg:pointer-events-none"
                             onClick={() => setShowContactSidebar(false)}
                         />
-                        <div className="absolute right-0 top-0 bottom-0 z-30 w-full md:w-[280px] max-w-[85vw] border-l flex flex-col bg-background shadow-2xl overflow-y-auto">
-                            <ScrollArea className="flex-1 min-h-0">
-                                <div className="p-4 md:p-5">
-                                    <div className="flex items-center justify-between mb-5">
-                                        <h3 className="text-sm font-semibold">{t('Contact Details')}</h3>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowContactSidebar(false)}>
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                        <div className="absolute right-0 top-0 bottom-0 z-30 w-full md:w-[300px] max-w-[88vw] border-l flex flex-col bg-background shadow-2xl">
 
-                                    {/* Profile */}
-                                    <div className="flex flex-col items-center text-center mb-6 w-full px-2 overflow-hidden">
-                                        {(() => {
-                                            const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
-                                            const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant;
-
-                                            return (
-                                                <>
-                                                    <Avatar className="h-16 w-16 mb-3 border-2 border-primary/10 shrink-0">
-                                                        <AvatarFallback className="text-lg font-bold bg-primary/5 text-primary">
-                                                            {contactName?.charAt(0).toUpperCase()}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <h4 className="font-bold text-sm truncate w-full">
-                                                        {contactName}
-                                                    </h4>
-                                                    <p className="text-xs text-muted-foreground truncate w-full">
-                                                        {externalParticipant}
+                            {/* ── Sidebar Header ────────────────────────── */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+                                <div className="flex items-center gap-2">
+                                    {(() => {
+                                        const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
+                                        const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
+                                        return (
+                                            <>
+                                                <Avatar className="h-7 w-7 border shrink-0">
+                                                    <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">
+                                                        {String(contactName).charAt(0).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-semibold truncate leading-tight">{contactName}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                                                        {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
                                                     </p>
-                                                </>
-                                            );
-                                        })()}
-                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setShowContactSidebar(false)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
 
-                                    {/* CRM context */}
-                                    <div className="space-y-4">
+                            {/* ── Section Tabs ──────────────────────────── */}
+                            <div className="flex border-b shrink-0">
+                                {[
+                                    { key: 'lead' as const, label: t('Lead'), icon: User },
+                                    { key: 'opportunities' as const, label: t('Opps'), icon: Briefcase },
+                                    { key: 'activity' as const, label: t('Activity'), icon: HistoryIcon },
+                                ].map(tab => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveSidebarSection(tab.key)}
+                                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition-colors border-b-2 ${
+                                            activeSidebarSection === tab.key
+                                                ? 'border-primary text-primary'
+                                                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                                        }`}
+                                    >
+                                        <tab.icon className="h-3.5 w-3.5" />
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* ── Section Body ──────────────────────────── */}
+                            <ScrollArea className="flex-1 min-h-0">
+
+                                {/* ═══════════════ LEAD SECTION ═══════════════ */}
+                                {activeSidebarSection === 'lead' && (
+                                    <div className="p-4 space-y-4">
                                         {selectedThread.leads?.length > 0 ? (
-                                            <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Badge className="bg-blue-600 font-bold text-[10px] px-1.5 py-0">{t('LEAD')}</Badge>
-                                                    <span className="text-[10px] text-blue-600 uppercase font-bold">
-                                                        {selectedThread.leads[0].lead_status?.name || selectedThread.leads[0].status || t('Active')}
-                                                    </span>
-                                                </div>
-                                                <div className="space-y-1.5 text-xs">
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">{t('Value')}:</span>
-                                                        <span className="font-semibold">{selectedThread.leads[0].value ? `$${selectedThread.leads[0].value}` : t('N/A')}</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">{t('Status')}:</span>
-                                                        <Badge variant="outline" className="h-4 text-[9px]">
-                                                            {selectedThread.leads[0].lead_status?.name || selectedThread.leads[0].status || t('New')}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                                <a href={route('leads.show', selectedThread.leads[0].id)}>
-                                                    <Button variant="link" size="sm" className="p-0 h-auto mt-3 text-xs font-semibold">
-                                                        {t('View Full Lead Record')}
-                                                    </Button>
-                                                </a>
-                                            </div>
+                                            <>
+                                                {selectedThread.leads.map((lead: any) => {
+                                                    const currentStatus = localLeadStatuses[lead.id] ?? (lead.lead_status?.name || lead.status || 'New');
+                                                    const statusConfig: Record<string, { color: string; dot: string }> = {
+                                                        'New':         { color: 'text-blue-700 bg-blue-50 border-blue-200', dot: 'bg-blue-500' },
+                                                        'Contacted':   { color: 'text-violet-700 bg-violet-50 border-violet-200', dot: 'bg-violet-500' },
+                                                        'Qualified':   { color: 'text-emerald-700 bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
+                                                        'Unqualified': { color: 'text-rose-700 bg-rose-50 border-rose-200', dot: 'bg-rose-400' },
+                                                    };
+                                                    const sc = statusConfig[currentStatus] ?? { color: 'text-muted-foreground bg-muted border-border', dot: 'bg-muted-foreground' };
+                                                    return (
+                                                        <div key={lead.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                                                            {/* Lead card header */}
+                                                            <div className="flex items-center justify-between px-3 py-2.5 bg-muted/30 border-b">
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
+                                                                    <span className="text-xs font-semibold truncate">{lead.name}</span>
+                                                                </div>
+                                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0 ml-1">
+                                                                    {t('LEAD')}
+                                                                </Badge>
+                                                            </div>
+
+                                                            {/* Lead detail rows */}
+                                                            <div className="px-3 py-2.5 space-y-2 text-xs">
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <span className="text-muted-foreground shrink-0">{t('Company')}</span>
+                                                                    <span className="font-medium truncate text-right">{lead.company || '—'}</span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <span className="text-muted-foreground shrink-0">{t('Value')}</span>
+                                                                    <span className="font-semibold text-emerald-600">
+                                                                        {lead.value ? `$${Number(lead.value).toLocaleString()}` : '—'}
+                                                                    </span>
+                                                                </div>
+                                                                {lead.assigned_to_user && (
+                                                                    <div className="flex items-center justify-between gap-2">
+                                                                        <span className="text-muted-foreground shrink-0">{t('Owner')}</span>
+                                                                        <span className="font-medium truncate text-right">{lead.assigned_to_user.name}</span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Inline Status Selector */}
+                                                                <div className="pt-1">
+                                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                                                                        {t('Status')}
+                                                                    </p>
+                                                                    {canManage ? (
+                                                                        <Select
+                                                                            value={currentStatus}
+                                                                            onValueChange={(val) => {
+                                                                                setLocalLeadStatuses(prev => ({ ...prev, [lead.id]: val }));
+                                                                            }}
+                                                                        >
+                                                                            <SelectTrigger className={`h-7 text-xs font-semibold border rounded-md px-2.5 w-full ${sc.color}`}>
+                                                                                <SelectValue />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {['New', 'Contacted', 'Qualified', 'Unqualified'].map(s => (
+                                                                                    <SelectItem key={s} value={s} className="text-xs">{t(s)}</SelectItem>
+                                                                                ))}
+                                                                                {leadStatuses?.filter((ls: any) => !['New','Contacted','Qualified','Unqualified'].includes(ls.name)).map((ls: any) => (
+                                                                                    <SelectItem key={ls.id} value={ls.name} className="text-xs">{ls.name}</SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    ) : (
+                                                                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md border ${sc.color}`}>
+                                                                            <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
+                                                                            {currentStatus}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Lead card footer */}
+                                                            <div className="px-3 py-2 border-t bg-muted/10 flex items-center justify-between">
+                                                                <span className="text-[10px] text-muted-foreground">
+                                                                    {timeAgo(lead.created_at)}
+                                                                </span>
+                                                                <a href={route('leads.show', lead.id)} target="_blank" rel="noopener noreferrer">
+                                                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1 text-primary font-semibold hover:bg-primary/10">
+                                                                        {t('View')}
+                                                                        <ExternalLink className="h-3 w-3" />
+                                                                    </Button>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </>
                                         ) : (
-                                            <div className="flex flex-col items-center p-4 border border-dashed rounded-lg bg-muted/5">
-                                                <UserPlus className="h-5 w-5 text-muted-foreground/30 mb-1.5" />
+                                            /* No lead linked */
+                                            <div className="flex flex-col items-center py-8 px-3 text-center">
+                                                <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                                                    <UserPlus className="h-5 w-5 text-muted-foreground/40" />
+                                                </div>
+                                                <p className="text-xs font-medium text-foreground mb-1">{t('No lead linked')}</p>
 
                                                 {selectedThread.suggested_leads?.length > 0 ? (
-                                                    <div className="w-full space-y-3">
-                                                        <div className="bg-amber-50 border border-amber-100 p-2.5 rounded-md">
+                                                    <div className="w-full space-y-3 mt-3">
+                                                        <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-left">
                                                             <p className="text-[10px] text-amber-700 font-bold uppercase mb-1 flex items-center gap-1">
                                                                 <AlertCircle className="h-3 w-3" />
-                                                                {t('Existing Lead Found')}
+                                                                {t('Possible match found')}
                                                             </p>
-                                                            <p className="text-xs text-amber-900 font-medium">
-                                                                {selectedThread.suggested_leads[0].name}
-                                                            </p>
-                                                            <p className="text-[10px] text-amber-600 truncate">
-                                                                {selectedThread.suggested_leads[0].email}
-                                                            </p>
+                                                            <p className="text-xs text-amber-900 font-semibold">{selectedThread.suggested_leads[0].name}</p>
+                                                            <p className="text-[10px] text-amber-600 truncate">{selectedThread.suggested_leads[0].email}</p>
                                                         </div>
-                                                        <Button
-                                                            size="sm"
-                                                            className="w-full text-xs h-8 shadow-sm font-bold"
-                                                            onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)}
-                                                            disabled={!canManage}
-                                                        >
-                                                            {t('Link to Existing Lead')}
+                                                        <Button size="sm" className="w-full text-xs h-8 font-bold shadow-sm" onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)} disabled={!canManage}>
+                                                            {t('Link to This Lead')}
                                                         </Button>
-                                                        <div className="relative">
-                                                            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                                                            <div className="relative flex justify-center text-[10px] uppercase"><span className="bg-background px-2 text-muted-foreground font-bold">{t('Or')}</span></div>
-                                                        </div>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="w-full text-xs h-7 border-dashed"
-                                                            onClick={() => handleAddAsLead()}
-                                                            disabled={!canManage}
-                                                        >
-                                                            {t('Create New Lead Anyway')}
+                                                        <Button size="sm" variant="outline" className="w-full text-xs h-7 border-dashed" onClick={() => handleAddAsLead()} disabled={!canManage}>
+                                                            {t('Create New Lead')}
                                                         </Button>
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <p className="text-xs text-muted-foreground mb-3 text-center">
-                                                            {t('This contact is not yet linked to a Lead or Contact record.')}
-                                                        </p>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="w-full text-xs h-7"
-                                                            onClick={() => handleAddAsLead()}
-                                                            disabled={!canManage}
-                                                        >
+                                                        <p className="text-xs text-muted-foreground mb-4">{t('This conversation is not linked to any CRM lead.')}</p>
+                                                        <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => handleAddAsLead()} disabled={!canManage}>
+                                                            <UserPlus className="h-3.5 w-3.5 mr-1.5" />
                                                             {t('Add as Lead')}
                                                         </Button>
                                                     </>
                                                 )}
                                             </div>
                                         )}
+                                    </div>
+                                )}
 
-                                        {/* Activities */}
-                                        <div>
-                                            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                                                {t('Activities')}
-                                            </h4>
-                                            <div className="space-y-2">
-                                                <div className="flex gap-2 items-start">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5 shrink-0 shadow-[0_0_6px_rgba(34,197,94,0.4)]" />
-                                                    <p className="text-xs">
-                                                        <span className="font-semibold">{t('Last Contact')}:</span>{' '}
-                                                        {timeAgo(selectedThread.last_message_at) || t('N/A')}
-                                                    </p>
+                                {/* ═══════════════ OPPORTUNITIES SECTION ═══════════════ */}
+                                {activeSidebarSection === 'opportunities' && (
+                                    <div className="p-4 space-y-3">
+                                        {(() => {
+                                            const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
+                                            const oppStatusConfig: Record<string, { badge: string; dot: string; label: string }> = {
+                                                'Open':        { badge: 'bg-blue-100 text-blue-700 border-blue-200',    dot: 'bg-blue-500',    label: 'Open' },
+                                                'Negotiation': { badge: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500',   label: 'Negotiation' },
+                                                'Won':         { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', label: 'Won' },
+                                                'Lost':        { badge: 'bg-rose-100 text-rose-700 border-rose-200',    dot: 'bg-rose-500',    label: 'Lost' },
+                                            };
+
+                                            if (opportunities.length === 0) {
+                                                return (
+                                                    <div className="flex flex-col items-center py-8 px-3 text-center">
+                                                        <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                                                            <Briefcase className="h-5 w-5 text-muted-foreground/40" />
+                                                        </div>
+                                                        <p className="text-xs font-medium text-foreground mb-1">{t('No opportunities')}</p>
+                                                        {selectedThread.leads?.length === 0 ? (
+                                                            <p className="text-xs text-muted-foreground">{t('Link a lead first to see related opportunities.')}</p>
+                                                        ) : (
+                                                            <p className="text-xs text-muted-foreground">{t('No opportunities are linked to this lead yet.')}</p>
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
+
+                                            return opportunities.map((opp: any) => {
+                                                const sc = oppStatusConfig[opp.status] ?? oppStatusConfig['Open'];
+                                                const isExpanded = expandedOpportunityId === opp.id;
+                                                return (
+                                                    <div key={opp.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                                                        {/* Opportunity row — click to expand */}
+                                                        <button
+                                                            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/40 transition-colors text-left"
+                                                            onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
+                                                        >
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
+                                                                <span className="text-xs font-semibold truncate">{opp.name || opp.title}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 shrink-0 ml-1">
+                                                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${sc.badge}`}>
+                                                                    {t(sc.label)}
+                                                                </span>
+                                                                {isExpanded ? <ChevronUpIcon className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                                                            </div>
+                                                        </button>
+
+                                                        {/* Expanded detail view */}
+                                                        {isExpanded && (
+                                                            <div className="border-t bg-muted/10 px-3 py-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                                <div className="flex items-center justify-between text-xs">
+                                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                                        <DollarSign className="h-3 w-3" />{t('Value')}
+                                                                    </span>
+                                                                    <span className="font-semibold text-emerald-600">
+                                                                        {opp.amount ? `$${Number(opp.amount).toLocaleString()}` : '—'}
+                                                                    </span>
+                                                                </div>
+                                                                {opp.close_date && (
+                                                                    <div className="flex items-center justify-between text-xs">
+                                                                        <span className="text-muted-foreground flex items-center gap-1">
+                                                                            <Calendar className="h-3 w-3" />{t('Close Date')}
+                                                                        </span>
+                                                                        <span className="font-medium">{opp.close_date}</span>
+                                                                    </div>
+                                                                )}
+                                                                {opp.probability !== undefined && opp.probability !== null && (
+                                                                    <div className="space-y-1">
+                                                                        <div className="flex items-center justify-between text-xs">
+                                                                            <span className="text-muted-foreground flex items-center gap-1">
+                                                                                <TrendingUp className="h-3 w-3" />{t('Probability')}
+                                                                            </span>
+                                                                            <span className="font-semibold">{opp.probability}%</span>
+                                                                        </div>
+                                                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                                            <div
+                                                                                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                                                                                style={{ width: `${opp.probability}%` }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                {opp.id && (
+                                                                    <div className="pt-1">
+                                                                        <a href={route('opportunities.show', opp.id)} target="_blank" rel="noopener noreferrer">
+                                                                            <Button variant="ghost" size="sm" className="h-6 w-full text-[10px] gap-1 text-primary font-semibold hover:bg-primary/10">
+                                                                                {t('Open Opportunity')}
+                                                                                <ExternalLink className="h-3 w-3" />
+                                                                            </Button>
+                                                                        </a>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                )}
+
+                                {/* ═══════════════ ACTIVITY SECTION ═══════════════ */}
+                                {activeSidebarSection === 'activity' && (
+                                    <div className="p-4 space-y-4">
+                                        {/* Primary CTA */}
+                                        <button
+                                            onClick={() => {
+                                                const lead = selectedThread.leads?.[0];
+                                                if (lead) {
+                                                    setSelectedFolder('history');
+                                                    setShowContactSidebar(false);
+                                                } else {
+                                                    setSelectedFolder('history');
+                                                    setShowContactSidebar(false);
+                                                }
+                                            }}
+                                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 group"
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                                                    <HistoryIcon className="h-4 w-4" />
                                                 </div>
-                                                <div className="flex gap-2 items-start">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-muted mt-1.5 shrink-0" />
-                                                    <p className="text-xs">
-                                                        <span className="font-semibold">{t('Created')}:</span>{' '}
-                                                        {timeAgo(selectedThread.created_at) || t('N/A')}
-                                                    </p>
+                                                <div className="text-left">
+                                                    <p className="text-xs font-bold leading-tight">{t('Open Activity Stream')}</p>
+                                                    <p className="text-[10px] opacity-75 leading-tight">{t('Full contact history')}</p>
+                                                </div>
+                                            </div>
+                                            <ExternalLink className="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                                        </button>
+
+                                        {/* Recent activity preview */}
+                                        <div>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">
+                                                {t('Recent Activity')}
+                                            </p>
+                                            <div className="space-y-3">
+                                                <div className="flex gap-2.5">
+                                                    <div className="flex flex-col items-center shrink-0 mt-0.5">
+                                                        <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" />
+                                                        <div className="w-px flex-1 bg-border mt-1" />
+                                                    </div>
+                                                    <div className="pb-3 min-w-0">
+                                                        <p className="text-[11px] font-semibold leading-tight">{t('Last Message')}</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{selectedThread.snippet}</p>
+                                                        <p className="text-[10px] text-muted-foreground/70 mt-1">{timeAgo(selectedThread.last_message_at)}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2.5">
+                                                    <div className="flex flex-col items-center shrink-0 mt-0.5">
+                                                        <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                                                    </div>
+                                                    <div className="pb-1 min-w-0">
+                                                        <p className="text-[11px] font-semibold leading-tight">{t('Thread Created')}</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                            {selectedThread.message_count} {t('message(s)')}
+                                                        </p>
+                                                        <p className="text-[10px] text-muted-foreground/70 mt-1">{timeAgo(selectedThread.created_at)}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Lead activity quick links */}
+                                        {selectedThread.leads?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                                                    {t('Lead Activity')}
+                                                </p>
+                                                <div className="space-y-1.5">
+                                                    {[
+                                                        { label: t('Last contact'), value: timeAgo(selectedThread.last_message_at) },
+                                                        { label: t('Thread messages'), value: `${selectedThread.message_count} emails` },
+                                                        { label: t('Lead created'), value: timeAgo(selectedThread.leads[0]?.created_at) },
+                                                    ].map((row, idx) => (
+                                                        <div key={idx} className="flex items-center justify-between text-xs py-1.5 border-b border-dashed last:border-0">
+                                                            <span className="text-muted-foreground">{row.label}</span>
+                                                            <span className="font-medium">{row.value || '—'}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                )}
+
                             </ScrollArea>
                         </div>
                     </>
