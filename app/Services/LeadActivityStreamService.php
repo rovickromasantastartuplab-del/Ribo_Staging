@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\LeadEvent;
 use Carbon\CarbonInterface;
