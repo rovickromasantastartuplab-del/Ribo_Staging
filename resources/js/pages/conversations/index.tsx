@@ -2115,7 +2115,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                                                                                     <div className="min-w-0">
                                                                                         <p className="text-[10px] font-bold leading-tight">{t('Status updated')}</p>
-                                                                                        <p className="text-[9px] text-muted-foreground mt-0.5">{t('Successfully moved to')} {currentStatus}</p>
+                                                                                        <p className="text-[9px] text-muted-foreground mt-0.5">{t('Successfully moved to')} {stageName}</p>
                                                                                     </div>
                                                                                 </div>
                                                                                 <div className="flex gap-2.5">
