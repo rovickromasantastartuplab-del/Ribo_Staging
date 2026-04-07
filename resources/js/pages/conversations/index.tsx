@@ -71,6 +71,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target, ShieldCheck, Bell, Flame } from 'lucide-react';
 import ConversationAiPanel from './components/ConversationAiPanel';
+import AiStrategyDrawer from './components/AiStrategyDrawer';
 import { getMockTriage } from './utils/mockAiData';
 
 /* ── helpers ───────────────────────────────────────────────── */
@@ -310,6 +311,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [isComposing, setIsComposing] = useState(false);
     const [showComposeCcBcc, setShowComposeCcBcc] = useState(false);
     const [showFormatting, setShowFormatting] = useState(false);
+    const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('conversations_ai_drawer_open');
+            return saved === 'true';
+        }
+        return false;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('conversations_ai_drawer_open', String(isAiDrawerOpen));
+    }, [isAiDrawerOpen]);
 
     // Tiptap Editor for Compose Modal
     const composeEditor = useEditor({
@@ -1060,6 +1072,16 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     />
 
+                    <AiStrategyDrawer 
+                        threadId={selectedThread?.id || null} 
+                        isOpen={isAiDrawerOpen} 
+                        onToggle={() => setIsAiDrawerOpen(!isAiDrawerOpen)} 
+                        onInsertDraft={(body: string) => {
+                            replyEditor?.commands.setContent(body);
+                            setShowCrmModal(false); // Close modal if open
+                        }}
+                    />
+
                     <>
                         {/* Pane 2: Thread list or Calendar */}
                         <div
@@ -1128,7 +1150,11 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 {threads.map((thread) => (
                                                     <button
                                                         key={thread.id}
-                                                        onClick={() => handleSelectThread(thread)}
+                                                        onClick={() => {
+                                                            setSelectedThread(thread);
+                                                            // We no longer automatically open the CRM Modal here
+                                                            // Logic for AI is now handled by the persistent drawer
+                                                        }}
                                                         className={`w-full text-left py-3 pl-3 pr-5 lg:pr-4 hover:bg-muted/50 transition-colors flex items-start gap-2.5 overflow-hidden min-w-0 ${selectedThread?.id === thread.id ? 'bg-primary/5 border-l-2 border-primary' : ''
                                                             }`}
                                                     >
@@ -1872,36 +1898,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </div>
                                 </DialogHeader>
 
-                                {/* Main Navigation Tabs (CRM vs AI) */}
-                                <div className="flex bg-muted/20 p-1.5 gap-1.5 mx-5 my-2 rounded-xl border border-border/10">
-                                    <button
-                                        onClick={() => setActiveSidebarTab('crm')}
-                                        className={cn(
-                                            "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all",
-                                            activeSidebarTab === 'crm'
-                                                ? "bg-background text-primary shadow-sm border border-border/50"
-                                                : "text-muted-foreground hover:text-foreground"
-                                        )}
-                                    >
-                                        <User className="h-3.5 w-3.5" />
-                                        CRM
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveSidebarTab('ai')}
-                                        className={cn(
-                                            "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all",
-                                            activeSidebarTab === 'ai'
-                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                                        )}
-                                    >
-                                        <Sparkles className="h-3.5 w-3.5" />
-                                        AI Sidekick
-                                    </button>
-                                </div>
-
-                                {activeSidebarTab === 'crm' ? (
-                                    <>
                                         {/* Section Tabs */}
                                         <div className="flex border-b shrink-0 px-5 bg-background">
                                             {[
@@ -2312,19 +2308,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             )}
 
                                         </ScrollArea>
-                                    </>
-                                ) : (
-                                    /* AI Power Ups View */
-                                    <div className="flex-1 flex flex-col min-h-0 bg-muted/5">
-                                        <ConversationAiPanel
-                                            threadId={selectedThread.id}
-                                            onInsertDraft={(body: string) => {
-                                                replyEditor?.commands.setContent(body);
-                                                setActiveSidebarTab('crm'); // Optional: switch back or stay
-                                            }}
-                                        />
-                                    </div>
-                                )}
                             </DialogContent>
                         </Dialog>
                     )}
