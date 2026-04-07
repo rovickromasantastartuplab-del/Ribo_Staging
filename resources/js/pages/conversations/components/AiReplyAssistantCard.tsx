@@ -52,18 +52,18 @@ export default function AiReplyAssistantCard({ triageData, onInsertDraft }: AiRe
                         <Sparkles className="w-4 h-4 text-amber-500" />
                     </div>
                     <div>
-                        <CardTitle className="text-sm font-semibold">Reply Assistant</CardTitle>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Magic Draft • Phase 4</p>
+                        <CardTitle className="text-sm font-semibold">Smart Reply Assistant</CardTitle>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Automatic Compose</p>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 {/* Phase 4 Strategic Header */}
                 <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 space-y-2">
-                    <div className="flex items-center gap-2 text-amber-600">
-                        <Lightbulb className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-bold uppercase tracking-tight">AI Strategy Insight</span>
-                    </div>
+                        <div className="flex items-center gap-2 text-amber-600">
+                            <Lightbulb className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-bold uppercase tracking-tight">AI Suggestion</span>
+                        </div>
                     <p className="text-[11px] font-medium leading-tight text-slate-700 dark:text-slate-300">
                         Goal: <span className="text-amber-700 dark:text-amber-500 font-bold">{triageData.strategic_action.goal}</span>. {triageData.strategic_action.recommendation}
                     </p>
@@ -120,7 +120,7 @@ export default function AiReplyAssistantCard({ triageData, onInsertDraft }: AiRe
                             }}
                         >
                             <Zap className="w-4 h-4 fill-current" />
-                            Insert into Composer
+                            Use this reply
                         </Button>
                     </div>
                 )}

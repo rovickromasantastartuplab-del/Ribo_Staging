@@ -30,7 +30,7 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                     <div className="p-2 bg-rose-500/10 rounded-lg">
                         <History className="w-4 h-4 text-rose-500" />
                     </div>
-                    <CardTitle className="text-sm font-semibold text-slate-900 dark:text-slate-100">Relationship Memory</CardTitle>
+                    <CardTitle className="text-sm font-semibold text-slate-900 dark:text-slate-100">Relationship History</CardTitle>
                 </div>
                 <Badge variant="outline" className={cn(
                     "gap-1 px-2 py-0.5 border-none",
@@ -39,7 +39,7 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                     "bg-slate-500/10 text-slate-600"
                 )}>
                     {data.sentiment === 'positive' ? <Heart className="w-3 h-3 fill-current" /> : <AlertCircle className="w-3 h-3" />}
-                    {data.sentiment.toUpperCase()} VIBE
+                    {data.sentiment.toUpperCase()} MOOD
                 </Badge>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
@@ -48,7 +48,7 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-slate-500">
                             <Activity className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-bold uppercase tracking-tight">Engagement Pulse</span>
+                            <span className="text-[10px] font-bold uppercase tracking-tight">Response Speed</span>
                         </div>
                         {pulse === 'heating_up' && (
                             <Badge className="bg-orange-500 text-white text-[9px] h-4 border-none animate-pulse">
@@ -72,7 +72,7 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                 <div className="space-y-2">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                         <CheckSquare className="w-3.5 h-3.5 text-rose-500" />
-                        Open Loops Detected
+                        Task Checklist
                     </div>
                     <div className="space-y-1">
                         {data.open_loops.map((loop, idx) => (

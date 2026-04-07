@@ -45,8 +45,8 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                         <BrainCircuit className="w-4 h-4 text-indigo-500" />
                     </div>
                     <div>
-                        <CardTitle className="text-sm font-semibold">Inbox Triage</CardTitle>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Phase 4 Intelligence</p>
+                        <CardTitle className="text-sm font-semibold">AI Assistant Summary</CardTitle>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Quick Glance</p>
                     </div>
                 </div>
                 {data.success_probability && (
@@ -62,7 +62,7 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                     <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10 space-y-2">
                         <div className="flex items-center gap-2 text-indigo-500">
                             <Zap className="w-3.5 h-3.5 fill-current" />
-                            <span className="text-xs font-bold uppercase tracking-tight">AI Strategic Move</span>
+                            <span className="text-xs font-bold uppercase tracking-tight">AI Suggested Action</span>
                         </div>
                         <div className="space-y-1">
                             <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 italic">
@@ -77,9 +77,9 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                             variant="secondary" 
                             size="sm" 
                             className="w-full mt-2 h-7 text-[10px] bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 hover:bg-slate-50"
-                            onClick={() => toast.success(`Strategic Move Accepted: ${data.strategic_action.goal}`)}
+                            onClick={() => toast.success(`Action Accepted: ${data.strategic_action.goal}`)}
                         >
-                            Accept Recommendation
+                            Accept Suggestion
                         </Button>
                     </div>
                 )}
