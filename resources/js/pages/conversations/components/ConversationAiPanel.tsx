@@ -26,7 +26,6 @@ export default function ConversationAiPanel({ threadId, onInsertDraft }: Convers
         setTimeout(() => {
             setTriage(getMockTriage(threadId));
             setMemory(getMockMemory(threadId));
-            setLoading(setLoading as any); // just for internal state toggle demo
             setLoading(false);
         }, 1000);
     };

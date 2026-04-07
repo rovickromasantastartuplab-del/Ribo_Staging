@@ -1828,33 +1828,36 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     {selectedThread && (
                         <Dialog open={showCrmModal} onOpenChange={setShowCrmModal}>
                             <DialogContent className="max-w-2xl w-[96vw] h-[90vh] md:h-[85vh] p-0 overflow-hidden !flex !flex-col [&>button.absolute]:hidden rounded-2xl shadow-2xl border-primary/10">
-                                {/* Modal Header */}
-                                <div className="flex items-center justify-between gap-3 min-w-0 px-5 py-4 border-b shrink-0 bg-gradient-to-b from-background to-muted/30">
-                                    <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
-                                        {(() => {
-                                            const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
-                                            const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
-                                            return (
-                                                <>
-                                                    <Avatar className="h-8 w-8 border shrink-0">
-                                                        <AvatarFallback className="text-[12px] font-bold bg-primary/10 text-primary">
-                                                            {String(contactName).charAt(0).toUpperCase()}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-base font-semibold truncate leading-tight">{contactName}</p>
-                                                        <p className="text-sm text-muted-foreground truncate leading-tight">
-                                                            {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            );
-                                        })()}
+                                <DialogHeader className="p-0">
+                                    <DialogTitle className="sr-only">Conversation Intelligence Sidebar</DialogTitle>
+                                    {/* Modal Header */}
+                                    <div className="flex items-center justify-between gap-3 min-w-0 px-5 py-4 border-b shrink-0 bg-gradient-to-b from-background to-muted/30">
+                                        <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
+                                            {(() => {
+                                                const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
+                                                const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
+                                                return (
+                                                    <>
+                                                        <Avatar className="h-8 w-8 border shrink-0">
+                                                            <AvatarFallback className="text-[12px] font-bold bg-primary/10 text-primary">
+                                                                {String(contactName).charAt(0).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-base font-semibold truncate leading-tight">{contactName}</p>
+                                                            <p className="text-sm text-muted-foreground truncate leading-tight">
+                                                                {selectedThread.leads?.[0]?.company || selectedThread.contacts?.[0]?.account?.name || ''}
+                                                            </p>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-full hover:bg-muted border-muted-foreground/20" onClick={() => setShowCrmModal(false)}>
+                                            <X className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
                                     </div>
-                                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-full hover:bg-muted border-muted-foreground/20" onClick={() => setShowCrmModal(false)}>
-                                        <X className="h-4 w-4 text-muted-foreground" />
-                                    </Button>
-                                </div>
+                                </DialogHeader>
 
                                 {/* Main Navigation Tabs (CRM vs AI) */}
                                 <div className="flex bg-muted/20 p-1.5 gap-1.5 mx-5 my-2 rounded-xl border border-border/10">
