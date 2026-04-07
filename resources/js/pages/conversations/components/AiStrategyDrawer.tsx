@@ -19,7 +19,7 @@ export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertD
         return (
             <div 
                 className={cn(
-                    "h-full border-r bg-slate-50/10 dark:bg-slate-900/10 transition-all duration-300 ease-in-out flex flex-col shrink-0 overflow-hidden items-center pt-8",
+                    "h-full border-l bg-slate-50/10 dark:bg-slate-900/10 transition-all duration-300 ease-in-out flex flex-col shrink-0 overflow-hidden items-center py-6",
                     isOpen ? "w-[320px]" : "w-[52px]"
                 )}
             >
