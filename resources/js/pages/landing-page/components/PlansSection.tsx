@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ArrowRight, Clock } from 'lucide-react';
+import { Check, ArrowRight, Clock, ArrowUpRight } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation';
 import { useTranslation } from 'react-i18next';
@@ -358,7 +358,14 @@ function PlansSection({ plans, settings, sectionData, brandColor = '#3b82f6' }: 
                 </div>
 
                 {/* Actions */}
-                <div className="mt-auto pt-4 border-t border-gray-200">
+                <div className="mt-auto pt-4 border-t border-gray-200 flex flex-col items-center gap-4">
+                  <Link
+                    href={route('pricing')}
+                    className="text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1.5 group/link"
+                  >
+                    {t('See all features')}
+                    <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover/link:text-gray-900 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-all" />
+                  </Link>
                   <Link
                     href={route('register', { plan: encryptPlanId(plan.id) })}
                     className="block w-full text-center py-3 px-6 rounded-lg font-semibold transition-colors hover:opacity-90"
