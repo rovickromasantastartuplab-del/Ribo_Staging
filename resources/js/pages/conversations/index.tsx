@@ -69,8 +69,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles } from 'lucide-react';
-import { ConversationAiPanel } from './components/ConversationAiPanel';
+import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target } from 'lucide-react';
+import ConversationAiPanel from './components/ConversationAiPanel';
 import { getMockTriage } from './utils/mockAiData';
 
 /* ── helpers ───────────────────────────────────────────────── */
@@ -1173,18 +1173,32 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                 {t('Contact')}
                                                                             </Badge>
                                                                         )}
-                                                                        {/* AI Intent Badge */}
-                                                                        {(() => {
-                                                                            const aiTriage = getMockTriage(thread.id);
-                                                                            return (
-                                                                                <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5">
-                                                                                    <Sparkles className="h-2 w-2" />
-                                                                                    {t(aiTriage.intent.toUpperCase())}
-                                                                                </Badge>
-                                                                            );
-                                                                        })()}
                                                                     </>
                                                                 )}
+                                                                {/* AI Strategic Badges (Phase 4) */}
+                                                                {(() => {
+                                                                    const aiTriage = getMockTriage(thread.id);
+                                                                    return (
+                                                                        <>
+                                                                            <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5 capitalize">
+                                                                                <Sparkles className="w-2.5 h-2.5 fill-current" />
+                                                                                {aiTriage.intent}
+                                                                            </Badge>
+                                                                            {/* Success Probability (Gold if >80%) */}
+                                                                            <Badge 
+                                                                                variant="outline" 
+                                                                                className={`text-[9px] font-bold px-1 py-0 flex items-center gap-0.5 ${
+                                                                                    aiTriage.success_probability > 80 
+                                                                                    ? 'bg-amber-100 text-amber-700 border-amber-200' 
+                                                                                    : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                                                                }`}
+                                                                            >
+                                                                                <Target className="w-2.5 h-2.5" />
+                                                                                {aiTriage.success_probability}%
+                                                                            </Badge>
+                                                                        </>
+                                                                    );
+                                                                })()}
 
                                                                 {thread.priority && (
                                                                     <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :

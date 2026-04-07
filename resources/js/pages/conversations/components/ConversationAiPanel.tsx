@@ -1,118 +1,116 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import AiTriageCard from './AiTriageCard';
+import AiMemoryCard from './AiMemoryCard';
+import AiReplyAssistantCard from './AiReplyAssistantCard';
+import { getMockTriage, getMockMemory } from '../utils/mockAiData';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
+import { RefreshCcw, Sparkles, Target, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AiTriageCard } from './AiTriageCard';
-import { cn } from '@/lib/utils';
-import { AiMemoryCard } from './AiMemoryCard';
-import { AiReplyAssistantCard } from './AiReplyAssistantCard';
-import { getMockTriage, getMockMemory, AiTriageResult, AiMemorySummary } from '../utils/mockAiData';
-import { Loader2, Sparkles, BrainCircuit } from 'lucide-react';
-import { toast } from '@/components/custom-toast';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface ConversationAiPanelProps {
-    threadId?: number;
-    onInsertDraft: (body: string) => void;
+    threadId: number;
+    onInsertDraft: (content: string) => void;
 }
 
-export const ConversationAiPanel: React.FC<ConversationAiPanelProps> = ({ threadId, onInsertDraft }) => {
-    const [loading, setLoading] = useState(false);
-    const [triage, setTriage] = useState<AiTriageResult | null>(null);
-    const [memory, setMemory] = useState<AiMemorySummary | null>(null);
+export default function ConversationAiPanel({ threadId, onInsertDraft }: ConversationAiPanelProps) {
+    const [loading, setLoading] = useState(true);
+    const [triage, setTriage] = useState<any>(null);
+    const [memory, setMemory] = useState<any>(null);
 
-    useEffect(() => {
-        if (!threadId) return;
-        //hi
+    const loadAiInsights = () => {
         setLoading(true);
-        // Simulate background processing for AI
-        const timer = setTimeout(() => {
+        // Simulate backend latency
+        setTimeout(() => {
             setTriage(getMockTriage(threadId));
             setMemory(getMockMemory(threadId));
+            setLoading(setLoading as any); // just for internal state toggle demo
             setLoading(false);
-        }, 800);
-
-        return () => clearTimeout(timer);
-    }, [threadId]);
-
-    const handleApplyTriage = (type: string) => {
-        toast.success(`Successfully applied AI ${type} suggestion!`);
+        }, 1000);
     };
 
-    if (!threadId) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full p-8 text-center text-muted-foreground space-y-4 opacity-50">
-                <BrainCircuit className="h-12 w-12 text-muted-foreground/30 stroke-1" />
-                <p className="text-sm">Select a conversation to see AI insights and relationship memory.</p>
-            </div>
-        );
-    }
+    useEffect(() => {
+        loadAiInsights();
+    }, [threadId]);
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center h-full p-12 text-center text-primary/40 space-y-4">
-                <div className="relative">
-                    <Loader2 className="h-10 w-10 animate-spin" />
-                    <Sparkles className="h-4 w-4 absolute -top-1 -right-1 animate-pulse text-primary" />
+            <div className="p-4 space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-32" />
+                    </div>
                 </div>
-                <div className="space-y-1">
-                    <p className="text-sm font-bold uppercase tracking-widest animate-pulse">Analyzing Thread...</p>
-                    <p className="text-[10px] text-muted-foreground">Fetching CRM context and relationship history</p>
-                </div>
+                <Skeleton className="h-[200px] w-full rounded-xl" />
+                <Skeleton className="h-[150px] w-full rounded-xl" />
+                <Skeleton className="h-[300px] w-full rounded-xl" />
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="px-4 py-3 border-b flex items-center justify-between bg-muted/10 shrink-0">
-                <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">AI Sidekick</h3>
+        <div className="h-full flex flex-col bg-slate-50/30 dark:bg-slate-950/30">
+            {/* Header / Intelligence Strip */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
+                        <h2 className="font-bold text-slate-800 dark:text-slate-100">AI Sidekick</h2>
+                    </div>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-400 hover:text-indigo-500"
+                        onClick={() => {
+                            loadAiInsights();
+                            toast.info("Re-analyzing conversation flow...");
+                        }}
+                    >
+                        <RefreshCcw className="w-4 h-4" />
+                    </Button>
                 </div>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors"
-                    onClick={() => {
-                        setLoading(true);
-                        setTimeout(() => {
-                            setTriage(getMockTriage(threadId));
-                            setMemory(getMockMemory(threadId));
-                            setLoading(false);
-                            toast.success('Analysis refreshed');
-                        }, 1200);
-                    }}
-                >
-                    <Loader2 className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-                </Button>
+
+                {/* Phase 4 Intelligence Strip */}
+                <div className="flex gap-2">
+                    <div className="flex-1 p-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Target className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                            <span className="text-[10px] font-bold uppercase text-slate-500 truncate tracking-tight">Deal Prob.</span>
+                        </div>
+                        <span className="text-sm font-bold text-indigo-600 ml-2">{triage.success_probability}%</span>
+                    </div>
+                    <div className="flex-1 p-2 rounded-lg bg-slate-500/5 border border-slate-500/10 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Activity className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                            <span className="text-[10px] font-bold uppercase text-slate-500 truncate tracking-tight">Pulse</span>
+                        </div>
+                        <Badge variant="outline" className={`text-[10px] h-5 border-none ${triage.behavioral_pulse === 'heating_up' ? 'bg-orange-500/10 text-orange-600' : 'bg-slate-500/10 text-slate-600'}`}>
+                            {triage.behavioral_pulse === 'heating_up' ? '🔥 HOT' : 'STABLE'}
+                        </Badge>
+                    </div>
+                </div>
             </div>
-            
+
             <ScrollArea className="flex-1">
-                <div className="p-4 space-y-2">
-                {triage && (
-                    <AiTriageCard 
-                        data={triage} 
-                        onApply={handleApplyTriage} 
+                <div className="p-4 space-y-4 pb-20">
+                    {/* Approach 3: Stratety is embedded in Reply Assistant, which sits at top of content list */}
+                    <AiReplyAssistantCard 
+                        triageData={triage} 
+                        onInsertDraft={onInsertDraft} 
                     />
-                )}
-                
-                {memory && (
+
+                    <AiTriageCard data={triage} />
+                    
                     <AiMemoryCard 
                         data={memory} 
+                        triageData={triage} 
                     />
-                )}
-
-                <AiReplyAssistantCard 
-                    onInsertDraft={onInsertDraft}
-                />
-                
-                <div className="pt-6 pb-4 text-center">
-                    <p className="text-[10px] text-muted-foreground/60 flex items-center justify-center gap-1">
-                        <BrainCircuit className="h-2.5 w-2.5" />
-                        AI Insights are powered by Ribo IntelliSync
-                    </p>
                 </div>
-            </div>
             </ScrollArea>
         </div>
     );
-};
+}

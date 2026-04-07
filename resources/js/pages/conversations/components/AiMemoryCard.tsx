@@ -1,104 +1,117 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AiMemorySummary } from '../utils/mockAiData';
-import { History, Heart, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
+import { AiMemorySummary, AiTriageResult } from '../utils/mockAiData';
+import { History, Heart, AlertCircle, CheckSquare, Square, Zap, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AiMemoryCardProps {
     data: AiMemorySummary;
+    triageData?: AiTriageResult;
 }
 
-export const AiMemoryCard: React.FC<AiMemoryCardProps> = ({ data }) => {
-    const [completedLoops, setCompletedLoops] = React.useState<number[]>([]);
+export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
+    const [completedLoops, setCompletedLoops] = useState<string[]>([]);
 
-    const toggleLoop = (index: number) => {
+    const toggleLoop = (loop: string) => {
         setCompletedLoops(prev => 
-            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+            prev.includes(loop) 
+                ? prev.filter(l => l !== loop) 
+                : [...prev, loop]
         );
     };
 
-    const getSentimentIcon = (sentiment: string) => {
-        switch (sentiment) {
-            case 'positive': return <Heart className="h-3 w-3 text-emerald-500 fill-emerald-500" />;
-            case 'frustrated': return <AlertCircle className="h-3 w-3 text-rose-500" />;
-            default: return <Info className="h-3 w-3 text-slate-400" />;
-        }
-    };
-
-    const getSentimentText = (sentiment: string) => {
-        switch (sentiment) {
-            case 'positive': return 'Warm relationship';
-            case 'frustrated': return 'At risk / Frustrated';
-            default: return 'Neutral / Calm';
-        }
-    };
+    const pulse = triageData?.behavioral_pulse || 'stable';
 
     return (
-        <Card className="border-border shadow-sm mb-4">
-            <CardHeader className="pb-2 py-3 border-b border-border/10">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <History className="h-4 w-4 text-muted-foreground mr-1" />
-                        Conversation Memory
-                    </CardTitle>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/30 border border-border/10">
-                        {getSentimentIcon(data.sentiment)}
-                        <span className="text-[10px] lowercase text-muted-foreground">{getSentimentText(data.sentiment)}</span>
+        <Card className="border-none shadow-sm bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-950 dark:to-slate-900/50">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0 text-sm font-medium">
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-rose-500/10 rounded-lg">
+                        <History className="w-4 h-4 text-rose-500" />
+                    </div>
+                    <CardTitle className="text-sm font-semibold text-slate-900 dark:text-slate-100">Relationship Memory</CardTitle>
+                </div>
+                <Badge variant="outline" className={cn(
+                    "gap-1 px-2 py-0.5 border-none",
+                    data.sentiment === 'positive' ? "bg-emerald-500/10 text-emerald-600" : 
+                    data.sentiment === 'frustrated' ? "bg-rose-500/10 text-rose-600" : 
+                    "bg-slate-500/10 text-slate-600"
+                )}>
+                    {data.sentiment === 'positive' ? <Heart className="w-3 h-3 fill-current" /> : <AlertCircle className="w-3 h-3" />}
+                    {data.sentiment.toUpperCase()} VIBE
+                </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+                {/* Phase 4 Behavioral Pulse */}
+                <div className="p-3 rounded-xl bg-slate-500/5 border border-slate-500/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-slate-500">
+                            <Activity className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-bold uppercase tracking-tight">Engagement Pulse</span>
+                        </div>
+                        {pulse === 'heating_up' && (
+                            <Badge className="bg-orange-500 text-white text-[9px] h-4 border-none animate-pulse">
+                                🔥 HEATING UP
+                            </Badge>
+                        )}
+                    </div>
+                    <div className="flex items-end gap-2">
+                        <p className="text-[11px] text-muted-foreground font-medium">
+                            Interaction rhythm is <span className="text-slate-900 dark:text-slate-100">{pulse === 'heating_up' ? '+22% faster' : 'stable'}</span> compared to last week.
+                        </p>
                     </div>
                 </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
+
                 <div className="space-y-1.5">
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Relationship Context</span>
-                    <p className="text-xs leading-relaxed text-foreground/80">
-                        {data.relationship_summary}
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium italic">
+                        "{data.relationship_summary}"
                     </p>
                 </div>
 
-                {data.open_loops.length > 0 && (
-                    <div className="space-y-2">
-                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Open Loops</span>
-                        <div className="space-y-1.5">
-                            {data.open_loops.map((loop, i) => {
-                                const isCompleted = completedLoops.includes(i);
-                                return (
-                                    <button 
-                                        key={i} 
-                                        onClick={() => toggleLoop(i)}
-                                        className={cn(
-                                            "w-full flex items-start gap-2 p-2 rounded-md border border-border/10 italic transition-all text-left group",
-                                            isCompleted ? "bg-emerald-50/20 border-emerald-500/20" : "bg-muted/10"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "h-3 w-3 rounded-sm border mt-0.5 flex items-center justify-center shrink-0 transition-colors",
-                                            isCompleted ? "bg-emerald-500 border-emerald-500" : "border-muted-foreground/30 group-hover:border-primary/50"
-                                        )}>
-                                            {isCompleted && <CheckCircle2 className="h-2 w-2 text-white" />}
-                                        </div>
-                                        <span className={cn(
-                                            "text-xs transition-all",
-                                            isCompleted ? "text-emerald-700/60 line-through" : "text-foreground/70"
-                                        )}>
-                                            {loop}
-                                        </span>
-                                    </button>
-                                );
-                            })}
+                <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <CheckSquare className="w-3.5 h-3.5 text-rose-500" />
+                        Open Loops Detected
+                    </div>
+                    <div className="space-y-1">
+                        {data.open_loops.map((loop, idx) => (
+                            <div 
+                                key={idx} 
+                                className={cn(
+                                    "flex items-start gap-2 p-2 rounded-lg transition-colors cursor-pointer group",
+                                    completedLoops.includes(loop) ? "bg-emerald-500/5 opacity-60" : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                                )}
+                                onClick={() => toggleLoop(loop)}
+                            >
+                                {completedLoops.includes(loop) ? (
+                                    <CheckSquare className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                                ) : (
+                                    <Square className="w-3.5 h-3.5 text-slate-300 dark:text-slate-700 mt-0.5 shrink-0 group-hover:text-rose-400" />
+                                )}
+                                <span className={cn(
+                                    "text-[11px] leading-tight",
+                                    completedLoops.includes(loop) && "line-through text-muted-foreground"
+                                )}>
+                                    {loop}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {data.last_commitment && (
+                    <div className="pt-2 flex items-start gap-2 border-t border-slate-100 dark:border-slate-800 mt-2">
+                        <Zap className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                        <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tight">Last Commitment</span>
+                            <p className="text-[11px] text-muted-foreground leading-tight">
+                                {data.last_commitment}
+                            </p>
                         </div>
                     </div>
                 )}
-
-                <div className="pt-2 border-t border-border/20">
-                    <div className="flex items-center justify-between text-[10px] uppercase font-medium">
-                        <span className="text-muted-foreground">Last Commitment</span>
-                    </div>
-                    <p className="text-xs text-foreground/70 mt-1">
-                        {data.last_commitment}
-                    </p>
-                </div>
             </CardContent>
         </Card>
     );
-};
+}
