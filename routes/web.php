@@ -238,6 +238,16 @@ Route::post('payments/hitpay/webhook', [HitPayPaymentController::class, 'callbac
 Route::get('/landing-page', [LandingPageController::class, 'settings'])->name('landing-page');
 Route::post('/landing-page/contact', [LandingPageController::class, 'submitContact'])->name('landing-page.contact');
 Route::post('/landing-page/subscribe', [LandingPageController::class, 'subscribe'])->name('landing-page.subscribe');
+Route::get('/pricing', function() {
+    $landingSettings = \App\Models\LandingPageSetting::getSettings();
+    $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+    return Inertia::render('landing-page/Pricing', [
+        'customPages' => \App\Models\LandingPageCustomPage::active()->ordered()->get() ?? [],
+        'settings' => array_merge($landingSettings->toArray(), [
+            'footerText' => getSetting('footerText', '', $superadmin->id ?? null)
+        ])
+    ]);
+})->name('pricing');
 Route::get('/page/{slug}', [CustomPageController::class, 'show'])->name('custom-page.show');
 
 Route::get('/translations/{locale}', [TranslationController::class, 'getTranslations'])->name('translations');
