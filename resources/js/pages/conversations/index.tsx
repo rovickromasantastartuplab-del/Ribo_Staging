@@ -69,7 +69,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target, ShieldCheck, Bell } from 'lucide-react';
+import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target, ShieldCheck, Bell, Flame } from 'lucide-react';
 import ConversationAiPanel from './components/ConversationAiPanel';
 import { getMockTriage } from './utils/mockAiData';
 
@@ -202,8 +202,8 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
                         onClick={() => onSelect(f.key)}
                         title={isCollapsed ? f.label : undefined}
                         className={`w-full relative flex items-center rounded-md transition-colors ${isCollapsed
-                                ? 'justify-center h-10 mb-1'
-                                : 'justify-between px-2.5 py-1.5 text-xs'
+                            ? 'justify-center h-10 mb-1'
+                            : 'justify-between px-2.5 py-1.5 text-xs'
                             } ${selectedFolder === f.key
                                 ? 'bg-primary/10 text-primary font-medium'
                                 : 'hover:bg-muted text-muted-foreground'
@@ -1175,41 +1175,42 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         )}
                                                                     </>
                                                                 )}
-                                                                {/* AI Strategic Badges (Phase 4) */}
+                                                                {/* AI Strategic Badges (Founder Compliance: Urgent, Hot Leads, Follow-up) */}
                                                                 {(() => {
                                                                     const aiTriage = getMockTriage(thread.id);
-                                                                            {/* AI Strategic Badges (Cleaned: Non-Redundant) */}
-                                                                            <Badge 
-                                                                                variant="outline" 
-                                                                                className={cn(
-                                                                                    "text-[9px] font-bold px-1 py-0 flex items-center gap-0.5 capitalize shrink-0",
-                                                                                    aiTriage.priority === 'urgent' || aiTriage.priority === 'high' 
-                                                                                        ? "bg-rose-50 text-rose-700 border-rose-100 italic shadow-[0_0_8px_rgba(244,63,94,0.1)]" 
-                                                                                        : aiTriage.priority === 'medium'
-                                                                                            ? "bg-amber-50 text-amber-700 border-amber-100"
-                                                                                            : "bg-primary/5 text-primary border-primary/20"
-                                                                                )}
-                                                                            >
-                                                                                <Sparkles className={cn("w-2.5 h-2.5 fill-current", (aiTriage.priority === 'urgent' || aiTriage.priority === 'high') && "animate-pulse")} />
-                                                                                {t(aiTriage.intent)}
-                                                                                {(aiTriage.priority === 'urgent' || aiTriage.priority === 'high') && <span className="ml-1 ml-0.5 opacity-70">!</span>}
-                                                                            </Badge>
-
-                                                                            {/* Low Risk Resolution Badge (Hidden on Spam) */}
-                                                                            {aiTriage.low_risk_resolution && aiTriage.intent !== 'spam' && (
-                                                                                <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-100 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0">
-                                                                                    <ShieldCheck className="w-2.5 h-2.5" />
-                                                                                    {t('Low-risk')}
+                                                                    return (
+                                                                        <>
+                                                                            {/* 1. URGENT / PRIORITY SYSTEM (Founder Section 7.5) */}
+                                                                            {(aiTriage.priority === 'urgent' || aiTriage.priority === 'high') && (
+                                                                                <Badge variant="outline" className="text-[9px] bg-rose-50 text-rose-700 border-rose-100 italic shadow-[0_0_8px_rgba(244,63,94,0.15)] font-bold px-1 py-0 flex items-center gap-0.5 shrink-0 animate-in fade-in zoom-in duration-300">
+                                                                                    <AlertCircle className="w-2.5 h-2.5 animate-pulse text-rose-600" />
+                                                                                    {t('Urgent')}
                                                                                 </Badge>
                                                                             )}
 
-                                                                            {/* Follow-up Suggested Badge (Founder Top Priority) */}
+                                                                            {/* 2. HOT LEADS (Founder Section 7.5) */}
+                                                                            {aiTriage.success_probability > 80 && aiTriage.intent === 'sales' && (
+                                                                                <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-600 border-amber-200 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0 shadow-sm">
+                                                                                    <Flame className="w-2.5 h-2.5 fill-amber-500 text-amber-600" />
+                                                                                    {t('Hot Lead')}
+                                                                                </Badge>
+                                                                            )}
+
+                                                                            {/* 3. FOLLOW-UP SYSTEM (Founder Section 7.2) */}
                                                                             {aiTriage.suggested_follow_up && (
                                                                                 <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-100 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0">
-                                                                                    <Bell className="w-2.5 h-2.5" />
+                                                                                    <Bell className="w-2.5 h-2.5 text-blue-600" />
                                                                                     {t('Follow-up')}
                                                                                 </Badge>
                                                                             )}
+
+                                                                            {/* 4. INSIGHTS / TAGS (Founder Section 7.6) */}
+                                                                            <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5 capitalize shrink-0 opacity-80 hover:opacity-100 transition-opacity">
+                                                                                <Sparkles className="w-2.5 h-2.5 fill-current" />
+                                                                                {t(aiTriage.intent)}
+                                                                            </Badge>
+                                                                        </>
+                                                                    );
                                                                 })()}
 
                                                                 {thread.priority && (
@@ -1877,8 +1878,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         onClick={() => setActiveSidebarTab('crm')}
                                         className={cn(
                                             "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all",
-                                            activeSidebarTab === 'crm' 
-                                                ? "bg-background text-primary shadow-sm border border-border/50" 
+                                            activeSidebarTab === 'crm'
+                                                ? "bg-background text-primary shadow-sm border border-border/50"
                                                 : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
@@ -1889,8 +1890,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         onClick={() => setActiveSidebarTab('ai')}
                                         className={cn(
                                             "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all",
-                                            activeSidebarTab === 'ai' 
-                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                                            activeSidebarTab === 'ai'
+                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                                         )}
                                     >
@@ -1911,8 +1912,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     key={tab.key}
                                                     onClick={() => setActiveSidebarSection(tab.key)}
                                                     className={`px-6 flex items-center gap-2 py-3 text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 relative ${activeSidebarSection === tab.key
-                                                            ? 'border-primary text-primary shadow-[0_4px_12px_-4px_rgba(var(--primary),0.2)]'
-                                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                                        ? 'border-primary text-primary shadow-[0_4px_12px_-4px_rgba(var(--primary),0.2)]'
+                                                        : 'border-transparent text-muted-foreground hover:text-foreground'
                                                         }`}
                                                 >
                                                     <tab.icon className={cn("h-3.5 w-3.5 transition-transform", activeSidebarSection === tab.key && "scale-110")} />
@@ -1924,399 +1925,399 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                         <ScrollArea className="flex-1 min-h-0 w-full bg-background/50">
                                             {/* (Rest of existing CRM content) */}
 
-                                    {/* ═══════════════ LEAD SECTION ═══════════════ */}
-                                    {activeSidebarSection === 'lead' && (
-                                    <div className="p-4 md:p-6 space-y-5 transition-all duration-300 ease-in-out">
-                                        {selectedThread.leads?.length > 0 ? (
-                                            <>
-                                                {selectedThread.leads.map((lead: any) => {
-                                                    const currentStatus = localLeadStatuses[lead.id] ?? lead.lead_status?.name ?? lead.leadStatus?.name ?? leadStatuses[0]?.name ?? '';
-                                                    const statusConfig: Record<string, { color: string; dot: string }> = {
-                                                        'New': { color: 'text-blue-700 bg-blue-50 border-blue-200', dot: 'bg-blue-500' },
-                                                        'Contacted': { color: 'text-violet-700 bg-violet-50 border-violet-200', dot: 'bg-violet-500' },
-                                                        'Qualified': { color: 'text-emerald-700 bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
-                                                        'Unqualified': { color: 'text-rose-700 bg-rose-50 border-rose-200', dot: 'bg-rose-400' },
-                                                    };
-                                                    const sc = statusConfig[currentStatus] ?? { color: 'text-muted-foreground bg-muted border-border', dot: 'bg-muted-foreground' };
-                                                    return (
-                                                        <div key={lead.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
-                                                            {/* Lead card header */}
-                                                            <div className="flex items-center justify-between gap-2 min-w-0 px-3 py-2.5 bg-muted/30 border-b">
-                                                                <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                                                                    <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
-                                                                    <span className="min-w-0 flex-1 truncate text-sm font-semibold">{lead.name}</span>
-                                                                </div>
-                                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0 ml-1">
-                                                                    {t('LEAD')}
-                                                                </Badge>
-                                                            </div>
+                                            {/* ═══════════════ LEAD SECTION ═══════════════ */}
+                                            {activeSidebarSection === 'lead' && (
+                                                <div className="p-4 md:p-6 space-y-5 transition-all duration-300 ease-in-out">
+                                                    {selectedThread.leads?.length > 0 ? (
+                                                        <>
+                                                            {selectedThread.leads.map((lead: any) => {
+                                                                const currentStatus = localLeadStatuses[lead.id] ?? lead.lead_status?.name ?? lead.leadStatus?.name ?? leadStatuses[0]?.name ?? '';
+                                                                const statusConfig: Record<string, { color: string; dot: string }> = {
+                                                                    'New': { color: 'text-blue-700 bg-blue-50 border-blue-200', dot: 'bg-blue-500' },
+                                                                    'Contacted': { color: 'text-violet-700 bg-violet-50 border-violet-200', dot: 'bg-violet-500' },
+                                                                    'Qualified': { color: 'text-emerald-700 bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
+                                                                    'Unqualified': { color: 'text-rose-700 bg-rose-50 border-rose-200', dot: 'bg-rose-400' },
+                                                                };
+                                                                const sc = statusConfig[currentStatus] ?? { color: 'text-muted-foreground bg-muted border-border', dot: 'bg-muted-foreground' };
+                                                                return (
+                                                                    <div key={lead.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                                                                        {/* Lead card header */}
+                                                                        <div className="flex items-center justify-between gap-2 min-w-0 px-3 py-2.5 bg-muted/30 border-b">
+                                                                            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                                                                                <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
+                                                                                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{lead.name}</span>
+                                                                            </div>
+                                                                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0 ml-1">
+                                                                                {t('LEAD')}
+                                                                            </Badge>
+                                                                        </div>
 
-                                                            {/* Lead detail rows */}
-                                                            <div className="px-3 py-2.5 space-y-4 text-sm">
-                                                                <div className="flex min-w-0 items-center justify-between gap-2">
-                                                                    <span className="shrink-0 text-muted-foreground">{t('Company')}</span>
-                                                                    <span className="min-w-0 flex-1 truncate text-right font-medium">{lead.company || '—'}</span>
-                                                                </div>
-                                                                <div className="flex min-w-0 items-center justify-between gap-2">
-                                                                    <span className="shrink-0 text-muted-foreground">{t('Value')}</span>
-                                                                    <span className="min-w-0 flex-1 text-right font-semibold text-emerald-600">
-                                                                        {lead.value ? `$${Number(lead.value).toLocaleString()}` : '—'}
-                                                                    </span>
-                                                                </div>
-                                                                {lead.assigned_to_user && (
-                                                                    <div className="flex min-w-0 items-center justify-between gap-2">
-                                                                        <span className="shrink-0 text-muted-foreground">{t('Owner')}</span>
-                                                                        <span className="min-w-0 flex-1 truncate text-right font-medium">{lead.assigned_to_user.name}</span>
+                                                                        {/* Lead detail rows */}
+                                                                        <div className="px-3 py-2.5 space-y-4 text-sm">
+                                                                            <div className="flex min-w-0 items-center justify-between gap-2">
+                                                                                <span className="shrink-0 text-muted-foreground">{t('Company')}</span>
+                                                                                <span className="min-w-0 flex-1 truncate text-right font-medium">{lead.company || '—'}</span>
+                                                                            </div>
+                                                                            <div className="flex min-w-0 items-center justify-between gap-2">
+                                                                                <span className="shrink-0 text-muted-foreground">{t('Value')}</span>
+                                                                                <span className="min-w-0 flex-1 text-right font-semibold text-emerald-600">
+                                                                                    {lead.value ? `$${Number(lead.value).toLocaleString()}` : '—'}
+                                                                                </span>
+                                                                            </div>
+                                                                            {lead.assigned_to_user && (
+                                                                                <div className="flex min-w-0 items-center justify-between gap-2">
+                                                                                    <span className="shrink-0 text-muted-foreground">{t('Owner')}</span>
+                                                                                    <span className="min-w-0 flex-1 truncate text-right font-medium">{lead.assigned_to_user.name}</span>
+                                                                                </div>
+                                                                            )}
+
+                                                                            {/* Inline Status Selector */}
+                                                                            <div className="pt-1">
+                                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                                                                                    {t('Status')}
+                                                                                </p>
+                                                                                {canEditLeadStatus && leadStatuses.length > 0 ? (
+                                                                                    <Select
+                                                                                        value={currentStatus}
+                                                                                        onValueChange={(val) => persistLeadStatus(lead, val)}
+                                                                                        disabled={savingLeadId === lead.id}
+                                                                                    >
+                                                                                        <SelectTrigger className={`h-7 text-xs font-semibold border rounded-md px-2.5 w-full ${sc.color}`}>
+                                                                                            <SelectValue placeholder={t('Status')} />
+                                                                                        </SelectTrigger>
+                                                                                        <SelectContent>
+                                                                                            {leadStatuses.map((ls: any) => (
+                                                                                                <SelectItem key={ls.id} value={ls.name} className="text-xs">{ls.name}</SelectItem>
+                                                                                            ))}
+                                                                                        </SelectContent>
+                                                                                    </Select>
+                                                                                ) : (
+                                                                                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md border ${sc.color}`}>
+                                                                                        <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
+                                                                                        {currentStatus}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Lead card footer */}
+                                                                        <div className="px-3 py-2 border-t bg-muted/10 flex items-center justify-between">
+                                                                            <span className="text-[10px] text-muted-foreground">
+                                                                                {timeAgo(lead.created_at)}
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
-                                                                )}
+                                                                );
+                                                            })}
 
-                                                                {/* Inline Status Selector */}
-                                                                <div className="pt-1">
-                                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                                                                        {t('Status')}
-                                                                    </p>
-                                                                    {canEditLeadStatus && leadStatuses.length > 0 ? (
-                                                                        <Select
-                                                                            value={currentStatus}
-                                                                            onValueChange={(val) => persistLeadStatus(lead, val)}
-                                                                            disabled={savingLeadId === lead.id}
-                                                                        >
-                                                                            <SelectTrigger className={`h-7 text-xs font-semibold border rounded-md px-2.5 w-full ${sc.color}`}>
-                                                                                <SelectValue placeholder={t('Status')} />
-                                                                            </SelectTrigger>
-                                                                            <SelectContent>
-                                                                                {leadStatuses.map((ls: any) => (
-                                                                                    <SelectItem key={ls.id} value={ls.name} className="text-xs">{ls.name}</SelectItem>
-                                                                                ))}
-                                                                            </SelectContent>
-                                                                        </Select>
+                                                            {/* Global lead activity stream preview (same source as Lead Detail page) */}
+                                                            <div className="mt-6 pt-6 border-t space-y-4">
+                                                                <div>
+                                                                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center justify-between">
+                                                                        {t('Recent Lead Activity')}
+                                                                        <Clock className="h-3 w-3 opacity-50" />
+                                                                    </h4>
+                                                                    <div className="space-y-4 relative">
+                                                                        <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border/60" />
+                                                                        {(() => {
+                                                                            const preview = selectedThread.leads?.[0]?.recent_stream_preview ?? [];
+                                                                            if (preview.length === 0) {
+                                                                                return (
+                                                                                    <p className="text-[10px] text-muted-foreground pl-6">{t('No activities yet')}</p>
+                                                                                );
+                                                                            }
+                                                                            return preview.map((activity: any, idx: number) => {
+                                                                                const dot = getLeadStreamPreviewDotClass(activity);
+                                                                                const rawDesc = activity.description;
+                                                                                const descIsHtml =
+                                                                                    typeof rawDesc === 'string' && /<[^>]+>/.test(rawDesc);
+                                                                                return (
+                                                                                    <div key={String(activity.id ?? idx)} className="flex gap-4 group">
+                                                                                        <div className="relative shrink-0 mt-1">
+                                                                                            <div className={`h-3 w-3 rounded-full ring-4 shadow-sm ${dot}`} />
+                                                                                        </div>
+                                                                                        <div className="min-w-0 pb-1">
+                                                                                            <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2 break-words">
+                                                                                                {activity.title}
+                                                                                            </p>
+                                                                                            {rawDesc ? (
+                                                                                                descIsHtml ? (
+                                                                                                    <div
+                                                                                                        className="text-[10px] text-muted-foreground mt-1 line-clamp-2 [&_p]:my-0 [&_*]:text-[10px]"
+                                                                                                        dangerouslySetInnerHTML={{
+                                                                                                            __html: sanitizeHtml(String(rawDesc)),
+                                                                                                        }}
+                                                                                                    />
+                                                                                                ) : (
+                                                                                                    <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                                                                                                        {rawDesc}
+                                                                                                    </p>
+                                                                                                )
+                                                                                            ) : null}
+                                                                                            <p className="text-[10px] font-semibold text-muted-foreground/60 mt-2 flex items-center gap-1">
+                                                                                                <Clock className="h-2.5 w-2.5" />
+                                                                                                {activity.created_at
+                                                                                                    ? timeAgo(activity.created_at)
+                                                                                                    : '—'}
+                                                                                            </p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            });
+                                                                        })()}
+                                                                    </div>
+                                                                </div>
+
+                                                                <a
+                                                                    href={route('leads.show', selectedThread.leads[0].id)}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group"
+                                                                >
+                                                                    <span className="text-[11px] font-bold tracking-tight">{t('Open Full History Stream')}</span>
+                                                                    <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                                                </a>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        /* No lead linked */
+                                                        <div className="flex flex-col items-center py-12 px-6 text-center">
+                                                            <div className="h-14 w-14 rounded-2xl bg-muted/40 flex items-center justify-center mb-4 transition-transform hover:rotate-6">
+                                                                <UserPlus className="h-7 w-7 text-muted-foreground/30" />
+                                                            </div>
+                                                            <h5 className="text-sm font-bold text-foreground mb-1.5">{t('No CRM Lead Linked')}</h5>
+                                                            <p className="text-xs text-muted-foreground mb-6 leading-relaxed">
+                                                                {t('Contextual lead tracking and opportunity management are unavailable for this conversation.')}
+                                                            </p>
+
+                                                            {selectedThread.suggested_leads?.length > 0 ? (
+                                                                <div className="w-full space-y-3">
+                                                                    <div className="min-w-0 bg-amber-50/50 border border-amber-200/50 p-3 rounded-xl text-left scale-[0.98] hover:scale-100 transition-transform">
+                                                                        <p className="text-[10px] text-amber-700 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                                                            <AlertCircle className="h-3 w-3 shrink-0" />
+                                                                            {t('Suggested Match')}
+                                                                        </p>
+                                                                        <p className="text-xs text-amber-900 font-bold leading-none break-words">{selectedThread.suggested_leads[0].name}</p>
+                                                                        <p className="text-[10px] text-amber-600/80 truncate mt-1 min-w-0">{selectedThread.suggested_leads[0].email}</p>
+                                                                    </div>
+                                                                    <Button size="sm" className="w-full text-xs h-9 font-bold shadow-lg shadow-primary/10 transition-all hover:translate-y-[-1px]" onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)} disabled={!canManage}>
+                                                                        {t('Link Match to Thread')}
+                                                                    </Button>
+                                                                    <Button size="sm" variant="ghost" className="w-full text-xs h-8 text-muted-foreground font-semibold" onClick={() => handleAddAsLead()} disabled={!canManage}>
+                                                                        {t('Create New Lead')}
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <Button size="sm" variant="outline" className="w-full text-xs h-9 font-bold bg-background shadow-sm transition-all hover:bg-muted" onClick={() => handleAddAsLead()} disabled={!canManage}>
+                                                                    <UserPlus className="h-4 w-4 mr-2" />
+                                                                    {t('Quick Create Lead')}
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* ═══════════════ OPPORTUNITIES SECTION ═══════════════ */}
+                                            {activeSidebarSection === 'opportunities' && (
+                                                <div className="p-4 md:p-6 space-y-5 transition-all duration-300 ease-in-out">
+                                                    {(() => {
+                                                        const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
+
+                                                        const oppStatusConfig: Record<string, { badge: string; dot: string; label: string }> = {
+                                                            'Open': { badge: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-500', label: 'Open' },
+                                                            'Negotiation': { badge: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500', label: 'Negotiation' },
+                                                            'Won': { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', label: 'Won' },
+                                                            'Lost': { badge: 'bg-rose-100 text-rose-700 border-rose-200', dot: 'bg-rose-500', label: 'Lost' },
+                                                        };
+
+                                                        if (opportunities.length === 0) {
+                                                            return (
+                                                                <div className="flex flex-col items-center py-8 px-3 text-center">
+                                                                    <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                                                                        <Briefcase className="h-5 w-5 text-muted-foreground/40" />
+                                                                    </div>
+                                                                    <p className="text-xs font-medium text-foreground mb-1">{t('No opportunities')}</p>
+                                                                    {selectedThread.leads?.length === 0 ? (
+                                                                        <p className="text-xs text-muted-foreground">{t('Link a lead first to see related opportunities.')}</p>
                                                                     ) : (
-                                                                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md border ${sc.color}`}>
-                                                                            <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
-                                                                            {currentStatus}
-                                                                        </span>
+                                                                        <p className="text-xs text-muted-foreground">{t('No opportunities are linked to this lead yet.')}</p>
                                                                     )}
                                                                 </div>
-                                                            </div>
+                                                            );
+                                                        }
 
-                                                            {/* Lead card footer */}
-                                                            <div className="px-3 py-2 border-t bg-muted/10 flex items-center justify-between">
-                                                                <span className="text-[10px] text-muted-foreground">
-                                                                    {timeAgo(lead.created_at)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-
-                                                {/* Global lead activity stream preview (same source as Lead Detail page) */}
-                                                <div className="mt-6 pt-6 border-t space-y-4">
-                                                    <div>
-                                                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center justify-between">
-                                                            {t('Recent Lead Activity')}
-                                                            <Clock className="h-3 w-3 opacity-50" />
-                                                        </h4>
-                                                        <div className="space-y-4 relative">
-                                                            <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border/60" />
-                                                            {(() => {
-                                                                const preview = selectedThread.leads?.[0]?.recent_stream_preview ?? [];
-                                                                if (preview.length === 0) {
-                                                                    return (
-                                                                        <p className="text-[10px] text-muted-foreground pl-6">{t('No activities yet')}</p>
-                                                                    );
-                                                                }
-                                                                return preview.map((activity: any, idx: number) => {
-                                                                    const dot = getLeadStreamPreviewDotClass(activity);
-                                                                    const rawDesc = activity.description;
-                                                                    const descIsHtml =
-                                                                        typeof rawDesc === 'string' && /<[^>]+>/.test(rawDesc);
-                                                                    return (
-                                                                        <div key={String(activity.id ?? idx)} className="flex gap-4 group">
-                                                                            <div className="relative shrink-0 mt-1">
-                                                                                <div className={`h-3 w-3 rounded-full ring-4 shadow-sm ${dot}`} />
-                                                                            </div>
-                                                                            <div className="min-w-0 pb-1">
-                                                                                <p className="text-[11px] font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2 break-words">
-                                                                                    {activity.title}
-                                                                                </p>
-                                                                                {rawDesc ? (
-                                                                                    descIsHtml ? (
-                                                                                        <div
-                                                                                            className="text-[10px] text-muted-foreground mt-1 line-clamp-2 [&_p]:my-0 [&_*]:text-[10px]"
-                                                                                            dangerouslySetInnerHTML={{
-                                                                                                __html: sanitizeHtml(String(rawDesc)),
-                                                                                            }}
-                                                                                        />
-                                                                                    ) : (
-                                                                                        <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
-                                                                                            {rawDesc}
-                                                                                        </p>
-                                                                                    )
-                                                                                ) : null}
-                                                                                <p className="text-[10px] font-semibold text-muted-foreground/60 mt-2 flex items-center gap-1">
-                                                                                    <Clock className="h-2.5 w-2.5" />
-                                                                                    {activity.created_at
-                                                                                        ? timeAgo(activity.created_at)
-                                                                                        : '—'}
-                                                                                </p>
-                                                                            </div>
+                                                        return opportunities.map((opp: any) => {
+                                                            const stageName =
+                                                                localOppStatuses[opp.id] ??
+                                                                opp.opportunity_stage?.name ??
+                                                                opp.opportunityStage?.name ??
+                                                                opportunityStages[0]?.name ??
+                                                                '';
+                                                            const sc = oppStatusConfig[stageName] ?? { badge: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground', label: stageName };
+                                                            const isExpanded = expandedOpportunityId === opp.id;
+                                                            return (
+                                                                <div key={opp.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                                                                    {/* Opportunity row — click to expand */}
+                                                                    <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
+                                                                        <button
+                                                                            type="button"
+                                                                            className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden py-1.5 text-left"
+                                                                            onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
+                                                                        >
+                                                                            <div className={`h-2 w-2 shrink-0 rounded-full ${sc.dot}`} />
+                                                                            <span className="min-w-0 flex-1 truncate text-sm font-semibold">{opp.name || opp.title}</span>
+                                                                        </button>
+                                                                        <div className="flex shrink-0 items-center gap-1.5 ml-1">
+                                                                            {canEditOpportunityStage && opportunityStages.length > 0 ? (
+                                                                                <Select
+                                                                                    value={stageName}
+                                                                                    onValueChange={(val) => persistOpportunityStage(opp, val)}
+                                                                                    disabled={savingOppId === opp.id}
+                                                                                >
+                                                                                    <SelectTrigger className={`h-6 min-w-0 max-w-[7rem] truncate text-[10px] font-bold border rounded-md px-1.5 ${sc.badge}`}>
+                                                                                        <SelectValue placeholder={t('Stage')} />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        {opportunityStages.map((st: any) => (
+                                                                                            <SelectItem key={st.id} value={st.name} className="text-xs">{st.name}</SelectItem>
+                                                                                        ))}
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            ) : (
+                                                                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${sc.badge}`}>
+                                                                                    {stageName || '—'}
+                                                                                </span>
+                                                                            )}
+                                                                            <button
+                                                                                onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
+                                                                                className="p-1 hover:bg-muted rounded"
+                                                                            >
+                                                                                {isExpanded ? <ChevronUpIcon className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                                                                            </button>
                                                                         </div>
-                                                                    );
-                                                                });
-                                                            })()}
-                                                        </div>
-                                                    </div>
-
-                                                    <a
-                                                        href={route('leads.show', selectedThread.leads[0].id)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group"
-                                                    >
-                                                        <span className="text-[11px] font-bold tracking-tight">{t('Open Full History Stream')}</span>
-                                                        <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                                                    </a>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            /* No lead linked */
-                                            <div className="flex flex-col items-center py-12 px-6 text-center">
-                                                <div className="h-14 w-14 rounded-2xl bg-muted/40 flex items-center justify-center mb-4 transition-transform hover:rotate-6">
-                                                    <UserPlus className="h-7 w-7 text-muted-foreground/30" />
-                                                </div>
-                                                <h5 className="text-sm font-bold text-foreground mb-1.5">{t('No CRM Lead Linked')}</h5>
-                                                <p className="text-xs text-muted-foreground mb-6 leading-relaxed">
-                                                    {t('Contextual lead tracking and opportunity management are unavailable for this conversation.')}
-                                                </p>
-
-                                                {selectedThread.suggested_leads?.length > 0 ? (
-                                                    <div className="w-full space-y-3">
-                                                        <div className="min-w-0 bg-amber-50/50 border border-amber-200/50 p-3 rounded-xl text-left scale-[0.98] hover:scale-100 transition-transform">
-                                                            <p className="text-[10px] text-amber-700 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                                                <AlertCircle className="h-3 w-3 shrink-0" />
-                                                                {t('Suggested Match')}
-                                                            </p>
-                                                            <p className="text-xs text-amber-900 font-bold leading-none break-words">{selectedThread.suggested_leads[0].name}</p>
-                                                            <p className="text-[10px] text-amber-600/80 truncate mt-1 min-w-0">{selectedThread.suggested_leads[0].email}</p>
-                                                        </div>
-                                                        <Button size="sm" className="w-full text-xs h-9 font-bold shadow-lg shadow-primary/10 transition-all hover:translate-y-[-1px]" onClick={() => handleLinkToLead(selectedThread.suggested_leads[0].id)} disabled={!canManage}>
-                                                            {t('Link Match to Thread')}
-                                                        </Button>
-                                                        <Button size="sm" variant="ghost" className="w-full text-xs h-8 text-muted-foreground font-semibold" onClick={() => handleAddAsLead()} disabled={!canManage}>
-                                                            {t('Create New Lead')}
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <Button size="sm" variant="outline" className="w-full text-xs h-9 font-bold bg-background shadow-sm transition-all hover:bg-muted" onClick={() => handleAddAsLead()} disabled={!canManage}>
-                                                        <UserPlus className="h-4 w-4 mr-2" />
-                                                        {t('Quick Create Lead')}
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* ═══════════════ OPPORTUNITIES SECTION ═══════════════ */}
-                                {activeSidebarSection === 'opportunities' && (
-                                    <div className="p-4 md:p-6 space-y-5 transition-all duration-300 ease-in-out">
-                                        {(() => {
-                                            const opportunities = selectedThread.leads?.flatMap((l: any) => l.opportunities ?? []) ?? [];
-
-                                            const oppStatusConfig: Record<string, { badge: string; dot: string; label: string }> = {
-                                                'Open': { badge: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-500', label: 'Open' },
-                                                'Negotiation': { badge: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500', label: 'Negotiation' },
-                                                'Won': { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', label: 'Won' },
-                                                'Lost': { badge: 'bg-rose-100 text-rose-700 border-rose-200', dot: 'bg-rose-500', label: 'Lost' },
-                                            };
-
-                                            if (opportunities.length === 0) {
-                                                return (
-                                                    <div className="flex flex-col items-center py-8 px-3 text-center">
-                                                        <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                                                            <Briefcase className="h-5 w-5 text-muted-foreground/40" />
-                                                        </div>
-                                                        <p className="text-xs font-medium text-foreground mb-1">{t('No opportunities')}</p>
-                                                        {selectedThread.leads?.length === 0 ? (
-                                                            <p className="text-xs text-muted-foreground">{t('Link a lead first to see related opportunities.')}</p>
-                                                        ) : (
-                                                            <p className="text-xs text-muted-foreground">{t('No opportunities are linked to this lead yet.')}</p>
-                                                        )}
-                                                    </div>
-                                                );
-                                            }
-
-                                            return opportunities.map((opp: any) => {
-                                                const stageName =
-                                                    localOppStatuses[opp.id] ??
-                                                    opp.opportunity_stage?.name ??
-                                                    opp.opportunityStage?.name ??
-                                                    opportunityStages[0]?.name ??
-                                                    '';
-                                                const sc = oppStatusConfig[stageName] ?? { badge: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground', label: stageName };
-                                                const isExpanded = expandedOpportunityId === opp.id;
-                                                return (
-                                                    <div key={opp.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
-                                                        {/* Opportunity row — click to expand */}
-                                                        <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
-                                                            <button
-                                                                type="button"
-                                                                className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden py-1.5 text-left"
-                                                                onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
-                                                            >
-                                                                <div className={`h-2 w-2 shrink-0 rounded-full ${sc.dot}`} />
-                                                                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{opp.name || opp.title}</span>
-                                                            </button>
-                                                            <div className="flex shrink-0 items-center gap-1.5 ml-1">
-                                                                {canEditOpportunityStage && opportunityStages.length > 0 ? (
-                                                                    <Select
-                                                                        value={stageName}
-                                                                        onValueChange={(val) => persistOpportunityStage(opp, val)}
-                                                                        disabled={savingOppId === opp.id}
-                                                                    >
-                                                                        <SelectTrigger className={`h-6 min-w-0 max-w-[7rem] truncate text-[10px] font-bold border rounded-md px-1.5 ${sc.badge}`}>
-                                                                            <SelectValue placeholder={t('Stage')} />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {opportunityStages.map((st: any) => (
-                                                                                <SelectItem key={st.id} value={st.name} className="text-xs">{st.name}</SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                ) : (
-                                                                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${sc.badge}`}>
-                                                                        {stageName || '—'}
-                                                                    </span>
-                                                                )}
-                                                                <button
-                                                                    onClick={() => setExpandedOpportunityId(isExpanded ? null : opp.id)}
-                                                                    className="p-1 hover:bg-muted rounded"
-                                                                >
-                                                                    {isExpanded ? <ChevronUpIcon className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Expanded detail view */}
-                                                        {isExpanded && (
-                                                            <div className="border-t bg-muted/10 px-3 py-3 space-y-4 animate-in fade-in slide-in-from-top-1 duration-150">
-                                                                <div className="flex items-center justify-between text-xs">
-                                                                    <span className="text-muted-foreground flex items-center gap-1">
-                                                                        <DollarSign className="h-3 w-3" />{t('Value')}
-                                                                    </span>
-                                                                    <span className="font-semibold text-emerald-600">
-                                                                        {opp.amount ? `$${Number(opp.amount).toLocaleString()}` : '—'}
-                                                                    </span>
-                                                                </div>
-                                                                {opp.close_date && (
-                                                                    <div className="flex items-center justify-between text-xs">
-                                                                        <span className="text-muted-foreground flex items-center gap-1">
-                                                                            <Calendar className="h-3 w-3" />{t('Close Date')}
-                                                                        </span>
-                                                                        <span className="font-medium">{new Date(opp.close_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                                                     </div>
-                                                                )}
-                                                                {(() => {
-                                                                    const prob =
-                                                                        opp.opportunity_stage?.probability ??
-                                                                        opp.opportunityStage?.probability ??
-                                                                        opp.probability;
-                                                                    if (prob === undefined || prob === null) return null;
-                                                                    return (
-                                                                        <div className="space-y-1">
+
+                                                                    {/* Expanded detail view */}
+                                                                    {isExpanded && (
+                                                                        <div className="border-t bg-muted/10 px-3 py-3 space-y-4 animate-in fade-in slide-in-from-top-1 duration-150">
                                                                             <div className="flex items-center justify-between text-xs">
                                                                                 <span className="text-muted-foreground flex items-center gap-1">
-                                                                                    <TrendingUp className="h-3 w-3" />{t('Probability')}
+                                                                                    <DollarSign className="h-3 w-3" />{t('Value')}
                                                                                 </span>
-                                                                                <span className="font-semibold">{prob}%</span>
+                                                                                <span className="font-semibold text-emerald-600">
+                                                                                    {opp.amount ? `$${Number(opp.amount).toLocaleString()}` : '—'}
+                                                                                </span>
                                                                             </div>
-                                                                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                                                                <div
-                                                                                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                                                                                    style={{ width: `${Math.min(100, Number(prob))}%` }}
-                                                                                />
-                                                                            </div>
+                                                                            {opp.close_date && (
+                                                                                <div className="flex items-center justify-between text-xs">
+                                                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                                                        <Calendar className="h-3 w-3" />{t('Close Date')}
+                                                                                    </span>
+                                                                                    <span className="font-medium">{new Date(opp.close_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            {(() => {
+                                                                                const prob =
+                                                                                    opp.opportunity_stage?.probability ??
+                                                                                    opp.opportunityStage?.probability ??
+                                                                                    opp.probability;
+                                                                                if (prob === undefined || prob === null) return null;
+                                                                                return (
+                                                                                    <div className="space-y-1">
+                                                                                        <div className="flex items-center justify-between text-xs">
+                                                                                            <span className="text-muted-foreground flex items-center gap-1">
+                                                                                                <TrendingUp className="h-3 w-3" />{t('Probability')}
+                                                                                            </span>
+                                                                                            <span className="font-semibold">{prob}%</span>
+                                                                                        </div>
+                                                                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                                                            <div
+                                                                                                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                                                                                                style={{ width: `${Math.min(100, Number(prob))}%` }}
+                                                                                            />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
+                                                                            {opp.id && (
+                                                                                <div className="pt-2">
+                                                                                    <div className="mb-4 pt-3 border-t">
+                                                                                        <h5 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+                                                                                            {t('Opp Activity')}
+                                                                                        </h5>
+                                                                                        <div className="space-y-3 relative">
+                                                                                            <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border/60" />
+                                                                                            {(() => {
+                                                                                                const preview = opp.recent_stream_preview ?? [];
+                                                                                                if (preview.length === 0) {
+                                                                                                    return (
+                                                                                                        <p className="text-[9px] text-muted-foreground pl-6">{t('No activities yet')}</p>
+                                                                                                    );
+                                                                                                }
+                                                                                                return preview.map((activity: any, idx: number) => {
+                                                                                                    const dot = getLeadStreamPreviewDotClass(activity);
+                                                                                                    const rawDesc = activity.description;
+                                                                                                    const descIsHtml =
+                                                                                                        typeof rawDesc === 'string' && /<[^>]+>/.test(rawDesc);
+                                                                                                    return (
+                                                                                                        <div key={String(activity.id ?? idx)} className="flex gap-3 group pl-0.5">
+                                                                                                            <div className="relative shrink-0 mt-0.5">
+                                                                                                                <div className={`h-2.5 w-2.5 rounded-full ring-2 shadow-sm ${dot}`} />
+                                                                                                            </div>
+                                                                                                            <div className="min-w-0 pb-0.5">
+                                                                                                                <p className="text-[10px] font-bold leading-tight group-hover:text-primary transition-colors">
+                                                                                                                    {activity.title}
+                                                                                                                </p>
+                                                                                                                {rawDesc ? (
+                                                                                                                    descIsHtml ? (
+                                                                                                                        <div
+                                                                                                                            className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2 [&_p]:my-0 [&_*]:text-[9px]"
+                                                                                                                            dangerouslySetInnerHTML={{
+                                                                                                                                __html: sanitizeHtml(String(rawDesc)),
+                                                                                                                            }}
+                                                                                                                        />
+                                                                                                                    ) : (
+                                                                                                                        <p className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2">
+                                                                                                                            {rawDesc}
+                                                                                                                        </p>
+                                                                                                                    )
+                                                                                                                ) : null}
+                                                                                                                <p className="text-[9px] font-semibold text-muted-foreground/60 mt-1 flex items-center gap-1">
+                                                                                                                    <Clock className="h-2 w-2" />
+                                                                                                                    {activity.created_at ? timeAgo(activity.created_at) : '—'}
+                                                                                                                </p>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    );
+                                                                                                });
+                                                                                            })()}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <a href={route('opportunities.show', opp.id)} target="_blank" rel="noopener noreferrer">
+                                                                                        <Button variant="ghost" size="sm" className="h-8 w-full text-[10px] gap-1 text-primary font-bold hover:bg-primary/10 border border-primary/10 transition-all active:scale-[0.98]">
+                                                                                            {t('View Detailed Opportunity')}
+                                                                                            <ExternalLink className="h-3 w-3" />
+                                                                                        </Button>
+                                                                                    </a>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
-                                                                    );
-                                                                })()}
-                                                                {opp.id && (
-                                                                    <div className="pt-2">
-                                                                        <div className="mb-4 pt-3 border-t">
-                                                                            <h5 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
-                                                                                {t('Opp Activity')}
-                                                                            </h5>
-                                                                            <div className="space-y-3 relative">
-                                                                                <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border/60" />
-                                                                                {(() => {
-                                                                                    const preview = opp.recent_stream_preview ?? [];
-                                                                                    if (preview.length === 0) {
-                                                                                        return (
-                                                                                            <p className="text-[9px] text-muted-foreground pl-6">{t('No activities yet')}</p>
-                                                                                        );
-                                                                                    }
-                                                                                    return preview.map((activity: any, idx: number) => {
-                                                                                        const dot = getLeadStreamPreviewDotClass(activity);
-                                                                                        const rawDesc = activity.description;
-                                                                                        const descIsHtml =
-                                                                                            typeof rawDesc === 'string' && /<[^>]+>/.test(rawDesc);
-                                                                                        return (
-                                                                                            <div key={String(activity.id ?? idx)} className="flex gap-3 group pl-0.5">
-                                                                                                <div className="relative shrink-0 mt-0.5">
-                                                                                                    <div className={`h-2.5 w-2.5 rounded-full ring-2 shadow-sm ${dot}`} />
-                                                                                                </div>
-                                                                                                <div className="min-w-0 pb-0.5">
-                                                                                                    <p className="text-[10px] font-bold leading-tight group-hover:text-primary transition-colors">
-                                                                                                        {activity.title}
-                                                                                                    </p>
-                                                                                                    {rawDesc ? (
-                                                                                                        descIsHtml ? (
-                                                                                                            <div
-                                                                                                                className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2 [&_p]:my-0 [&_*]:text-[9px]"
-                                                                                                                dangerouslySetInnerHTML={{
-                                                                                                                    __html: sanitizeHtml(String(rawDesc)),
-                                                                                                                }}
-                                                                                                            />
-                                                                                                        ) : (
-                                                                                                            <p className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2">
-                                                                                                                {rawDesc}
-                                                                                                            </p>
-                                                                                                        )
-                                                                                                    ) : null}
-                                                                                                    <p className="text-[9px] font-semibold text-muted-foreground/60 mt-1 flex items-center gap-1">
-                                                                                                        <Clock className="h-2 w-2" />
-                                                                                                        {activity.created_at ? timeAgo(activity.created_at) : '—'}
-                                                                                                    </p>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        );
-                                                                                    });
-                                                                                })()}
-                                                                            </div>
-                                                                        </div>
-                                                                        <a href={route('opportunities.show', opp.id)} target="_blank" rel="noopener noreferrer">
-                                                                            <Button variant="ghost" size="sm" className="h-8 w-full text-[10px] gap-1 text-primary font-bold hover:bg-primary/10 border border-primary/10 transition-all active:scale-[0.98]">
-                                                                                {t('View Detailed Opportunity')}
-                                                                                <ExternalLink className="h-3 w-3" />
-                                                                            </Button>
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            });
-                                        })()}
-                                    </div>
-                                )}
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        });
+                                                    })()}
+                                                </div>
+                                            )}
 
                                         </ScrollArea>
                                     </>
                                 ) : (
                                     /* AI Power Ups View */
                                     <div className="flex-1 flex flex-col min-h-0 bg-muted/5">
-                                        <ConversationAiPanel 
-                                            threadId={selectedThread.id} 
+                                        <ConversationAiPanel
+                                            threadId={selectedThread.id}
                                             onInsertDraft={(body: string) => {
                                                 replyEditor?.commands.setContent(body);
                                                 setActiveSidebarTab('crm'); // Optional: switch back or stay
@@ -2327,248 +2328,248 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             </DialogContent>
                         </Dialog>
                     )}
-            </div>
+                </div>
 
-            {/* Compose Dialog */}
-            <Dialog open={showCompose} onOpenChange={setShowCompose}>
-                <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden gap-0 border-none shadow-2xl rounded-xl">
-                    <DialogHeader className="px-6 py-4 bg-primary/5 border-b">
-                        <DialogTitle className="text-lg font-semibold flex items-center text-primary">
-                            <Mail className="w-5 h-5 mr-2" />
-                            {t('New Message')}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col bg-background">
-                        <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
-                            <Label htmlFor="compose-to" className="w-16 text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('To')}</Label>
-                            <Input
-                                id="compose-to"
-                                value={composeTo}
-                                onChange={(e) => setComposeTo(e.target.value)}
-                                placeholder="recipient@example.com"
-                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto break-all bg-transparent text-sm"
-                            />
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowComposeCcBcc(!showComposeCcBcc)}
-                                className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-tight"
-                            >
-                                {showComposeCcBcc ? t('Hide CC/BCC') : t('CC/BCC')}
-                            </Button>
-                        </div>
-                        {showComposeCcBcc && (
-                            <div className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
-                                    <Label htmlFor="compose-cc" className="w-16 text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Cc')}</Label>
-                                    <Input
-                                        id="compose-cc"
-                                        value={composeCc}
-                                        onChange={(e) => setComposeCc(e.target.value)}
-                                        placeholder="cc1@example.com, cc2@example.com"
-                                        className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto bg-transparent text-sm"
-                                    />
-                                </div>
-                                <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
-                                    <Label htmlFor="compose-bcc" className="w-16 text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Bcc')}</Label>
-                                    <Input
-                                        id="compose-bcc"
-                                        value={composeBcc}
-                                        onChange={(e) => setComposeBcc(e.target.value)}
-                                        placeholder="bcc1@example.com, bcc2@example.com"
-                                        className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto bg-transparent text-sm"
-                                    />
-                                </div>
+                {/* Compose Dialog */}
+                <Dialog open={showCompose} onOpenChange={setShowCompose}>
+                    <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden gap-0 border-none shadow-2xl rounded-xl">
+                        <DialogHeader className="px-6 py-4 bg-primary/5 border-b">
+                            <DialogTitle className="text-lg font-semibold flex items-center text-primary">
+                                <Mail className="w-5 h-5 mr-2" />
+                                {t('New Message')}
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-col bg-background">
+                            <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
+                                <Label htmlFor="compose-to" className="w-16 text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('To')}</Label>
+                                <Input
+                                    id="compose-to"
+                                    value={composeTo}
+                                    onChange={(e) => setComposeTo(e.target.value)}
+                                    placeholder="recipient@example.com"
+                                    className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto break-all bg-transparent text-sm"
+                                />
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowComposeCcBcc(!showComposeCcBcc)}
+                                    className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-tight"
+                                >
+                                    {showComposeCcBcc ? t('Hide CC/BCC') : t('CC/BCC')}
+                                </Button>
                             </div>
-                        )}
-                        <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
-                            <Label htmlFor="compose-subject" className="w-16 text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('Subject')}</Label>
-                            <Input
-                                id="compose-subject"
-                                value={composeSubject}
-                                onChange={(e) => setComposeSubject(e.target.value)}
-                                placeholder={t('Enter subject here...')}
-                                className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto font-semibold bg-transparent text-sm"
-                            />
-                        </div>
-                        <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
-                            <div className="min-h-[15.625rem] cursor-text" onClick={() => composeEditor?.commands.focus()}>
-                                <EditorContent editor={composeEditor} />
-                            </div>
-                            {/* Compose attachment previews */}
-                            {composeFiles.length > 0 && (
-                                <div className="flex flex-wrap gap-2 px-5 py-3 border-t bg-muted/10">
-                                    {composeFiles.map((file, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 bg-background border rounded-lg px-3 py-2 text-xs shadow-sm">
-                                            {file.type.startsWith('image/') ? (
-                                                <img src={URL.createObjectURL(file)} alt={file.name} className="h-8 w-8 rounded object-cover" />
-                                            ) : (
-                                                <FileText className="h-4 w-4 text-primary shrink-0" />
-                                            )}
-                                            <span className="truncate max-w-[140px]">{file.name}</span>
-                                            <button onClick={() => setComposeFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
-                                                <X className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
+                            {showComposeCcBcc && (
+                                <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
+                                        <Label htmlFor="compose-cc" className="w-16 text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Cc')}</Label>
+                                        <Input
+                                            id="compose-cc"
+                                            value={composeCc}
+                                            onChange={(e) => setComposeCc(e.target.value)}
+                                            placeholder="cc1@example.com, cc2@example.com"
+                                            className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto bg-transparent text-sm"
+                                        />
+                                    </div>
+                                    <div className="flex items-center px-6 py-2.5 border-b bg-muted/5 group">
+                                        <Label htmlFor="compose-bcc" className="w-16 text-xs font-bold text-muted-foreground group-focus-within:text-foreground">{t('Bcc')}</Label>
+                                        <Input
+                                            id="compose-bcc"
+                                            value={composeBcc}
+                                            onChange={(e) => setComposeBcc(e.target.value)}
+                                            placeholder="bcc1@example.com, bcc2@example.com"
+                                            className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto bg-transparent text-sm"
+                                        />
+                                    </div>
                                 </div>
                             )}
-                            {/* Formatting Toolbar (Toggled by T button) */}
-                            {showFormatting && composeEditor && (
-                                <div className="flex items-center gap-0.5 px-5 py-1.5 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('bold') && "bg-muted text-primary")}
-                                        onClick={() => composeEditor.chain().focus().toggleBold().run()}
-                                    >
-                                        <Bold className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={cn("h-8 w-8 p-0", composeEditor.isActive('italic') && "bg-muted text-primary")}
-                                        onClick={() => composeEditor.chain().focus().toggleItalic().run()}
-                                    >
-                                        <Italic className="h-4 w-4" />
-                                    </Button>
-                                    <div className="w-px h-4 bg-border mx-1" />
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                                        onClick={() => composeEditor.chain().focus().unsetAllMarks().run()}
-                                    >
-                                        <X className="h-3.5 w-3.5" />
-                                    </Button>
+                            <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
+                                <Label htmlFor="compose-subject" className="w-16 text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('Subject')}</Label>
+                                <Input
+                                    id="compose-subject"
+                                    value={composeSubject}
+                                    onChange={(e) => setComposeSubject(e.target.value)}
+                                    placeholder={t('Enter subject here...')}
+                                    className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 h-auto font-semibold bg-transparent text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
+                                <div className="min-h-[15.625rem] cursor-text" onClick={() => composeEditor?.commands.focus()}>
+                                    <EditorContent editor={composeEditor} />
                                 </div>
-                            )}
-                            {/* Main Toolbar */}
-                            <div className="flex items-center justify-between px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-                                <div className="flex items-center gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={cn("h-8 w-8 transition-colors rounded-full", showFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
-                                        onClick={() => setShowFormatting(!showFormatting)}
-                                    >
-                                        <Type className="h-4 w-4" />
-                                    </Button>
-                                    <div className="w-px h-5 bg-border mx-2" />
-                                    <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
-                                    <EmojiPicker
-                                        onSelect={(emoji) => composeEditor?.chain().focus().insertContent(emoji).run()}
-                                    />
+                                {/* Compose attachment previews */}
+                                {composeFiles.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 px-5 py-3 border-t bg-muted/10">
+                                        {composeFiles.map((file, idx) => (
+                                            <div key={idx} className="flex items-center gap-2 bg-background border rounded-lg px-3 py-2 text-xs shadow-sm">
+                                                {file.type.startsWith('image/') ? (
+                                                    <img src={URL.createObjectURL(file)} alt={file.name} className="h-8 w-8 rounded object-cover" />
+                                                ) : (
+                                                    <FileText className="h-4 w-4 text-primary shrink-0" />
+                                                )}
+                                                <span className="truncate max-w-[140px]">{file.name}</span>
+                                                <button onClick={() => setComposeFiles(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {/* Formatting Toolbar (Toggled by T button) */}
+                                {showFormatting && composeEditor && (
+                                    <div className="flex items-center gap-0.5 px-5 py-1.5 border-t bg-muted/5 animate-in slide-in-from-bottom-1 duration-200">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className={cn("h-8 w-8 p-0", composeEditor.isActive('bold') && "bg-muted text-primary")}
+                                            onClick={() => composeEditor.chain().focus().toggleBold().run()}
+                                        >
+                                            <Bold className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className={cn("h-8 w-8 p-0", composeEditor.isActive('italic') && "bg-muted text-primary")}
+                                            onClick={() => composeEditor.chain().focus().toggleItalic().run()}
+                                        >
+                                            <Italic className="h-4 w-4" />
+                                        </Button>
+                                        <div className="w-px h-4 bg-border mx-1" />
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                            onClick={() => composeEditor.chain().focus().unsetAllMarks().run()}
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                )}
+                                {/* Main Toolbar */}
+                                <div className="flex items-center justify-between px-5 py-2 border-t bg-background relative z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn("h-8 w-8 transition-colors rounded-full", showFormatting ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}
+                                            onClick={() => setShowFormatting(!showFormatting)}
+                                        >
+                                            <Type className="h-4 w-4" />
+                                        </Button>
+                                        <div className="w-px h-5 bg-border mx-2" />
+                                        <input type="file" multiple ref={composeFileRef} className="hidden" onChange={(e) => { if (e.target.files) setComposeFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><Paperclip className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors" onClick={() => composeFileRef.current?.click()}><ImageIcon className="h-4 w-4" /></Button>
+                                        <EmojiPicker
+                                            onSelect={(emoji) => composeEditor?.chain().focus().insertContent(emoji).run()}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <DialogFooter className="px-5 py-4 bg-muted/10 sm:justify-end items-center rounded-b-xl">
-                        <div className="flex items-center gap-3">
-                            <Button variant="ghost" size="sm" onClick={() => setShowCompose(false)} disabled={isComposing} className="text-xs font-semibold px-4 h-9">
-                                {t('Cancel')}
-                            </Button>
-                            <Button size="sm" onClick={handleSendNewEmail} disabled={isComposing || !composeTo.trim() || !composeSubject.trim() || !composeBody.trim()} className="gap-2 px-6 h-9 shadow-md rounded-full font-bold tracking-wide">
-                                {isComposing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                {t('Send Message')}
-                            </Button>
+                        <DialogFooter className="px-5 py-4 bg-muted/10 sm:justify-end items-center rounded-b-xl">
+                            <div className="flex items-center gap-3">
+                                <Button variant="ghost" size="sm" onClick={() => setShowCompose(false)} disabled={isComposing} className="text-xs font-semibold px-4 h-9">
+                                    {t('Cancel')}
+                                </Button>
+                                <Button size="sm" onClick={handleSendNewEmail} disabled={isComposing || !composeTo.trim() || !composeSubject.trim() || !composeBody.trim()} className="gap-2 px-6 h-9 shadow-md rounded-full font-bold tracking-wide">
+                                    {isComposing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                    {t('Send Message')}
+                                </Button>
+                            </div>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Follow-up Sequence Dialog */}
+                <Dialog open={showFollowUpModal} onOpenChange={setShowFollowUpModal}>
+                    <DialogContent className="w-[95vw] sm:max-w-[550px] p-0 overflow-hidden border-none shadow-2xl rounded-xl">
+                        <DialogHeader className="px-6 py-4 bg-primary/5 border-b">
+                            <DialogTitle className="text-lg font-semibold flex items-center text-primary">
+                                <Clock className="w-5 h-5 mr-2" />
+                                {t('Auto Follow-up Sequence')}
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="bg-background max-h-[85vh] overflow-hidden">
+                            <FollowUpSequenceBuilder
+                                threadId={selectedThread?.id}
+                                lastMessageAt={selectedThread?.last_message_at}
+                            />
                         </div>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </DialogContent>
+                </Dialog>
 
-            {/* Follow-up Sequence Dialog */}
-            <Dialog open={showFollowUpModal} onOpenChange={setShowFollowUpModal}>
-                <DialogContent className="w-[95vw] sm:max-w-[550px] p-0 overflow-hidden border-none shadow-2xl rounded-xl">
-                    <DialogHeader className="px-6 py-4 bg-primary/5 border-b">
-                        <DialogTitle className="text-lg font-semibold flex items-center text-primary">
-                            <Clock className="w-5 h-5 mr-2" />
-                            {t('Auto Follow-up Sequence')}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="bg-background max-h-[85vh] overflow-hidden">
-                        <FollowUpSequenceBuilder
-                            threadId={selectedThread?.id}
-                            lastMessageAt={selectedThread?.last_message_at}
-                        />
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            <CrudFormModal
-                isOpen={isLeadModalOpen}
-                onClose={() => setIsLeadModalOpen(false)}
-                onSubmit={handleLeadFormSubmit}
-                formConfig={{
-                    fields: [
-                        { name: 'name', label: t('Lead Name'), type: 'text', required: true },
-                        { name: 'email', label: t('Email'), type: 'email' },
-                        { name: 'phone', label: t('Phone'), type: 'tel' },
-                        { name: 'company', label: t('Company'), type: 'text' },
-                        { name: 'account_name', label: t('Account Name'), type: 'text' },
-                        {
-                            name: 'account_industry_id',
-                            label: t('Account Industry'),
-                            type: 'select',
-                            options: accountIndustries.map((industry: any) => ({ value: industry.id, label: industry.name }))
-                        },
-                        { name: 'website', label: t('Website'), type: 'text' },
-                        { name: 'position', label: t('Position'), type: 'text' },
-                        { name: 'value', label: t('Lead Value'), type: 'number', step: '0.01', min: '0' },
-                        {
-                            name: 'lead_status_id',
-                            label: t('Lead Status'),
-                            type: 'select',
-                            required: true,
-                            options: leadStatuses.map((status: any) => ({
-                                value: status.id,
-                                label: status.name
-                            }))
-                        },
-                        {
-                            name: 'lead_source_id',
-                            label: t('Lead Source'),
-                            type: 'select',
-                            required: true,
-                            options: leadSources.map((source: any) => ({
-                                value: source.id,
-                                label: source.name
-                            }))
-                        },
-                        { name: 'address', label: t('Address'), type: 'textarea' },
-                        {
-                            name: 'campaign_id',
-                            label: t('Campaign'),
-                            type: 'select',
-                            options: campaigns.map((campaign: any) => ({ value: campaign.id, label: campaign.name }))
-                        },
-                        { name: 'notes', label: t('Notes'), type: 'textarea' },
-                        {
-                            name: 'assigned_to',
-                            label: t('Assign To'),
-                            type: 'select',
-                            options: users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` })),
-                            hidden: !isOwner
-                        },
-                        {
-                            name: 'status',
-                            label: t('Status'),
-                            type: 'select',
-                            options: [
-                                { value: 'active', label: t('Active') },
-                                { value: 'inactive', label: t('Inactive') }
-                            ],
-                            defaultValue: 'active'
-                        }
-                    ],
-                    modalSize: 'xl'
-                }}
-                initialData={leadInitialData}
-                title={t('Add New Lead')}
-                mode="create"
-            />
+                <CrudFormModal
+                    isOpen={isLeadModalOpen}
+                    onClose={() => setIsLeadModalOpen(false)}
+                    onSubmit={handleLeadFormSubmit}
+                    formConfig={{
+                        fields: [
+                            { name: 'name', label: t('Lead Name'), type: 'text', required: true },
+                            { name: 'email', label: t('Email'), type: 'email' },
+                            { name: 'phone', label: t('Phone'), type: 'tel' },
+                            { name: 'company', label: t('Company'), type: 'text' },
+                            { name: 'account_name', label: t('Account Name'), type: 'text' },
+                            {
+                                name: 'account_industry_id',
+                                label: t('Account Industry'),
+                                type: 'select',
+                                options: accountIndustries.map((industry: any) => ({ value: industry.id, label: industry.name }))
+                            },
+                            { name: 'website', label: t('Website'), type: 'text' },
+                            { name: 'position', label: t('Position'), type: 'text' },
+                            { name: 'value', label: t('Lead Value'), type: 'number', step: '0.01', min: '0' },
+                            {
+                                name: 'lead_status_id',
+                                label: t('Lead Status'),
+                                type: 'select',
+                                required: true,
+                                options: leadStatuses.map((status: any) => ({
+                                    value: status.id,
+                                    label: status.name
+                                }))
+                            },
+                            {
+                                name: 'lead_source_id',
+                                label: t('Lead Source'),
+                                type: 'select',
+                                required: true,
+                                options: leadSources.map((source: any) => ({
+                                    value: source.id,
+                                    label: source.name
+                                }))
+                            },
+                            { name: 'address', label: t('Address'), type: 'textarea' },
+                            {
+                                name: 'campaign_id',
+                                label: t('Campaign'),
+                                type: 'select',
+                                options: campaigns.map((campaign: any) => ({ value: campaign.id, label: campaign.name }))
+                            },
+                            { name: 'notes', label: t('Notes'), type: 'textarea' },
+                            {
+                                name: 'assigned_to',
+                                label: t('Assign To'),
+                                type: 'select',
+                                options: users.map((user: any) => ({ value: user.id, label: `${(user.display_name || user.name)} (${user.email})` })),
+                                hidden: !isOwner
+                            },
+                            {
+                                name: 'status',
+                                label: t('Status'),
+                                type: 'select',
+                                options: [
+                                    { value: 'active', label: t('Active') },
+                                    { value: 'inactive', label: t('Inactive') }
+                                ],
+                                defaultValue: 'active'
+                            }
+                        ],
+                        modalSize: 'xl'
+                    }}
+                    initialData={leadInitialData}
+                    title={t('Add New Lead')}
+                    mode="create"
+                />
 
             </div>
 
