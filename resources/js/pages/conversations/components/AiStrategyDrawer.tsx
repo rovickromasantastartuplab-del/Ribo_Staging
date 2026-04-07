@@ -31,16 +31,16 @@ export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertD
     return (
         <div 
             className={cn(
-                "h-full border-r bg-white dark:bg-slate-950 transition-all duration-300 ease-in-out flex flex-col shrink-0 overflow-hidden relative group shadow-sm",
+                "h-full border-l bg-white dark:bg-slate-950 transition-all duration-300 ease-in-out flex flex-col shrink-0 overflow-hidden relative group shadow-sm",
                 isOpen ? "w-[320px]" : "w-[52px]"
             )}
         >
             {/* Toggle Button (Floating) */}
             <button
                 onClick={onToggle}
-                className="absolute right-1.5 top-4 z-20 h-6 w-6 rounded-full bg-white dark:bg-slate-800 border shadow-md flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                className="absolute left-1.5 top-4 z-20 h-6 w-6 rounded-full bg-white dark:bg-slate-800 border shadow-md flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:scale-110 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
             >
-                {isOpen ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                {isOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
             </button>
 
             {!isOpen ? (
@@ -81,7 +81,7 @@ export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertD
                 </div>
             ) : (
                 /* Full Panel (Expanded State) */
-                <div className="w-[320px] h-full animate-in fade-in slide-in-from-left-2 duration-300">
+                <div className="w-[320px] h-full animate-in fade-in slide-in-from-right-2 duration-300">
                     <ConversationAiPanel 
                         threadId={threadId} 
                         onInsertDraft={onInsertDraft} 

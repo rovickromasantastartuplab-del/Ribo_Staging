@@ -1072,15 +1072,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     />
 
-                    <AiStrategyDrawer 
-                        threadId={selectedThread?.id || null} 
-                        isOpen={isAiDrawerOpen} 
-                        onToggle={() => setIsAiDrawerOpen(!isAiDrawerOpen)} 
-                        onInsertDraft={(body: string) => {
-                            replyEditor?.commands.setContent(body);
-                            setShowCrmModal(false); // Close modal if open
-                        }}
-                    />
 
                     <>
                         {/* Pane 2: Thread list or Calendar */}
@@ -1151,7 +1142,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     <button
                                                         key={thread.id}
                                                         onClick={() => {
-                                                            setSelectedThread(thread);
+                                                            handleSelectThread(thread);
                                                             // We no longer automatically open the CRM Modal here
                                                             // Logic for AI is now handled by the persistent drawer
                                                         }}
@@ -1863,6 +1854,17 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             )}
                         </div>
                     </>
+
+                    <AiStrategyDrawer 
+                        threadId={selectedThread?.id || null} 
+                        isOpen={isAiDrawerOpen} 
+                        onToggle={() => setIsAiDrawerOpen(!isAiDrawerOpen)} 
+                        onInsertDraft={(body: string) => {
+                            replyEditor?.commands.setContent(body);
+                            setShowCrmModal(false); // Close modal if open
+                        }}
+                    />
+
                     {/* Pane 4: CRM Context Modal */}
                     {selectedThread && (
                         <Dialog open={showCrmModal} onOpenChange={setShowCrmModal}>
