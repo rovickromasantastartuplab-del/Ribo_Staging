@@ -69,7 +69,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon } from 'lucide-react';
+import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles } from 'lucide-react';
+import { ConversationAiPanel } from './components/ConversationAiPanel';
+import { getMockTriage } from './utils/mockAiData';
 
 /* ── helpers ───────────────────────────────────────────────── */
 const parseUTC = (dateStr: string) => {
@@ -286,6 +288,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     // CRM Sidebar state
     const [activeSidebarSection, setActiveSidebarSection] = useState<'lead' | 'opportunities' | 'activity'>('lead');
+    const [activeSidebarTab, setActiveSidebarTab] = useState<'crm' | 'ai'>('crm');
     const [expandedOpportunityId, setExpandedOpportunityId] = useState<number | null>(null);
     const [localLeadStatuses, setLocalLeadStatuses] = useState<Record<number, string>>({});
     const [localOppStatuses, setLocalOppStatuses] = useState<Record<number, string>>({});
@@ -1170,6 +1173,16 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                 {t('Contact')}
                                                                             </Badge>
                                                                         )}
+                                                                        {/* AI Intent Badge */}
+                                                                        {(() => {
+                                                                            const aiTriage = getMockTriage(thread.id);
+                                                                            return (
+                                                                                <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5">
+                                                                                    <Sparkles className="h-2 w-2" />
+                                                                                    {t(aiTriage.intent.toUpperCase())}
+                                                                                </Badge>
+                                                                            );
+                                                                        })()}
                                                                     </>
                                                                 )}
 
@@ -1829,31 +1842,58 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </Button>
                                 </div>
 
-                                {/* Section Tabs */}
-                                <div className="flex border-b shrink-0">
-                                    {[
-                                        { key: 'lead' as const, label: t('Lead'), icon: User },
-                                        { key: 'opportunities' as const, label: t('Opportunity'), icon: Briefcase },
-                                    ].map(tab => (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveSidebarSection(tab.key)}
-                                            className={`flex-1 flex flex-col items-center gap-1.5 py-4 text-[10px] font-bold uppercase tracking-[0.15em] transition-all border-b-2 relative ${activeSidebarSection === tab.key
-                                                    ? 'border-primary text-primary bg-primary/5'
-                                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                                                }`}
-                                        >
-                                            <tab.icon className={cn("h-4 w-4 transition-transform", activeSidebarSection === tab.key && "scale-110")} />
-                                            {tab.label}
-                                            {activeSidebarSection === tab.key && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary animate-in fade-in slide-in-from-bottom-1" />
-                                            )}
-                                        </button>
-                                    ))}
+                                {/* Main Navigation Tabs (CRM vs AI) */}
+                                <div className="flex bg-muted/20 p-1.5 gap-1.5 mx-5 my-2 rounded-xl border border-border/10">
+                                    <button
+                                        onClick={() => setActiveSidebarTab('crm')}
+                                        className={cn(
+                                            "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all",
+                                            activeSidebarTab === 'crm' 
+                                                ? "bg-background text-primary shadow-sm border border-border/50" 
+                                                : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        <User className="h-3.5 w-3.5" />
+                                        CRM
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveSidebarTab('ai')}
+                                        className={cn(
+                                            "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all",
+                                            activeSidebarTab === 'ai' 
+                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                                        )}
+                                    >
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        AI Sidekick
+                                    </button>
                                 </div>
 
-                                {/* Section Body */}
-                                <ScrollArea className="flex-1 min-h-0 w-full bg-background/50">
+                                {activeSidebarTab === 'crm' ? (
+                                    <>
+                                        {/* Section Tabs */}
+                                        <div className="flex border-b shrink-0 px-5 bg-background">
+                                            {[
+                                                { key: 'lead' as const, label: t('Lead'), icon: User },
+                                                { key: 'opportunities' as const, label: t('Opportunity'), icon: Briefcase },
+                                            ].map(tab => (
+                                                <button
+                                                    key={tab.key}
+                                                    onClick={() => setActiveSidebarSection(tab.key)}
+                                                    className={`px-6 flex items-center gap-2 py-3 text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 relative ${activeSidebarSection === tab.key
+                                                            ? 'border-primary text-primary shadow-[0_4px_12px_-4px_rgba(var(--primary),0.2)]'
+                                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                                        }`}
+                                                >
+                                                    <tab.icon className={cn("h-3.5 w-3.5 transition-transform", activeSidebarSection === tab.key && "scale-110")} />
+                                                    {tab.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <ScrollArea className="flex-1 min-h-0 w-full bg-background/50">
+                                            {/* (Rest of existing CRM content) */}
 
                                     {/* ═══════════════ LEAD SECTION ═══════════════ */}
                                     {activeSidebarSection === 'lead' && (
@@ -2241,8 +2281,20 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     </div>
                                 )}
 
-                                {/* Activities have been merged into Leads and Opportunities sections */}
-                                </ScrollArea>
+                                        </ScrollArea>
+                                    </>
+                                ) : (
+                                    /* AI Power Ups View */
+                                    <div className="flex-1 flex flex-col min-h-0 bg-muted/5">
+                                        <ConversationAiPanel 
+                                            threadId={selectedThread.id} 
+                                            onInsertDraft={(body: string) => {
+                                                replyEditor?.commands.setContent(body);
+                                                setActiveSidebarTab('crm'); // Optional: switch back or stay
+                                            }}
+                                        />
+                                    </div>
+                                )}
                             </DialogContent>
                         </Dialog>
                     )}
