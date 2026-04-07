@@ -10,7 +10,8 @@ export interface AiTriageResult {
     priority: 'low' | 'medium' | 'high' | 'urgent';
     suggested_status: string;
     low_risk_resolution: boolean;
-    success_probability: number; // Phase 4: Deal prediction
+    suggested_follow_up: boolean; // Add for new badge
+    success_probability: number;
     behavioral_pulse: 'heating_up' | 'cooling_down' | 'stable'; // Phase 4: Engagement trend
     strategic_action: {
         goal: string;
@@ -45,6 +46,7 @@ export const getMockTriage = (threadId: number): AiTriageResult => {
             : "Customer is reporting a bug in the dashboard where data doesn't refresh automatically.",
         suggested_status: intent === 'sales' ? 'Open' : 'Pending',
         low_risk_resolution: intent === 'spam',
+        suggested_follow_up: threadId % 4 === 0, // Mock follow-up suggest
         success_probability: intent === 'sales' ? 75 + (threadId % 20) : 40,
         behavioral_pulse: intent === 'sales' ? 'heating_up' : 'stable',
         strategic_action: {

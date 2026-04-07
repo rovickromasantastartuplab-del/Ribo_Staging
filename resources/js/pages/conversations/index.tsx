@@ -69,7 +69,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target } from 'lucide-react';
+import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target, ShieldCheck, Bell } from 'lucide-react';
 import ConversationAiPanel from './components/ConversationAiPanel';
 import { getMockTriage } from './utils/mockAiData';
 
@@ -1180,14 +1180,16 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                     const aiTriage = getMockTriage(thread.id);
                                                                     return (
                                                                         <>
-                                                                            <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5 capitalize">
+                                                                            {/* AI Strategic Badges (Phase 4 Compliance) */}
+                                                                            <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5 capitalize shrink-0">
                                                                                 <Sparkles className="w-2.5 h-2.5 fill-current" />
-                                                                                {aiTriage.intent}
+                                                                                {t(aiTriage.intent)}
                                                                             </Badge>
+
                                                                             {/* Success Probability (Gold if >80%) */}
                                                                             <Badge 
                                                                                 variant="outline" 
-                                                                                className={`text-[9px] font-bold px-1 py-0 flex items-center gap-0.5 ${
+                                                                                className={`text-[9px] font-bold px-1 py-0 flex items-center gap-0.5 shrink-0 ${
                                                                                     aiTriage.success_probability > 80 
                                                                                     ? 'bg-amber-100 text-amber-700 border-amber-200' 
                                                                                     : 'bg-indigo-50 text-indigo-600 border-indigo-100'
@@ -1196,6 +1198,22 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                                 <Target className="w-2.5 h-2.5" />
                                                                                 {aiTriage.success_probability}%
                                                                             </Badge>
+
+                                                                            {/* Low Risk Resolution Badge */}
+                                                                            {aiTriage.low_risk_resolution && (
+                                                                                <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-100 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0">
+                                                                                    <ShieldCheck className="w-2.5 h-2.5" />
+                                                                                    {t('Low-risk')}
+                                                                                </Badge>
+                                                                            )}
+
+                                                                            {/* Follow-up Suggested Badge */}
+                                                                            {aiTriage.suggested_follow_up && (
+                                                                                <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-100 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0">
+                                                                                    <Bell className="w-2.5 h-2.5" />
+                                                                                    {t('Follow-up')}
+                                                                                </Badge>
+                                                                            )}
                                                                         </>
                                                                     );
                                                                 })()}
