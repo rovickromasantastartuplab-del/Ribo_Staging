@@ -21,7 +21,7 @@ export const ConversationAiPanel: React.FC<ConversationAiPanelProps> = ({ thread
 
     useEffect(() => {
         if (!threadId) return;
-
+        //hi
         setLoading(true);
         // Simulate background processing for AI
         const timer = setTimeout(() => {
