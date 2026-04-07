@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AiMemorySummary } from '../utils/mockAiData';
-import { History, Heart, AlertCircle, Info } from 'lucide-react';
+import { History, Heart, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AiMemoryCardProps {
@@ -10,6 +10,14 @@ interface AiMemoryCardProps {
 }
 
 export const AiMemoryCard: React.FC<AiMemoryCardProps> = ({ data }) => {
+    const [completedLoops, setCompletedLoops] = React.useState<number[]>([]);
+
+    const toggleLoop = (index: number) => {
+        setCompletedLoops(prev => 
+            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+        );
+    };
+
     const getSentimentIcon = (sentiment: string) => {
         switch (sentiment) {
             case 'positive': return <Heart className="h-3 w-3 text-emerald-500 fill-emerald-500" />;
@@ -52,12 +60,32 @@ export const AiMemoryCard: React.FC<AiMemoryCardProps> = ({ data }) => {
                     <div className="space-y-2">
                         <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Open Loops</span>
                         <div className="space-y-1.5">
-                            {data.open_loops.map((loop, i) => (
-                                <div key={i} className="flex items-start gap-2 bg-muted/10 p-2 rounded-md border border-border/10 italic">
-                                    <div className="h-1 w-1 rounded-full bg-primary mt-1.5 shrink-0" />
-                                    <span className="text-xs text-foreground/70">{loop}</span>
-                                </div>
-                            ))}
+                            {data.open_loops.map((loop, i) => {
+                                const isCompleted = completedLoops.includes(i);
+                                return (
+                                    <button 
+                                        key={i} 
+                                        onClick={() => toggleLoop(i)}
+                                        className={cn(
+                                            "w-full flex items-start gap-2 p-2 rounded-md border border-border/10 italic transition-all text-left group",
+                                            isCompleted ? "bg-emerald-50/20 border-emerald-500/20" : "bg-muted/10"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "h-3 w-3 rounded-sm border mt-0.5 flex items-center justify-center shrink-0 transition-colors",
+                                            isCompleted ? "bg-emerald-500 border-emerald-500" : "border-muted-foreground/30 group-hover:border-primary/50"
+                                        )}>
+                                            {isCompleted && <CheckCircle2 className="h-2 w-2 text-white" />}
+                                        </div>
+                                        <span className={cn(
+                                            "text-xs transition-all",
+                                            isCompleted ? "text-emerald-700/60 line-through" : "text-foreground/70"
+                                        )}>
+                                            {loop}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

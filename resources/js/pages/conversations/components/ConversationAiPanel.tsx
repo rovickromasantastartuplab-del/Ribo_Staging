@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { AiTriageCard } from './AiTriageCard';
+import { cn } from '@/lib/utils';
 import { AiMemoryCard } from './AiMemoryCard';
 import { AiReplyAssistantCard } from './AiReplyAssistantCard';
 import { getMockTriage, getMockMemory, AiTriageResult, AiMemorySummary } from '../utils/mockAiData';
@@ -60,8 +62,32 @@ export const ConversationAiPanel: React.FC<ConversationAiPanelProps> = ({ thread
     }
 
     return (
-        <ScrollArea className="h-full">
-            <div className="p-4 space-y-2">
+        <div className="flex flex-col h-full">
+            <div className="px-4 py-3 border-b flex items-center justify-between bg-muted/10 shrink-0">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">AI Sidekick</h3>
+                </div>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => {
+                        setLoading(true);
+                        setTimeout(() => {
+                            setTriage(getMockTriage(threadId));
+                            setMemory(getMockMemory(threadId));
+                            setLoading(false);
+                            toast.success('Analysis refreshed');
+                        }, 1200);
+                    }}
+                >
+                    <Loader2 className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+                </Button>
+            </div>
+            
+            <ScrollArea className="flex-1">
+                <div className="p-4 space-y-2">
                 {triage && (
                     <AiTriageCard 
                         data={triage} 
@@ -86,6 +112,7 @@ export const ConversationAiPanel: React.FC<ConversationAiPanelProps> = ({ thread
                     </p>
                 </div>
             </div>
-        </ScrollArea>
+            </ScrollArea>
+        </div>
     );
 };

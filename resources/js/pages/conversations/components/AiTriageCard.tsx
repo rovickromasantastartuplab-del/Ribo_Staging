@@ -5,6 +5,14 @@ import { Button } from '@/components/ui/button';
 import { AiTriageResult } from '../utils/mockAiData';
 import { Zap, AlertCircle, CheckCircle2, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger,
+    DropdownMenuLabel,
+    DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 
 interface AiTriageCardProps {
     data: AiTriageResult;
@@ -79,9 +87,24 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({ data, onApply }) => 
                     <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
                     Apply All
                 </Button>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 border border-border">
-                    <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 border border-border">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel className="text-[10px] font-bold uppercase text-muted-foreground">{data.intent} Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-xs" onClick={() => onApply?.('status')}>
+                            Apply Status: {data.suggested_status}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-xs" onClick={() => onApply?.('priority')}>
+                            Apply Priority: {data.priority}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </CardFooter>
         </Card>
     );
