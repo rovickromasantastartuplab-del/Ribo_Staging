@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import AiTriageCard from './AiTriageCard';
 import AiMemoryCard from './AiMemoryCard';
 import AiReplyAssistantCard from './AiReplyAssistantCard';
-import AiAutomationCard from './AiAutomationCard';
 import { getMockTriage, getMockMemory } from '../utils/mockAiData';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -109,10 +108,6 @@ export default function ConversationAiPanel({ threadId, onInsertDraft }: Convers
                         data={memory} 
                         triageData={triage} 
                     />
-
-                    <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
-                        <AiAutomationCard />
-                    </div>
                 </div>
             </ScrollArea>
         </div>

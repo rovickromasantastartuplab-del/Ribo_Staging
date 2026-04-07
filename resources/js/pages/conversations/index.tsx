@@ -1178,44 +1178,38 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 {/* AI Strategic Badges (Phase 4) */}
                                                                 {(() => {
                                                                     const aiTriage = getMockTriage(thread.id);
-                                                                    return (
-                                                                        <>
-                                                                            {/* AI Strategic Badges (Phase 4 Compliance) */}
-                                                                            <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5 capitalize shrink-0">
-                                                                                <Sparkles className="w-2.5 h-2.5 fill-current" />
-                                                                                {t(aiTriage.intent)}
-                                                                            </Badge>
-
-                                                                            {/* Success Probability (Gold if >80%) */}
+                                                                            {/* AI Strategic Badges (Cleaned: Non-Redundant) */}
                                                                             <Badge 
                                                                                 variant="outline" 
-                                                                                className={`text-[9px] font-bold px-1 py-0 flex items-center gap-0.5 shrink-0 ${
-                                                                                    aiTriage.success_probability > 80 
-                                                                                    ? 'bg-amber-100 text-amber-700 border-amber-200' 
-                                                                                    : 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                                                                                }`}
+                                                                                className={cn(
+                                                                                    "text-[9px] font-bold px-1 py-0 flex items-center gap-0.5 capitalize shrink-0",
+                                                                                    aiTriage.priority === 'urgent' || aiTriage.priority === 'high' 
+                                                                                        ? "bg-rose-50 text-rose-700 border-rose-100 italic shadow-[0_0_8px_rgba(244,63,94,0.1)]" 
+                                                                                        : aiTriage.priority === 'medium'
+                                                                                            ? "bg-amber-50 text-amber-700 border-amber-100"
+                                                                                            : "bg-primary/5 text-primary border-primary/20"
+                                                                                )}
                                                                             >
-                                                                                <Target className="w-2.5 h-2.5" />
-                                                                                {aiTriage.success_probability}%
+                                                                                <Sparkles className={cn("w-2.5 h-2.5 fill-current", (aiTriage.priority === 'urgent' || aiTriage.priority === 'high') && "animate-pulse")} />
+                                                                                {t(aiTriage.intent)}
+                                                                                {(aiTriage.priority === 'urgent' || aiTriage.priority === 'high') && <span className="ml-1 ml-0.5 opacity-70">!</span>}
                                                                             </Badge>
 
-                                                                            {/* Low Risk Resolution Badge */}
-                                                                            {aiTriage.low_risk_resolution && (
+                                                                            {/* Low Risk Resolution Badge (Hidden on Spam) */}
+                                                                            {aiTriage.low_risk_resolution && aiTriage.intent !== 'spam' && (
                                                                                 <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-100 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0">
                                                                                     <ShieldCheck className="w-2.5 h-2.5" />
                                                                                     {t('Low-risk')}
                                                                                 </Badge>
                                                                             )}
 
-                                                                            {/* Follow-up Suggested Badge */}
+                                                                            {/* Follow-up Suggested Badge (Founder Top Priority) */}
                                                                             {aiTriage.suggested_follow_up && (
                                                                                 <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-100 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0">
                                                                                     <Bell className="w-2.5 h-2.5" />
                                                                                     {t('Follow-up')}
                                                                                 </Badge>
                                                                             )}
-                                                                        </>
-                                                                    );
                                                                 })()}
 
                                                                 {thread.priority && (
