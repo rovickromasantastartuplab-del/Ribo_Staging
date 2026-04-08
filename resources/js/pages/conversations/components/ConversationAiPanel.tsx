@@ -58,7 +58,7 @@ export default function ConversationAiPanel({ threadId, onInsertDraft }: Convers
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
-                        <h2 className="font-bold text-slate-800 dark:text-slate-100">AI Sidekick</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-slate-100">AI Assistant</h2>
                     </div>
                     <Button 
                         variant="ghost" 
