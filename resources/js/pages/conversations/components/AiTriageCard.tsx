@@ -170,25 +170,25 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
 
                 <Separator className="my-2 opacity-50" />
 
-                {/* New: Executive Narrative Reporting Section */}
+                {/* New: AI Summary Reports Section */}
                 <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-500">
                             <Layout className="w-3 h-3" />
-                            Executive Narrative Reports
+                            AI Summary Reports
                         </div>
                         <Badge variant="outline" className="text-[9px] font-black bg-indigo-500/10 text-indigo-600 border-none px-1.5 py-0">PROTOTYPE</Badge>
                     </div>
 
                     <div className="space-y-2.5">
                         <div className="space-y-1">
-                            <label className="text-[9px] font-bold text-muted-foreground uppercase ml-1">Select Reporting Stream</label>
+                            <label className="text-[9px] font-bold text-muted-foreground uppercase ml-1">Select Report Scope</label>
                             <Select value={selectedOppId} onValueChange={setSelectedOppId}>
                                 <SelectTrigger className="h-8 text-[11px] bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-indigo-500">
                                     <SelectValue placeholder="Select context" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="full-history" className="text-xs font-semibold italic">Full Lead Activity Story</SelectItem>
+                                    <SelectItem value="full-history" className="text-xs font-semibold italic">Full Activity History</SelectItem>
                                     <DropdownMenuSeparator />
                                     {opportunities.map(opp => (
                                         <SelectItem key={opp.id} value={opp.id.toString()} className="text-xs">
@@ -205,10 +205,10 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                             className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-2.5 shadow-lg shadow-indigo-100 dark:shadow-none transition-all hover:scale-[1.01] overflow-hidden group relative"
                             onClick={() => {
                                 setIsExporting(true);
-                                const toastId = toast.loading("AI is weaving activity stream into a narrative story...");
+                                const toastId = toast.loading("AI is generating your summary report...");
                                 setTimeout(() => {
                                     toast.dismiss(toastId);
-                                    toast.success("Executive Narrative (PDF) generated and downloaded.");
+                                    toast.success("Summary Report (PDF) generated and downloaded.");
                                     setIsExporting(false);
                                 }, 2500);
                             }}
@@ -219,13 +219,13 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                             ) : (
                                 <>
                                     <BookOpen className="w-4 h-4 text-indigo-200 group-hover:scale-110 transition-transform" />
-                                    Download Storyboard (PDF)
+                                    Download Summary Report (PDF)
                                     <Download className="w-3.5 h-3.5 ml-auto opacity-50 group-hover:translate-y-0.5 transition-transform" />
                                 </>
                             )}
                         </Button>
                         <p className="text-[9px] text-center text-muted-foreground italic px-2">
-                            Summarizes emails, calls, and updates into a narrative-style stakeholder brief.
+                            Summarizes your deal history into a clear, easy-to-read brief.
                         </p>
                     </div>
                 </div>
