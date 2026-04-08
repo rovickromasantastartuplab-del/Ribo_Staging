@@ -85,7 +85,7 @@ export default function ConversationAiPanel({ threadId, onInsertDraft }: Convers
                     <div className="flex-1 p-2 rounded-lg bg-slate-500/5 border border-slate-500/10 flex items-center justify-between">
                         <div className="flex items-center gap-1.5 min-w-0">
                             <Activity className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                            <span className="text-[10px] font-bold uppercase text-slate-500 truncate tracking-tight">Pulse</span>
+                            <span className="text-[10px] font-bold uppercase text-slate-500 truncate tracking-tight">Mood</span>
                         </div>
                         <Badge variant="outline" className={`text-[10px] h-5 border-none ${triage.behavioral_pulse === 'heating_up' ? 'bg-orange-500/10 text-orange-600' : 'bg-slate-500/10 text-slate-600'}`}>
                             {triage.behavioral_pulse === 'heating_up' ? '🔥 HOT' : 'STABLE'}
