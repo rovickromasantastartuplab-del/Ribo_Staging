@@ -32,6 +32,13 @@ export interface AiDraft {
     body: string;
 }
 
+export interface AiOpportunity {
+    id: number;
+    name: string;
+    value: number;
+    stage: string;
+}
+
 export const getMockTriage = (threadId: number): AiTriageResult => {
     // Deterministic mock data based on threadId
     const intents = ['sales', 'support', 'billing', 'spam'] as const;
@@ -138,4 +145,22 @@ export const getMockScrapedLead = (threadId: number): ScrapedLead => {
     ];
 
     return mocks[index];
+};
+
+export const getMockOpportunities = (threadId: number): AiOpportunity[] => {
+    return [
+        { id: 1, name: "Enterprise License - FY26", value: 45000, stage: "Discovery" },
+        { id: 2, name: "Custom API Integration", value: 12500, stage: "Proposal" },
+        { id: 3, name: "Consulting & Onboarding", value: 5000, stage: "Closed-Won" }
+    ];
+};
+
+export const getMockNarrativeStory = (id: number | string): string => {
+    return `
+        <div class="space-y-4">
+            <p>The journey with this account began 3 months ago with a high-intent inquiry regarding <strong>data scalability</strong>. After an initial discovery call, the technical team identified a significant friction point in their legacy system.</p>
+            <p>The engagement peaked last week when the AI detected a shift in stakeholder sentiment from <em>"Cautious"</em> to <em>"Urgent"</em>, prompting a strategic follow-up with a 15% incentive.</p>
+            <p>The deal is currently in the <strong>final negotiation phase</strong>, with high probability of closing by month-end.</p>
+        </div>
+    `.trim();
 };
