@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import AiTriageCard from './AiTriageCard';
 import AiMemoryCard from './AiMemoryCard';
-import AiReplyAssistantCard from './AiReplyAssistantCard';
+import AiStrategicActionCard from './AiStrategicActionCard';
 import { getMockTriage, getMockMemory } from '../utils/mockAiData';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -96,8 +96,9 @@ export default function ConversationAiPanel({ threadId, onInsertDraft }: Convers
 
             <ScrollArea className="flex-1">
                 <div className="p-4 space-y-4 pb-20">
-                    {/* Approach 3: Stratety is embedded in Reply Assistant, which sits at top of content list */}
-                    {/* Intelligence Section */}
+                    <AiStrategicActionCard 
+                        data={triage?.strategic_action} 
+                    />
 
                     <AiTriageCard 
                         data={triage} 

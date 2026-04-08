@@ -85,25 +85,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                 )}
             </CardHeader>
             <CardContent className="space-y-4">
-                {/* Phase 4 Strategic Move */}
-                {data.strategic_action && (
-                    <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10 space-y-2">
-                        <div className="flex items-center gap-2 text-indigo-500">
-                            <Zap className="w-3.5 h-3.5 fill-current" />
-                            <span className="text-xs font-bold uppercase tracking-tight">AI Suggested Action</span>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 italic">
-                                "{data.strategic_action.recommendation}"
-                            </p>
-                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                                <Info className="w-3 h-3" />
-                                <span>Goal: {data.strategic_action.goal} • {data.strategic_action.reason}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 <div className="flex flex-wrap gap-2">
                     <Badge variant="outline" className={getIntentColor(data.intent)}>
                         {data.intent.toUpperCase()}
@@ -160,16 +141,12 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                     </DropdownMenu>
                 </div>
 
-                <Separator className="my-2 opacity-50" />
-
-                {/* New: AI Summary Reports Section */}
-                <div className="space-y-3 pt-2">
+                <Separator className="my-2 opacity-50" />                <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-500">
                             <Layout className="w-3 h-3" />
                             AI Summary Reports
                         </div>
-                        <Badge variant="outline" className="text-[9px] font-black bg-indigo-500/10 text-indigo-600 border-none px-1.5 py-0">PROTOTYPE</Badge>
                     </div>
 
                     <div className="space-y-2.5">
@@ -200,7 +177,7 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                 const toastId = toast.loading("AI is generating your summary report...");
                                 setTimeout(() => {
                                     toast.dismiss(toastId);
-                                    toast.success("Summary Report (PDF) generated and downloaded.");
+                                    toast.success("Summary Report generated and downloaded.");
                                     setIsExporting(false);
                                 }, 2500);
                             }}
@@ -211,7 +188,7 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                             ) : (
                                 <>
                                     <BookOpen className="w-4 h-4 text-indigo-200 group-hover:scale-110 transition-transform" />
-                                    Download Summary Report (PDF)
+                                    Download Summary Report
                                     <Download className="w-3.5 h-3.5 ml-auto opacity-50 group-hover:translate-y-0.5 transition-transform" />
                                 </>
                             )}

@@ -37,6 +37,7 @@ export default function EditorAiAssistant({
     const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [open, setOpen] = useState(false);
+    const [tone, setTone] = useState<'professional' | 'friendly'>('professional');
 
     const handleGenerate = () => {
         if (!threadId || !prompt.trim()) return;
@@ -44,13 +45,12 @@ export default function EditorAiAssistant({
         
         // Simulate AI processing
         setTimeout(() => {
-            // In a real app, we'd pass the prompt to the API
-            // For now, we use our smart mock that takes a "hint"
-            const draft = getMockDraft(prompt.toLowerCase().includes('friendly') ? 'friendly' : 'professional');
+            // Use the user-selected tone
+            const draft = getMockDraft(tone);
             setGeneratedDraft(draft.body);
             setIsGenerating(false);
             setView('output');
-            toast.success("Response generated successfully");
+            toast.success(`Generated ${tone} response`);
         }, 1500);
     };
 
@@ -130,16 +130,41 @@ export default function EditorAiAssistant({
                                 />
                             </div>
 
-                            <div className="flex justify-end">
+                             <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-0.5 border border-slate-200 dark:border-slate-800">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={cn(
+                                            "h-7 px-3 text-[10px] font-bold rounded-md transition-all",
+                                            tone === 'professional' ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600" : "text-slate-500"
+                                        )}
+                                        onClick={() => setTone('professional')}
+                                    >
+                                        Professional
+                                    </Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={cn(
+                                            "h-7 px-3 text-[10px] font-bold rounded-md transition-all",
+                                            tone === 'friendly' ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600" : "text-slate-500"
+                                        )}
+                                        onClick={() => setTone('friendly')}
+                                    >
+                                        Friendly
+                                    </Button>
+                                </div>
+
                                 <Button 
-                                    className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 shadow-sm font-bold text-[11px] gap-2 transition-all active:scale-95 disabled:opacity-50"
+                                    className="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 dark:shadow-none font-bold text-[11px] gap-2 transition-all active:scale-95 disabled:opacity-50 ml-auto"
                                     onClick={handleGenerate}
                                     disabled={isGenerating || !prompt.trim()}
                                 >
                                     {isGenerating ? (
-                                        <Wand2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+                                        <Wand2 className="w-3.5 h-3.5 animate-spin text-white/70" />
                                     ) : (
-                                        <RefreshCw className="w-3.5 h-3.5 text-indigo-500 group-hover:rotate-180 transition-transform duration-500" />
+                                        <RefreshCw className="w-3.5 h-3.5 text-indigo-200" />
                                     )}
                                     Generate
                                 </Button>
