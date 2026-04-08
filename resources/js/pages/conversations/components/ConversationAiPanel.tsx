@@ -13,9 +13,10 @@ import { toast } from 'sonner';
 interface ConversationAiPanelProps {
     threadId: number;
     onInsertDraft: (content: string) => void;
+    onMagicConvert?: () => void;
 }
 
-export default function ConversationAiPanel({ threadId, onInsertDraft }: ConversationAiPanelProps) {
+export default function ConversationAiPanel({ threadId, onInsertDraft, onMagicConvert }: ConversationAiPanelProps) {
     const [loading, setLoading] = useState(true);
     const [triage, setTriage] = useState<any>(null);
     const [memory, setMemory] = useState<any>(null);
@@ -102,7 +103,10 @@ export default function ConversationAiPanel({ threadId, onInsertDraft }: Convers
                         onInsertDraft={onInsertDraft} 
                     />
 
-                    <AiTriageCard data={triage} />
+                    <AiTriageCard 
+                        data={triage} 
+                        onMagicConvert={onMagicConvert}
+                    />
                     
                     <AiMemoryCard 
                         data={memory} 

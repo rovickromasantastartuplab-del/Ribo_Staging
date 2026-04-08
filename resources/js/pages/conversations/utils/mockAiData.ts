@@ -93,3 +93,49 @@ export const getMockMemory = (threadId: number): AiMemorySummary => {
 export const getMockDraft = (tone: string): AiDraft => {
     return mockDrafts[tone] || mockDrafts['professional'];
 };
+
+export interface ScrapedLead {
+    name: string;
+    email: string;
+    company: string;
+    phone: string;
+    estimated_value: number;
+    industry_id?: number;
+    source_id?: number;
+}
+
+export const getMockScrapedLead = (threadId: number): ScrapedLead => {
+    // Deterministic mock based on threadId % 3
+    const index = threadId % 3;
+    const mocks: ScrapedLead[] = [
+        {
+            name: "John Carter",
+            email: "j.carter@acmecorp.com",
+            company: "Acme Corp",
+            phone: "+1 (555) 902-1234",
+            estimated_value: 15000,
+            industry_id: 2, // Technology
+            source_id: 3 // Email/Sync
+        },
+        {
+            name: "Sarah Jenkins",
+            email: "sjenkins@devsystems.io",
+            company: "DevSystems.io",
+            phone: "+44 20 7946 0123",
+            estimated_value: 4500,
+            industry_id: 5, // SaaS
+            source_id: 3
+        },
+        {
+            name: "Michael Chen",
+            email: "mchen@globalogistics.net",
+            company: "Global Logistics Net",
+            phone: "+65 6743 1234",
+            estimated_value: 28000,
+            industry_id: 8, // Logistics
+            source_id: 3
+        }
+    ];
+
+    return mocks[index];
+};

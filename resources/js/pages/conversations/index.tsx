@@ -72,7 +72,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target, ShieldCheck, Bell, Flame } from 'lucide-react';
 import ConversationAiPanel from './components/ConversationAiPanel';
 import AiStrategyDrawer from './components/AiStrategyDrawer';
-import { getMockTriage } from './utils/mockAiData';
+import { getMockTriage, getMockScrapedLead } from './utils/mockAiData';
 
 /* ── helpers ───────────────────────────────────────────────── */
 const parseUTC = (dateStr: string) => {
@@ -459,6 +459,34 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
     const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
     const [leadInitialData, setLeadInitialData] = useState<any>(null);
+
+    const handleMagicLeadConversion = () => {
+        if (!selectedThread) return;
+
+        // 1. Show professional analysis toast
+        const toastId = toast.loading(t('AI is analyzing conversation history for CRM details...'));
+
+        // 2. Simulate scraping latency
+        setTimeout(() => {
+            const scrapedData = getMockScrapedLead(selectedThread.id);
+            
+            setLeadInitialData({
+                name: scrapedData.name,
+                email: scrapedData.email,
+                company: scrapedData.company,
+                phone: scrapedData.phone,
+                email_thread_id: selectedThread.id,
+                // These are hints for the form fields
+                estimated_value: scrapedData.estimated_value,
+                account_industry_id: scrapedData.industry_id,
+                lead_source_id: scrapedData.source_id
+            });
+
+            toast.dismiss(toastId);
+            toast.success(t('AI Scrape Complete: Lead details extracted.'));
+            setIsLeadModalOpen(true);
+        }, 1500);
+    };
 
     const handleAddAsLead = () => {
         if (!selectedThread) return;
@@ -1863,6 +1891,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             replyEditor?.commands.setContent(body);
                             setShowCrmModal(false); // Close modal if open
                         }}
+                        onMagicConvert={handleMagicLeadConversion}
                     />
 
                     {/* Pane 4: CRM Context Modal */}

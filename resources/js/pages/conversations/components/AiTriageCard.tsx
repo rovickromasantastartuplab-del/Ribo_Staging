@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, Info, CheckCircle2, TrendingUp, Target, Zap, MoreHorizontal } from 'lucide-react';
+import { BrainCircuit, Info, CheckCircle2, TrendingUp, Target, Zap, MoreHorizontal, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -16,9 +16,10 @@ import { AiTriageResult } from '../utils/mockAiData';
 
 interface AiTriageCardProps {
     data: AiTriageResult;
+    onMagicConvert?: () => void;
 }
 
-export default function AiTriageCard({ data }: AiTriageCardProps) {
+export default function AiTriageCard({ data, onMagicConvert }: AiTriageCardProps) {
     const getIntentColor = (intent: string) => {
         switch (intent.toLowerCase()) {
             case 'sales': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
@@ -139,6 +140,18 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
+
+                {/* Magic Convert Action */}
+                {!data.low_risk_resolution && onMagicConvert && (
+                    <Button 
+                        size="sm" 
+                        className="w-full h-9 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-2 shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-[1.01] active:scale-95 group"
+                        onClick={onMagicConvert}
+                    >
+                        <Sparkles className="w-4 h-4 text-indigo-200 group-hover:animate-pulse" />
+                        Magic Convert to Lead
+                    </Button>
+                )}
             </CardContent>
         </Card>
     );
