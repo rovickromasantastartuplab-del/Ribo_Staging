@@ -37,15 +37,6 @@ export default function AiStrategicActionCard({ data }: AiStrategicActionCardPro
                         </span>
                     </div>
                 </div>
-                
-                <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="w-full h-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] gap-2 shadow-md shadow-indigo-100 dark:shadow-none transition-all active:scale-95"
-                    onClick={() => toast.success(`Strategic Action: ${data.goal} initiated.`)}
-                >
-                    Apply Strategy
-                </Button>
             </CardContent>
         </Card>
     );

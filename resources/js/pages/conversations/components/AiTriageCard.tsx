@@ -157,7 +157,9 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                     <SelectValue placeholder="Select context" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="full-history" className="text-xs font-semibold italic">Full Activity History</SelectItem>
+                                    <SelectItem value="overall" className="text-xs font-semibold italic">Full Relationship Narrative (Leads & All Opportunities)</SelectItem>
+                                    <SelectItem value="lead-only" className="text-xs">Contact Interaction History</SelectItem>
+                                    <SelectItem value="all-opps" className="text-xs">Consolidated Opportunity Summary</SelectItem>
                                     <DropdownMenuSeparator />
                                     {opportunities.map(opp => (
                                         <SelectItem key={opp.id} value={opp.id.toString()} className="text-xs">
