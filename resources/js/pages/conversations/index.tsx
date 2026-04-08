@@ -72,6 +72,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target, ShieldCheck, Bell, Flame } from 'lucide-react';
 import ConversationAiPanel from './components/ConversationAiPanel';
 import AiStrategyDrawer from './components/AiStrategyDrawer';
+import EditorAiAssistant from './components/EditorAiAssistant';
 import { getMockTriage, getMockScrapedLead } from './utils/mockAiData';
 
 /* ── helpers ───────────────────────────────────────────────── */
@@ -1848,6 +1849,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         disabled={submittingReply || selectedThread.status === 'Archive'}
                                                         onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()}
                                                     />
+                                                    <div className="w-px h-4 bg-border mx-1" />
+                                                    <EditorAiAssistant 
+                                                        threadId={selectedThread?.id}
+                                                        disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                        onInsertDraft={(body) => {
+                                                            replyEditor?.commands.setContent(body);
+                                                        }}
+                                                        onAiConvert={handleAiLeadConversion}
+                                                    />
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Button
@@ -1891,7 +1901,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             replyEditor?.commands.setContent(body);
                             setShowCrmModal(false); // Close modal if open
                         }}
-                        onAiConvert={handleAiLeadConversion}
                     />
 
                     {/* Pane 4: CRM Context Modal */}

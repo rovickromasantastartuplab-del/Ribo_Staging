@@ -13,10 +13,9 @@ import { toast } from 'sonner';
 interface ConversationAiPanelProps {
     threadId: number;
     onInsertDraft: (content: string) => void;
-    onAiConvert?: () => void;
 }
 
-export default function ConversationAiPanel({ threadId, onInsertDraft, onAiConvert }: ConversationAiPanelProps) {
+export default function ConversationAiPanel({ threadId, onInsertDraft }: ConversationAiPanelProps) {
     const [loading, setLoading] = useState(true);
     const [triage, setTriage] = useState<any>(null);
     const [memory, setMemory] = useState<any>(null);
@@ -98,14 +97,10 @@ export default function ConversationAiPanel({ threadId, onInsertDraft, onAiConve
             <ScrollArea className="flex-1">
                 <div className="p-4 space-y-4 pb-20">
                     {/* Approach 3: Stratety is embedded in Reply Assistant, which sits at top of content list */}
-                    <AiReplyAssistantCard 
-                        triageData={triage} 
-                        onInsertDraft={onInsertDraft} 
-                    />
+                    {/* Intelligence Section */}
 
                     <AiTriageCard 
                         data={triage} 
-                        onAiConvert={onAiConvert}
                     />
                     
                     <AiMemoryCard 
