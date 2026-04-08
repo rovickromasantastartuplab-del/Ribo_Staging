@@ -9,10 +9,10 @@ interface AiStrategyDrawerProps {
     isOpen: boolean;
     onToggle: () => void;
     onInsertDraft: (content: string) => void;
-    onMagicConvert?: () => void;
+    onAiConvert?: () => void;
 }
 
-export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertDraft, onMagicConvert }: AiStrategyDrawerProps) {
+export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertDraft, onAiConvert }: AiStrategyDrawerProps) {
     // Get triage data for the slim bar preview
     const triage = threadId ? getMockTriage(threadId) : null;
 
@@ -86,7 +86,7 @@ export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertD
                     <ConversationAiPanel 
                         threadId={threadId} 
                         onInsertDraft={onInsertDraft} 
-                        onMagicConvert={onMagicConvert}
+                        onAiConvert={onAiConvert}
                     />
                 </div>
             )}

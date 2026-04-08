@@ -16,10 +16,10 @@ import { AiTriageResult } from '../utils/mockAiData';
 
 interface AiTriageCardProps {
     data: AiTriageResult;
-    onMagicConvert?: () => void;
+    onAiConvert?: () => void;
 }
 
-export default function AiTriageCard({ data, onMagicConvert }: AiTriageCardProps) {
+export default function AiTriageCard({ data, onAiConvert }: AiTriageCardProps) {
     const getIntentColor = (intent: string) => {
         switch (intent.toLowerCase()) {
             case 'sales': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
@@ -141,15 +141,15 @@ export default function AiTriageCard({ data, onMagicConvert }: AiTriageCardProps
                     </DropdownMenu>
                 </div>
 
-                {/* Magic Convert Action */}
-                {!data.low_risk_resolution && onMagicConvert && (
+                {/* AI-Powered Conversion Action */}
+                {!data.low_risk_resolution && onAiConvert && (
                     <Button 
                         size="sm" 
                         className="w-full h-9 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-2 shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-[1.01] active:scale-95 group"
-                        onClick={onMagicConvert}
+                        onClick={onAiConvert}
                     >
                         <Sparkles className="w-4 h-4 text-indigo-200 group-hover:animate-pulse" />
-                        Magic Convert to Lead
+                        AI-Powered Conversion
                     </Button>
                 )}
             </CardContent>

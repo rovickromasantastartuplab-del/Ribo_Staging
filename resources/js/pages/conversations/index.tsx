@@ -460,7 +460,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
     const [leadInitialData, setLeadInitialData] = useState<any>(null);
 
-    const handleMagicLeadConversion = () => {
+    const handleAiLeadConversion = () => {
         if (!selectedThread) return;
 
         // 1. Show professional analysis toast
@@ -1891,7 +1891,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             replyEditor?.commands.setContent(body);
                             setShowCrmModal(false); // Close modal if open
                         }}
-                        onMagicConvert={handleMagicLeadConversion}
+                        onAiConvert={handleAiLeadConversion}
                     />
 
                     {/* Pane 4: CRM Context Modal */}
