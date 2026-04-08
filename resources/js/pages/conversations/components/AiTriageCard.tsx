@@ -101,14 +101,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                 <span>Goal: {data.strategic_action.goal} • {data.strategic_action.reason}</span>
                             </div>
                         </div>
-                        <Button 
-                            variant="secondary" 
-                            size="sm" 
-                            className="w-full mt-2 h-7 text-[10px] bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 hover:bg-slate-50"
-                            onClick={() => toast.success(`Action Accepted: ${data.strategic_action.goal}`)}
-                        >
-                            Accept Suggestion
-                        </Button>
                     </div>
                 )}
 
@@ -224,9 +216,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                 </>
                             )}
                         </Button>
-                        <p className="text-[9px] text-center text-muted-foreground italic px-2">
-                            Summarizes your deal history into a clear, easy-to-read brief.
-                        </p>
                     </div>
                 </div>
             </CardContent>
