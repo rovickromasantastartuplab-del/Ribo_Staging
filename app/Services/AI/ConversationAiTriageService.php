@@ -23,6 +23,12 @@ class ConversationAiTriageService
             ->first();
 
         if ($existing) {
+            // Auto-refresh if the thread has new activity since the last analysis (with 5s safety buffer)
+            if ($thread->last_message_at && $existing->analyzed_at) {
+                if ($thread->last_message_at->addSeconds(5)->isAfter($existing->analyzed_at)) {
+                    return $this->refresh($thread, $companyId);
+                }
+            }
             return $existing;
         }
 

@@ -24,15 +24,28 @@ class ConversationAiMemoryService
             ->latest('id')
             ->first();
 
-        if (!$summary) {
+        if ($summary) {
+            // Auto-refresh if the contact has new activity since the last summary (with 5s safety buffer)
+            $latestActivity = $contact->last_inbound_at;
+            $latestThread = $contact->emailThreads()->first();
+            if ($latestThread && (!$latestActivity || $latestThread->last_message_at?->isAfter($latestActivity))) {
+                $latestActivity = $latestThread->last_message_at;
+            }
+
+            if ($latestActivity && $summary->summarized_at && $latestActivity->addSeconds(5)->isAfter($summary->summarized_at)) {
+                $generated = $this->generateSummary($contact, $companyId);
+                $summary = $generated['summary'];
+                $telemetryMetadata = $generated['metadata'];
+            } else {
+                $telemetryMetadata = [
+                    'prompt_version' => (string) ($summary->prompt_version ?? ''),
+                    'source' => 'cached',
+                ];
+            }
+        } else {
             $generated = $this->generateSummary($contact, $companyId);
             $summary = $generated['summary'];
             $telemetryMetadata = $generated['metadata'];
-        } else {
-            $telemetryMetadata = [
-                'prompt_version' => (string) ($summary->prompt_version ?? ''),
-                'source' => 'cached',
-            ];
         }
 
         $tasks = AiTask::query()
