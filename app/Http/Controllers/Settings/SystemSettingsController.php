@@ -161,16 +161,22 @@ class SystemSettingsController extends Controller
 
         try {
             $validated = $request->validate([
-                'chatgptKey' => 'required|string',
-                'chatgptModel' => 'required|string',
+                'chatgptKey' => 'nullable|string',
+                'chatgptModel' => 'nullable|string',
                 'ai_conversation_enabled' => 'nullable|boolean',
                 'ai_conversation_api_key' => 'nullable|string',
                 'ai_conversation_model' => 'nullable|string',
                 'ai_conversation_timeout_seconds' => 'nullable|integer|min:5|max:120',
             ]);
 
-            updateSetting('chatgptKey', $validated['chatgptKey']);
-            updateSetting('chatgptModel', $validated['chatgptModel']);
+            if (isset($validated['chatgptKey']) && trim((string) $validated['chatgptKey']) !== '') {
+                updateSetting('chatgptKey', $validated['chatgptKey']);
+            }
+
+            if (isset($validated['chatgptModel']) && trim((string) $validated['chatgptModel']) !== '') {
+                updateSetting('chatgptModel', $validated['chatgptModel']);
+            }
+
             updateSetting('ai_conversation_enabled', ($validated['ai_conversation_enabled'] ?? false) ? '1' : '0');
             if (isset($validated['ai_conversation_api_key']) && trim((string) $validated['ai_conversation_api_key']) !== '') {
                 updateSetting('ai_conversation_api_key', $validated['ai_conversation_api_key']);
