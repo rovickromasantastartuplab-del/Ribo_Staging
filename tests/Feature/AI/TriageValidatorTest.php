@@ -46,6 +46,9 @@ class TriageValidatorTest extends TestCase
             'success_probability' => 80,
             'behavioral_pulse' => 'stable',
             'summary' => 'Bad recommendation test.',
+            'thread_state' => 'active',
+            'relationship_health' => 'neutral',
+            'actionability' => 'monitor',
             'strategic_action_json' => [
                 'goal' => 'Test',
                 'reason' => 'Test',
@@ -73,6 +76,9 @@ class TriageValidatorTest extends TestCase
             'success_probability' => 100,
             'behavioral_pulse' => 'stable',
             'summary' => 'Semantic mismatch test.',
+            'thread_state' => 'active',
+            'relationship_health' => 'neutral',
+            'actionability' => 'monitor',
             'strategic_action_json' => [
                 'goal' => 'Test',
                 'reason' => 'Test',
@@ -97,6 +103,9 @@ class TriageValidatorTest extends TestCase
             'success_probability' => 90,
             'behavioral_pulse' => 'stable',
             'summary' => 'Urgency inflation test.',
+            'thread_state' => 'active',
+            'relationship_health' => 'neutral',
+            'actionability' => 'monitor',
             'strategic_action_json' => [
                 'goal' => 'Test',
                 'reason' => 'Test',
@@ -122,6 +131,9 @@ class TriageValidatorTest extends TestCase
             'success_probability' => 85,
             'behavioral_pulse' => 'heating_up',
             'summary' => 'Valid expert output.',
+            'thread_state' => 'active',
+            'relationship_health' => 'positive',
+            'actionability' => 'act_now',
             'strategic_action_json' => [
                 'goal' => 'Book demo',
                 'reason' => 'High intent',

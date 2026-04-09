@@ -68,22 +68,31 @@ class ConversationAiTriageController extends Controller
 
     private function transform(AiTriageResult $result): array
     {
-        $priority = strtolower((string) ($result->priority ?? ''));
-        $suggestedStatus = in_array($priority, ['high', 'urgent'], true) ? 'Open' : 'Pending';
+        $statusMap = [
+            'active' => 'Open',
+            'nurturing' => 'Pending',
+            'stalled' => 'Pending',
+            'objection' => 'At Risk',
+            'misaligned' => 'At Risk',
+            'closed_lost' => 'Closed Lost',
+            'spam' => 'Ignored',
+            'non_commercial' => 'Support/Info',
+        ];
 
         return [
             'id' => $result->id,
             'email_thread_id' => $result->email_thread_id,
             'intent' => $result->intent,
-            'intent_confidence' => $result->intent_confidence,
+            'intent_confidence' => (int) $result->intent_confidence,
             'priority' => $result->priority,
-            'suggested_status' => $suggestedStatus,
-            'success_probability' => $result->success_probability,
+            'thread_state' => $result->thread_state,
+            'relationship_health' => $result->relationship_health,
+            'actionability' => $result->actionability,
+            'ui_status' => $statusMap[$result->thread_state] ?? 'Pending',
+            'success_probability' => (int) $result->success_probability,
             'behavioral_pulse' => $result->behavioral_pulse,
             'summary' => $result->summary,
             'strategic_action' => $result->strategic_action_json,
-            'model_version' => $result->model_version,
-            'prompt_version' => $result->prompt_version,
             'analyzed_at' => optional($result->analyzed_at)->toIso8601String(),
         ];
     }

@@ -76,9 +76,13 @@ class OpenAiConversationClient
         if ($behavioralPulse === 'neutral') {
             $behavioralPulse = 'stable';
         }
-        if (!in_array($behavioralPulse, ['heating_up', 'cooling_down', 'stable'], true)) {
+        if (!in_array($behavioralPulse, ['heating_up', 'cooling_down', 'stable', 'broken'], true)) {
             $behavioralPulse = 'stable';
         }
+
+        $threadState = strtolower(trim((string) ($data['thread_state'] ?? 'active')));
+        $relationshipHealth = strtolower(trim((string) ($data['relationship_health'] ?? 'neutral')));
+        $actionability = strtolower(trim((string) ($data['actionability'] ?? 'monitor')));
 
         $strategicAction = $data['strategic_action'] ?? [];
         if (!is_array($strategicAction)) {
@@ -94,6 +98,9 @@ class OpenAiConversationClient
             'intent' => $intent,
             'intent_confidence' => $this->clampPercentage((int) ($data['intent_confidence'] ?? 0)),
             'priority' => $priority,
+            'thread_state' => $threadState,
+            'relationship_health' => $relationshipHealth,
+            'actionability' => $actionability,
             'success_probability' => $this->clampPercentage((int) ($data['success_probability'] ?? 0)),
             'behavioral_pulse' => $behavioralPulse,
             'summary' => trim((string) ($data['summary'] ?? '')),
@@ -371,8 +378,11 @@ class OpenAiConversationClient
                     'priority',
                     'success_probability',
                     'behavioral_pulse',
-                    'strategic_action',
+                    'thread_state',
+                    'relationship_health',
+                    'actionability',
                     'prompt_version',
+                    'strategic_action',
                 ],
                 'properties' => [
                     'summary' => ['type' => 'string'],
@@ -381,6 +391,9 @@ class OpenAiConversationClient
                     'priority' => ['type' => 'string'],
                     'success_probability' => ['type' => 'integer'],
                     'behavioral_pulse' => ['type' => 'string'],
+                    'thread_state' => ['type' => 'string'],
+                    'relationship_health' => ['type' => 'string'],
+                    'actionability' => ['type' => 'string'],
                     'prompt_version' => ['type' => ['string', 'null']],
                     'strategic_action' => [
                         'type' => 'object',

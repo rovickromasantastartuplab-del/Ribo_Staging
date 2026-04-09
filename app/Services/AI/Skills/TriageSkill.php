@@ -57,7 +57,8 @@ class TriageSkill
             $validated = $this->applyRepair($validated, $metadata);
         }
 
-        // Final Safety Gate: Urgency Enforcement
+        // Final Safety Gate: Terminal Overrides & Urgency Enforcement
+        $validated = $this->enforceTerminalLogic($validated, $metadata);
         $validated = $this->gateUrgency($validated, $metadata);
 
         return [
@@ -68,7 +69,10 @@ class TriageSkill
 
     private function validateParse(array $data, array &$metadata): array
     {
-        $requiredKeys = ['summary', 'intent', 'priority', 'strategic_action_json'];
+        $requiredKeys = [
+            'summary', 'intent', 'priority', 'strategic_action_json', 
+            'thread_state', 'relationship_health', 'actionability'
+        ];
         foreach ($requiredKeys as $key) {
             if (!isset($data[$key]) || (is_string($data[$key]) && trim($data[$key]) === '')) {
                 $metadata['validation_stage_failed'] = 'parse';
@@ -76,6 +80,36 @@ class TriageSkill
                 $metadata['fallback_reason'] = "missing_required_key_{$key}";
                 return $data;
             }
+        }
+
+        return $data;
+    }
+
+    private function enforceTerminalLogic(array $data, array &$metadata): array
+    {
+        // 1. Force Probability & Recommendation for Lost Deals
+        if (($data['thread_state'] ?? '') === 'closed_lost') {
+            $data['success_probability'] = min($data['success_probability'] ?? 0, 5);
+            $data['behavioral_pulse'] = 'broken';
+            $data['priority'] = 'low';
+            
+            // Override recommendation to prevent "Sales Optimism"
+            $data['strategic_action_json']['recommendation'] = 'Tasks: Archive thread and mark as lost opportunity.';
+            $data['strategic_action_json']['goal'] = 'Cease interaction';
+            
+            $metadata['repair_applied'] = true;
+            $metadata['repair_type'] = $metadata['repair_type'] 
+                ? $metadata['repair_type'] . ',terminal_override' 
+                : 'terminal_override';
+        }
+
+        // 2. Action Suppression for Damaged Relationships
+        if (($data['relationship_health'] ?? '') === 'damaged' && !str_starts_with($data['strategic_action_json']['recommendation'] ?? '', 'Tasks:')) {
+            $data['strategic_action_json']['recommendation'] = 'Tasks: Review hostile sentiment and archive if necessary.';
+            $metadata['repair_applied'] = true;
+            $metadata['repair_type'] = $metadata['repair_type'] 
+                ? $metadata['repair_type'] . ',action_suppression' 
+                : 'action_suppression';
         }
 
         return $data;
