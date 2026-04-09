@@ -4,7 +4,7 @@ import { RefreshCw, BarChart3, Building2, CreditCard, Users, DollarSign, Trendin
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
+import { DashboardOverview, AiUsageInsights } from '@/components/dashboard';
 import { router } from '@inertiajs/react';
 import { formatCurrency } from '@/utils/currency';
 
@@ -47,6 +47,7 @@ interface SuperAdminDashboardData {
     revenue: number;
   }>;
   paymentLogs: PaymentLog[];
+  aiUsage: any;
 }
 
 interface PageAction {
@@ -179,6 +180,11 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
             </CardContent>
           </Card>
         </div>
+
+        {/* AI Usage Insights */}
+        {dashboardData.aiUsage && (
+          <AiUsageInsights data={dashboardData.aiUsage} />
+        )}
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Recent Activity */}

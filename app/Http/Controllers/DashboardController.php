@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Plan;
 use App\Models\PlanOrder;
 use App\Models\PlanRequest;
+use App\Models\AiUsageLog;
 use Illuminate\Support\Facades\DB;
 
 
@@ -284,6 +285,111 @@ class DashboardController extends Controller
             // Table might not exist yet
         }
 
+        // AI Usage Insights (Last 30 days)
+        $aiUsage = [
+            'stats' => [
+                'totalTokens' => 0,
+                'totalRequests' => 0,
+                'totalCost' => 0,
+                'successRate' => 0
+            ],
+            'charts' => [
+                'dailyTrends' => [],
+                'modelDistribution' => []
+            ],
+            'topCompanies' => []
+        ];
+
+        try {
+            $thirtyDaysAgo = now()->subDays(30)->startOfDay();
+            
+            // Global Stats
+            $aiGlobalStats = AiUsageLog::where('requested_at', '>=', $thirtyDaysAgo)
+                ->select(
+                    DB::raw('SUM(total_tokens) as total_tokens'),
+                    DB::raw('COUNT(*) as total_requests'),
+                    DB::raw('SUM(estimated_cost) as total_cost'),
+                    DB::raw('SUM(CASE WHEN metadata_json->>"$.status" = "success" THEN 1 ELSE 0 END) as successful_requests')
+                )
+                ->first();
+
+            if ($aiGlobalStats->total_requests > 0) {
+                $aiUsage['stats'] = [
+                    'totalTokens' => (int) $aiGlobalStats->total_tokens,
+                    'totalRequests' => (int) $aiGlobalStats->total_requests,
+                    'totalCost' => (float) $aiGlobalStats->total_cost,
+                    'successRate' => round(($aiGlobalStats->successful_requests / $aiGlobalStats->total_requests) * 100, 1)
+                ];
+            }
+
+            // Daily Trends
+            $dailyTrends = AiUsageLog::where('requested_at', '>=', $thirtyDaysAgo)
+                ->select(
+                    DB::raw('DATE(requested_at) as date'),
+                    DB::raw('SUM(total_tokens) as tokens'),
+                    DB::raw('COUNT(*) as requests'),
+                    DB::raw('SUM(estimated_cost) as cost')
+                )
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+
+            // Fill missing days with zeros
+            $trendData = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $date = now()->subDays($i)->format('Y-m-d');
+                $match = $dailyTrends->firstWhere('date', $date);
+                $trendData[] = [
+                    'date' => $date,
+                    'displayDate' => now()->subDays($i)->format('M d'),
+                    'tokens' => $match ? (int) $match->tokens : 0,
+                    'requests' => $match ? (int) $match->requests : 0,
+                    'cost' => $match ? (float) $match->cost : 0
+                ];
+            }
+            $aiUsage['charts']['dailyTrends'] = $trendData;
+
+            // Model Distribution
+            $modelDist = AiUsageLog::where('requested_at', '>=', $thirtyDaysAgo)
+                ->select('model_version', DB::raw('SUM(total_tokens) as value'))
+                ->whereNotNull('model_version')
+                ->groupBy('model_version')
+                ->get();
+
+            $colors = ['#3b82f6', '#10b77f', '#f59e0b', '#ef4444', '#8b5cf6'];
+            $aiUsage['charts']['modelDistribution'] = $modelDist->map(function ($item, $index) use ($colors) {
+                return [
+                    'name' => $item->model_version,
+                    'value' => (int) $item->value,
+                    'color' => $colors[$index % count($colors)]
+                ];
+            })->toArray();
+
+            // Top Companies
+            $topAiCompanies = AiUsageLog::where('ai_usage_logs.requested_at', '>=', $thirtyDaysAgo)
+                ->join('users', 'ai_usage_logs.created_by', '=', 'users.id')
+                ->select(
+                    'users.name',
+                    DB::raw('SUM(ai_usage_logs.total_tokens) as usage_tokens'),
+                    DB::raw('SUM(ai_usage_logs.estimated_cost) as total_cost')
+                )
+                ->groupBy('users.id', 'users.name')
+                ->orderByDesc('usage_tokens')
+                ->take(5)
+                ->get();
+
+            $aiUsage['topCompanies'] = $topAiCompanies->map(function ($item) {
+                return [
+                    'name' => $item->name,
+                    'usage' => number_format($item->usage_tokens) . ' tokens',
+                    'cost' => (float) $item->total_cost
+                ];
+            })->toArray();
+
+        } catch (\Exception $e) {
+            // Handle table or migration issues
+        }
+
         $dashboardData = [
             'stats' => [
                 'totalCompanies' => $totalCompanies,
@@ -301,7 +407,8 @@ class DashboardController extends Controller
             ],
             'recentActivity' => $recentActivity,
             'topPlans' => $topPlans,
-            'paymentLogs' => $paymentLogs
+            'paymentLogs' => $paymentLogs,
+            'aiUsage' => $aiUsage
         ];
 
         return Inertia::render('superadmin/dashboard', [
