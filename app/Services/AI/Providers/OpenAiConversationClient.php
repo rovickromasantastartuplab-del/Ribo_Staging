@@ -12,7 +12,7 @@ class OpenAiConversationClient
         $systemPrompt = (string) ($payload['system_prompt'] ?? '');
         $userPrompt = (string) ($payload['user_prompt'] ?? '');
         $threadSubject = trim((string) ($payload['thread_subject'] ?? ''));
-        $response = $this->requestJson($config, $systemPrompt, $userPrompt);
+        $response = $this->requestJson($config, $systemPrompt, $userPrompt, $this->draftResponseSchema());
         $data = $response['data'];
 
         $subject = trim((string) ($data['subject'] ?? ''));
@@ -41,7 +41,8 @@ class OpenAiConversationClient
         $response = $this->requestJson(
             $config,
             (string) ($payload['system_prompt'] ?? ''),
-            (string) ($payload['user_prompt'] ?? '')
+            (string) ($payload['user_prompt'] ?? ''),
+            $this->triageResponseSchema()
         );
         $data = $response['data'];
 
@@ -89,7 +90,8 @@ class OpenAiConversationClient
         $response = $this->requestJson(
             $config,
             (string) ($payload['system_prompt'] ?? ''),
-            (string) ($payload['user_prompt'] ?? '')
+            (string) ($payload['user_prompt'] ?? ''),
+            $this->memoryResponseSchema()
         );
         $data = $response['data'];
         $memoryPoints = $data['memory_points'] ?? [];
@@ -119,7 +121,8 @@ class OpenAiConversationClient
         $response = $this->requestJson(
             $config,
             (string) ($payload['system_prompt'] ?? ''),
-            (string) ($payload['user_prompt'] ?? '')
+            (string) ($payload['user_prompt'] ?? ''),
+            $this->reportResponseSchema()
         );
         $data = $response['data'];
 
@@ -131,7 +134,7 @@ class OpenAiConversationClient
         ];
     }
 
-    private function requestJson(array $config, string $systemPrompt, string $userPrompt): array
+    private function requestJson(array $config, string $systemPrompt, string $userPrompt, ?array $responseSchema = null): array
     {
         $enabled = (bool) ($config['enabled'] ?? false);
         $apiKey = trim((string) ($config['api_key'] ?? ''));
@@ -142,16 +145,25 @@ class OpenAiConversationClient
         $model = trim((string) ($config['model'] ?? 'gpt-5.4-mini'));
         $timeoutSeconds = max(5, (int) ($config['timeout_seconds'] ?? 30));
 
+        $payload = [
+            'model' => $model !== '' ? $model : 'gpt-5.4-mini',
+            'input' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+        ];
+
+        if (is_array($responseSchema)) {
+            $payload['response_format'] = [
+                'type' => 'json_schema',
+                'json_schema' => $responseSchema,
+            ];
+        }
+
         $response = Http::timeout($timeoutSeconds)
             ->withToken($apiKey)
             ->acceptJson()
-            ->post('https://api.openai.com/v1/responses', [
-                'model' => $model !== '' ? $model : 'gpt-5.4-mini',
-                'input' => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => $userPrompt],
-                ],
-            ]);
+            ->post('https://api.openai.com/v1/responses', $payload);
 
         if (!$response->successful()) {
             throw new RuntimeException('AI unavailable');
@@ -280,5 +292,110 @@ class OpenAiConversationClient
     private function clampPercentage(int $value): int
     {
         return max(0, min(100, $value));
+    }
+
+    private function draftResponseSchema(): array
+    {
+        return [
+            'name' => 'conversation_ai_draft',
+            'strict' => true,
+            'schema' => [
+                'type' => 'object',
+                'additionalProperties' => false,
+                'required' => ['subject', 'body'],
+                'properties' => [
+                    'subject' => ['type' => 'string'],
+                    'body' => ['type' => 'string'],
+                    'prompt_version' => ['type' => 'string'],
+                ],
+            ],
+        ];
+    }
+
+    private function triageResponseSchema(): array
+    {
+        return [
+            'name' => 'conversation_ai_triage',
+            'strict' => true,
+            'schema' => [
+                'type' => 'object',
+                'additionalProperties' => false,
+                'required' => [
+                    'summary',
+                    'intent',
+                    'intent_confidence',
+                    'priority',
+                    'success_probability',
+                    'behavioral_pulse',
+                    'strategic_action',
+                ],
+                'properties' => [
+                    'summary' => ['type' => 'string'],
+                    'intent' => ['type' => 'string'],
+                    'intent_confidence' => ['type' => 'integer'],
+                    'priority' => ['type' => 'string'],
+                    'success_probability' => ['type' => 'integer'],
+                    'behavioral_pulse' => ['type' => 'string'],
+                    'prompt_version' => ['type' => 'string'],
+                    'strategic_action' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'required' => ['goal', 'reason', 'recommendation'],
+                        'properties' => [
+                            'goal' => ['type' => 'string'],
+                            'reason' => ['type' => 'string'],
+                            'recommendation' => ['type' => 'string'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    private function memoryResponseSchema(): array
+    {
+        return [
+            'name' => 'conversation_ai_memory',
+            'strict' => true,
+            'schema' => [
+                'type' => 'object',
+                'additionalProperties' => false,
+                'required' => ['relationship_summary', 'relationship_strength', 'memory_points'],
+                'properties' => [
+                    'relationship_summary' => ['type' => 'string'],
+                    'relationship_strength' => ['type' => 'string'],
+                    'prompt_version' => ['type' => 'string'],
+                    'memory_points' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    private function reportResponseSchema(): array
+    {
+        return [
+            'name' => 'conversation_ai_report',
+            'strict' => true,
+            'schema' => [
+                'type' => 'object',
+                'additionalProperties' => false,
+                'required' => ['summary', 'key_insights', 'next_actions'],
+                'properties' => [
+                    'summary' => ['type' => 'string'],
+                    'prompt_version' => ['type' => 'string'],
+                    'key_insights' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'next_actions' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                ],
+            ],
+        ];
     }
 }

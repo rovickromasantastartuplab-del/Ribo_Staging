@@ -38,8 +38,6 @@ class ConversationAiTriageController extends Controller
             return response()->json(['message' => 'AI unavailable'], 422);
         }
 
-        $this->telemetryService->recordSuccess($companyId, 'triage_show', $thread->id, (string) ($result->model_version ?? ($config['model'] ?? null)));
-
         return response()->json([
             'data' => $this->transform($result),
         ]);
@@ -62,8 +60,6 @@ class ConversationAiTriageController extends Controller
             $this->telemetryService->recordFailure($companyId, 'triage_refresh', $thread->id, (string) ($config['model'] ?? null), ['reason' => 'provider_failure']);
             return response()->json(['message' => 'AI unavailable'], 422);
         }
-
-        $this->telemetryService->recordSuccess($companyId, 'triage_refresh', $thread->id, (string) ($result->model_version ?? ($config['model'] ?? null)));
 
         return response()->json([
             'data' => $this->transform($result),

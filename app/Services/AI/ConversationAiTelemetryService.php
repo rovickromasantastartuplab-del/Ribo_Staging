@@ -19,6 +19,11 @@ class ConversationAiTelemetryService
     ): void {
         $cost = app(AiUsageCostCalculator::class)->calculate($modelVersion, $promptTokens, $completionTokens);
 
+        $logMetadata = array_merge($metadata, [
+            'status' => 'success',
+            'prompt_version' => $metadata['prompt_version'] ?? null,
+        ]);
+
         AiUsageLog::query()->create([
             'created_by' => $companyId,
             'email_thread_id' => $threadId,
@@ -28,7 +33,7 @@ class ConversationAiTelemetryService
             'completion_tokens' => $completionTokens,
             'total_tokens' => $totalTokens,
             'estimated_cost' => $cost,
-            'metadata_json' => array_merge($metadata, ['status' => 'success']),
+            'metadata_json' => $logMetadata,
             'requested_at' => now(),
         ]);
     }

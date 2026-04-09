@@ -10,7 +10,8 @@ class ConversationAiTriageService
 {
     public function __construct(
         private readonly ConversationAiConfigService $configService,
-        private readonly TriageSkill $triageSkill
+        private readonly TriageSkill $triageSkill,
+        private readonly ConversationAiTelemetryService $telemetryService
     ) {
     }
 
@@ -38,16 +39,22 @@ class ConversationAiTriageService
             'email_thread_id' => $thread->id,
         ];
 
-        $values = array_merge($analysis, [
+        $values = array_merge($analysis['result'], [
             'model_version' => (string) ($config['model'] ?? 'gpt-5.4-mini'),
             'analyzed_at' => now(),
         ]);
 
-        AiTriageResult::query()->updateOrCreate($attributes, $values);
+        $result = AiTriageResult::query()->updateOrCreate($attributes, $values);
 
-        return AiTriageResult::query()
-            ->where('created_by', $companyId)
-            ->where('email_thread_id', $thread->id)
-            ->firstOrFail();
+        // Log enriched telemetry including validation metadata
+        $this->telemetryService->recordSuccess(
+            $companyId,
+            'triage_refresh',
+            $thread->id,
+            $result->model_version,
+            $analysis['metadata']
+        );
+
+        return $result;
     }
 }

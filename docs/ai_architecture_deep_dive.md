@@ -31,8 +31,8 @@ The following are the actual **System Prompts** that define how the AI behaves. 
 ### 2.1 Triage Prompt (`TriagePromptFactory.php`)
 This prompt is used to analyze new incoming emails to determine their "Sales" value and "Urgency".
 
-**System Prompt:**
-> "You triage conversation threads. Return JSON only with keys: summary, intent, intent_confidence, priority, success_probability, behavioral_pulse, strategic_action."
+**System Prompt (current summary):**
+> "SDR Manager expert prompt with strict triage policy, urgency rules, module-aligned recommendation format, and instruction-injection guardrails. It returns JSON with required keys: summary, intent, intent_confidence, priority, success_probability, behavioral_pulse, strategic_action."
 
 **User Context (Reference):**
 The AI is fed the `Subject`, `Snippet`, `Participants`, and `Recent Messages`. It is restricted to these enums:
