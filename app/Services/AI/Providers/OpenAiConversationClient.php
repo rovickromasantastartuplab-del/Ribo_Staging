@@ -3,6 +3,7 @@
 namespace App\Services\AI\Providers;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class OpenAiConversationClient
@@ -154,9 +155,8 @@ class OpenAiConversationClient
         ];
 
         if (is_array($responseSchema)) {
-            $payload['response_format'] = [
-                'type' => 'json_schema',
-                'json_schema' => $responseSchema,
+            $payload['text'] = [
+                'format' => array_merge(['type' => 'json_schema'], $responseSchema),
             ];
         }
 
@@ -166,6 +166,10 @@ class OpenAiConversationClient
             ->post('https://api.openai.com/v1/responses', $payload);
 
         if (!$response->successful()) {
+            Log::warning('Conversation AI upstream call failed', [
+                'status' => $response->status(),
+                'body' => mb_substr((string) $response->body(), 0, 500),
+            ]);
             throw new RuntimeException('AI unavailable');
         }
 
@@ -302,11 +306,11 @@ class OpenAiConversationClient
             'schema' => [
                 'type' => 'object',
                 'additionalProperties' => false,
-                'required' => ['subject', 'body'],
+                'required' => ['subject', 'body', 'prompt_version'],
                 'properties' => [
                     'subject' => ['type' => 'string'],
                     'body' => ['type' => 'string'],
-                    'prompt_version' => ['type' => 'string'],
+                    'prompt_version' => ['type' => ['string', 'null']],
                 ],
             ],
         ];
@@ -328,6 +332,7 @@ class OpenAiConversationClient
                     'success_probability',
                     'behavioral_pulse',
                     'strategic_action',
+                    'prompt_version',
                 ],
                 'properties' => [
                     'summary' => ['type' => 'string'],
@@ -336,7 +341,7 @@ class OpenAiConversationClient
                     'priority' => ['type' => 'string'],
                     'success_probability' => ['type' => 'integer'],
                     'behavioral_pulse' => ['type' => 'string'],
-                    'prompt_version' => ['type' => 'string'],
+                    'prompt_version' => ['type' => ['string', 'null']],
                     'strategic_action' => [
                         'type' => 'object',
                         'additionalProperties' => false,
@@ -360,11 +365,11 @@ class OpenAiConversationClient
             'schema' => [
                 'type' => 'object',
                 'additionalProperties' => false,
-                'required' => ['relationship_summary', 'relationship_strength', 'memory_points'],
+                'required' => ['relationship_summary', 'relationship_strength', 'memory_points', 'prompt_version'],
                 'properties' => [
                     'relationship_summary' => ['type' => 'string'],
                     'relationship_strength' => ['type' => 'string'],
-                    'prompt_version' => ['type' => 'string'],
+                    'prompt_version' => ['type' => ['string', 'null']],
                     'memory_points' => [
                         'type' => 'array',
                         'items' => ['type' => 'string'],
@@ -382,10 +387,10 @@ class OpenAiConversationClient
             'schema' => [
                 'type' => 'object',
                 'additionalProperties' => false,
-                'required' => ['summary', 'key_insights', 'next_actions'],
+                'required' => ['summary', 'key_insights', 'next_actions', 'prompt_version'],
                 'properties' => [
                     'summary' => ['type' => 'string'],
-                    'prompt_version' => ['type' => 'string'],
+                    'prompt_version' => ['type' => ['string', 'null']],
                     'key_insights' => [
                         'type' => 'array',
                         'items' => ['type' => 'string'],

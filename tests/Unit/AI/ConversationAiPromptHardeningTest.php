@@ -66,9 +66,9 @@ class ConversationAiPromptHardeningTest extends TestCase
         Http::assertSent(function ($request): bool {
             $payload = $request->data();
 
-            return data_get($payload, 'response_format.type') === 'json_schema'
-                && data_get($payload, 'response_format.json_schema.name') === 'conversation_ai_draft'
-                && data_get($payload, 'response_format.json_schema.strict') === true;
+            return data_get($payload, 'text.format.type') === 'json_schema'
+                && data_get($payload, 'text.format.name') === 'conversation_ai_draft'
+                && data_get($payload, 'text.format.strict') === true;
         });
     }
 }
