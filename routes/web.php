@@ -241,9 +241,14 @@ Route::post('/landing-page/subscribe', [LandingPageController::class, 'subscribe
 Route::get('/pricing', function() {
     $landingSettings = \App\Models\LandingPageSetting::getSettings();
     $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+
+    $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans();
+    $plans = \App\Services\PlanPricingService::applyRecommendation($formattedPlans)->toArray();
+
     return Inertia::render('landing-page/Pricing', [
+        'plans'       => $plans,
         'customPages' => \App\Models\LandingPageCustomPage::active()->ordered()->get() ?? [],
-        'settings' => array_merge($landingSettings->toArray(), [
+        'settings'    => array_merge($landingSettings->toArray(), [
             'footerText' => getSetting('footerText', '', $superadmin->id ?? null)
         ])
     ]);

@@ -39,13 +39,39 @@ interface CustomPage {
     slug: string;
 }
 
+interface Plan {
+    id: number;
+    name: string;
+    price: number;
+    monthly_price: number;
+    yearly_price: number;
+    max_users: number;
+    max_projects: number;
+    max_contacts: number;
+    max_accounts: number;
+    enable_branding: string;
+    enable_chatgpt: string;
+    storage_limit: string | number;
+    trial_day?: number;
+    trial_days?: number;
+    is_trial: string | null;
+    module: string[];
+    recommended?: boolean;
+    is_default?: boolean;
+}
+
 interface PageProps extends Record<string, unknown> {
+    plans: Plan[];
     customPages: CustomPage[];
     settings: LandingSettings;
+    flash: {
+        success?: string;
+        error?: string;
+    };
 }
 
 export default function PricingPage() {
-    const { customPages = [], settings } = usePage<PageProps>().props;
+    const { plans = [], customPages = [], settings } = usePage<PageProps>().props;
     const globalSettings = (usePage().props as any).globalSettings;
 
     // Get brand colors
@@ -97,7 +123,10 @@ export default function PricingPage() {
                     </p>
                 </div>
 
-                <ComparisonTable brandColor={primaryColor} />
+                <ComparisonTable 
+                    brandColor={primaryColor} 
+                    plans={plans}
+                />
             </main>
 
             <Footer
