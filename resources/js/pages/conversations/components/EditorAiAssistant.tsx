@@ -53,7 +53,15 @@ export default function EditorAiAssistant({
             toast.success(`Generated ${tone} response`);
         } catch (error: unknown) {
             if (axios.isAxiosError(error) && error.response?.status === 422) {
-                toast.warning('AI is currently unavailable.');
+                const data = error.response?.data as { blocked?: boolean; reason?: string } | undefined;
+                if (data?.blocked) {
+                    toast.warning(
+                        'Draft blocked — this thread is closed. Use a recovery instruction (e.g. "write a win-back email") to send a message.',
+                        { duration: 6000 }
+                    );
+                } else {
+                    toast.warning('AI is currently unavailable.');
+                }
             } else {
                 toast.error('Failed to generate AI draft.');
             }

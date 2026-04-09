@@ -27,20 +27,26 @@ class ConversationAiDraftService
             ->first();
 
         $analysis = $this->draftSkill->generate($thread, $prompt, $tone, $config, $triage);
-        $draft = $analysis['result'];
+        $draft    = $analysis['result'];
         $metadata = $analysis['metadata'] ?? [];
 
+        // Triage guard blocked the draft — do not write to DB, surface a clean signal
+        $fallbackReason = $metadata['fallback_reason'] ?? '';
+        if ($metadata['fallback_applied'] && str_starts_with($fallbackReason, 'draft_blocked')) {
+            throw new \RuntimeException('DRAFT_BLOCKED:' . $fallbackReason);
+        }
+
         $run = AiDraftRun::query()->create([
-            'created_by' => $companyId,
+            'created_by'      => $companyId,
             'email_thread_id' => $thread->id,
-            'prompt' => $prompt,
-            'tone' => $tone,
-            'subject' => $draft['subject'],
-            'body' => $draft['body'],
-            'status' => 'completed',
-            'model_version' => (string) ($config['model'] ?? 'gpt-5.4-mini'),
-            'prompt_version' => $draft['prompt_version'],
-            'generated_at' => now(),
+            'prompt'          => $prompt,
+            'tone'            => $tone,
+            'subject'         => $draft['subject'],
+            'body'            => $draft['body'],
+            'status'          => 'completed',
+            'model_version'   => (string) ($config['model'] ?? 'gpt-5.4-mini'),
+            'prompt_version'  => $draft['prompt_version'] ?? 'unknown',
+            'generated_at'    => now(),
         ]);
 
         return [

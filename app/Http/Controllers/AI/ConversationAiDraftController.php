@@ -54,7 +54,37 @@ class ConversationAiDraftController extends Controller
                 $validated['prompt'],
                 (string) ($validated['tone'] ?? 'professional')
             );
+        } catch (\RuntimeException $e) {
+            // Triage guard blocked the draft (not an AI failure)
+            if (str_starts_with($e->getMessage(), 'DRAFT_BLOCKED:')) {
+                $reason = str_replace('DRAFT_BLOCKED:', '', $e->getMessage());
+
+                $this->telemetryService->recordFailure(
+                    $companyId,
+                    'draft',
+                    $thread->id,
+                    (string) ($config['model'] ?? null),
+                    ['reason' => $reason]
+                );
+
+                return response()->json([
+                    'message' => 'Draft blocked by triage state.',
+                    'blocked' => true,
+                    'reason'  => $reason,
+                ], 422);
+            }
+
+            $this->telemetryService->recordFailure(
+                $companyId,
+                'draft',
+                $thread->id,
+                (string) ($config['model'] ?? null),
+                ['reason' => 'provider_failure']
+            );
+
+            return response()->json(['message' => 'AI unavailable'], 422);
         } catch (Throwable $e) {
+
             $this->telemetryService->recordFailure(
                 $companyId,
                 'draft',
