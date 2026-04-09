@@ -8,6 +8,7 @@ use App\Models\Contact;
 use App\Models\EmailThread;
 use App\Models\GmailAccount;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\postJson;
 
@@ -113,10 +114,15 @@ it('returns 422 when api key is missing', function () {
 it('returns controlled fallback when provider fails without leaking internals', function () {
     [$staff, $superadmin, $thread] = createFallbackFixture();
     updateSetting('ai_conversation_enabled', '1', $superadmin->id);
-    updateSetting('ai_conversation_api_key', 'fail-secret-key', $superadmin->id);
+    updateSetting('ai_conversation_api_key', 'test-key', $superadmin->id);
 
     actingAs($staff);
     disableNonApiBlockingMiddlewareForFallback();
+    Http::fake([
+        'https://api.openai.com/v1/responses' => Http::response([
+            'error' => ['message' => 'provider outage'],
+        ], 500),
+    ]);
 
     $response = postJson('/ai/draft', [
         'threadId' => $thread->id,
@@ -128,6 +134,6 @@ it('returns controlled fallback when provider fails without leaking internals', 
         ->assertJsonPath('message', 'AI unavailable');
 
     $responseBody = json_encode($response->json());
-    expect($responseBody)->not->toContain('fail-secret-key');
+    expect($responseBody)->not->toContain('test-key');
     expect($responseBody)->not->toContain('RuntimeException');
 });

@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\EmailThread;
 use App\Models\GmailAccount;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use App\Models\Contact;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\postJson;
@@ -85,14 +86,27 @@ it('generates ai draft from prompt and tone', function () {
     [$staff, $thread] = createDraftFixture();
     actingAs($staff);
     disableNonApiBlockingMiddlewareForDraft();
+    Http::fake([
+        'https://api.openai.com/v1/responses' => Http::response([
+            'output_text' => json_encode([
+                'subject' => 'Re: Follow-up regarding proposal',
+                'body' => '<p>Thanks for the update. Are you available for a quick call tomorrow?</p>',
+            ]),
+            'usage' => [
+                'input_tokens' => 12,
+                'output_tokens' => 18,
+                'total_tokens' => 30,
+            ],
+        ], 200),
+    ]);
 
     postJson('/ai/draft', [
         'threadId' => $thread->id,
         'prompt' => 'Write a professional follow-up',
         'tone' => 'professional',
-    ])->assertOk()->assertJsonStructure([
-        'data' => ['subject', 'body'],
-    ]);
+    ])->assertOk()
+        ->assertJsonPath('data.subject', 'Re: Follow-up regarding proposal')
+        ->assertJsonPath('data.body', '<p>Thanks for the update. Are you available for a quick call tomorrow?</p>');
 });
 
 it('forbids draft generation for cross-company thread', function () {

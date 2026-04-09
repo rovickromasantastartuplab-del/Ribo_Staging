@@ -69,11 +69,10 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Sparkles, Target, ShieldCheck, Bell, Flame } from 'lucide-react';
+import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Target, ShieldCheck } from 'lucide-react';
 import ConversationAiPanel from './components/ConversationAiPanel';
 import AiStrategyDrawer from './components/AiStrategyDrawer';
 import EditorAiAssistant from './components/EditorAiAssistant';
-import { getMockTriage } from './utils/mockAiData';
 
 /* ── helpers ───────────────────────────────────────────────── */
 const parseUTC = (dateStr: string) => {
@@ -1193,44 +1192,6 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                         )}
                                                                     </>
                                                                 )}
-                                                                {/* AI Strategic Badges (Founder Compliance: Urgent, Hot Leads, Follow-up) */}
-                                                                {(() => {
-                                                                    const aiTriage = getMockTriage(thread.id);
-                                                                    return (
-                                                                        <>
-                                                                            {/* 1. URGENT / PRIORITY SYSTEM (Founder Section 7.5) */}
-                                                                            {(aiTriage.priority === 'urgent' || aiTriage.priority === 'high') && (
-                                                                                <Badge variant="outline" className="text-[9px] bg-rose-50 text-rose-700 border-rose-100 italic shadow-[0_0_8px_rgba(244,63,94,0.15)] font-bold px-1 py-0 flex items-center gap-0.5 shrink-0 animate-in fade-in zoom-in duration-300">
-                                                                                    <AlertCircle className="w-2.5 h-2.5 animate-pulse text-rose-600" />
-                                                                                    {t('Urgent')}
-                                                                                </Badge>
-                                                                            )}
-
-                                                                            {/* 2. HOT LEADS (Founder Section 7.5) */}
-                                                                            {aiTriage.success_probability > 80 && aiTriage.intent === 'sales' && (
-                                                                                <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-600 border-amber-200 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0 shadow-sm">
-                                                                                    <Flame className="w-2.5 h-2.5 fill-amber-500 text-amber-600" />
-                                                                                    {t('Hot Lead')}
-                                                                                </Badge>
-                                                                            )}
-
-                                                                            {/* 3. FOLLOW-UP SYSTEM (Founder Section 7.2) */}
-                                                                            {aiTriage.suggested_follow_up && (
-                                                                                <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-100 font-bold px-1 py-0 flex items-center gap-0.5 shrink-0">
-                                                                                    <Bell className="w-2.5 h-2.5 text-blue-600" />
-                                                                                    {t('Follow-up')}
-                                                                                </Badge>
-                                                                            )}
-
-                                                                            {/* 4. INSIGHTS / TAGS (Founder Section 7.6) */}
-                                                                            <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 font-bold px-1 py-0 flex items-center gap-0.5 capitalize shrink-0 opacity-80 hover:opacity-100 transition-opacity">
-                                                                                <Sparkles className="w-2.5 h-2.5 fill-current" />
-                                                                                {t(aiTriage.intent)}
-                                                                            </Badge>
-                                                                        </>
-                                                                    );
-                                                                })()}
-
                                                                 {thread.priority && (
                                                                     <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${thread.priority === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
                                                                         thread.priority === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200' :

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Sparkles, ChevronRight, ChevronLeft, Target, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ConversationAiPanel from './ConversationAiPanel';
-import { getMockTriage } from '../utils/mockAiData';
+import { adaptTriageFromApi, AiTriageResult } from '../utils/mockAiData';
 
 interface AiStrategyDrawerProps {
     threadId: number | null;
@@ -12,8 +13,34 @@ interface AiStrategyDrawerProps {
 }
 
 export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertDraft }: AiStrategyDrawerProps) {
-    // Get triage data for the slim bar preview
-    const triage = threadId ? getMockTriage(threadId) : null;
+    const [triage, setTriage] = useState<AiTriageResult | null>(null);
+
+    useEffect(() => {
+        if (!threadId) {
+            setTriage(null);
+            return;
+        }
+
+        let isCurrent = true;
+        axios
+            .get(`/ai/triage/${threadId}`)
+            .then((response) => {
+                if (!isCurrent) {
+                    return;
+                }
+                setTriage(adaptTriageFromApi(response.data?.data));
+            })
+            .catch(() => {
+                if (!isCurrent) {
+                    return;
+                }
+                setTriage(null);
+            });
+
+        return () => {
+            isCurrent = false;
+        };
+    }, [threadId]);
 
     if (!threadId) {
         return (

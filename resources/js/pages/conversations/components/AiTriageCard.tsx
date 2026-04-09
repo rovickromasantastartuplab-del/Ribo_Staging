@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from 'sonner';
-import { AiTriageResult, getMockOpportunities } from '../utils/mockAiData';
+import { AiTriageResult } from '../utils/mockAiData';
 
 interface AiTriageCardProps {
     data: AiTriageResult;
@@ -40,9 +40,7 @@ interface AiTriageCardProps {
 export default function AiTriageCard({ data }: AiTriageCardProps) {
     const [selectedOppId, setSelectedOppId] = useState<string>("overall");
     const [isExporting, setIsExporting] = useState(false);
-    
-    // Mock data for prototype
-    const opportunities = getMockOpportunities(0); 
+
     const getIntentColor = (intent: string) => {
         switch (intent.toLowerCase()) {
             case 'sales': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
@@ -156,12 +154,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                     <SelectItem value="overall" className="text-xs font-semibold italic">Full History (Leads & All Opportunities)</SelectItem>
                                     <SelectItem value="lead-only" className="text-xs">Leads History Only</SelectItem>
                                     <SelectItem value="all-opps" className="text-xs">All Opportunities Summary</SelectItem>
-                                    <DropdownMenuSeparator />
-                                    {opportunities.map(opp => (
-                                        <SelectItem key={opp.id} value={opp.id.toString()} className="text-xs">
-                                            {opp.name} (${(opp.value/1000).toFixed(1)}k)
-                                        </SelectItem>
-                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -179,7 +171,7 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                 setIsExporting(true);
                                 const toastId = toast.loading("AI is generating your summary report...");
 
-                                const scope = selectedOppId === 'full-history' ? 'overall' : selectedOppId;
+                                const scope = selectedOppId;
 
                                 try {
                                     const response = await axios.post('/ai/reports/generate', {

@@ -60,7 +60,7 @@ class ConversationAiMemoryService
     private function generateSummary(Contact $contact, int $companyId): AiMemorySummary
     {
         $config = $this->configService->resolve();
-        $analysis = $this->memorySkill->summarize($contact);
+        $analysis = $this->memorySkill->summarize($contact, $config);
 
         $data = array_merge($analysis, [
             'created_by' => $companyId,

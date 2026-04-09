@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Http\Middleware\CheckInstallation;
 use App\Http\Middleware\CheckPlanAccess;
 use App\Http\Middleware\EnsureOnboardingCompleted;
+use Illuminate\Support\Facades\Http;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
@@ -93,12 +94,29 @@ it('refreshes triage for thread', function () {
     [$staff, $thread] = createCompanyThreadFixture();
     actingAs($staff);
     disableNonApiBlockingMiddleware();
+    Http::fake([
+        'https://api.openai.com/v1/responses' => Http::response([
+            'output_text' => json_encode([
+                'summary' => 'Customer asked for a pricing breakdown and timeline.',
+                'intent' => 'sales',
+                'intent_confidence' => 92,
+                'priority' => 'high',
+                'success_probability' => 78,
+                'behavioral_pulse' => 'heating_up',
+                'strategic_action' => [
+                    'goal' => 'close_deal',
+                    'reason' => 'high_purchase_intent',
+                    'recommendation' => 'Send a concise proposal with options and timeline today.',
+                ],
+            ]),
+        ], 200),
+    ]);
 
     postJson("/ai/triage/{$thread->id}/refresh")
         ->assertOk()
-        ->assertJsonStructure([
-            'data' => ['email_thread_id', 'analyzed_at'],
-        ]);
+        ->assertJsonPath('data.intent', 'sales')
+        ->assertJsonPath('data.priority', 'high')
+        ->assertJsonPath('data.summary', 'Customer asked for a pricing breakdown and timeline.');
 });
 
 it('forbids triage access across companies', function () {

@@ -4,27 +4,26 @@ namespace App\Services\AI\Skills;
 
 use App\Models\Contact;
 use App\Services\AI\Prompts\MemoryPromptFactory;
+use App\Services\AI\Providers\OpenAiConversationClient;
 
 class MemorySkill
 {
     public function __construct(
-        private readonly MemoryPromptFactory $promptFactory
+        private readonly MemoryPromptFactory $promptFactory,
+        private readonly OpenAiConversationClient $provider
     ) {
     }
 
-    public function summarize(Contact $contact): array
+    public function summarize(Contact $contact, array $config): array
     {
-        $this->promptFactory->buildSystemPrompt();
-        $this->promptFactory->buildUserPrompt($contact);
+        $systemPrompt = $this->promptFactory->buildSystemPrompt();
+        $userPrompt = $this->promptFactory->buildUserPrompt($contact);
 
-        return [
-            'relationship_summary' => "Recent interactions indicate ongoing collaboration with {$contact->name}.",
-            'relationship_strength' => 'moderate',
-            'memory_points_json' => [
-                'follow_up_requested',
-                'maintain_weekly_touchpoint',
-            ],
-            'prompt_version' => 'memory-v1',
-        ];
+        return $this->provider->summarizeMemory($config, [
+            'system_prompt' => $systemPrompt,
+            'user_prompt' => $userPrompt,
+            'contact_name' => $contact->name,
+            'contact_email' => $contact->email,
+        ]);
     }
 }

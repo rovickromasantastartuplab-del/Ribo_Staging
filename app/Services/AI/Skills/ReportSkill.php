@@ -4,30 +4,26 @@ namespace App\Services\AI\Skills;
 
 use App\Models\AiReportJob;
 use App\Services\AI\Prompts\ReportPromptFactory;
+use App\Services\AI\Providers\OpenAiConversationClient;
 
 class ReportSkill
 {
     public function __construct(
-        private readonly ReportPromptFactory $promptFactory
+        private readonly ReportPromptFactory $promptFactory,
+        private readonly OpenAiConversationClient $provider
     ) {
     }
 
-    public function generate(AiReportJob $job): array
+    public function generate(AiReportJob $job, array $config): array
     {
-        $this->promptFactory->buildSystemPrompt();
-        $this->promptFactory->buildUserPrompt($job);
+        $systemPrompt = $this->promptFactory->buildSystemPrompt();
+        $userPrompt = $this->promptFactory->buildUserPrompt($job);
 
-        return [
-            'summary' => 'Conversation report generated successfully.',
-            'key_insights' => [
-                'Stakeholder engagement remains active.',
-                'Follow-up action is recommended within 24 hours.',
-            ],
-            'next_actions' => [
-                'Send progress update',
-                'Confirm timeline and ownership',
-            ],
-            'prompt_version' => 'report-v1',
-        ];
+        return $this->provider->generateReport($config, [
+            'system_prompt' => $systemPrompt,
+            'user_prompt' => $userPrompt,
+            'job_id' => $job->id,
+            'scope' => $job->scope,
+        ]);
     }
 }

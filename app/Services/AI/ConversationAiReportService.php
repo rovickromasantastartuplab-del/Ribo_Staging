@@ -11,6 +11,7 @@ use App\Services\AI\Skills\ReportSkill;
 class ConversationAiReportService
 {
     public function __construct(
+        private readonly ConversationAiConfigService $configService,
         private readonly ReportSkill $reportSkill
     ) {
     }
@@ -58,13 +59,14 @@ class ConversationAiReportService
         }
 
         try {
-            $result = $this->reportSkill->generate($job);
+            $result = $this->reportSkill->generate($job, $this->configService->resolve());
             $job->update([
                 'status' => 'completed',
                 'result_payload_json' => [
                     'summary' => $result['summary'],
                     'key_insights' => $result['key_insights'],
                     'next_actions' => $result['next_actions'],
+                    'prompt_version' => $result['prompt_version'] ?? null,
                 ],
                 'completed_at' => now(),
             ]);

@@ -31,7 +31,7 @@ class ConversationAiTriageService
     public function refresh(EmailThread $thread, int $companyId): AiTriageResult
     {
         $config = $this->configService->resolve();
-        $analysis = $this->triageSkill->analyze($thread);
+        $analysis = $this->triageSkill->analyze($thread, $config);
 
         $attributes = [
             'created_by' => $companyId,
