@@ -59,7 +59,8 @@ class ConversationAiReportService
         }
 
         try {
-            $result = $this->reportSkill->generate($job, $this->configService->resolve());
+            $analysis = $this->reportSkill->generate($job, $this->configService->resolve());
+            $result = $analysis['result'];
             $job->update([
                 'status' => 'completed',
                 'result_payload_json' => [

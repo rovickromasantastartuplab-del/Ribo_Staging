@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiReportJob;
 use App\Models\Contact;
 use App\Models\EmailThread;
+use App\Services\AI\Prompts\ReportPromptFactory;
 use App\Services\AI\ConversationAiReportService;
 use App\Services\AI\ConversationAiTelemetryService;
 use App\Services\AI\Rules\ConversationAiRules;
@@ -63,7 +64,17 @@ class ConversationAiReportController extends Controller
             return response()->json(['message' => 'AI unavailable'], 422);
         }
 
-        $this->telemetryService->recordSuccess($companyId, 'report_generate', $thread->id, (string) ($config['model'] ?? null), ['scope' => (string) ($validated['scope'] ?? 'overall')]);
+        $this->telemetryService->recordSuccess(
+            $companyId,
+            'report_generate',
+            $thread->id,
+            (string) ($config['model'] ?? null),
+            [
+                'scope' => (string) ($validated['scope'] ?? 'overall'),
+                'prompt_version' => ReportPromptFactory::VERSION,
+                'phase' => 'queued',
+            ]
+        );
 
         return response()->json([
             'data' => [

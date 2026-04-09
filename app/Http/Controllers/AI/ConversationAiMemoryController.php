@@ -39,8 +39,18 @@ class ConversationAiMemoryController extends Controller
 
         $summary = $payload['summary'];
         $tasks = $payload['tasks'];
+        $metadata = $payload['metadata'] ?? [];
 
-        $this->telemetryService->recordSuccess($companyId, 'memory_show', null, (string) ($summary->model_version ?? ($config['model'] ?? null)));
+        $this->telemetryService->recordSuccess(
+            $companyId,
+            'memory_show',
+            null,
+            (string) ($summary->model_version ?? ($config['model'] ?? null)),
+            array_merge($metadata, [
+                'prompt_version' => (string) ($summary->prompt_version ?? ''),
+                'relationship_strength' => (string) ($summary->relationship_strength ?? ''),
+            ])
+        );
 
         return response()->json([
             'data' => [

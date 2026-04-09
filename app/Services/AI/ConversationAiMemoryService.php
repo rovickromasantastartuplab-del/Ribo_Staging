@@ -17,6 +17,7 @@ class ConversationAiMemoryService
 
     public function show(Contact $contact, int $companyId): array
     {
+        $telemetryMetadata = [];
         $summary = AiMemorySummary::query()
             ->where('created_by', $companyId)
             ->where('contact_id', $contact->id)
@@ -24,7 +25,14 @@ class ConversationAiMemoryService
             ->first();
 
         if (!$summary) {
-            $summary = $this->generateSummary($contact, $companyId);
+            $generated = $this->generateSummary($contact, $companyId);
+            $summary = $generated['summary'];
+            $telemetryMetadata = $generated['metadata'];
+        } else {
+            $telemetryMetadata = [
+                'prompt_version' => (string) ($summary->prompt_version ?? ''),
+                'source' => 'cached',
+            ];
         }
 
         $tasks = AiTask::query()
@@ -36,6 +44,7 @@ class ConversationAiMemoryService
         return [
             'summary' => $summary,
             'tasks' => $tasks,
+            'metadata' => $telemetryMetadata,
         ];
     }
 
@@ -57,18 +66,23 @@ class ConversationAiMemoryService
             ->firstOrFail();
     }
 
-    private function generateSummary(Contact $contact, int $companyId): AiMemorySummary
+    private function generateSummary(Contact $contact, int $companyId): array
     {
         $config = $this->configService->resolve();
         $analysis = $this->memorySkill->summarize($contact, $config);
+        $result = $analysis['result'];
+        $metadata = $analysis['metadata'] ?? [];
 
-        $data = array_merge($analysis, [
+        $data = array_merge($result, [
             'created_by' => $companyId,
             'contact_id' => $contact->id,
             'model_version' => (string) ($config['model'] ?? 'gpt-5.4-mini'),
             'summarized_at' => now(),
         ]);
 
-        return AiMemorySummary::query()->create($data);
+        return [
+            'summary' => AiMemorySummary::query()->create($data),
+            'metadata' => $metadata,
+        ];
     }
 }

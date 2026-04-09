@@ -68,13 +68,17 @@ class ConversationAiDraftController extends Controller
 
         $run = $result['run'];
         $usage = $result['usage'];
+        $metadata = $result['metadata'] ?? [];
 
         $this->telemetryService->recordSuccess(
             $companyId,
             'draft',
             $thread->id,
             (string) ($run->model_version ?? ($config['model'] ?? null)),
-            ['tone' => (string) ($validated['tone'] ?? 'professional')],
+            array_merge($metadata, [
+                'tone' => (string) ($validated['tone'] ?? 'professional'),
+                'prompt_version' => (string) ($run->prompt_version ?? ''),
+            ]),
             (int) ($usage['prompt_tokens'] ?? 0),
             (int) ($usage['completion_tokens'] ?? 0),
             (int) ($usage['total_tokens'] ?? 0)

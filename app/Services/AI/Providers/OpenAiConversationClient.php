@@ -13,6 +13,11 @@ class OpenAiConversationClient
         $systemPrompt = (string) ($payload['system_prompt'] ?? '');
         $userPrompt = (string) ($payload['user_prompt'] ?? '');
         $threadSubject = trim((string) ($payload['thread_subject'] ?? ''));
+        $defaultPromptVersion = trim((string) ($payload['prompt_version'] ?? 'draft-v2'));
+        if ($defaultPromptVersion === '') {
+            $defaultPromptVersion = 'draft-v2';
+        }
+
         $response = $this->requestJson($config, $systemPrompt, $userPrompt, $this->draftResponseSchema());
         $data = $response['data'];
 
@@ -26,11 +31,16 @@ class OpenAiConversationClient
             throw new RuntimeException('AI unavailable');
         }
 
+        $promptVersion = trim((string) ($data['prompt_version'] ?? $defaultPromptVersion));
+        if ($promptVersion === '') {
+            $promptVersion = $defaultPromptVersion;
+        }
+
         $usage = $response['usage'];
         return [
             'subject' => $subject,
             'body' => $body,
-            'prompt_version' => (string) ($data['prompt_version'] ?? 'draft-v2'),
+            'prompt_version' => $promptVersion,
             'prompt_tokens' => (int) ($usage['prompt_tokens'] ?? 0),
             'completion_tokens' => (int) ($usage['completion_tokens'] ?? 0),
             'total_tokens' => (int) ($usage['total_tokens'] ?? 0),
@@ -39,6 +49,11 @@ class OpenAiConversationClient
 
     public function analyzeTriage(array $config, array $payload): array
     {
+        $defaultPromptVersion = trim((string) ($payload['prompt_version'] ?? 'triage-v2'));
+        if ($defaultPromptVersion === '') {
+            $defaultPromptVersion = 'triage-v2';
+        }
+
         $response = $this->requestJson(
             $config,
             (string) ($payload['system_prompt'] ?? ''),
@@ -70,6 +85,11 @@ class OpenAiConversationClient
             $strategicAction = [];
         }
 
+        $promptVersion = trim((string) ($data['prompt_version'] ?? $defaultPromptVersion));
+        if ($promptVersion === '') {
+            $promptVersion = $defaultPromptVersion;
+        }
+
         return [
             'intent' => $intent,
             'intent_confidence' => $this->clampPercentage((int) ($data['intent_confidence'] ?? 0)),
@@ -82,12 +102,17 @@ class OpenAiConversationClient
                 'reason' => trim((string) ($strategicAction['reason'] ?? 'insufficient_context')),
                 'recommendation' => trim((string) ($strategicAction['recommendation'] ?? 'Send a concise follow-up with next steps.')),
             ],
-            'prompt_version' => (string) ($data['prompt_version'] ?? 'triage-v2'),
+            'prompt_version' => $promptVersion,
         ];
     }
 
     public function summarizeMemory(array $config, array $payload): array
     {
+        $defaultPromptVersion = trim((string) ($payload['prompt_version'] ?? 'memory-v2'));
+        if ($defaultPromptVersion === '') {
+            $defaultPromptVersion = 'memory-v2';
+        }
+
         $response = $this->requestJson(
             $config,
             (string) ($payload['system_prompt'] ?? ''),
@@ -105,6 +130,11 @@ class OpenAiConversationClient
             $relationshipStrength = 'moderate';
         }
 
+        $promptVersion = trim((string) ($data['prompt_version'] ?? $defaultPromptVersion));
+        if ($promptVersion === '') {
+            $promptVersion = $defaultPromptVersion;
+        }
+
         return [
             'relationship_summary' => trim((string) ($data['relationship_summary'] ?? 'No relationship summary available.')),
             'relationship_strength' => $relationshipStrength,
@@ -113,12 +143,17 @@ class OpenAiConversationClient
                 ->filter(static fn (string $point): bool => $point !== '')
                 ->values()
                 ->all(),
-            'prompt_version' => (string) ($data['prompt_version'] ?? 'memory-v2'),
+            'prompt_version' => $promptVersion,
         ];
     }
 
     public function generateReport(array $config, array $payload): array
     {
+        $defaultPromptVersion = trim((string) ($payload['prompt_version'] ?? 'report-v2'));
+        if ($defaultPromptVersion === '') {
+            $defaultPromptVersion = 'report-v2';
+        }
+
         $response = $this->requestJson(
             $config,
             (string) ($payload['system_prompt'] ?? ''),
@@ -127,11 +162,16 @@ class OpenAiConversationClient
         );
         $data = $response['data'];
 
+        $promptVersion = trim((string) ($data['prompt_version'] ?? $defaultPromptVersion));
+        if ($promptVersion === '') {
+            $promptVersion = $defaultPromptVersion;
+        }
+
         return [
             'summary' => trim((string) ($data['summary'] ?? 'Report unavailable.')),
             'key_insights' => $this->normalizeStringList($data['key_insights'] ?? []),
             'next_actions' => $this->normalizeStringList($data['next_actions'] ?? []),
-            'prompt_version' => (string) ($data['prompt_version'] ?? 'report-v2'),
+            'prompt_version' => $promptVersion,
         ];
     }
 

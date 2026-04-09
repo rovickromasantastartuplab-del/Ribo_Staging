@@ -34,6 +34,7 @@ class TriageSkill
             'system_prompt' => $systemPrompt,
             'user_prompt' => $userPrompt,
             'thread_subject' => $thread->subject,
+            'prompt_version' => TriagePromptFactory::VERSION,
         ]);
 
         $metadata = [
@@ -151,3 +152,4 @@ class TriageSkill
         return $data;
     }
 }
+

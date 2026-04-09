@@ -17,7 +17,9 @@ class ConversationAiDraftService
     public function generate(EmailThread $thread, int $companyId, string $prompt, string $tone): array
     {
         $config = $this->configService->resolve();
-        $draft = $this->draftSkill->generate($thread, $prompt, $tone, $config);
+        $analysis = $this->draftSkill->generate($thread, $prompt, $tone, $config);
+        $draft = $analysis['result'];
+        $metadata = $analysis['metadata'] ?? [];
 
         $run = AiDraftRun::query()->create([
             'created_by' => $companyId,
@@ -35,6 +37,7 @@ class ConversationAiDraftService
         return [
             'run' => $run,
             'config' => $config,
+            'metadata' => $metadata,
             'usage' => [
                 'prompt_tokens' => (int) ($draft['prompt_tokens'] ?? 0),
                 'completion_tokens' => (int) ($draft['completion_tokens'] ?? 0),
