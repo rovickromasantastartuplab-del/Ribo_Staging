@@ -282,7 +282,9 @@ class DashboardController extends Controller
                 })
                 ->toArray();
         } catch (\Exception $e) {
-            // Table might not exist yet
+            \Log::error('AI Usage Insight Aggregation Failure: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
         }
 
         // AI Usage Insights (Last 30 days)
@@ -304,12 +306,12 @@ class DashboardController extends Controller
             $thirtyDaysAgo = now()->subDays(30)->startOfDay();
             
             // Global Stats
-            $aiGlobalStats = AiUsageLog::where('requested_at', '>=', $thirtyDaysAgo)
+            $aiGlobalStats = AiUsageLog::where(DB::raw('COALESCE(requested_at, created_at)'), '>=', $thirtyDaysAgo)
                 ->select(
                     DB::raw('SUM(total_tokens) as total_tokens'),
                     DB::raw('COUNT(*) as total_requests'),
                     DB::raw('SUM(estimated_cost) as total_cost'),
-                    DB::raw('SUM(CASE WHEN metadata_json->>"$.status" = "success" THEN 1 ELSE 0 END) as successful_requests')
+                    DB::raw('SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(metadata_json, "$.status")) = "success" THEN 1 ELSE 0 END) as successful_requests')
                 )
                 ->first();
 
@@ -323,9 +325,9 @@ class DashboardController extends Controller
             }
 
             // Daily Trends
-            $dailyTrends = AiUsageLog::where('requested_at', '>=', $thirtyDaysAgo)
+            $dailyTrends = AiUsageLog::where(DB::raw('COALESCE(requested_at, created_at)'), '>=', $thirtyDaysAgo)
                 ->select(
-                    DB::raw('DATE(requested_at) as date'),
+                    DB::raw('DATE(COALESCE(requested_at, created_at)) as date'),
                     DB::raw('SUM(total_tokens) as tokens'),
                     DB::raw('COUNT(*) as requests'),
                     DB::raw('SUM(estimated_cost) as cost')
@@ -350,7 +352,7 @@ class DashboardController extends Controller
             $aiUsage['charts']['dailyTrends'] = $trendData;
 
             // Model Distribution
-            $modelDist = AiUsageLog::where('requested_at', '>=', $thirtyDaysAgo)
+            $modelDist = AiUsageLog::where(DB::raw('COALESCE(requested_at, created_at)'), '>=', $thirtyDaysAgo)
                 ->select('model_version', DB::raw('SUM(total_tokens) as value'))
                 ->whereNotNull('model_version')
                 ->groupBy('model_version')
@@ -366,7 +368,7 @@ class DashboardController extends Controller
             })->toArray();
 
             // Top Companies
-            $topAiCompanies = AiUsageLog::where('ai_usage_logs.requested_at', '>=', $thirtyDaysAgo)
+            $topAiCompanies = AiUsageLog::where(DB::raw('COALESCE(ai_usage_logs.requested_at, ai_usage_logs.created_at)'), '>=', $thirtyDaysAgo)
                 ->join('users', 'ai_usage_logs.created_by', '=', 'users.id')
                 ->select(
                     'users.name',
