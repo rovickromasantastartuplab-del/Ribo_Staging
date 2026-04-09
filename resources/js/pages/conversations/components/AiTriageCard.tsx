@@ -1,19 +1,15 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
     BrainCircuit, 
-    Info, 
     CheckCircle2, 
     TrendingUp, 
     Target, 
-    Zap, 
     MoreHorizontal, 
-    Sparkles,
-    FileText,
     BookOpen,
     Download,
-    ChevronDown,
     Layout,
     RefreshCw
 } from 'lucide-react';
@@ -42,7 +38,7 @@ interface AiTriageCardProps {
 }
 
 export default function AiTriageCard({ data }: AiTriageCardProps) {
-    const [selectedOppId, setSelectedOppId] = useState<string>("full-history");
+    const [selectedOppId, setSelectedOppId] = useState<string>("overall");
     const [isExporting, setIsExporting] = useState(false);
     
     // Mock data for prototype
@@ -174,14 +170,37 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                             variant="default"
                             size="sm"
                             className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-2.5 shadow-lg shadow-indigo-100 dark:shadow-none transition-all hover:scale-[1.01] overflow-hidden group relative"
-                            onClick={() => {
+                            onClick={async () => {
+                                if (!data.email_thread_id) {
+                                    toast.warning('No thread context available for report generation.');
+                                    return;
+                                }
+
                                 setIsExporting(true);
                                 const toastId = toast.loading("AI is generating your summary report...");
-                                setTimeout(() => {
+
+                                const scope = selectedOppId === 'full-history' ? 'overall' : selectedOppId;
+
+                                try {
+                                    const response = await axios.post('/ai/reports/generate', {
+                                        threadId: data.email_thread_id,
+                                        scope,
+                                        contactId: null,
+                                    });
+
+                                    const jobId = response?.data?.data?.job_id;
                                     toast.dismiss(toastId);
-                                    toast.success("Summary Report generated and downloaded.");
+                                    toast.success(jobId ? `Summary report queued (job #${jobId}).` : 'Summary report queued.');
+                                } catch (error: unknown) {
+                                    toast.dismiss(toastId);
+                                    if (axios.isAxiosError(error) && error.response?.status === 422) {
+                                        toast.warning('AI is currently unavailable.');
+                                    } else {
+                                        toast.error('Failed to generate summary report.');
+                                    }
+                                } finally {
                                     setIsExporting(false);
-                                }, 2500);
+                                }
                             }}
                             disabled={isExporting}
                         >

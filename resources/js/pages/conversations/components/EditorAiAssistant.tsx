@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { 
     Popover, 
     PopoverContent, 
@@ -9,9 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
     Sparkles, 
     Wand2, 
-    Zap, 
     Check, 
-    MessageSquareQuote,
     RefreshCw,
     CornerDownLeft,
     X,
@@ -19,7 +18,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { getMockDraft } from '../utils/mockAiData';
 
 interface EditorAiAssistantProps {
     threadId: number | null;
@@ -39,19 +37,29 @@ export default function EditorAiAssistant({
     const [open, setOpen] = useState(false);
     const [tone, setTone] = useState<'professional' | 'friendly'>('professional');
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         if (!threadId || !prompt.trim()) return;
         setIsGenerating(true);
-        
-        // Simulate AI processing
-        setTimeout(() => {
-            // Use the user-selected tone
-            const draft = getMockDraft(tone);
-            setGeneratedDraft(draft.body);
-            setIsGenerating(false);
+
+        try {
+            const response = await axios.post('/ai/draft', {
+                threadId,
+                prompt,
+                tone,
+            });
+
+            setGeneratedDraft(String(response?.data?.data?.body ?? ''));
             setView('output');
             toast.success(`Generated ${tone} response`);
-        }, 1500);
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error) && error.response?.status === 422) {
+                toast.warning('AI is currently unavailable.');
+            } else {
+                toast.error('Failed to generate AI draft.');
+            }
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const handleInsert = () => {

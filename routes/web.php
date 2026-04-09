@@ -85,6 +85,12 @@ use App\Http\Controllers\TargetListController;
 use App\Http\Controllers\ShippingProviderTypeController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\ChatGptController;
+use App\Http\Controllers\AI\ConversationAiTriageController;
+use App\Http\Controllers\AI\ConversationAiMemoryController;
+use App\Http\Controllers\AI\ConversationAiTasksController;
+use App\Http\Controllers\AI\ConversationAiDraftController;
+use App\Http\Controllers\AI\ConversationAiReportController;
+use App\Http\Controllers\AI\ConversationAiFeedbackController;
 use App\Http\Controllers\QuoteCommentController;
 use App\Http\Controllers\SalesOrderCommentController;
 use App\Http\Controllers\AccountCommentController;
@@ -1065,6 +1071,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // ChatGPT routes
         Route::post('api/chatgpt/generate', [ChatGptController::class, 'generate'])->name('chatgpt.generate');
+
+        Route::middleware('throttle:30,1')->group(function () {
+            // Conversation AI triage routes (Phase 1)
+            Route::get('/ai/triage/{thread}', [ConversationAiTriageController::class, 'show']);
+            Route::post('/ai/triage/{thread}/refresh', [ConversationAiTriageController::class, 'refresh']);
+
+            // Conversation AI memory/tasks routes (Phase 2)
+            Route::get('/ai/memory/{contact}', [ConversationAiMemoryController::class, 'show']);
+            Route::patch('/ai/tasks/{task}', [ConversationAiTasksController::class, 'update']);
+
+            // Conversation AI drafting route (Phase 3)
+            Route::post('/ai/draft', [ConversationAiDraftController::class, 'store']);
+
+            // Conversation AI report routes (Phase 4)
+            Route::post('/ai/reports/generate', [ConversationAiReportController::class, 'generate']);
+            Route::get('/ai/reports/{job}', [ConversationAiReportController::class, 'show']);
+
+            // Conversation AI feedback route (Phase 5)
+            Route::post('/ai/feedback', [ConversationAiFeedbackController::class, 'store']);
+        });
 
 
         // Language management

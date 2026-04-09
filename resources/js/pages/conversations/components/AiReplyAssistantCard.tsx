@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { AiDraft, AiTriageResult, getMockDraft } from '../utils/mockAiData';
+import axios from 'axios';
+import { AiDraft, AiTriageResult } from '../utils/mockAiData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Copy, Check, MessageSquare, Wand2, Lightbulb, Zap } from 'lucide-react';
@@ -13,27 +14,49 @@ import {
 import { toast } from 'sonner';
 
 interface AiReplyAssistantCardProps {
+    threadId?: number | null;
     triageData: AiTriageResult;
     onInsertDraft: (content: string) => void;
 }
 
-export default function AiReplyAssistantCard({ triageData, onInsertDraft }: AiReplyAssistantCardProps) {
+export default function AiReplyAssistantCard({ threadId, triageData, onInsertDraft }: AiReplyAssistantCardProps) {
     const [tone, setTone] = useState<string>('professional');
     const [draft, setDraft] = useState<AiDraft | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const generateDraft = () => {
+    const generateDraft = async () => {
+        const resolvedThreadId = threadId ?? triageData.email_thread_id;
+        if (!resolvedThreadId) {
+            toast.warning('No thread context available for draft generation.');
+            return;
+        }
+
         setIsGenerating(true);
         setDraft(null);
-        
-        // Simulate AI thinking
-        setTimeout(() => {
-            const fetchedDraft = getMockDraft(tone);
-            setDraft(fetchedDraft);
-            setIsGenerating(false);
+
+        try {
+            const prompt = `Create a ${tone} reply. Goal: ${triageData.strategic_action.goal}. Context: ${triageData.summary}`;
+            const response = await axios.post('/ai/draft', {
+                threadId: resolvedThreadId,
+                prompt,
+                tone,
+            });
+
+            setDraft({
+                subject: String(response?.data?.data?.subject ?? ''),
+                body: String(response?.data?.data?.body ?? ''),
+            });
             toast.success("Strategic draft generated!");
-        }, 1200);
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error) && error.response?.status === 422) {
+                toast.warning('AI is currently unavailable.');
+            } else {
+                toast.error('Failed to generate AI draft.');
+            }
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const copyToClipboard = () => {

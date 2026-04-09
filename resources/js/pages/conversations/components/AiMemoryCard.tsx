@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AiMemorySummary, AiTriageResult } from '../utils/mockAiData';
 import { History, Heart, AlertCircle, CheckSquare, Square, Zap, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface AiMemoryCardProps {
     data: AiMemorySummary;
@@ -12,6 +14,8 @@ interface AiMemoryCardProps {
 
 export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
     const [completedLoops, setCompletedLoops] = useState<string[]>([]);
+    const [taskCompletionOverrides, setTaskCompletionOverrides] = useState<Record<number, boolean>>({});
+    const [updatingTaskIds, setUpdatingTaskIds] = useState<number[]>([]);
 
     const toggleLoop = (loop: string) => {
         setCompletedLoops(prev => 
@@ -21,7 +25,47 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
         );
     };
 
+    const toggleTask = async (taskId: number, currentValue: boolean) => {
+        if (updatingTaskIds.includes(taskId)) {
+            return;
+        }
+
+        setUpdatingTaskIds((prev) => [...prev, taskId]);
+
+        try {
+            await axios.patch(`/ai/tasks/${taskId}`, {
+                is_completed: !currentValue,
+            });
+            setTaskCompletionOverrides((prev) => ({
+                ...prev,
+                [taskId]: !currentValue,
+            }));
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error) && error.response?.status === 422) {
+                toast.warning('AI is currently unavailable.');
+            } else {
+                toast.error('Failed to update AI task.');
+            }
+        } finally {
+            setUpdatingTaskIds((prev) => prev.filter((id) => id !== taskId));
+        }
+    };
+
     const pulse = triageData?.behavioral_pulse || 'stable';
+    const loops = data.tasks?.length
+        ? data.tasks.map((task) => ({
+              id: task.id,
+              title: task.title,
+              isCompleted:
+                  task.id in taskCompletionOverrides
+                      ? taskCompletionOverrides[task.id]
+                      : Boolean(task.is_completed),
+          }))
+        : data.open_loops.map((loop, idx) => ({
+              id: -(idx + 1),
+              title: loop,
+              isCompleted: completedLoops.includes(loop),
+          }));
 
     return (
         <Card className="border-none shadow-sm bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-950 dark:to-slate-900/50">
@@ -75,25 +119,32 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                         Task Checklist
                     </div>
                     <div className="space-y-1">
-                        {data.open_loops.map((loop, idx) => (
+                        {loops.map((loop) => (
                             <div 
-                                key={idx} 
+                                key={`${loop.id}-${loop.title}`} 
                                 className={cn(
                                     "flex items-start gap-2 p-2 rounded-lg transition-colors cursor-pointer group",
-                                    completedLoops.includes(loop) ? "bg-emerald-500/5 opacity-60" : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                                    loop.isCompleted ? "bg-emerald-500/5 opacity-60" : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
                                 )}
-                                onClick={() => toggleLoop(loop)}
+                                onClick={() => {
+                                    if (loop.id > 0) {
+                                        void toggleTask(loop.id, loop.isCompleted);
+                                        return;
+                                    }
+
+                                    toggleLoop(loop.title);
+                                }}
                             >
-                                {completedLoops.includes(loop) ? (
+                                {loop.isCompleted ? (
                                     <CheckSquare className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
                                 ) : (
                                     <Square className="w-3.5 h-3.5 text-slate-300 dark:text-slate-700 mt-0.5 shrink-0 group-hover:text-rose-400" />
                                 )}
                                 <span className={cn(
                                     "text-[11px] leading-tight",
-                                    completedLoops.includes(loop) && "line-through text-muted-foreground"
+                                    loop.isCompleted && "line-through text-muted-foreground"
                                 )}>
-                                    {loop}
+                                    {loop.title}
                                 </span>
                             </div>
                         ))}

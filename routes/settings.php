@@ -93,7 +93,7 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
         Route::get('auth/callback/{provider}', [\App\Http\Controllers\Settings\SocialAuthController::class , 'callback'])->name('social.callback');
 
         Route::post('settings/recaptcha', [SystemSettingsController::class , 'updateRecaptcha'])->name('settings.recaptcha.update');
-        Route::post('settings/chatgpt', [SystemSettingsController::class , 'updateChatgpt'])->middleware('plan.feature:ai_integration')->name('settings.chatgpt.update');
+        Route::post('settings/chatgpt', [SystemSettingsController::class , 'updateChatgpt'])->middleware(['plan.feature:ai_integration', 'App\\Http\\Middleware\\SuperAdminMiddleware'])->name('settings.chatgpt.update');
         Route::post('settings/cookie', [SystemSettingsController::class , 'updateCookie'])->name('settings.cookie.update');
         Route::post('settings/seo', [SystemSettingsController::class , 'updateSeo'])->name('settings.seo.update');
         Route::post('settings/storage', [SystemSettingsController::class , 'updateStorage'])->name('settings.storage.update');
