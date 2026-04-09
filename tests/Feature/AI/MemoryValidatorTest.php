@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\AI;
 
+use App\Models\AiTriageResult;
 use App\Models\Contact;
 use App\Services\AI\Prompts\MemoryPromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
@@ -97,5 +98,88 @@ class MemoryValidatorTest extends TestCase
         $this->assertFalse($response['metadata']['fallback_applied']);
         $this->assertEquals('strong', $response['result']['relationship_strength']);
         $this->assertCount(2, $response['result']['memory_points_json']);
+    }
+
+    public function test_it_clamps_relationship_strength_to_weak_when_latest_thread_is_closed_lost(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('summarizeMemory')->andReturn([
+            'relationship_summary'  => 'Customer was previously active.',
+            'relationship_strength' => 'strong', // AI incorrectly says strong
+            'memory_points_json'    => ['Had great calls in the past'],
+        ]);
+
+        $triageContext = [
+            ['thread_state' => 'closed_lost', 'relationship_health' => 'neutral', 'behavioral_pulse' => 'broken', 'is_latest' => true],
+        ];
+
+        $skill    = new MemorySkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->summarize($this->mockContact, ['enabled' => true], $triageContext);
+
+        $this->assertEquals('weak', $response['result']['relationship_strength']);
+    }
+
+    public function test_it_clamps_relationship_strength_to_weak_when_latest_health_is_damaged(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('summarizeMemory')->andReturn([
+            'relationship_summary'  => 'Customer was hostile.',
+            'relationship_strength' => 'moderate', // Should be clamped to weak
+            'memory_points_json'    => ['Customer threatened legal action'],
+        ]);
+
+        $triageContext = [
+            ['thread_state' => 'active', 'relationship_health' => 'damaged', 'behavioral_pulse' => 'cooling_down', 'is_latest' => true],
+        ];
+
+        $skill    = new MemorySkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->summarize($this->mockContact, ['enabled' => true], $triageContext);
+
+        $this->assertEquals('weak', $response['result']['relationship_strength']);
+    }
+
+    public function test_it_clamps_relationship_strength_to_moderate_when_latest_thread_is_reopened(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('summarizeMemory')->andReturn([
+            'relationship_summary'  => 'Customer came back after stepping away.',
+            'relationship_strength' => 'strong', // AI over-optimistic, should be capped at moderate
+            'memory_points_json'    => ['Returned after 3 months away'],
+        ]);
+
+        $triageContext = [
+            ['thread_state' => 'reopened', 'relationship_health' => 'neutral', 'behavioral_pulse' => 'heating_up', 'is_latest' => true],
+        ];
+
+        $skill    = new MemorySkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->summarize($this->mockContact, ['enabled' => true], $triageContext);
+
+        $this->assertNotEquals('strong', $response['result']['relationship_strength']);
+        $this->assertContains($response['result']['relationship_strength'], ['weak', 'moderate']);
+    }
+
+    public function test_it_appends_positive_trend_memory_point_for_consistent_healthy_threads(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('summarizeMemory')->andReturn([
+            'relationship_summary'  => 'Customer is consistently engaged.',
+            'relationship_strength' => 'strong',
+            'memory_points_json'    => ['Active in all recent threads'],
+        ]);
+
+        $triageContext = [
+            ['thread_state' => 'active', 'relationship_health' => 'positive', 'behavioral_pulse' => 'heating_up', 'is_latest' => true],
+            ['thread_state' => 'active', 'relationship_health' => 'positive', 'behavioral_pulse' => 'stable', 'is_latest' => false],
+            ['thread_state' => 'active', 'relationship_health' => 'positive', 'behavioral_pulse' => 'heating_up', 'is_latest' => false],
+        ];
+
+        $skill    = new MemorySkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->summarize($this->mockContact, ['enabled' => true], $triageContext);
+
+        $points = $response['result']['memory_points_json'];
+        $hasTrendPoint = collect($points)->contains(
+            fn($p) => str_contains(strtolower($p), 'consistent') || str_contains(strtolower($p), 'momentum')
+        );
+        $this->assertTrue($hasTrendPoint, 'Expected a positive trend memory point to be injected.');
     }
 }

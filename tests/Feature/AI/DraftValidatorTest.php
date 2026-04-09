@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\AI;
 
+use App\Models\AiTriageResult;
 use App\Models\EmailThread;
 use App\Services\AI\Prompts\DraftPromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
@@ -110,5 +111,89 @@ class DraftValidatorTest extends TestCase
 
         $this->assertFalse($response['metadata']['fallback_applied']);
         $this->assertEquals('Project Update', $response['result']['subject']);
+    }
+
+    public function test_it_blocks_draft_when_actionability_is_do_not_pursue(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        // AI should NOT be called — guard blocks before OpenAI
+        $mockClient->shouldNotReceive('generateDraft');
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'closed_lost',
+            'relationship_health' => 'damaged',
+            'actionability'       => 'do_not_pursue',
+            'behavioral_pulse'    => 'broken',
+        ]);
+
+        $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockThread, 'Write a follow-up', 'professional', [], $triage);
+
+        $this->assertTrue($response['metadata']['fallback_applied']);
+        $this->assertEquals('draft_blocked_do_not_pursue', $response['metadata']['fallback_reason']);
+    }
+
+    public function test_it_blocks_draft_for_closed_lost_without_recovery_instruction(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldNotReceive('generateDraft');
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'closed_lost',
+            'relationship_health' => 'neutral',
+            'actionability'       => 'archive',
+            'behavioral_pulse'    => 'broken',
+        ]);
+
+        $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockThread, 'Send a standard update', 'professional', [], $triage);
+
+        $this->assertTrue($response['metadata']['fallback_applied']);
+        $this->assertEquals('draft_blocked_terminal_state', $response['metadata']['fallback_reason']);
+    }
+
+    public function test_it_allows_draft_for_closed_lost_with_recovery_instruction(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateDraft')->andReturn([
+            'subject' => 'One last thought',
+            'body'    => '<p>We understand you\'ve stepped back. If you\'d like to reconnect, we\'re here.</p>',
+        ]);
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'closed_lost',
+            'relationship_health' => 'neutral',
+            'actionability'       => 'archive',
+            'behavioral_pulse'    => 'broken',
+        ]);
+
+        $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockThread, 'Write a win-back email', 'professional', [], $triage);
+
+        $this->assertFalse($response['metadata']['fallback_applied']);
+        $this->assertEquals('One last thought', $response['result']['subject']);
+    }
+
+    public function test_it_suppresses_scheduling_language_for_misaligned_threads(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateDraft')->andReturn([
+            'subject' => 'Clarifying our approach',
+            'body'    => '<p>Let me clarify what we can offer.</p>',
+        ]);
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'misaligned',
+            'relationship_health' => 'strained',
+            'actionability'       => 'act_now',
+            'behavioral_pulse'    => 'cooling_down',
+        ]);
+
+        $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockThread, 'Clarify scope', 'professional', [], $triage);
+
+        // Should allow draft (not blocked) but pass misaligned flag through
+        $this->assertFalse($response['metadata']['fallback_applied']);
+        $this->assertTrue($response['metadata']['triage_misaligned_guard'] ?? false);
     }
 }

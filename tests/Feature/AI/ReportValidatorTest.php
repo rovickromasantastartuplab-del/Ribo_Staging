@@ -3,6 +3,7 @@
 namespace Tests\Feature\AI;
 
 use App\Models\AiReportJob;
+use App\Models\AiTriageResult;
 use App\Services\AI\Prompts\ReportPromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
 use App\Services\AI\Skills\ReportSkill;
@@ -96,5 +97,89 @@ class ReportValidatorTest extends TestCase
         $this->assertFalse($response['metadata']['fallback_applied']);
         $this->assertCount(2, $response['result']['key_insights']);
         $this->assertCount(2, $response['result']['next_actions']);
+    }
+
+    public function test_it_prepends_closed_lost_prefix_to_summary(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateReport')->andReturn([
+            'summary'        => 'The customer expressed interest.',
+            'key_insights'   => ['Positive signals detected'],
+            'next_actions'   => ['Schedule a follow-up call with the prospect'],
+            'prompt_version' => 'v1.0-report',
+        ]);
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'closed_lost',
+            'relationship_health' => 'damaged',
+            'actionability'       => 'do_not_pursue',
+            'success_probability' => 0,
+        ]);
+
+        $skill    = new ReportSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockJob, ['enabled' => true], $triage);
+
+        $this->assertStringStartsWith('[CLOSED LOST]', $response['result']['summary']);
+    }
+
+    public function test_it_prepends_reopened_prefix_to_summary(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateReport')->andReturn([
+            'summary'        => 'Customer re-engaged after stepping away.',
+            'key_insights'   => ['Revival signal detected'],
+            'next_actions'   => ['Send a welcome-back message'],
+            'prompt_version' => 'v1.0-report',
+        ]);
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'reopened',
+            'relationship_health' => 'neutral',
+            'actionability'       => 'act_now',
+            'success_probability' => 35,
+        ]);
+
+        $skill    = new ReportSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockJob, ['enabled' => true], $triage);
+
+        $this->assertStringStartsWith('[REOPENED — PROCEED WITH CAUTION]', $response['result']['summary']);
+    }
+
+    public function test_it_strips_commercial_next_actions_for_do_not_pursue(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateReport')->andReturn([
+            'summary'      => 'Customer is hostile.',
+            'key_insights' => ['Do not contact'],
+            'next_actions' => [
+                'Schedule a meeting with the prospect',
+                'Send a product demo link',
+                'Follow up on the quote with the prospect',
+                'Document the loss internally',
+            ],
+            'prompt_version' => 'v1.0-report',
+        ]);
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'closed_lost',
+            'relationship_health' => 'damaged',
+            'actionability'       => 'do_not_pursue',
+            'success_probability' => 0,
+        ]);
+
+        $skill    = new ReportSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockJob, ['enabled' => true], $triage);
+
+        $nextActions = $response['result']['next_actions'];
+
+        $hasCommercial = collect($nextActions)->contains(
+            fn($a) => preg_match('/meeting|demo|quote/i', $a) && preg_match('/prospect/i', $a)
+        );
+        $this->assertFalse($hasCommercial, 'Commercial prospect-facing actions should be stripped.');
+
+        $hasInternal = collect($nextActions)->contains(
+            fn($a) => str_contains(strtolower($a), 'internally') || str_contains(strtolower($a), 'document')
+        );
+        $this->assertTrue($hasInternal, 'Internal next actions should be preserved.');
     }
 }

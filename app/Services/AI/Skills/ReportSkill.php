@@ -3,6 +3,7 @@
 namespace App\Services\AI\Skills;
 
 use App\Models\AiReportJob;
+use App\Models\AiTriageResult;
 use App\Services\AI\Prompts\ReportPromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
 
@@ -14,26 +15,25 @@ class ReportSkill
     ) {
     }
 
-    public function generate(AiReportJob $job, array $config): array
+    public function generate(AiReportJob $job, array $config, ?AiTriageResult $triage = null): array
     {
         $systemPrompt = $this->promptFactory->buildSystemPrompt();
-        $userPrompt = $this->promptFactory->buildUserPrompt($job);
+        $userPrompt   = $this->promptFactory->buildUserPrompt($job, $triage);
 
         $raw = $this->provider->generateReport($config, [
             'system_prompt' => $systemPrompt,
-            'user_prompt' => $userPrompt,
-            'job_id' => $job->id,
-            'scope' => $job->scope,
-            'prompt_version' => ReportPromptFactory::VERSION,
+            'user_prompt'   => $userPrompt,
+            'scope'         => $job->getAttribute('scope') ?: 'thread',
+            'prompt_version'=> ReportPromptFactory::VERSION,
         ]);
 
         $metadata = [
-            'prompt_version' => ReportPromptFactory::VERSION,
+            'prompt_version'          => ReportPromptFactory::VERSION,
             'validation_stage_failed' => null,
-            'repair_applied' => false,
-            'repair_type' => null,
-            'fallback_applied' => false,
-            'fallback_reason' => null,
+            'repair_applied'          => false,
+            'repair_type'             => null,
+            'fallback_applied'        => false,
+            'fallback_reason'         => null,
         ];
 
         $validated = $this->validateParse($raw, $metadata);
@@ -44,10 +44,15 @@ class ReportSkill
             $validated = $this->applyRepair($validated, $metadata);
         }
 
+        // Enforce triage framing after AI response
+        if (!$metadata['fallback_applied'] && $triage !== null) {
+            $validated = $this->enforceTriageFraming($validated, $triage, $metadata);
+        }
+
         $validated['prompt_version'] = ReportPromptFactory::VERSION;
 
         return [
-            'result' => $validated,
+            'result'   => $validated,
             'metadata' => $metadata,
         ];
     }
@@ -113,6 +118,43 @@ class ReportSkill
         $metadata['repair_type'] = $metadata['repair_type']
             ? $metadata['repair_type'] . ',fallback_report'
             : 'fallback_report';
+
+        return $data;
+    }
+
+    private function enforceTriageFraming(array $data, AiTriageResult $triage, array &$metadata): array
+    {
+        $threadState  = $triage->thread_state ?? '';
+        $actionable   = $triage->actionability ?? '';
+        $probability  = (int) ($triage->success_probability ?? 100);
+
+        // Prepend state prefixes to summary
+        if ($threadState === 'closed_lost' && !str_starts_with($data['summary'] ?? '', '[CLOSED LOST]')) {
+            $data['summary'] = '[CLOSED LOST] ' . ($data['summary'] ?? '');
+            $metadata['repair_applied'] = true;
+            $metadata['repair_type'] = $metadata['repair_type']
+                ? $metadata['repair_type'] . ',closed_lost_prefix'
+                : 'closed_lost_prefix';
+        }
+
+        if ($threadState === 'reopened' && !str_starts_with($data['summary'] ?? '', '[REOPENED')) {
+            $data['summary'] = '[REOPENED — PROCEED WITH CAUTION] ' . ($data['summary'] ?? '');
+            $metadata['repair_applied'] = true;
+            $metadata['repair_type'] = $metadata['repair_type']
+                ? $metadata['repair_type'] . ',reopened_prefix'
+                : 'reopened_prefix';
+        }
+
+        // Strip commercial prospect-facing next actions for terminal states
+        if (in_array($actionable, ['do_not_pursue', 'archive'], true) || $probability <= 5) {
+            $data['next_actions'] = collect($data['next_actions'] ?? [])->filter(function (string $action): bool {
+                // Allow purely internal/operational actions
+                $isCommercialProspectAction =
+                    preg_match('/meeting|demo|quote/i', $action) &&
+                    preg_match('/prospect|customer|client|them|contact/i', $action);
+                return !$isCommercialProspectAction;
+            })->values()->all();
+        }
 
         return $data;
     }

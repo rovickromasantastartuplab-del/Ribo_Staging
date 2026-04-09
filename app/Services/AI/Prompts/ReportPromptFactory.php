@@ -3,6 +3,7 @@
 namespace App\Services\AI\Prompts;
 
 use App\Models\AiReportJob;
+use App\Models\AiTriageResult;
 use App\Models\Contact;
 use App\Models\EmailThread;
 
@@ -58,51 +59,64 @@ Good report shape: summary of renewed intent, insight on timing opportunity, nex
 PROMPT;
     }
 
-    public function buildUserPrompt(AiReportJob $job): string
+    public function buildUserPrompt(AiReportJob $job, ?AiTriageResult $triage = null): string
     {
-        $scope = $job->scope ?: 'overall';
-        $threadId = $job->email_thread_id ?: 'none';
-        $contactId = $job->contact_id ?: 'none';
-        $thread = $job->email_thread_id ? EmailThread::query()->find($job->email_thread_id) : null;
-        $contact = $job->contact_id ? Contact::query()->find($job->contact_id) : null;
+        $scope   = $job->scope ?? 'thread';
+        $context = $job->context_payload_json ?? [];
 
-        $threadSubject = $thread?->subject ?: 'No subject';
-        $threadSnippet = $thread?->snippet ?: 'No snippet';
-        $contactName = $contact?->name ?: 'N/A';
-        $contactEmail = $contact?->email ?: 'N/A';
+        $threads = collect($context['threads'] ?? [])
+            ->map(fn($t) => "Subject: {$t['subject']}\nSnippet: {$t['snippet']}")
+            ->implode("\n---\n");
 
-        $messagesSummary = '- No messages available.';
-        if ($thread) {
-            $messages = $thread->messages()
-                ->orderByDesc('sent_at')
-                ->limit(10)
-                ->get()
-                ->reverse()
-                ->values();
-            if ($messages->isNotEmpty()) {
-                $messagesSummary = $messages->map(function ($message): string {
-                    $sentAt = optional($message->sent_at)->toIso8601String() ?? 'unknown time';
-                    $from = trim((string) ($message->from_email ?? 'unknown'));
-                    $content = strip_tags((string) ($message->body_html ?? $message->body_preview ?? ''));
-                    $content = preg_replace('/\s+/', ' ', $content ?? '') ?? '';
-                    $content = mb_substr(trim($content), 0, 260);
-                    return "- {$sentAt} {$from}: " . ($content !== '' ? $content : '(no message text)');
-                })->implode("\n");
-            }
+        $parts = [];
+
+        if ($triage !== null) {
+            $parts[] = $this->buildTriageDecisionBlock($triage);
         }
 
+        $parts = array_merge($parts, [
+            'BEGIN <<untrusted_data>> CONVERSATION DATA',
+            "Scope: <<{$scope}>>",
+            'Conversation threads:',
+            $threads ?: '(no threads provided)',
+            'END <<untrusted_data>> CONVERSATION DATA',
+            'Output JSON only: {"summary":"...","key_insights":[...],"next_actions":[...],"prompt_version":"' . self::VERSION . '"}',
+        ]);
+
+        return implode("\n", $parts);
+    }
+
+    private function buildTriageDecisionBlock(AiTriageResult $triage): string
+    {
+        $state    = $triage->thread_state ?? 'unknown';
+        $health   = $triage->relationship_health ?? 'unknown';
+        $action   = $triage->actionability ?? 'unknown';
+        $pulse    = $triage->behavioral_pulse ?? 'unknown';
+        $prob     = $triage->success_probability ?? 0;
+        $goal     = $triage->strategic_action_json['goal'] ?? '';
+        $rec      = $triage->strategic_action_json['recommendation'] ?? '';
+
         return implode("\n", [
-            'BEGIN <<untrusted_data>> REPORT CONTEXT',
-            "Scope: {$scope}",
-            "Thread ID: {$threadId}",
-            "Thread Subject: <<{$threadSubject}>>",
-            "Thread Snippet: <<{$threadSnippet}>>",
-            "Contact ID: {$contactId}",
-            "Contact Name: <<{$contactName}>>",
-            "Contact Email: <<{$contactEmail}>>",
-            "Recent messages:\n{$messagesSummary}",
-            'END <<untrusted_data>> REPORT CONTEXT',
-            'Output JSON only with prompt_version: ' . self::VERSION,
+            '### TRIAGE DECISION (AUTHORITATIVE — REPORT MUST REFLECT THIS)',
+            "thread_state: <<{$state}>>",
+            "relationship_health: <<{$health}>>",
+            "actionability: <<{$action}>>",
+            "behavioral_pulse: <<{$pulse}>>",
+            "success_probability: <<{$prob}>>",
+            "strategic_goal: <<{$goal}>>",
+            "strategic_recommendation: <<{$rec}>>",
+            '',
+            '### REPORT FRAMING RULES FROM TRIAGE',
+            'Frame the summary around the triage state, not a fresh independent judgment.',
+            'Do not infer a more positive outcome than triage has already decided.',
+            '- archive / do_not_pursue → next_actions must not include prospect-facing scheduling/meetings/demos/quotes.',
+            '- act_now → next_actions should be concrete and time-sensitive.',
+            '- monitor → next_actions should be passive watching, not pushing.',
+            '- key_insights must explain WHY the state is what it is, not just what was said.',
+            '- If thread_state = closed_lost: say so plainly in the summary. Do not soften it.',
+            '- If thread_state = reopened: note the revival signal and advise caution.',
+            '- If thread_state = misaligned: explicitly explain the type of mismatch (scope / value / expectations / process).',
+            '- success_probability may be referenced in the narrative when it materially helps leadership interpretation.',
         ]);
     }
 }

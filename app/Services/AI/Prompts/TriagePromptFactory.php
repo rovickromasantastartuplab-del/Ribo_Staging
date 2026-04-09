@@ -29,12 +29,13 @@ You must aggressively identify when a conversation has reached a dead end. Look 
 
 ### INTELLIGENCE FIELDS
 1. thread_state:
-   - [active]: Normal progression with mutual interest.
+   - [active]: Normal progression with mutual engagement.
    - [nurturing]: Passive interest, longer timeline.
-   - [stalled]: No response or "ghosting" pattern.
-   - [objection]: Specific hurdles (price, features) raised.
-   - [misaligned]: Fundamental disagreement on value or capability.
+   - [stalled]: No response or ghosting pattern — momentum stopped, re-engagement needed.
+   - [objection]: Specific hurdles (price, features, timing) raised.
+   - [misaligned]: Fundamental disagreement on value, scope, or fit — deeper than an objection.
    - [closed_lost]: Formal break-off or explicit rejection.
+   - [reopened]: Previously closed_lost, now re-engaging with an explicit revival signal.
    - [non_commercial]: Generic talk or support.
    - [spam]: Junk.
 
@@ -50,11 +51,43 @@ You must aggressively identify when a conversation has reached a dead end. Look 
    - [archive]: No further value expected.
    - [do_not_pursue]: Deal is dead or contact is hostile.
 
+### RULE 1 — TERMINAL OVERRIDE
+If the latest message contains a break-off, rejection, pause, or explicit disengagement:
+- thread_state = closed_lost
+- success_probability = 0–5
+- actionability = do_not_pursue or archive
+- behavioral_pulse = broken
+- Do NOT recommend Meetings, Quotes, or any follow-up ask
+Terminal signals: "step back", "not interested", "moving on", "best of luck", "not a good fit",
+                  "pausing for now", "not going forward", "decided not to proceed", "break-off".
+
+### RULE 2 — ESCALATION RULE
+If thread_state was objection or misaligned and the latest message does NOT resolve the concern:
+- thread_state must remain at objection OR worsen to misaligned
+- success_probability must NOT increase
+- Use misaligned for deeper disagreement on fit, process, or value — not just price repetition alone.
+
+### RULE 3 — REVIVAL OVERRIDE
+If thread_state was closed_lost AND the latest message contains an explicit re-engagement signal:
+- thread_state = reopened (transitional — one step before active)
+- success_probability = 25–45 only
+- actionability = act_now
+- behavioral_pulse = heating_up
+- strategic_action should recommend a careful, low-friction re-engagement reply
+Explicit revival signals ONLY: "let's proceed", "apology accepted", "ready to move forward",
+                               "we'd like to restart", "can we reconnect", "we want to try again".
+Vague warmth ("thanks for reaching out") does NOT trigger revival.
+
+### RULE 4 — LATEST-MESSAGE PRIORITY
+The most recent message is the dominant signal. Earlier context provides background only.
+- A positive history does NOT protect against a terminal latest message.
+- A negative history does NOT prevent a genuine revival signal.
+- If the latest message contradicts the thread trend — trust the latest message.
+
 ### STRICT RULES
-1. LATEST MESSAGE PRIORITY: If a thread was 90% positive but the latest message is a break-off, the thread is [closed_lost] and probability is 0-5%.
-2. REJECTION CLAMP: If thread_state = [closed_lost], success_probability MUST BE capped at 5%.
-3. RELATIONSHIP SAFETY: If relationship_health is [damaged], do NOT suggest aggressive sales modules (Meetings/Quotes). Suggest [Tasks: Archive].
-4. MISSING CONTEXT: Default to [neutral] health and [nurturing] state if signal is weak. NEVER assume optimism.
+1. REJECTION CLAMP: If thread_state = [closed_lost], success_probability MUST BE capped at 5%.
+2. RELATIONSHIP SAFETY: If relationship_health is [damaged], do NOT suggest aggressive sales modules (Meetings/Quotes). Suggest [Tasks: Archive].
+3. MISSING CONTEXT: Default to [neutral] health and [nurturing] state if signal is weak. NEVER assume optimism.
 
 ### EXAMPLES (FEW-SHOT)
 User: "Thank you for the effort, but we've decided to step back from this project for now. Best of luck."

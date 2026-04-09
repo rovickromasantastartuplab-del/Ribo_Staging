@@ -38,7 +38,15 @@ class ConversationAiTriageService
     public function refresh(EmailThread $thread, int $companyId): AiTriageResult
     {
         $config = $this->configService->resolve();
-        $analysis = $this->triageSkill->analyze($thread, $config);
+
+        // Load the previous triage result so TriageSkill can enforce state transitions
+        $previousTriage = AiTriageResult::query()
+            ->where('created_by', $companyId)
+            ->where('email_thread_id', $thread->id)
+            ->latest('analyzed_at')
+            ->first();
+
+        $analysis = $this->triageSkill->analyze($thread, $config, $previousTriage);
 
         $attributes = [
             'created_by' => $companyId,

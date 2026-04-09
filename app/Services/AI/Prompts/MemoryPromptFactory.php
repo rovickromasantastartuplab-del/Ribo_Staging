@@ -59,7 +59,7 @@ Good outcome: moderate relationship, with "watch momentum" memory point.
 PROMPT;
     }
 
-    public function buildUserPrompt(Contact $contact): string
+    public function buildUserPrompt(Contact $contact, array $triageContext = []): string
     {
         $name = $contact->name ?: 'Unknown contact';
         $email = $contact->email ?: 'Unknown email';
@@ -77,14 +77,49 @@ PROMPT;
                 return "- {$lastAt} | {$subject} | {$snippet}";
             })->implode("\n");
 
-        return implode("\n", [
+        $parts = [
             'BEGIN <<untrusted_data>> CONTACT CONTEXT',
             "Contact: <<{$name}>>",
             "Email: <<{$email}>>",
             "Recent linked threads:\n{$threadLines}",
             'END <<untrusted_data>> CONTACT CONTEXT',
-            'Output JSON only with relationship_strength in [weak, moderate, strong].',
-            'Output prompt_version as: ' . self::VERSION,
-        ]);
+        ];
+
+        if (!empty($triageContext)) {
+            $parts[] = $this->buildTriageHistoryBlock($triageContext);
+        }
+
+        $parts[] = 'Prefer state patterns over isolated message wording.';
+        $parts[] = 'Output JSON only with relationship_strength in [weak, moderate, strong].';
+        $parts[] = 'Output prompt_version as: ' . self::VERSION;
+
+        return implode("\n", $parts);
+    }
+
+    private function buildTriageHistoryBlock(array $triageContext): string
+    {
+        $lines = ['### TRIAGE HISTORY (AUTHORITATIVE — DO NOT OVERRIDE)'];
+        $lines[] = 'The following are validated AI-assessed states for this contact\'s recent threads:';
+        $lines[] = '';
+
+        foreach ($triageContext as $entry) {
+            $label   = ($entry['is_latest'] ?? false) ? '[LATEST]' : 'Thread';
+            $state   = $entry['thread_state'] ?? 'unknown';
+            $health  = $entry['relationship_health'] ?? 'unknown';
+            $pulse   = $entry['behavioral_pulse'] ?? 'unknown';
+            $prob    = $entry['success_probability'] ?? 0;
+            $lines[] = "{$label}: state={$state} | health={$health} | pulse={$pulse} | probability={$prob}%";
+        }
+
+        $lines[] = '';
+        $lines[] = '### MEMORY BEHAVIOR RULES FROM TRIAGE';
+        $lines[] = '- The LATEST thread state is the dominant signal for relationship_strength.';
+        $lines[] = '- If latest thread_state = closed_lost or relationship_health = damaged: relationship_strength MUST be weak.';
+        $lines[] = '- If latest thread_state = reopened or stalled: relationship_strength max moderate.';
+        $lines[] = '- If latest behavioral_pulse = broken: note it explicitly in memory_points.';
+        $lines[] = '- If history shows repeated active + positive + heating_up: note the healthy pattern.';
+        $lines[] = '- Capture state changes and transitions as memory_points.';
+
+        return implode("\n", $lines);
     }
 }

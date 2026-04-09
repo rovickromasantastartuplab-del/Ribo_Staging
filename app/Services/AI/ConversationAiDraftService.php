@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use App\Models\AiDraftRun;
+use App\Models\AiTriageResult;
 use App\Models\EmailThread;
 use App\Services\AI\Skills\DraftSkill;
 
@@ -17,7 +18,15 @@ class ConversationAiDraftService
     public function generate(EmailThread $thread, int $companyId, string $prompt, string $tone): array
     {
         $config = $this->configService->resolve();
-        $analysis = $this->draftSkill->generate($thread, $prompt, $tone, $config);
+
+        // Load the latest triage result so DraftSkill can enforce state-aware guards
+        $triage = AiTriageResult::query()
+            ->where('email_thread_id', $thread->id)
+            ->where('created_by', $companyId)
+            ->latest('analyzed_at')
+            ->first();
+
+        $analysis = $this->draftSkill->generate($thread, $prompt, $tone, $config, $triage);
         $draft = $analysis['result'];
         $metadata = $analysis['metadata'] ?? [];
 

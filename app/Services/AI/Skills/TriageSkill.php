@@ -2,6 +2,7 @@
 
 namespace App\Services\AI\Skills;
 
+use App\Models\AiTriageResult;
 use App\Models\EmailThread;
 use App\Services\AI\Prompts\TriagePromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
@@ -25,30 +26,30 @@ class TriageSkill
     ) {
     }
 
-    public function analyze(EmailThread $thread, array $config): array
+    public function analyze(EmailThread $thread, array $config, ?AiTriageResult $previousTriage = null): array
     {
         $systemPrompt = $this->promptFactory->buildSystemPrompt();
         $userPrompt = $this->promptFactory->buildUserPrompt($thread);
 
         $rawResponse = $this->provider->analyzeTriage($config, [
             'system_prompt' => $systemPrompt,
-            'user_prompt' => $userPrompt,
+            'user_prompt'   => $userPrompt,
             'thread_subject' => $thread->subject,
             'prompt_version' => TriagePromptFactory::VERSION,
         ]);
 
         $metadata = [
-            'prompt_version' => TriagePromptFactory::VERSION,
-            'original_recommendation' => $rawResponse['strategic_action_json']['recommendation'] ?? '',
-            'validation_stage_failed' => null,
-            'repair_applied' => false,
-            'repair_type' => null,
-            'fallback_applied' => false,
-            'fallback_reason' => null,
+            'prompt_version'           => TriagePromptFactory::VERSION,
+            'original_recommendation'  => $rawResponse['strategic_action_json']['recommendation'] ?? '',
+            'validation_stage_failed'  => null,
+            'repair_applied'           => false,
+            'repair_type'              => null,
+            'fallback_applied'         => false,
+            'fallback_reason'          => null,
         ];
 
         $validated = $this->validateParse($rawResponse, $metadata);
-        
+
         if (!$metadata['fallback_applied']) {
             $validated = $this->validatePolicy($validated, $metadata);
         }
@@ -61,8 +62,12 @@ class TriageSkill
         $validated = $this->enforceTerminalLogic($validated, $metadata);
         $validated = $this->gateUrgency($validated, $metadata);
 
+        // State-transition enforcement using previous triage
+        $validated = $this->enforceRevivalLogic($validated, $metadata, $previousTriage);
+        $validated = $this->enforceEscalationLogic($validated, $metadata, $previousTriage);
+
         return [
-            'result' => array_merge($validated, ['prompt_version' => TriagePromptFactory::VERSION]),
+            'result'   => array_merge($validated, ['prompt_version' => TriagePromptFactory::VERSION]),
             'metadata' => $metadata,
         ];
     }
@@ -110,6 +115,55 @@ class TriageSkill
             $metadata['repair_type'] = $metadata['repair_type'] 
                 ? $metadata['repair_type'] . ',action_suppression' 
                 : 'action_suppression';
+        }
+
+        return $data;
+    }
+
+    private function enforceRevivalLogic(array $data, array &$metadata, ?AiTriageResult $previousTriage): array
+    {
+        if ($previousTriage === null) {
+            return $data;
+        }
+
+        // closed_lost → reopened: clamp probability, force act_now and heating_up
+        if (
+            ($previousTriage->thread_state ?? '') === 'closed_lost' &&
+            ($data['thread_state'] ?? '') === 'reopened'
+        ) {
+            $data['success_probability'] = max(25, min(45, $data['success_probability'] ?? 35));
+            $data['actionability']       = 'act_now';
+            $data['behavioral_pulse']    = 'heating_up';
+            // Note: priority is left for the AI to decide — not forced here
+            $metadata['repair_applied'] = true;
+            $metadata['repair_type']    = $metadata['repair_type']
+                ? $metadata['repair_type'] . ',revival_override'
+                : 'revival_override';
+        }
+
+        return $data;
+    }
+
+    private function enforceEscalationLogic(array $data, array &$metadata, ?AiTriageResult $previousTriage): array
+    {
+        if ($previousTriage === null) {
+            return $data;
+        }
+
+        $currentState  = $data['thread_state'] ?? '';
+        $previousProb  = (int) ($previousTriage->success_probability ?? 0);
+        $currentProb   = (int) ($data['success_probability'] ?? 0);
+
+        // Objection or misaligned: probability must not increase while state remains stuck
+        if (
+            in_array($currentState, ['objection', 'misaligned'], true) &&
+            $currentProb > $previousProb
+        ) {
+            $data['success_probability'] = $previousProb;
+            $metadata['repair_applied']  = true;
+            $metadata['repair_type']     = $metadata['repair_type']
+                ? $metadata['repair_type'] . ',escalation_guard'
+                : 'escalation_guard';
         }
 
         return $data;

@@ -14,10 +14,10 @@ class MemorySkill
     ) {
     }
 
-    public function summarize(Contact $contact, array $config): array
+    public function summarize(Contact $contact, array $config, array $triageContext = []): array
     {
         $systemPrompt = $this->promptFactory->buildSystemPrompt();
-        $userPrompt = $this->promptFactory->buildUserPrompt($contact);
+        $userPrompt   = $this->promptFactory->buildUserPrompt($contact, $triageContext);
 
         $raw = $this->provider->summarizeMemory($config, [
             'system_prompt' => $systemPrompt,
@@ -42,6 +42,11 @@ class MemorySkill
         }
         if ($metadata['fallback_applied']) {
             $validated = $this->applyRepair($validated, $metadata);
+        }
+
+        // Reconcile memory output with validated triage history
+        if (!$metadata['fallback_applied'] && !empty($triageContext)) {
+            $validated = $this->reconcileWithTriage($validated, $triageContext);
         }
 
         $validated['prompt_version'] = MemoryPromptFactory::VERSION;
@@ -106,6 +111,45 @@ class MemorySkill
         $metadata['repair_type'] = $metadata['repair_type']
             ? $metadata['repair_type'] . ',fallback_memory'
             : 'fallback_memory';
+
+        return $data;
+    }
+
+    private function reconcileWithTriage(array $data, array $triageContext): array
+    {
+        $latest = collect($triageContext)->firstWhere('is_latest', true) ?? $triageContext[0] ?? null;
+
+        if ($latest === null) {
+            return $data;
+        }
+
+        $latestState  = $latest['thread_state'] ?? '';
+        $latestHealth = $latest['relationship_health'] ?? '';
+        $latestPulse  = $latest['behavioral_pulse'] ?? '';
+
+        // Hard clamps for strong negative signals (latest thread dominates)
+        if ($latestState === 'closed_lost' || $latestHealth === 'damaged') {
+            $data['relationship_strength'] = 'weak';
+        } elseif (in_array($latestState, ['reopened', 'stalled'], true)) {
+            if ($data['relationship_strength'] === 'strong') {
+                $data['relationship_strength'] = 'moderate';
+            }
+        }
+
+        // Append broken engagement memory point
+        if ($latestPulse === 'broken') {
+            $data['memory_points_json'][] = 'Most recent thread ended with broken engagement.';
+        }
+
+        // Positive trend: majority active + positive relationship health
+        $healthyCount = collect($triageContext)->filter(
+            fn($t) => ($t['thread_state'] ?? '') === 'active' &&
+                      in_array($t['relationship_health'] ?? '', ['positive'], true)
+        )->count();
+
+        if ($healthyCount >= 2 && count($triageContext) >= 2) {
+            $data['memory_points_json'][] = 'Recent threads show consistent engagement and healthy momentum.';
+        }
 
         return $data;
     }

@@ -4,6 +4,7 @@ namespace App\Services\AI;
 
 use App\Models\AiMemorySummary;
 use App\Models\AiTask;
+use App\Models\AiTriageResult;
 use App\Models\Contact;
 use App\Services\AI\Skills\MemorySkill;
 
@@ -82,8 +83,37 @@ class ConversationAiMemoryService
     private function generateSummary(Contact $contact, int $companyId): array
     {
         $config = $this->configService->resolve();
-        $analysis = $this->memorySkill->summarize($contact, $config);
-        $result = $analysis['result'];
+
+        // Build triage context from the contact's recent threads
+        $recentThreadIds = $contact->emailThreads()
+            ->orderByDesc('last_message_at')
+            ->limit(5)
+            ->pluck('email_threads.id');
+
+        $triageResults = AiTriageResult::query()
+            ->whereIn('email_thread_id', $recentThreadIds)
+            ->where('created_by', $companyId)
+            ->latest('analyzed_at')
+            ->get()
+            ->keyBy('email_thread_id');
+
+        $triageContext = [];
+        foreach ($recentThreadIds as $index => $threadId) {
+            $triage = $triageResults->get($threadId);
+            if ($triage) {
+                $triageContext[] = [
+                    'thread_id'           => $threadId,
+                    'thread_state'         => $triage->thread_state,
+                    'relationship_health'  => $triage->relationship_health,
+                    'behavioral_pulse'     => $triage->behavioral_pulse,
+                    'success_probability'  => $triage->success_probability,
+                    'is_latest'            => $index === 0,
+                ];
+            }
+        }
+
+        $analysis = $this->memorySkill->summarize($contact, $config, $triageContext);
+        $result   = $analysis['result'];
         $metadata = $analysis['metadata'] ?? [];
 
         $data = array_merge($result, [

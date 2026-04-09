@@ -2,6 +2,7 @@
 
 namespace App\Services\AI\Prompts;
 
+use App\Models\AiTriageResult;
 use App\Models\EmailThread;
 
 class DraftPromptFactory
@@ -62,14 +63,20 @@ Good reply shape: Show ownership, provide timeline/update, ask one confirmation 
 PROMPT;
     }
 
-    public function buildUserPrompt(EmailThread $thread, string $instruction, string $tone): string
+    public function buildUserPrompt(EmailThread $thread, string $instruction, string $tone, ?AiTriageResult $triage = null): string
     {
-        $subject = $thread->subject ?: 'No subject';
-        $snippet = $thread->snippet ?: 'No snippet';
+        $subject      = $thread->subject ?: 'No subject';
+        $snippet      = $thread->snippet ?: 'No snippet';
         $participants = is_array($thread->participants) ? implode(', ', $thread->participants) : 'Unknown participants';
-        $history = $this->buildRecentMessageContext($thread);
+        $history      = $this->buildRecentMessageContext($thread);
 
-        return implode("\n", [
+        $parts = [];
+
+        if ($triage !== null) {
+            $parts[] = $this->buildTriageContextBlock($triage);
+        }
+
+        $parts = array_merge($parts, [
             'BEGIN <<untrusted_data>> THREAD DATA',
             "Thread subject: <<{$subject}>>",
             "Thread snippet: <<{$snippet}>>",
@@ -80,6 +87,40 @@ PROMPT;
             "User instruction: <<{$instruction}>>",
             'Output JSON only: {"subject":"...","body":"<p>...</p>","prompt_version":"' . self::VERSION . '"}',
         ]);
+
+        return implode("\n", $parts);
+    }
+
+    private function buildTriageContextBlock(AiTriageResult $triage): string
+    {
+        $state       = $triage->thread_state ?? 'unknown';
+        $health      = $triage->relationship_health ?? 'unknown';
+        $actionable  = $triage->actionability ?? 'unknown';
+        $pulse       = $triage->behavioral_pulse ?? 'unknown';
+        $probability = $triage->success_probability ?? 0;
+
+        $rules = [
+            '### TRIAGE CONTEXT (AUTHORITATIVE — USE AS SOURCE OF TRUTH)',
+            "thread_state: <<{$state}>>",
+            "relationship_health: <<{$health}>>",
+            "actionability: <<{$actionable}>>",
+            "behavioral_pulse: <<{$pulse}>>",
+            "success_probability: <<{$probability}>>",
+            '',
+            '### DRAFT BEHAVIOR RULES FROM TRIAGE',
+            'Use triage state as the source of truth. Do not infer a more optimistic state from the thread.',
+            '- closed_lost: write a recovery or farewell message only, never a sales push.',
+            '- reopened: write a careful re-engagement reply. Low-friction. One gentle CTA is allowed (e.g., "Would next week work for a short discussion?").',
+            '- objection: address the specific concern first before any next step.',
+            '- misaligned: repair clarity or scope first. Do NOT suggest scheduling.',
+            '- strained health: use empathetic, de-escalating tone.',
+            '- damaged health: do not pitch. Do not suggest meetings. Acknowledge only.',
+            '- cooling_down pulse: reduce urgency. No hard push.',
+            '- broken pulse: no engagement language. Neutral acknowledgement only.',
+            '- heating_up pulse: direct tone is appropriate. One clear CTA is fine.',
+        ];
+
+        return implode("\n", $rules);
     }
 
     private function buildRecentMessageContext(EmailThread $thread): string

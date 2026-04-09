@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\AI;
 
+use App\Models\AiTriageResult;
 use App\Models\EmailThread;
 use App\Services\AI\Prompts\TriagePromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
@@ -106,5 +107,102 @@ class AiTriageRealityTest extends TestCase
         $this->assertStringContainsString('Review hostile sentiment', $result['strategic_action_json']['recommendation']);
         $this->assertTrue($response['metadata']['repair_applied']);
         $this->assertStringContainsString('action_suppression', $response['metadata']['repair_type']);
+    }
+
+    public function test_it_clamps_reopened_probability_between_25_and_45_when_previous_was_closed_lost(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'summary'              => 'Customer wants to restart.',
+            'intent'               => 'sales',
+            'intent_confidence'    => 90,
+            'priority'             => 'high',
+            'thread_state'         => 'reopened',
+            'relationship_health'  => 'neutral',
+            'actionability'        => 'monitor', // AI was passive — should be overridden to act_now
+            'success_probability'  => 70,        // Too high — should be clamped to 25–45
+            'behavioral_pulse'     => 'stable',  // Should be overridden to heating_up
+            'strategic_action_json' => [
+                'goal'           => 'Re-engage',
+                'reason'         => 'Revival signal',
+                'recommendation' => 'Meetings: Schedule welcome-back call',
+            ],
+            'prompt_version' => 'v1.1-expert',
+        ]);
+
+        $previousTriage = new AiTriageResult(['thread_state' => 'closed_lost', 'success_probability' => 0]);
+
+        $skill    = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true], $previousTriage);
+        $result   = $response['result'];
+
+        $this->assertEquals('reopened', $result['thread_state']);
+        $this->assertGreaterThanOrEqual(25, $result['success_probability']);
+        $this->assertLessThanOrEqual(45, $result['success_probability']);
+        $this->assertEquals('act_now', $result['actionability']);
+        $this->assertEquals('heating_up', $result['behavioral_pulse']);
+    }
+
+    public function test_it_prevents_probability_increase_when_objection_is_unresolved(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'summary'              => 'Customer raised the same pricing concern again.',
+            'intent'               => 'sales',
+            'intent_confidence'    => 85,
+            'priority'             => 'medium',
+            'thread_state'         => 'objection',
+            'relationship_health'  => 'strained',
+            'actionability'        => 'act_now',
+            'success_probability'  => 75, // Higher than previous — should not be allowed
+            'behavioral_pulse'     => 'cooling_down',
+            'strategic_action_json' => [
+                'goal'           => 'Address objection',
+                'reason'         => 'Price concern repeated',
+                'recommendation' => 'Tasks: Follow up on pricing concern',
+            ],
+            'prompt_version' => 'v1.1-expert',
+        ]);
+
+        $previousTriage = new AiTriageResult(['thread_state' => 'objection', 'success_probability' => 55]);
+
+        $skill    = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true], $previousTriage);
+        $result   = $response['result'];
+
+        $this->assertEquals('objection', $result['thread_state']);
+        $this->assertLessThanOrEqual(55, $result['success_probability']);
+    }
+
+    public function test_it_advances_reopened_to_active_on_confirming_message(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'summary'              => 'Customer sent a normal business follow-up.',
+            'intent'               => 'sales',
+            'intent_confidence'    => 88,
+            'priority'             => 'medium',
+            'thread_state'         => 'active',   // AI correctly sees normal progression
+            'relationship_health'  => 'neutral',
+            'actionability'        => 'act_now',
+            'success_probability'  => 50,
+            'behavioral_pulse'     => 'stable',
+            'strategic_action_json' => [
+                'goal'           => 'Continue engagement',
+                'reason'         => 'Normal follow-up after revival',
+                'recommendation' => 'Leads: Move to qualified stage',
+            ],
+            'prompt_version' => 'v1.1-expert',
+        ]);
+
+        $previousTriage = new AiTriageResult(['thread_state' => 'reopened', 'success_probability' => 35]);
+
+        $skill    = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true], $previousTriage);
+        $result   = $response['result'];
+
+        // Confirming message after reopened: stays active (no forced regression)
+        $this->assertEquals('active', $result['thread_state']);
+        $this->assertGreaterThanOrEqual(35, $result['success_probability']);
     }
 }
