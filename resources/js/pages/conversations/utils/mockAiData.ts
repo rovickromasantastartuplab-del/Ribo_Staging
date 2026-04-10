@@ -119,6 +119,33 @@ export const deriveHealthLabel = (
 };
 
 /**
+ * Derives pulse display info with probability calibration.
+ */
+export const derivePulseInfo = (
+    pulse: string,
+    probability: number,
+    state: string
+): { label: string; className: string } => {
+    if (pulse === 'broken') {
+        return { label: 'BROKEN', className: 'bg-red-500/10 text-red-600' };
+    }
+
+    if (pulse === 'cooling_down') {
+        return { label: 'COOLING', className: 'bg-blue-500/10 text-blue-600' };
+    }
+
+    if (pulse === 'heating_up') {
+        // Tie HOT/WARM to probability
+        if (state === 'reopened' && probability <= 45) {
+            return { label: 'WARM', className: 'bg-orange-500/10 text-orange-600' };
+        }
+        return { label: 'HOT', className: 'bg-orange-500/10 text-orange-600' };
+    }
+
+    return { label: 'STABLE', className: 'bg-slate-500/10 text-slate-600' };
+};
+
+/**
  * Returns the allowed actions based on thread_state and actionability.
  * RULE: When triage fields exist, derived legacy display logic must be bypassed.
  */

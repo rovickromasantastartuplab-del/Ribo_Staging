@@ -9,6 +9,7 @@ import {
     adaptMemoryFromApi,
     adaptTriageFromApi,
     createFallbackMemory,
+    derivePulseInfo,
 } from '../utils/mockAiData';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -168,9 +169,21 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
                         </div>
                         <Badge
                             variant="outline"
-                            className={`text-[10px] h-5 border-none ${triage?.behavioral_pulse === 'heating_up' ? 'bg-orange-500/10 text-orange-600' : 'bg-slate-500/10 text-slate-600'}`}
+                            className={`text-[10px] h-5 border-none ${
+                                derivePulseInfo(
+                                    triage?.behavioral_pulse ?? 'stable',
+                                    triage?.success_probability ?? 0,
+                                    triage?.thread_state ?? 'active'
+                                ).className
+                            }`}
                         >
-                            {triage?.behavioral_pulse === 'heating_up' ? 'HOT' : 'STABLE'}
+                            {
+                                derivePulseInfo(
+                                    triage?.behavioral_pulse ?? 'stable',
+                                    triage?.success_probability ?? 0,
+                                    triage?.thread_state ?? 'active'
+                                ).label
+                            }
                         </Badge>
                     </div>
                 </div>

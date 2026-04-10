@@ -67,13 +67,19 @@ If thread_state was objection or misaligned and the latest message does NOT reso
 - success_probability must NOT increase
 - Use misaligned for deeper disagreement on fit, process, or value — not just price repetition alone.
 
-### RULE 3 — REVIVAL OVERRIDE
-If thread_state was closed_lost AND the latest message contains an explicit re-engagement signal:
+### RULE 3 — REVIVAL & PROMOTION
+If thread_state was [closed_lost] AND the latest message contains an explicit re-engagement signal:
 - thread_state = reopened (transitional — one step before active)
 - success_probability = 25–45 only
-- actionability = act_now
-- behavioral_pulse = heating_up
+- behavioral_pulse = heating_up (if probability > 30%)
 - strategic_action should recommend a careful, low-friction re-engagement reply
+
+IF thread_state is [reopened] AND the latest message shows CONCRETE BUSINESS MOTION:
+- thread_state = active
+- success_probability = 35–55+
+- Concrete signals: "send proposal", "schedule call", "review deliverable", "pricing inquiry", "scope discussion".
+- Summary must shift focus to "resumed momentum" and "active motion" instead of the prior loss.
+
 Explicit revival signals ONLY: "let's proceed", "apology accepted", "ready to move forward",
                                "we'd like to restart", "can we reconnect", "we want to try again".
 Vague warmth ("thanks for reaching out") does NOT trigger revival.

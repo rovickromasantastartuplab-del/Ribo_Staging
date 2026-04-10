@@ -130,11 +130,13 @@ class MemorySkill
         // Hard clamps for strong negative signals (latest thread dominates)
         if ($latestState === 'closed_lost' || $latestHealth === 'damaged') {
             $data['relationship_strength'] = 'weak';
-        } elseif (in_array($latestState, ['reopened', 'stalled'], true)) {
+        } elseif ($latestState === 'reopened' || $latestState === 'stalled') {
             if ($data['relationship_strength'] === 'strong') {
                 $data['relationship_strength'] = 'moderate';
             }
         }
+        // Note: 'active' state (including those promoted from reopened) 
+        // allows 'strong' relationship strength if supported by LLM findings.
 
         // Append broken engagement memory point
         if ($latestPulse === 'broken') {

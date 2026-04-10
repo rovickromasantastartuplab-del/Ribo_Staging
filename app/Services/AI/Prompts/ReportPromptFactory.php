@@ -115,6 +115,7 @@ PROMPT;
             '- key_insights must explain WHY the state is what it is, not just what was said.',
             '- If thread_state = closed_lost: say so plainly in the summary. Do not soften it.',
             '- If thread_state = reopened: note the revival signal and advise caution.',
+            '- If thread_state = active (promoted from reopened): explicitly focus the summary on resumed motion and active deliverables. Stop centering the prior apology or loss.',
             '- If thread_state = misaligned: explicitly explain the type of mismatch (scope / value / expectations / process).',
             '- success_probability may be referenced in the narrative when it materially helps leadership interpretation.',
         ]);

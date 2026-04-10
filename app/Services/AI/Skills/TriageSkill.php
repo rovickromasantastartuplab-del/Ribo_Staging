@@ -64,6 +64,7 @@ class TriageSkill
 
         // State-transition enforcement using previous triage
         $validated = $this->enforceRevivalLogic($validated, $metadata, $previousTriage);
+        $validated = $this->enforceActivePromotionLogic($validated, $metadata, $previousTriage, $thread);
         $validated = $this->enforceEscalationLogic($validated, $metadata, $previousTriage);
 
         return [
@@ -133,12 +134,54 @@ class TriageSkill
         ) {
             $data['success_probability'] = max(25, min(45, $data['success_probability'] ?? 35));
             $data['actionability']       = 'act_now';
-            $data['behavioral_pulse']    = 'heating_up';
-            // Note: priority is left for the AI to decide — not forced here
+            
+            // Only force heating_up if probability is high enough to be "hot"
+            if (($data['success_probability'] ?? 0) > 30) {
+                $data['behavioral_pulse'] = 'heating_up';
+            } else {
+                $data['behavioral_pulse'] = 'stable';
+            }
+
             $metadata['repair_applied'] = true;
             $metadata['repair_type']    = $metadata['repair_type']
                 ? $metadata['repair_type'] . ',revival_override'
                 : 'revival_override';
+        }
+
+        return $data;
+    }
+
+    private function enforceActivePromotionLogic(array $data, array &$metadata, ?AiTriageResult $previousTriage, EmailThread $thread): array
+    {
+        if ($previousTriage === null) {
+            return $data;
+        }
+
+        $currentState = $data['thread_state'] ?? '';
+        $previousState = $previousTriage->thread_state ?? '';
+        $snippet = strtolower($thread->getAttribute('snippet') ?? '');
+
+        // Reopened -> Active Promotion: if we are in reopened and see concrete business progression
+        if ($previousState === 'reopened' && $currentState === 'reopened') {
+            $businessSignals = [
+                'send over', 'proposal', 'timing', 'schedule', 'quote', 
+                'pricing', 'deliverable', 'first-pass', 'approach', 'next step',
+                'review request', 'let\'s move', 'forward'
+            ];
+
+            foreach ($businessSignals as $signal) {
+                if (str_contains($snippet, $signal)) {
+                    $data['thread_state'] = 'active';
+                    $data['success_probability'] = max(35, min(55, $data['success_probability'] ?? 45));
+                    $data['behavioral_pulse'] = 'heating_up';
+                    
+                    $metadata['repair_applied'] = true;
+                    $metadata['repair_type'] = $metadata['repair_type']
+                        ? $metadata['repair_type'] . ',active_promotion'
+                        : 'active_promotion';
+                    break;
+                }
+            }
         }
 
         return $data;

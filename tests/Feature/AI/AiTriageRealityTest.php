@@ -26,6 +26,7 @@ class AiTriageRealityTest extends TestCase
         $this->mockThread = Mockery::mock(EmailThread::class);
         $this->mockThread->shouldReceive('getAttribute')->with('id')->andReturn(123);
         $this->mockThread->shouldReceive('getAttribute')->with('subject')->andReturn('Test Subject');
+        $this->mockThread->shouldReceive('getAttribute')->with('snippet')->andReturn('Test Snippet');
     }
 
     public function tearDown(): void
