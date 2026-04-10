@@ -12,7 +12,6 @@ import {
     adaptMemoryFromApi,
     adaptTriageFromApi,
     createFallbackMemory,
-    deriveActionabilityInfo,
     deriveHealthInfo,
     derivePulseInfo,
     deriveStateInfo,
@@ -114,7 +113,6 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
     const stateInfo = deriveStateInfo(resolvedTriage.thread_state);
     const healthInfo = deriveHealthInfo(resolvedTriage.relationship_health);
     const pulseInfo = derivePulseInfo(resolvedTriage.behavioral_pulse, resolvedTriage.success_probability, resolvedTriage.thread_state);
-    const actionabilityInfo = deriveActionabilityInfo(resolvedTriage.actionability);
 
     if (loading) {
         return (
@@ -184,12 +182,9 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
                             <Activity className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                             Pulse
                         </div>
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
                             <Badge variant="outline" className={`h-5 border ${pulseInfo.className}`}>
                                 {pulseInfo.label}
-                            </Badge>
-                            <Badge variant="outline" className={`h-5 border ${actionabilityInfo.className}`}>
-                                {actionabilityInfo.label}
                             </Badge>
                         </div>
                     </div>
