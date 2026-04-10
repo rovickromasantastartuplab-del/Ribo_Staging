@@ -2,10 +2,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
-import { Activity, AlertCircle, AlertTriangle, CheckSquare, Heart, History, Square, Zap } from 'lucide-react';
+import { CheckSquare, History, Square, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { AiMemorySummary, AiTriageResult, deriveHealthInfo, derivePulseInfo } from '../utils/mockAiData';
+import { AiMemorySummary, AiTriageResult } from '../utils/mockAiData';
 
 interface AiMemoryCardProps {
     data: AiMemorySummary;
@@ -47,10 +47,6 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
         }
     };
 
-    const pulse = triageData?.behavioral_pulse || 'stable';
-    const healthInfo = deriveHealthInfo(triageData?.relationship_health);
-    const pulseInfo = derivePulseInfo(pulse, triageData?.success_probability ?? 0, triageData?.thread_state ?? 'active');
-
     const loops = data.tasks?.length
         ? data.tasks.map((task) => ({
               id: task.id,
@@ -72,47 +68,8 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                     </div>
                     <CardTitle className="text-sm font-semibold text-slate-900 dark:text-slate-100">Relationship History</CardTitle>
                 </div>
-                <Badge
-                    variant="outline"
-                    className={cn(
-                        'gap-1 border px-2 py-0.5',
-                        triageData
-                            ? healthInfo.className
-                            : data.sentiment === 'positive'
-                              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
-                              : data.sentiment === 'frustrated'
-                                ? 'border-rose-500/20 bg-rose-500/10 text-rose-600'
-                                : 'border-slate-500/20 bg-slate-500/10 text-slate-600',
-                    )}
-                >
-                    {triageData?.relationship_health === 'positive' || (!triageData && data.sentiment === 'positive') ? (
-                        <Heart className="h-3 w-3 fill-current" />
-                    ) : (
-                        <AlertCircle className="h-3 w-3" />
-                    )}
-                    {triageData ? `${healthInfo.label.toUpperCase()} RELATIONSHIP` : `${data.sentiment.toUpperCase()} MOOD`}
-                </Badge>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-                <div className="space-y-2 rounded-xl border border-slate-500/10 bg-slate-500/5 p-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-slate-500">
-                            <Activity className="h-3.5 w-3.5" />
-                            <span className="text-[10px] font-bold tracking-tight uppercase">Behavioral Pulse</span>
-                        </div>
-                        <Badge variant="outline" className={`h-5 border ${pulseInfo.className}`}>
-                            {pulseInfo.label}
-                        </Badge>
-                    </div>
-                    <div className="flex items-start gap-2">
-                        {pulse === 'broken' ? (
-                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600" />
-                        ) : (
-                            <Activity className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                        )}
-                        <p className="text-muted-foreground text-[11px] font-medium">{pulseInfo.description}</p>
-                    </div>
-                </div>
 
                 <div className="space-y-1.5">
                     <p className="text-xs leading-relaxed font-medium text-slate-600 italic dark:text-slate-400">"{data.relationship_summary}"</p>

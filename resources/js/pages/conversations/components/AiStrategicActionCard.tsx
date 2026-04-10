@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Info, Zap } from 'lucide-react';
-import { AiTriageResult, deriveActionabilityInfo, deriveStateInfo, getAllowedActions } from '../utils/mockAiData';
+import { AiTriageResult } from '../utils/mockAiData';
 
 interface AiStrategicActionCardProps {
     data: {
@@ -15,10 +15,6 @@ interface AiStrategicActionCardProps {
 export default function AiStrategicActionCard({ data, triageData }: AiStrategicActionCardProps) {
     if (!data) return null;
 
-    const stateInfo = deriveStateInfo(triageData?.thread_state);
-    const actionabilityInfo = deriveActionabilityInfo(triageData?.actionability);
-    const allowedActions = triageData ? getAllowedActions(triageData) : [];
-
     return (
         <Card className="overflow-hidden border-none bg-gradient-to-br from-indigo-50 to-white shadow-sm ring-1 ring-indigo-500/10 dark:from-indigo-950/20 dark:to-slate-900/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
@@ -30,16 +26,6 @@ export default function AiStrategicActionCard({ data, triageData }: AiStrategicA
                         AI Suggested Action
                     </CardTitle>
                 </div>
-                {triageData && (
-                    <div className="flex flex-wrap justify-end gap-2">
-                        <Badge variant="outline" className={`border ${stateInfo.className}`}>
-                            {stateInfo.label}
-                        </Badge>
-                        <Badge variant="outline" className={`border ${actionabilityInfo.className}`}>
-                            {actionabilityInfo.label}
-                        </Badge>
-                    </div>
-                )}
             </CardHeader>
             <CardContent className="space-y-3 px-4 pt-1 pb-4">
                 <div className="space-y-1.5">
@@ -51,22 +37,6 @@ export default function AiStrategicActionCard({ data, triageData }: AiStrategicA
                         </span>
                     </div>
                 </div>
-                {allowedActions.length > 0 && (
-                    <div className="space-y-2">
-                        <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">UI-Safe Actions</div>
-                        <div className="flex flex-wrap gap-2">
-                            {allowedActions.map((action) => (
-                                <Badge
-                                    key={action}
-                                    variant="outline"
-                                    className="border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                                >
-                                    {action}
-                                </Badge>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </CardContent>
         </Card>
     );

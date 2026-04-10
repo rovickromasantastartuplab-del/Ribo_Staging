@@ -12,10 +12,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import axios from 'axios';
-import { BookOpen, BrainCircuit, CheckCircle2, Download, Layout, MoreHorizontal, RefreshCw, Target, TrendingUp } from 'lucide-react';
+import { BookOpen, BrainCircuit, CheckCircle2, Download, Layout, MoreHorizontal, RefreshCw, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { AiTriageResult, deriveActionabilityInfo, deriveHealthInfo, deriveStateInfo, getAllowedActions } from '../utils/mockAiData';
+import { AiTriageResult, deriveStateInfo } from '../utils/mockAiData';
 
 interface AiTriageCardProps {
     data: AiTriageResult;
@@ -25,9 +25,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
     const [selectedOppId, setSelectedOppId] = useState<string>('overall');
     const [isExporting, setIsExporting] = useState(false);
     const stateInfo = deriveStateInfo(data.thread_state);
-    const healthInfo = deriveHealthInfo(data.relationship_health);
-    const actionabilityInfo = deriveActionabilityInfo(data.actionability);
-    const allowedActions = getAllowedActions(data);
 
     const getIntentColor = (intent: string) => {
         switch (intent.toLowerCase()) {
@@ -66,10 +63,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                         <p className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">Quick Glance</p>
                     </div>
                 </div>
-                <Badge variant="outline" className="gap-1 border-indigo-500/20 bg-indigo-500/5 px-2 py-0.5 text-indigo-500">
-                    <Target className="h-3 w-3" />
-                    {data.success_probability}% Win Prob.
-                </Badge>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2">
@@ -84,17 +77,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                     </Badge>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className={`border ${stateInfo.className}`}>
-                        State: {stateInfo.label}
-                    </Badge>
-                    <Badge variant="outline" className={`border ${healthInfo.className}`}>
-                        Relationship: {healthInfo.label}
-                    </Badge>
-                    <Badge variant="outline" className={`border ${actionabilityInfo.className}`}>
-                        Actionability: {actionabilityInfo.label}
-                    </Badge>
-                </div>
 
                 <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -138,20 +120,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                     </DropdownMenu>
                 </div>
 
-                <div className="space-y-2 rounded-xl border border-slate-200/70 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
-                    <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Allowed Next Steps</div>
-                    <div className="flex flex-wrap gap-2">
-                        {allowedActions.map((action) => (
-                            <Badge
-                                key={action}
-                                variant="outline"
-                                className="border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                            >
-                                {action}
-                            </Badge>
-                        ))}
-                    </div>
-                </div>
 
                 <Separator className="my-2 opacity-50" />
                 <div className="space-y-3 pt-2">
