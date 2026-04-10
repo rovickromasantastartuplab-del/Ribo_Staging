@@ -90,20 +90,20 @@ it('generates ai draft from prompt and tone', function () {
         'https://api.openai.com/v1/responses' => Http::response([
             'output_text' => json_encode([
                 'subject' => 'Re: Follow-up regarding proposal',
-                'body' => '<p>Thanks for the update. Are you available for a quick call tomorrow?</p>',
+                'body'    => '<p>Thanks for the update. Are you available for a quick call tomorrow?</p>',
             ]),
             'usage' => [
-                'input_tokens' => 12,
+                'input_tokens'  => 12,
                 'output_tokens' => 18,
-                'total_tokens' => 30,
+                'total_tokens'  => 30,
             ],
         ], 200),
     ]);
 
     postJson('/ai/draft', [
         'threadId' => $thread->id,
-        'prompt' => 'Write a professional follow-up',
-        'tone' => 'professional',
+        'prompt'   => 'Write a professional follow-up',
+        'tone'     => 'professional',
     ])->assertOk()
         ->assertJsonPath('data.subject', 'Re: Follow-up regarding proposal')
         ->assertJsonPath('data.body', '<p>Thanks for the update. Are you available for a quick call tomorrow?</p>');

@@ -97,18 +97,22 @@ it('refreshes triage for thread', function () {
     Http::fake([
         'https://api.openai.com/v1/responses' => Http::response([
             'output_text' => json_encode([
-                'summary' => 'Customer asked for a pricing breakdown and timeline.',
-                'intent' => 'sales',
-                'intent_confidence' => 92,
-                'priority' => 'high',
-                'success_probability' => 78,
-                'behavioral_pulse' => 'heating_up',
-                'strategic_action' => [
-                    'goal' => 'close_deal',
-                    'reason' => 'high_purchase_intent',
-                    'recommendation' => 'Send a concise proposal with options and timeline today.',
+                'summary'              => 'Customer asked for a pricing breakdown and timeline.',
+                'intent'               => 'sales',
+                'intent_confidence'    => 92,
+                'priority'             => 'high',
+                'thread_state'         => 'active',
+                'relationship_health'  => 'positive',
+                'actionability'        => 'act_now',
+                'success_probability'  => 78,
+                'behavioral_pulse'     => 'heating_up',
+                'strategic_action_json' => [
+                    'goal'           => 'close_deal',
+                    'reason'         => 'high_purchase_intent',
+                    'recommendation' => 'Leads: Send a concise proposal with options and timeline today.',
                 ],
             ]),
+            'usage' => ['input_tokens' => 20, 'output_tokens' => 30, 'total_tokens' => 50],
         ], 200),
     ]);
 

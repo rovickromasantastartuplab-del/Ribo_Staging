@@ -52,37 +52,30 @@ class ConversationAiReportService
             ->firstOrFail();
     }
 
-    public function process(AiReportJob $job, int $companyId): AiReportJob
+    public function process(AiReportJob|int $job): AiReportJob
     {
+        $job = $this->resolveReportJob($job);
         $config = $this->configService->resolve();
-
-        // Load latest triage for this thread so Report reflects the same state
-        $triage = $job->email_thread_id
-            ? AiTriageResult::query()
-                ->where('email_thread_id', $job->email_thread_id)
-                ->where('created_by', $companyId)
-                ->latest('analyzed_at')
-                ->first()
-            : null;
+        $triage = $this->resolveTriageSnapshot($job);
 
         try {
             $analysis = $this->reportSkill->generate($job, $config, $triage);
-            $report   = $analysis['result'];
+            $report = $analysis['result'];
             $metadata = $analysis['metadata'] ?? [];
 
-            // Store triage snapshot alongside report payload for historical accuracy
             $payload = array_merge($report, array_filter([
-                'thread_state'        => $triage?->thread_state,
+                'thread_state' => $triage?->thread_state,
                 'relationship_health' => $triage?->relationship_health,
-                'actionability'       => $triage?->actionability,
+                'actionability' => $triage?->actionability,
+                'behavioral_pulse' => $triage?->behavioral_pulse,
                 'success_probability' => $triage?->success_probability,
-            ], fn($v) => $v !== null));
+            ], fn ($value) => $value !== null));
 
             $job->update([
-                'status'              => ($metadata['fallback_applied'] ?? false) ? 'fallback' : 'completed',
+                'status' => ($metadata['fallback_applied'] ?? false) ? 'fallback' : 'completed',
                 'result_payload_json' => $payload,
-                'metadata_json'       => $metadata,
-                'completed_at'        => now(),
+                'metadata_json' => $metadata,
+                'completed_at' => now(),
             ]);
         } catch (\Throwable $e) {
             $job->update([
@@ -91,5 +84,29 @@ class ConversationAiReportService
                 'completed_at' => now(),
             ]);
         }
+
+        return $job;
+    }
+
+    protected function resolveReportJob(AiReportJob|int $job): AiReportJob
+    {
+        if ($job instanceof AiReportJob) {
+            return $job;
+        }
+
+        return AiReportJob::query()->findOrFail($job);
+    }
+
+    protected function resolveTriageSnapshot(AiReportJob $job): ?AiTriageResult
+    {
+        if (!$job->email_thread_id || !$job->created_by) {
+            return null;
+        }
+
+        return AiTriageResult::query()
+            ->where('email_thread_id', $job->email_thread_id)
+            ->where('created_by', $job->created_by)
+            ->latest('analyzed_at')
+            ->first();
     }
 }

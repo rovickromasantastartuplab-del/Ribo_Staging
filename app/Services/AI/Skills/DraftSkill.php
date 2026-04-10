@@ -9,7 +9,18 @@ use App\Services\AI\Providers\OpenAiConversationClient;
 
 class DraftSkill
 {
-    private const RECOVERY_KEYWORDS = ['recovery', 'win-back', 'win back', 'closing', 'farewell', 'reopen'];
+    private const RECOVERY_KEYWORDS = [
+        'recovery',
+        'win-back',
+        'win back',
+        'closing',
+        'farewell',
+        'reopen',
+        'revival',
+        're-engage',
+        'reengage',
+        'reactivate',
+    ];
 
     public function __construct(
         private readonly DraftPromptFactory $promptFactory,
@@ -63,10 +74,10 @@ class DraftSkill
 
         $validated = $this->validateParse($raw, $metadata);
         if (!$metadata['fallback_applied']) {
-            $validated = $this->validatePolicy($validated, $metadata);
+            $validated = $this->validatePolicy($validated, $metadata, $triage);
         }
         if ($metadata['fallback_applied']) {
-            $validated = $this->applyRepair($validated, $metadata);
+            $validated = $this->applyRepair($validated, $metadata, $triage);
         }
 
         $validated['prompt_version'] = DraftPromptFactory::VERSION;
@@ -123,7 +134,7 @@ class DraftSkill
         return $data;
     }
 
-    private function validatePolicy(array $data, array &$metadata): array
+    private function validatePolicy(array $data, array &$metadata, ?AiTriageResult $triage): array
     {
         $subject = trim((string) ($data['subject'] ?? ''));
         $body = trim((string) ($data['body'] ?? ''));
@@ -149,15 +160,84 @@ class DraftSkill
             return $data;
         }
 
+        $normalizedBody = mb_strtolower(strip_tags($body));
+        $threadState = (string) ($triage?->thread_state ?? '');
+        $relationshipHealth = (string) ($triage?->relationship_health ?? '');
+
+        if (
+            $threadState === 'misaligned'
+            && $this->containsSchedulingLanguage($normalizedBody)
+        ) {
+            $metadata['validation_stage_failed'] = 'policy';
+            $metadata['fallback_applied'] = true;
+            $metadata['fallback_reason'] = 'misaligned_scheduling_blocked';
+            return $data;
+        }
+
+        if (
+            in_array($threadState, ['closed_lost'], true) || $relationshipHealth === 'damaged'
+        ) {
+            if ($this->containsAggressiveSalesLanguage($normalizedBody)) {
+                $metadata['validation_stage_failed'] = 'policy';
+                $metadata['fallback_applied'] = true;
+                $metadata['fallback_reason'] = 'aggressive_sales_blocked';
+                return $data;
+            }
+        }
+
         return $data;
     }
 
-    private function applyRepair(array $data, array &$metadata): array
+    private function containsSchedulingLanguage(string $body): bool
     {
-        $data['subject'] = 'Quick follow-up';
-        $data['body'] = '<p>Thanks for the update. Would you like us to schedule a quick next step?</p>';
+        $patterns = [
+            'schedule',
+            'meeting',
+            'book a call',
+            'calendar',
+            'time slot',
+            'demo',
+            'jump on a call',
+        ];
+
+        return collect($patterns)->contains(fn ($token) => str_contains($body, $token));
+    }
+
+    private function containsAggressiveSalesLanguage(string $body): bool
+    {
+        $patterns = [
+            'act now',
+            'close this week',
+            'limited time',
+            'book a demo now',
+            'sign today',
+            'final push',
+            'book a call now',
+        ];
+
+        return collect($patterns)->contains(fn ($token) => str_contains($body, $token));
+    }
+
+    private function applyRepair(array $data, array &$metadata, ?AiTriageResult $triage = null): array
+    {
+        $threadState        = $triage?->thread_state ?? '';
+        $relationshipHealth = $triage?->relationship_health ?? '';
+        $actionability      = $triage?->actionability ?? '';
+
+        $isConstrained = in_array($threadState, ['closed_lost', 'misaligned'], true)
+            || $actionability === 'do_not_pursue'
+            || $relationshipHealth === 'damaged';
+
+        if ($isConstrained) {
+            $data['subject'] = 'Reviewing your message';
+            $data['body']    = '<p>Thank you for your message. We are reviewing the details and will be in touch if appropriate.</p>';
+        } else {
+            $data['subject'] = 'Quick follow-up';
+            $data['body']    = '<p>Thanks for the update. Let me know if there is anything I can help clarify.</p>';
+        }
+
         $metadata['repair_applied'] = true;
-        $metadata['repair_type'] = $metadata['repair_type']
+        $metadata['repair_type']    = $metadata['repair_type']
             ? $metadata['repair_type'] . ',fallback_draft'
             : 'fallback_draft';
 

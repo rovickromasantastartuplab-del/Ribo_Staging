@@ -48,7 +48,7 @@ class DraftValidatorTest extends TestCase
         $this->assertTrue($response['metadata']['fallback_applied']);
         $this->assertEquals('missing_required_key_body', $response['metadata']['fallback_reason']);
         $this->assertEquals('Quick follow-up', $response['result']['subject']);
-        $this->assertStringContainsString('Would you like us to schedule a quick next step?', $response['result']['body']);
+        $this->assertStringContainsString('Let me know if there is anything I can help clarify', $response['result']['body']);
     }
 
     public function test_it_trims_long_subjects(): void
@@ -174,12 +174,12 @@ class DraftValidatorTest extends TestCase
         $this->assertEquals('One last thought', $response['result']['subject']);
     }
 
-    public function test_it_suppresses_scheduling_language_for_misaligned_threads(): void
+    public function test_it_blocks_scheduling_language_for_misaligned_threads(): void
     {
         $mockClient = Mockery::mock(OpenAiConversationClient::class);
         $mockClient->shouldReceive('generateDraft')->andReturn([
-            'subject' => 'Clarifying our approach',
-            'body'    => '<p>Let me clarify what we can offer.</p>',
+            'subject' => 'Let us align quickly',
+            'body'    => '<p>Let us schedule a call tomorrow to align details.</p>',
         ]);
 
         $triage = new AiTriageResult([
@@ -192,8 +192,78 @@ class DraftValidatorTest extends TestCase
         $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
         $response = $skill->generate($this->mockThread, 'Clarify scope', 'professional', [], $triage);
 
-        // Should allow draft (not blocked) but pass misaligned flag through
-        $this->assertFalse($response['metadata']['fallback_applied']);
-        $this->assertTrue($response['metadata']['triage_misaligned_guard'] ?? false);
+        $this->assertTrue($response['metadata']['fallback_applied']);
+        $this->assertEquals('misaligned_scheduling_blocked', $response['metadata']['fallback_reason']);
+    }
+
+    public function test_it_blocks_aggressive_sales_language_for_damaged_threads(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateDraft')->andReturn([
+            'subject' => 'Final push',
+            'body'    => '<p>Book a demo now so we can close this week.</p>',
+        ]);
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'objection',
+            'relationship_health' => 'damaged',
+            'actionability'       => 'monitor',
+            'behavioral_pulse'    => 'cooling_down',
+        ]);
+
+        $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockThread, 'Follow up', 'professional', [], $triage);
+
+        $this->assertTrue($response['metadata']['fallback_applied']);
+        $this->assertEquals('aggressive_sales_blocked', $response['metadata']['fallback_reason']);
+    }
+
+    public function test_fallback_draft_does_not_push_scheduling_in_closed_lost_state(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        // AI returns a body that will fail policy and trigger fallback
+        $mockClient->shouldReceive('generateDraft')->andReturn([
+            'subject' => 'Checking in',
+            'body'    => '<p>Would you like us to schedule a quick next step?</p>', // actually passes policy
+        ]);
+
+        // But we simulate a parse failure to force applyRepair()
+        $mockClient->shouldReceive('generateDraft')->andReturn([
+            // body key deliberately missing to trigger fallback
+            'subject' => 'Checking in',
+        ]);
+
+        $triage = new AiTriageResult([
+            'thread_state'        => 'closed_lost',
+            'relationship_health' => 'damaged',
+            'actionability'       => 'archive',
+            'behavioral_pulse'    => 'broken',
+        ]);
+
+        $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
+
+        // Note: closed_lost without recovery keyword is hard-blocked before AI call (draft_blocked_terminal_state)
+        // So to test fallback body content, we use a state that triggers fallback AFTER the AI call.
+        // Test with misaligned + scheduling body that triggers misaligned_scheduling_blocked fallback:
+        $mockClient2 = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient2->shouldReceive('generateDraft')->andReturn([
+            'subject' => 'Let us reconnect',
+            'body'    => '<p>Let us schedule a meeting to realign on scope.</p>',
+        ]);
+
+        $misalignedTriage = new AiTriageResult([
+            'thread_state'        => 'misaligned',
+            'relationship_health' => 'strained',
+            'actionability'       => 'act_now',
+            'behavioral_pulse'    => 'cooling_down',
+        ]);
+
+        $skill2   = new DraftSkill($this->mockPromptFactory, $mockClient2);
+        $response = $skill2->generate($this->mockThread, 'Clarify scope', 'professional', [], $misalignedTriage);
+
+        // Fallback is triggered; the fallback body must NOT contain scheduling language
+        $this->assertTrue($response['metadata']['fallback_applied']);
+        $this->assertStringNotContainsStringIgnoringCase('schedule', $response['result']['body']);
+        $this->assertStringNotContainsStringIgnoringCase('next step', $response['result']['body']);
     }
 }

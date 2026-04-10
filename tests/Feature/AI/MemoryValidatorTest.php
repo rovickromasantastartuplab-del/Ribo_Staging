@@ -182,4 +182,59 @@ class MemoryValidatorTest extends TestCase
         );
         $this->assertTrue($hasTrendPoint, 'Expected a positive trend memory point to be injected.');
     }
+
+    public function test_it_records_repeated_friction_from_triage_history_without_rejudging_the_contact(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('summarizeMemory')->andReturn([
+            'relationship_summary'  => 'Relationship has some mixed history.',
+            'relationship_strength' => 'moderate',
+            'memory_points_json'    => ['There have been several back-and-forth conversations'],
+        ]);
+
+        $triageContext = [
+            ['thread_state' => 'objection', 'relationship_health' => 'strained', 'behavioral_pulse' => 'cooling_down', 'is_latest' => true],
+            ['thread_state' => 'objection', 'relationship_health' => 'strained', 'behavioral_pulse' => 'stable', 'is_latest' => false],
+            ['thread_state' => 'misaligned', 'relationship_health' => 'strained', 'behavioral_pulse' => 'cooling_down', 'is_latest' => false],
+        ];
+
+        $skill    = new MemorySkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->summarize($this->mockContact, ['enabled' => true], $triageContext);
+
+        $this->assertTrue(
+            collect($response['result']['memory_points_json'])->contains(
+                fn (string $point): bool => str_contains(strtolower($point), 'repeated')
+                    && (str_contains(strtolower($point), 'friction') || str_contains(strtolower($point), 'objection'))
+            ),
+            'Expected triage-history friction to be preserved as a memory point.'
+        );
+    }
+
+    public function test_it_records_cautious_revival_when_history_moves_from_closed_lost_to_reopened(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('summarizeMemory')->andReturn([
+            'relationship_summary'  => 'The relationship looks fully back on track.',
+            'relationship_strength' => 'strong',
+            'memory_points_json'    => ['Customer restarted the conversation'],
+        ]);
+
+        $triageContext = [
+            ['thread_state' => 'reopened', 'relationship_health' => 'neutral', 'behavioral_pulse' => 'heating_up', 'is_latest' => true],
+            ['thread_state' => 'closed_lost', 'relationship_health' => 'strained', 'behavioral_pulse' => 'broken', 'is_latest' => false],
+        ];
+
+        $skill    = new MemorySkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->summarize($this->mockContact, ['enabled' => true], $triageContext);
+
+        $this->assertEquals('moderate', $response['result']['relationship_strength']);
+        $this->assertStringContainsString('reopened', strtolower($response['result']['relationship_summary']));
+        $this->assertTrue(
+            collect($response['result']['memory_points_json'])->contains(
+                fn (string $point): bool => str_contains(strtolower($point), 'reopened')
+                    || str_contains(strtolower($point), 'revived')
+            ),
+            'Expected the closed_lost -> reopened transition to be preserved in memory.'
+        );
+    }
 }

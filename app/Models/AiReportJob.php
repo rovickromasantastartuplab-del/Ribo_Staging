@@ -17,6 +17,7 @@ class AiReportJob extends Model
         'status',
         'request_payload_json',
         'result_payload_json',
+        'metadata_json',
         'error_message',
         'requested_at',
         'completed_at',
@@ -25,6 +26,7 @@ class AiReportJob extends Model
     protected $casts = [
         'request_payload_json' => 'array',
         'result_payload_json' => 'array',
+        'metadata_json' => 'array',
         'requested_at' => 'datetime',
         'completed_at' => 'datetime',
     ];

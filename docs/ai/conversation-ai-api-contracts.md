@@ -24,17 +24,18 @@ Response `200`:
     "intent": "follow_up",
     "intent_confidence": 68,
     "priority": "medium",
-    "suggested_status": "Pending",
+    "thread_state": "active",
+    "relationship_health": "neutral",
+    "actionability": "act_now",
+    "suggested_status": "Open",
     "success_probability": 55,
-    "behavioral_pulse": "neutral",
+    "behavioral_pulse": "stable",
     "summary": "Thread requires attention: Subject.",
     "strategic_action": {
       "goal": "advance_conversation",
       "reason": "customer_activity_detected",
-      "recommendation": "send a concise follow-up response"
+      "recommendation": "Leads: Send a concise follow-up response"
     },
-    "model_version": "gpt-5.4-mini",
-    "prompt_version": "triage-v1",
     "analyzed_at": "2026-04-09T12:00:00+00:00"
   }
 }

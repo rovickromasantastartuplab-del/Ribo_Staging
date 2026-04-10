@@ -1,10 +1,18 @@
-﻿# Output Contract
+# Output Contract
 
-Return strict JSON only.
+This policy currently ships inside triage output as the nested `strategic_action` object:
+
+```json
+{
+  "goal": "string",
+  "reason": "string",
+  "recommendation": "ModulePrefix: action text"
+}
+```
 
 ## Rules
-- Include only required keys for the target feature.
-- Keep values concise and specific.
-- Do not return markdown, code fences, or extra keys.
-- Enforce enum values where applicable.
-- If uncertain, use safe fallback behavior defined in guardrails.
+- `goal` should name the single objective of the next move.
+- `reason` should explain why the action matches the triage state.
+- `recommendation` should use one module-prefixed instruction such as `Tasks:` or `Quotes:`.
+- Do not return multiple options or a plan list.
+- Do not contradict triage-owned `thread_state`, `relationship_health`, or `actionability`.

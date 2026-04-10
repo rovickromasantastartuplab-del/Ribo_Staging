@@ -17,7 +17,7 @@ class MemorySkill
     public function summarize(Contact $contact, array $config, array $triageContext = []): array
     {
         $systemPrompt = $this->promptFactory->buildSystemPrompt();
-        $userPrompt   = $this->promptFactory->buildUserPrompt($contact, $triageContext);
+        $userPrompt = $this->promptFactory->buildUserPrompt($contact, $triageContext);
 
         $raw = $this->provider->summarizeMemory($config, [
             'system_prompt' => $systemPrompt,
@@ -44,7 +44,6 @@ class MemorySkill
             $validated = $this->applyRepair($validated, $metadata);
         }
 
-        // Reconcile memory output with validated triage history
         if (!$metadata['fallback_applied'] && !empty($triageContext)) {
             $validated = $this->reconcileWithTriage($validated, $triageContext);
         }
@@ -65,6 +64,7 @@ class MemorySkill
                 $metadata['validation_stage_failed'] = 'parse';
                 $metadata['fallback_applied'] = true;
                 $metadata['fallback_reason'] = "missing_required_key_{$key}";
+
                 return $data;
             }
         }
@@ -82,6 +82,7 @@ class MemorySkill
             $metadata['validation_stage_failed'] = 'policy';
             $metadata['fallback_applied'] = true;
             $metadata['fallback_reason'] = 'invalid_memory_contract';
+
             return $data;
         }
 
@@ -95,10 +96,12 @@ class MemorySkill
             $metadata['validation_stage_failed'] = 'policy';
             $metadata['fallback_applied'] = true;
             $metadata['fallback_reason'] = 'empty_memory_points';
+
             return $data;
         }
 
         $data['memory_points_json'] = $cleanPoints;
+
         return $data;
     }
 
@@ -123,35 +126,70 @@ class MemorySkill
             return $data;
         }
 
-        $latestState  = $latest['thread_state'] ?? '';
+        $latestState = $latest['thread_state'] ?? '';
         $latestHealth = $latest['relationship_health'] ?? '';
-        $latestPulse  = $latest['behavioral_pulse'] ?? '';
+        $latestPulse = $latest['behavioral_pulse'] ?? '';
+        $history = collect($triageContext);
 
-        // Hard clamps for strong negative signals (latest thread dominates)
         if ($latestState === 'closed_lost' || $latestHealth === 'damaged') {
             $data['relationship_strength'] = 'weak';
+            $data['relationship_summary'] = $latestState === 'closed_lost'
+                ? 'Latest triage marks the relationship as closed_lost despite any earlier positive history.'
+                : 'Latest triage marks the relationship as damaged and requiring careful handling.';
         } elseif ($latestState === 'reopened' || $latestState === 'stalled') {
             if ($data['relationship_strength'] === 'strong') {
                 $data['relationship_strength'] = 'moderate';
             }
-        }
-        // Note: 'active' state (including those promoted from reopened) 
-        // allows 'strong' relationship strength if supported by LLM findings.
 
-        // Append broken engagement memory point
+            if ($latestState === 'reopened') {
+                $data['relationship_summary'] = 'Relationship recently reopened after a previously lost thread, but renewed momentum is still cautious.';
+            }
+
+            if ($latestState === 'stalled') {
+                $data['relationship_summary'] = 'Recent relationship momentum is stalled and should be treated as paused until business motion returns.';
+            }
+        }
+
         if ($latestPulse === 'broken') {
             $data['memory_points_json'][] = 'Most recent thread ended with broken engagement.';
         }
 
-        // Positive trend: majority active + positive relationship health
-        $healthyCount = collect($triageContext)->filter(
-            fn($t) => ($t['thread_state'] ?? '') === 'active' &&
-                      in_array($t['relationship_health'] ?? '', ['positive'], true)
+        $frictionCount = $history->filter(
+            fn ($entry) => in_array($entry['thread_state'] ?? '', ['objection', 'misaligned'], true)
+                || in_array($entry['relationship_health'] ?? '', ['strained', 'damaged'], true)
+        )->count();
+
+        if ($frictionCount >= 2) {
+            $data['memory_points_json'][] = 'Recent triage history shows repeated friction and unresolved objections.';
+        }
+
+        $hasPriorClosedLost = $history
+            ->reject(fn (array $entry): bool => (bool) ($entry['is_latest'] ?? false))
+            ->contains(fn (array $entry): bool => ($entry['thread_state'] ?? '') === 'closed_lost');
+
+        if ($latestState === 'reopened' && $hasPriorClosedLost) {
+            $data['memory_points_json'][] = 'The relationship reopened after a previously lost thread, so renewed momentum should be treated cautiously.';
+        }
+
+        if ($latestState === 'stalled') {
+            $data['memory_points_json'][] = 'Recent engagement is stalled and needs a fresh signal before it should be treated as active momentum.';
+        }
+
+        $healthyCount = $history->filter(
+            fn ($entry) => ($entry['thread_state'] ?? '') === 'active'
+                && in_array($entry['relationship_health'] ?? '', ['positive'], true)
         )->count();
 
         if ($healthyCount >= 2 && count($triageContext) >= 2) {
             $data['memory_points_json'][] = 'Recent threads show consistent engagement and healthy momentum.';
         }
+
+        $data['memory_points_json'] = collect($data['memory_points_json'] ?? [])
+            ->map(static fn ($point): string => trim((string) $point))
+            ->filter(static fn (string $point): bool => $point !== '')
+            ->unique()
+            ->values()
+            ->all();
 
         return $data;
     }

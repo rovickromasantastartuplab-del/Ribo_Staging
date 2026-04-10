@@ -29,7 +29,7 @@ class TriageSkill
     public function analyze(EmailThread $thread, array $config, ?AiTriageResult $previousTriage = null): array
     {
         $systemPrompt = $this->promptFactory->buildSystemPrompt();
-        $userPrompt = $this->promptFactory->buildUserPrompt($thread);
+        $userPrompt = $this->promptFactory->buildUserPrompt($thread, $previousTriage);
 
         $rawResponse = $this->provider->analyzeTriage($config, [
             'system_prompt' => $systemPrompt,
@@ -63,9 +63,10 @@ class TriageSkill
         $validated = $this->gateUrgency($validated, $metadata);
 
         // State-transition enforcement using previous triage
-        $validated = $this->enforceRevivalLogic($validated, $metadata, $previousTriage);
+        $validated = $this->enforceRevivalLogic($validated, $metadata, $previousTriage, $thread);
         $validated = $this->enforceActivePromotionLogic($validated, $metadata, $previousTriage, $thread);
         $validated = $this->enforceEscalationLogic($validated, $metadata, $previousTriage);
+        $validated = $this->enforceStateCalibration($validated, $metadata);
 
         return [
             'result'   => array_merge($validated, ['prompt_version' => TriagePromptFactory::VERSION]),
@@ -104,37 +105,57 @@ class TriageSkill
             $data['strategic_action_json']['goal'] = 'Cease interaction';
             
             $metadata['repair_applied'] = true;
-            $metadata['repair_type'] = $metadata['repair_type'] 
-                ? $metadata['repair_type'] . ',terminal_override' 
-                : 'terminal_override';
+            $this->appendRepairType($metadata, 'terminal_override');
         }
 
         // 2. Action Suppression for Damaged Relationships
         if (($data['relationship_health'] ?? '') === 'damaged' && !str_starts_with($data['strategic_action_json']['recommendation'] ?? '', 'Tasks:')) {
             $data['strategic_action_json']['recommendation'] = 'Tasks: Review hostile sentiment and archive if necessary.';
             $metadata['repair_applied'] = true;
-            $metadata['repair_type'] = $metadata['repair_type'] 
-                ? $metadata['repair_type'] . ',action_suppression' 
-                : 'action_suppression';
+            $this->appendRepairType($metadata, 'action_suppression');
         }
 
         return $data;
     }
 
-    private function enforceRevivalLogic(array $data, array &$metadata, ?AiTriageResult $previousTriage): array
+    private function enforceRevivalLogic(array $data, array &$metadata, ?AiTriageResult $previousTriage, EmailThread $thread): array
     {
         if ($previousTriage === null) {
             return $data;
         }
 
-        // closed_lost → reopened: clamp probability, force act_now and heating_up
-        if (
-            ($previousTriage->thread_state ?? '') === 'closed_lost' &&
-            ($data['thread_state'] ?? '') === 'reopened'
-        ) {
+        $previousState = $previousTriage->thread_state ?? '';
+        $currentState  = $data['thread_state'] ?? '';
+
+        // Guard: any transition OUT of closed_lost must have an inbound trigger
+        if ($previousState === 'closed_lost' && $currentState !== 'closed_lost') {
+            $latestSenderRole = $this->detectLatestSenderRole($thread);
+
+            if ($latestSenderRole === 'outbound_team') {
+                // Outbound message cannot revive a closed_lost thread under any state label
+                $data['thread_state']    = 'closed_lost';
+                $data['actionability']   = 'monitor';
+                $data['success_probability'] = min($data['success_probability'] ?? 5, 5);
+                $data['behavioral_pulse'] = 'broken';
+                $data['strategic_action_json']['goal']           = 'Wait for explicit revival';
+                $data['strategic_action_json']['reason']         = 'Only an inbound customer/prospect reply can revive a previously lost thread.';
+                $data['strategic_action_json']['recommendation'] = 'Tasks: Wait for explicit inbound customer/prospect confirmation before treating this thread as revived.';
+
+                $metadata['repair_applied'] = true;
+                $this->appendRepairType($metadata, 'outbound_recovery_guard');
+
+                return $data;
+            }
+
+            // Inbound revival path: allow and calibrate
+            // Only allow reopened as the transition state (inbound doesn't jump directly to active)
+            if ($currentState !== 'reopened') {
+                $data['thread_state'] = 'reopened';
+            }
+
             $data['success_probability'] = max(25, min(45, $data['success_probability'] ?? 35));
             $data['actionability']       = 'act_now';
-            
+
             // Only force heating_up if probability is high enough to be "hot"
             if (($data['success_probability'] ?? 0) > 30) {
                 $data['behavioral_pulse'] = 'heating_up';
@@ -143,9 +164,7 @@ class TriageSkill
             }
 
             $metadata['repair_applied'] = true;
-            $metadata['repair_type']    = $metadata['repair_type']
-                ? $metadata['repair_type'] . ',revival_override'
-                : 'revival_override';
+            $this->appendRepairType($metadata, 'revival_override');
         }
 
         return $data;
@@ -176,9 +195,7 @@ class TriageSkill
                     $data['behavioral_pulse'] = 'heating_up';
                     
                     $metadata['repair_applied'] = true;
-                    $metadata['repair_type'] = $metadata['repair_type']
-                        ? $metadata['repair_type'] . ',active_promotion'
-                        : 'active_promotion';
+                    $this->appendRepairType($metadata, 'active_promotion');
                     break;
                 }
             }
@@ -204,9 +221,89 @@ class TriageSkill
         ) {
             $data['success_probability'] = $previousProb;
             $metadata['repair_applied']  = true;
-            $metadata['repair_type']     = $metadata['repair_type']
-                ? $metadata['repair_type'] . ',escalation_guard'
-                : 'escalation_guard';
+            $this->appendRepairType($metadata, 'escalation_guard');
+        }
+
+        return $data;
+    }
+
+    private function enforceStateCalibration(array $data, array &$metadata): array
+    {
+        $threadState = $data['thread_state'] ?? '';
+        $actionability = $data['actionability'] ?? '';
+        $recommendation = (string) ($data['strategic_action_json']['recommendation'] ?? '');
+
+        if ($threadState === 'objection') {
+            $changed = false;
+
+            if (($data['success_probability'] ?? 0) > 55) {
+                $data['success_probability'] = 55;
+                $changed = true;
+            }
+
+            if (($data['behavioral_pulse'] ?? '') === 'heating_up') {
+                $data['behavioral_pulse'] = 'cooling_down';
+                $changed = true;
+            }
+
+            if (!str_starts_with($recommendation, 'Tasks:')) {
+                $data['strategic_action_json']['goal'] = 'Resolve stated objection';
+                $data['strategic_action_json']['reason'] = 'The thread is blocked by an explicit concern that must be handled before any commercial advance.';
+                $data['strategic_action_json']['recommendation'] = 'Tasks: Address the objection directly before proposing any meeting or commercial next step.';
+                $changed = true;
+            }
+
+            if ($changed) {
+                $metadata['repair_applied'] = true;
+                $this->appendRepairType($metadata, 'objection_guard');
+            }
+        }
+
+        if ($threadState === 'misaligned') {
+            $changed = false;
+
+            if (($data['success_probability'] ?? 0) > 30) {
+                $data['success_probability'] = 30;
+                $changed = true;
+            }
+
+            if (in_array($data['relationship_health'] ?? '', ['positive', 'neutral'], true)) {
+                $data['relationship_health'] = 'strained';
+                $changed = true;
+            }
+
+            if (($data['relationship_health'] ?? '') === 'damaged') {
+                if (($data['behavioral_pulse'] ?? '') !== 'broken') {
+                    $data['behavioral_pulse'] = 'broken';
+                    $changed = true;
+                }
+            } elseif (($data['behavioral_pulse'] ?? '') !== 'cooling_down') {
+                $data['behavioral_pulse'] = 'cooling_down';
+                $changed = true;
+            }
+
+            if (!str_starts_with($recommendation, 'Tasks:')) {
+                $data['strategic_action_json']['goal'] = 'Repair or confirm mismatch';
+                $data['strategic_action_json']['reason'] = 'The thread shows a deeper scope, value, or process mismatch that should be clarified before any commercial ask.';
+                $data['strategic_action_json']['recommendation'] = 'Tasks: Clarify the scope, value gap, or process mismatch before proposing any meeting or quote.';
+                $changed = true;
+            }
+
+            if ($changed) {
+                $metadata['repair_applied'] = true;
+                $this->appendRepairType($metadata, 'misalignment_guard');
+            }
+        }
+
+        if (
+            in_array($actionability, ['archive', 'do_not_pursue'], true) &&
+            !str_starts_with((string) ($data['strategic_action_json']['recommendation'] ?? ''), 'Tasks:')
+        ) {
+            $data['strategic_action_json']['goal'] = 'Respect non-pursuit state';
+            $data['strategic_action_json']['reason'] = 'The actionability state forbids active commercial pursuit.';
+            $data['strategic_action_json']['recommendation'] = 'Tasks: Archive or hold the thread according to triage actionability.';
+            $metadata['repair_applied'] = true;
+            $this->appendRepairType($metadata, 'actionability_guard');
         }
 
         return $data;
@@ -254,9 +351,7 @@ class TriageSkill
         if ($data['priority'] === 'urgent' && !in_array($data['intent'], ['sales', 'billing'], true)) {
             $data['priority'] = 'high';
             $metadata['repair_applied'] = true;
-            $metadata['repair_type'] = $metadata['repair_type'] 
-                ? $metadata['repair_type'] . ',urgency_downgrade' 
-                : 'urgency_downgrade';
+            $this->appendRepairType($metadata, 'urgency_downgrade');
         }
 
         return $data;
@@ -281,6 +376,51 @@ class TriageSkill
         $data['success_probability'] = min($data['success_probability'] ?? 50, 50);
 
         return $data;
+    }
+
+    private function detectLatestSenderRole(EmailThread $thread): string
+    {
+        $ownEmail = $this->getOwnEmailAddress($thread);
+        $latestSender = $this->getLatestMessageSenderEmail($thread);
+
+        if ($ownEmail === null || $latestSender === null) {
+            return 'unknown';
+        }
+
+        return $latestSender === $ownEmail
+            ? 'outbound_team'
+            : 'inbound_customer_prospect';
+    }
+
+    private function getOwnEmailAddress(EmailThread $thread): ?string
+    {
+        try {
+            $account = $thread->getAttribute('gmailAccount');
+            $email = strtolower(trim((string) ($account->gmail_address ?? '')));
+
+            return $email !== '' ? $email : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function getLatestMessageSenderEmail(EmailThread $thread): ?string
+    {
+        try {
+            $message = $thread->getAttribute('latestMessage');
+            $email = strtolower(trim((string) ($message->from_email ?? '')));
+
+            return $email !== '' ? $email : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function appendRepairType(array &$metadata, string $type): void
+    {
+        $metadata['repair_type'] = $metadata['repair_type']
+            ? $metadata['repair_type'] . ',' . $type
+            : $type;
     }
 }
 

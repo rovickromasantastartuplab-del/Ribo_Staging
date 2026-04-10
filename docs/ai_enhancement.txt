@@ -1,0 +1,355 @@
+You are a senior AI systems architect and prompt engineer working on an existing Laravel CRM conversation AI system.
+
+Your job is to enhance and align the full skill system across:
+1. triage-sdr-manager
+2. magic-draft-executive-liaison
+3. memory-customer-success-analyst
+4. reports-chief-of-staff
+5. strategic-action-revops-director
+
+IMPORTANT:
+Do not treat these as independent prompts.
+Treat them as one coordinated AI system with shared truth.
+
+The core design principle is:
+
+TRIAGE IS THE AUTHORITATIVE SOURCE OF TRUTH.
+
+That means:
+- Triage decides the conversation state
+- Draft must follow that state
+- Memory must preserve that state over time
+- Report must explain that state
+- Strategic action must align with that state
+- Skill docs and prompt factories must match this architecture exactly
+
+==================================================
+PROJECT GOAL
+==================================================
+
+Enhance the skill design, prompt design, and coordination logic so the system behaves like ONE coherent assistant instead of several disconnected AI tools.
+
+I need you to improve:
+1. the conversation-skills documentation under docs/ai/conversation-skills
+2. the corresponding PromptFactory logic
+3. the role design and boundaries between skills
+4. the state coordination rules between skills
+5. the examples/few-shot behavior for each skill
+
+Do NOT give generic advice.
+Do NOT only rewrite one prompt.
+Do NOT only focus on triage.
+Do NOT make high-level suggestions without implementation-ready changes.
+
+==================================================
+SHARED STATE MODEL (SOURCE OF TRUTH)
+==================================================
+
+Triage owns the canonical shared state:
+
+- thread_state
+- relationship_health
+- actionability
+- behavioral_pulse
+- success_probability
+- strategic_action
+
+Thread state enum:
+- active
+- nurturing
+- stalled
+- objection
+- misaligned
+- closed_lost
+- reopened
+- non_commercial
+- spam
+
+Relationship health enum:
+- positive
+- neutral
+- strained
+- damaged
+
+Actionability enum:
+- act_now
+- monitor
+- archive
+- do_not_pursue
+
+Behavioral pulse enum:
+- heating_up
+- cooling_down
+- stable
+- broken
+
+State transition principles:
+- objection can worsen to misaligned
+- misaligned can worsen to closed_lost
+- closed_lost can become reopened only from explicit inbound customer revival
+- reopened is transitional and can promote to active after confirmed business motion
+- latest message is dominant
+- outbound recovery attempts from our side must NOT reopen a lost thread by themselves
+
+==================================================
+WHAT IS BROKEN TODAY
+==================================================
+
+The system currently has these problems:
+- triage can semantically understand a state change without enforcing it strongly enough
+- draft can still contradict dead/damaged thread reality if not constrained
+- memory can independently reclassify relationship health from raw snippets and drift from triage
+- report can independently re-judge the thread instead of explaining triage truth
+- strategic action can remain generic or commercially optimistic when the state does not support it
+- documentation and implementation can drift apart
+- UI can show contradictory labels if downstream skills do not align with triage
+
+==================================================
+YOUR TASK
+==================================================
+
+Design and write a full enhancement plan for ALL FIVE skills and their prompt/docs, with concrete updated wording and architecture guidance.
+
+You must improve both:
+1. SKILL documentation design
+2. PromptFactory prompt behavior
+
+For each skill, you must:
+- explain its exact role in the larger system
+- define what it is allowed to decide
+- define what it must inherit from triage
+- define what it must never override
+- improve its persona rules
+- improve its prompt structure
+- improve its examples/few-shot behavior
+- improve how it handles edge cases
+- make sure the docs and prompt logic are aligned
+
+==================================================
+SECTION 1 — TRIAGE-SDR-MANAGER
+==================================================
+
+Enhance triage-sdr-manager so it becomes a state transition engine, not a snapshot classifier.
+
+It must:
+- detect objection, misalignment, closed_lost, reopened, and active progression
+- apply latest-message priority
+- treat outbound recovery attempts as recovery attempts only, not revival
+- require inbound customer/prospect explicit re-engagement for reopened
+- promote reopened -> active only after confirmed business motion
+- downgrade probability more aggressively on objection and misalignment
+- prevent optimism on dead threads
+- produce one strategic action consistent with thread_state/actionability
+
+What I need from you:
+- improved SKILL.md wording for triage-sdr-manager
+- improved system prompt content for TriagePromptFactory
+- new/updated few-shot examples for:
+  - objection
+  - misalignment
+  - closed_lost
+  - apology-only from our side
+  - explicit customer revival
+  - reopened -> active promotion
+
+==================================================
+SECTION 2 — MAGIC-DRAFT-EXECUTIVE-LIAISON
+==================================================
+
+Enhance magic-draft-executive-liaison so Draft follows triage truth.
+
+Draft must:
+- consume triage state
+- never infer a more optimistic state than triage
+- block aggressive sales language for closed_lost or damaged threads
+- only allow recovery drafts when explicitly requested
+- handle reopened carefully with one low-friction CTA
+- handle objection by addressing the concern first
+- handle misaligned by repairing clarity/scope before scheduling
+- adapt tone based on relationship_health and behavioral_pulse
+
+What I need from you:
+- improved SKILL.md wording for magic-draft-executive-liaison
+- improved prompt instructions for DraftPromptFactory
+- explicit “triage context is authoritative” block
+- updated few-shot examples for:
+  - objection-aware reply
+  - misalignment repair reply
+  - blocked closed_lost draft
+  - careful revival reply
+  - reopened cautious next-step reply
+
+==================================================
+SECTION 3 — MEMORY-CUSTOMER-SUCCESS-ANALYST
+==================================================
+
+Enhance memory-customer-success-analyst so Memory becomes a relationship historian, not an independent re-judge.
+
+Memory must:
+- consume triage history
+- prefer state patterns over isolated snippets
+- preserve friction history
+- preserve revival events
+- preserve repeated positive momentum
+- clamp weak when latest state is closed_lost/damaged
+- keep reopened cautious
+- reflect triage-derived relationship reality rather than inventing a separate one
+
+What I need from you:
+- improved SKILL.md wording for memory-customer-success-analyst
+- improved prompt instructions for MemoryPromptFactory
+- explicit triage-history context block
+- memory behavior rules for:
+  - latest state dominance
+  - hard negative clamps
+  - positive trend recognition
+  - transition-aware memory points
+- updated few-shot examples for:
+  - repeated objections
+  - closed_lost then reopened
+  - steady healthy engagement
+  - stalled relationship
+
+==================================================
+SECTION 4 — REPORTS-CHIEF-OF-STAFF
+==================================================
+
+Enhance reports-chief-of-staff so Report explains triage rather than contradicting it.
+
+Report must:
+- consume triage snapshot
+- frame the summary around triage truth
+- explain why the state changed
+- align next_actions with actionability
+- avoid prospect-facing commercial follow-up if archive/do_not_pursue
+- explain misalignment type explicitly
+- treat reopened cautiously
+- include probability/state context in payload and narrative when useful
+
+What I need from you:
+- improved SKILL.md wording for reports-chief-of-staff
+- improved prompt instructions for ReportPromptFactory
+- explicit triage framing block
+- report behavior rules for:
+  - closed_lost
+  - reopened
+  - misaligned
+  - actionability gating
+- updated few-shot examples for:
+  - closed lost summary
+  - revived/reopened summary
+  - misalignment report
+  - executive explanation of risk shift
+
+==================================================
+SECTION 5 — STRATEGIC-ACTION-REVOPS-DIRECTOR
+==================================================
+
+Enhance strategic-action-revops-director so strategic action becomes clearly downstream of triage state.
+
+Strategic action must:
+- never conflict with thread_state/actionability
+- never suggest meetings/quotes on closed_lost/damaged/do_not_pursue
+- choose one best action based on state and leverage
+- be specific, not generic
+- adapt for:
+  - objection
+  - misaligned
+  - active
+  - reopened
+  - archive/do_not_pursue
+
+What I need from you:
+- improved SKILL.md wording for strategic-action-revops-director
+- explicit action-ranking rules
+- state-aware examples
+- examples of forbidden actions by state
+- improved next-best-action guidance for:
+  - objection
+  - misalignment
+  - closed_lost
+  - reopened
+  - active momentum
+
+==================================================
+SECTION 6 — CROSS-SKILL COORDINATION RULES
+==================================================
+
+Create a coordination layer in the documentation and prompts.
+
+I need a clear statement of:
+- what triage owns
+- what downstream skills inherit
+- what downstream skills are forbidden from overriding
+- how the same state should appear across draft, memory, report, strategic action
+- how to avoid contradictions across the system
+
+You must define:
+
+A. Shared invariants
+Examples:
+- if thread_state = closed_lost, no skill may imply active pursuit
+- if relationship_health = damaged, no skill may sound upbeat or pushy
+- if thread_state = reopened, all skills must remain cautious until business motion confirms active
+
+B. Sender-role invariant
+- only inbound customer/prospect messages can revive a closed_lost thread
+- outbound apologies/recovery attempts do not count as revival
+
+C. UI alignment guidance
+- triage state must be the displayed truth
+- legacy derived logic must be bypassed when triage fields exist
+- relationship/mood displays must not contradict triage
+
+==================================================
+SECTION 7 — OUTPUT FORMAT
+==================================================
+
+Return your answer in this exact structure:
+
+1. System diagnosis
+2. Shared architectural principle
+3. Enhanced triage-sdr-manager
+   - revised skill doc guidance
+   - revised prompt guidance
+   - revised few-shot examples
+4. Enhanced magic-draft-executive-liaison
+   - revised skill doc guidance
+   - revised prompt guidance
+   - revised few-shot examples
+5. Enhanced memory-customer-success-analyst
+   - revised skill doc guidance
+   - revised prompt guidance
+   - revised few-shot examples
+6. Enhanced reports-chief-of-staff
+   - revised skill doc guidance
+   - revised prompt guidance
+   - revised few-shot examples
+7. Enhanced strategic-action-revops-director
+   - revised skill doc guidance
+   - revised prompt guidance
+   - revised few-shot examples
+8. Cross-skill coordination rules
+9. Concrete implementation priorities
+10. Final recommendations for keeping docs and prompt factories aligned over time
+
+==================================================
+IMPORTANT CONSTRAINTS
+==================================================
+
+- Be concrete and opinionated
+- Do not stay high-level
+- Do not rewrite only one skill
+- Do not suggest vague “better prompt engineering”
+- Design the five skills as one coordinated system
+- Keep triage as the source of truth
+- Preserve what already works:
+  - closed_lost detection
+  - apology-only should not reopen
+  - explicit customer re-engagement should reopen
+- Improve what is still weak:
+  - objection calibration
+  - misalignment promotion
+  - reopened -> active promotion
+  - relationship consistency
+  - action specificity

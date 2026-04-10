@@ -206,4 +206,151 @@ class AiTriageRealityTest extends TestCase
         $this->assertEquals('active', $result['thread_state']);
         $this->assertGreaterThanOrEqual(35, $result['success_probability']);
     }
+
+    public function test_it_does_not_treat_outbound_recovery_attempts_as_reopened_threads(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'summary'               => 'We sent an apology and invited them back.',
+            'intent'                => 'follow_up',
+            'intent_confidence'     => 82,
+            'priority'              => 'medium',
+            'thread_state'          => 'reopened',
+            'relationship_health'   => 'neutral',
+            'actionability'         => 'act_now',
+            'success_probability'   => 48,
+            'behavioral_pulse'      => 'heating_up',
+            'strategic_action_json' => [
+                'goal'           => 'Restart the deal',
+                'reason'         => 'Apology sent',
+                'recommendation' => 'Meetings: Book a recovery call immediately',
+            ],
+            'prompt_version' => 'v1.1-expert',
+        ]);
+
+        $this->mockThread->shouldReceive('getAttribute')->with('gmailAccount')->andReturn((object) ['gmail_address' => 'sales@ribo.test']);
+        $this->mockThread->shouldReceive('getAttribute')->with('latestMessage')->andReturn((object) ['from_email' => 'sales@ribo.test']);
+
+        $previousTriage = new AiTriageResult([
+            'thread_state' => 'closed_lost',
+            'success_probability' => 0,
+        ]);
+
+        $skill    = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true], $previousTriage);
+        $result   = $response['result'];
+
+        $this->assertEquals('closed_lost', $result['thread_state']);
+        $this->assertLessThanOrEqual(5, $result['success_probability']);
+        $this->assertStringContainsString('Wait for explicit inbound', $result['strategic_action_json']['recommendation']);
+        $this->assertStringContainsString('outbound_recovery_guard', $response['metadata']['repair_type']);
+    }
+
+    public function test_it_clamps_misaligned_threads_and_forces_repair_first_action(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'summary'               => 'The buyer says our process and scope still do not fit.',
+            'intent'                => 'sales',
+            'intent_confidence'     => 87,
+            'priority'              => 'high',
+            'thread_state'          => 'misaligned',
+            'relationship_health'   => 'positive',
+            'actionability'         => 'act_now',
+            'success_probability'   => 82,
+            'behavioral_pulse'      => 'heating_up',
+            'strategic_action_json' => [
+                'goal'           => 'Keep momentum going',
+                'reason'         => 'Buyer replied',
+                'recommendation' => 'Meetings: Schedule a call to push the deal forward',
+            ],
+            'prompt_version' => 'v1.1-expert',
+        ]);
+
+        $skill    = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true]);
+        $result   = $response['result'];
+
+        $this->assertEquals('misaligned', $result['thread_state']);
+        $this->assertEquals('strained', $result['relationship_health']);
+        $this->assertLessThanOrEqual(30, $result['success_probability']);
+        $this->assertEquals('cooling_down', $result['behavioral_pulse']);
+        $this->assertStringStartsWith('Tasks:', $result['strategic_action_json']['recommendation']);
+        $this->assertStringContainsString('Clarify the scope, value gap, or process mismatch', $result['strategic_action_json']['recommendation']);
+        $this->assertStringContainsString('misalignment_guard', $response['metadata']['repair_type']);
+    }
+
+    public function test_it_clamps_objection_threads_and_requires_concern_handling_before_next_step(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'summary'               => 'The prospect repeated the pricing objection.',
+            'intent'                => 'sales',
+            'intent_confidence'     => 90,
+            'priority'              => 'high',
+            'thread_state'          => 'objection',
+            'relationship_health'   => 'neutral',
+            'actionability'         => 'act_now',
+            'success_probability'   => 88,
+            'behavioral_pulse'      => 'heating_up',
+            'strategic_action_json' => [
+                'goal'           => 'Get them on a demo',
+                'reason'         => 'Still engaged',
+                'recommendation' => 'Meetings: Schedule a pricing call right away',
+            ],
+            'prompt_version' => 'v1.1-expert',
+        ]);
+
+        $skill    = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true]);
+        $result   = $response['result'];
+
+        $this->assertEquals('objection', $result['thread_state']);
+        $this->assertLessThanOrEqual(55, $result['success_probability']);
+        $this->assertEquals('cooling_down', $result['behavioral_pulse']);
+        $this->assertStringStartsWith('Tasks:', $result['strategic_action_json']['recommendation']);
+        $this->assertStringContainsString('Address the objection directly', $result['strategic_action_json']['recommendation']);
+        $this->assertStringContainsString('objection_guard', $response['metadata']['repair_type']);
+    }
+
+    public function test_it_blocks_closed_lost_to_active_transition_when_sender_is_outbound(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        // Model skips 'reopened' and jumps directly to 'active' — gap in previous guard
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'summary'              => 'We sent an apology. Trying to restart.',
+            'intent'               => 'follow_up',
+            'intent_confidence'    => 80,
+            'priority'             => 'medium',
+            'thread_state'         => 'active',   // Model jumped to active, bypassing reopened
+            'relationship_health'  => 'neutral',
+            'actionability'        => 'act_now',
+            'success_probability'  => 55,
+            'behavioral_pulse'     => 'heating_up',
+            'strategic_action_json' => [
+                'goal'           => 'Win back customer',
+                'reason'         => 'Apology sent',
+                'recommendation' => 'Meetings: Book recovery call',
+            ],
+            'prompt_version' => 'v1.1-expert',
+        ]);
+
+        // Latest sender is our own team (outbound)
+        $this->mockThread->shouldReceive('getAttribute')->with('gmailAccount')->andReturn((object) ['gmail_address' => 'sales@ribo.test']);
+        $this->mockThread->shouldReceive('getAttribute')->with('latestMessage')->andReturn((object) ['from_email' => 'sales@ribo.test']);
+
+        $previousTriage = new AiTriageResult([
+            'thread_state'        => 'closed_lost',
+            'success_probability' => 0,
+        ]);
+
+        $skill    = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true], $previousTriage);
+        $result   = $response['result'];
+
+        // Must stay closed_lost — outbound apology cannot revive the thread
+        $this->assertEquals('closed_lost', $result['thread_state']);
+        $this->assertLessThanOrEqual(5, $result['success_probability']);
+        $this->assertStringContainsString('outbound_recovery_guard', $response['metadata']['repair_type']);
+    }
 }

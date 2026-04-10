@@ -73,9 +73,7 @@ const DEFAULT_TRIAGE: AiTriageResult = {
     },
 };
 
-export const normalizeBehavioralPulse = (
-    value?: string | null
-): 'heating_up' | 'cooling_down' | 'stable' | 'broken' => {
+export const normalizeBehavioralPulse = (value?: string | null): 'heating_up' | 'cooling_down' | 'stable' | 'broken' => {
     if (value === 'heating_up' || value === 'cooling_down' || value === 'stable' || value === 'broken') {
         return value;
     }
@@ -104,45 +102,118 @@ export const deriveStateLabel = (threadState?: string | null): string => {
     return labels[threadState ?? ''] ?? 'Pending';
 };
 
+export const deriveStateInfo = (threadState?: string | null): { label: string; className: string } => {
+    const label = deriveStateLabel(threadState);
+
+    switch (threadState) {
+        case 'active':
+            return { label, className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' };
+        case 'nurturing':
+            return { label, className: 'bg-sky-500/10 text-sky-700 border-sky-500/20' };
+        case 'stalled':
+            return { label, className: 'bg-slate-500/10 text-slate-700 border-slate-500/20' };
+        case 'objection':
+            return { label, className: 'bg-amber-500/10 text-amber-700 border-amber-500/20' };
+        case 'misaligned':
+            return { label, className: 'bg-rose-500/10 text-rose-700 border-rose-500/20' };
+        case 'closed_lost':
+            return { label, className: 'bg-red-500/10 text-red-700 border-red-500/20' };
+        case 'reopened':
+            return { label, className: 'bg-teal-500/10 text-teal-700 border-teal-500/20' };
+        case 'non_commercial':
+            return { label, className: 'bg-violet-500/10 text-violet-700 border-violet-500/20' };
+        case 'spam':
+            return { label, className: 'bg-zinc-500/10 text-zinc-700 border-zinc-500/20' };
+        default:
+            return { label, className: 'bg-slate-500/10 text-slate-700 border-slate-500/20' };
+    }
+};
+
 /**
  * Maps relationship_health to display info.
  */
-export const deriveHealthLabel = (
-    health?: string | null
-): { label: string; severity: 'positive' | 'neutral' | 'warning' | 'danger' } => {
+export const deriveHealthLabel = (health?: string | null): { label: string; severity: 'positive' | 'neutral' | 'warning' | 'danger' } => {
     switch (health) {
-        case 'positive':  return { label: 'Positive',  severity: 'positive' };
-        case 'strained':  return { label: 'Strained',  severity: 'warning'  };
-        case 'damaged':   return { label: 'Damaged',   severity: 'danger'   };
-        default:          return { label: 'Neutral',   severity: 'neutral'  };
+        case 'positive':
+            return { label: 'Positive', severity: 'positive' };
+        case 'strained':
+            return { label: 'Strained', severity: 'warning' };
+        case 'damaged':
+            return { label: 'Damaged', severity: 'danger' };
+        default:
+            return { label: 'Neutral', severity: 'neutral' };
+    }
+};
+
+export const deriveHealthInfo = (health?: string | null): { label: string; className: string } => {
+    const info = deriveHealthLabel(health);
+
+    switch (info.severity) {
+        case 'positive':
+            return { label: info.label, className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' };
+        case 'warning':
+            return { label: info.label, className: 'bg-amber-500/10 text-amber-700 border-amber-500/20' };
+        case 'danger':
+            return { label: info.label, className: 'bg-red-500/10 text-red-700 border-red-500/20' };
+        default:
+            return { label: info.label, className: 'bg-slate-500/10 text-slate-700 border-slate-500/20' };
+    }
+};
+
+export const deriveActionabilityInfo = (actionability?: string | null): { label: string; className: string } => {
+    switch (actionability) {
+        case 'act_now':
+            return { label: 'Act Now', className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' };
+        case 'archive':
+            return { label: 'Archive', className: 'bg-amber-500/10 text-amber-700 border-amber-500/20' };
+        case 'do_not_pursue':
+            return { label: 'Do Not Pursue', className: 'bg-red-500/10 text-red-700 border-red-500/20' };
+        default:
+            return { label: 'Monitor', className: 'bg-slate-500/10 text-slate-700 border-slate-500/20' };
     }
 };
 
 /**
  * Derives pulse display info with probability calibration.
  */
-export const derivePulseInfo = (
-    pulse: string,
-    probability: number,
-    state: string
-): { label: string; className: string } => {
+export const derivePulseInfo = (pulse: string, probability: number, state: string): { label: string; className: string; description: string } => {
     if (pulse === 'broken') {
-        return { label: 'BROKEN', className: 'bg-red-500/10 text-red-600' };
+        return {
+            label: 'Broken',
+            className: 'bg-red-500/10 text-red-700 border-red-500/20',
+            description: 'The latest thread movement is broken or commercially inactive.',
+        };
     }
 
     if (pulse === 'cooling_down') {
-        return { label: 'COOLING', className: 'bg-blue-500/10 text-blue-600' };
+        return {
+            label: 'Cooling Down',
+            className: 'bg-blue-500/10 text-blue-700 border-blue-500/20',
+            description: 'Momentum is fading, so follow-up should stay measured.',
+        };
     }
 
     if (pulse === 'heating_up') {
         // Tie HOT/WARM to probability
         if (state === 'reopened' && probability <= 45) {
-            return { label: 'WARM', className: 'bg-orange-500/10 text-orange-600' };
+            return {
+                label: 'Warming',
+                className: 'bg-orange-500/10 text-orange-700 border-orange-500/20',
+                description: 'The thread has revived, but it still needs a cautious next step.',
+            };
         }
-        return { label: 'HOT', className: 'bg-orange-500/10 text-orange-600' };
+        return {
+            label: 'Heating Up',
+            className: 'bg-orange-500/10 text-orange-700 border-orange-500/20',
+            description: 'Recent engagement is strengthening and ready for a timely response.',
+        };
     }
 
-    return { label: 'STABLE', className: 'bg-slate-500/10 text-slate-600' };
+    return {
+        label: 'Stable',
+        className: 'bg-slate-500/10 text-slate-700 border-slate-500/20',
+        description: 'Conversation rhythm is steady with no major recent change.',
+    };
 };
 
 /**
@@ -156,15 +227,15 @@ export const getAllowedActions = (triage: AiTriageResult): string[] => {
     if (actionability === 'do_not_pursue') return ['Archive'];
 
     const actions: Record<string, string[]> = {
-        active:         ['Reply', 'Schedule Meeting', 'Send Quote', 'Create Task'],
-        nurturing:      ['Reply', 'Create Task', 'Monitor'],
-        stalled:        ['Reply', 'Re-engage', 'Create Task', 'Monitor'],
-        objection:      ['Reply', 'Create Task'],
-        misaligned:     ['Reply', 'Create Task', 'Internal Review'],
-        closed_lost:    ['Archive', 'Mark as Lost'],
-        reopened:       ['Re-engage Reply', 'Create Task'],
+        active: ['Reply', 'Schedule Meeting', 'Send Quote', 'Create Task'],
+        nurturing: ['Reply', 'Create Task', 'Monitor'],
+        stalled: ['Reply', 'Re-engage', 'Create Task', 'Monitor'],
+        objection: ['Reply', 'Create Task'],
+        misaligned: ['Reply', 'Create Task', 'Internal Review'],
+        closed_lost: ['Archive', 'Mark as Lost'],
+        reopened: ['Re-engage Reply', 'Create Task'],
         non_commercial: ['Reply', 'Create Task'],
-        spam:           ['Archive', 'Mark as Spam'],
+        spam: ['Archive', 'Mark as Spam'],
     };
 
     // archive actionability further restricts the list
@@ -195,21 +266,17 @@ export const adaptTriageFromApi = (payload: unknown): AiTriageResult => {
     const data = payload as Record<string, unknown>;
     const priority = String(data.priority ?? 'medium').toLowerCase();
     const strategicAction =
-        data.strategic_action && typeof data.strategic_action === 'object'
-            ? (data.strategic_action as Record<string, unknown>)
-            : {};
+        data.strategic_action && typeof data.strategic_action === 'object' ? (data.strategic_action as Record<string, unknown>) : {};
     const intentValue = String(data.intent ?? 'general');
     const intent: AiTriageResult['intent'] = (
-        ['sales', 'support', 'billing', 'partnership', 'spam', 'general', 'follow_up'].includes(intentValue)
-            ? intentValue
-            : 'general'
+        ['sales', 'support', 'billing', 'partnership', 'spam', 'general', 'follow_up'].includes(intentValue) ? intentValue : 'general'
     ) as AiTriageResult['intent'];
 
-    const THREAD_STATES = ['active','nurturing','stalled','objection','misaligned','closed_lost','reopened','non_commercial','spam'];
-    const HEALTH_VALUES  = ['positive','neutral','strained','damaged'];
-    const ACTION_VALUES  = ['act_now','monitor','archive','do_not_pursue'];
+    const THREAD_STATES = ['active', 'nurturing', 'stalled', 'objection', 'misaligned', 'closed_lost', 'reopened', 'non_commercial', 'spam'];
+    const HEALTH_VALUES = ['positive', 'neutral', 'strained', 'damaged'];
+    const ACTION_VALUES = ['act_now', 'monitor', 'archive', 'do_not_pursue'];
 
-    const rawState  = String(data.thread_state ?? 'active');
+    const rawState = String(data.thread_state ?? 'active');
     const rawHealth = String(data.relationship_health ?? 'neutral');
     const rawAction = String(data.actionability ?? 'monitor');
 
@@ -270,9 +337,7 @@ export const adaptMemoryFromApi = (payload: unknown, triage?: AiTriageResult): A
           })
         : [];
 
-    const memoryPoints = Array.isArray(data.memory_points)
-        ? data.memory_points.map((point: unknown) => String(point))
-        : [];
+    const memoryPoints = Array.isArray(data.memory_points) ? data.memory_points.map((point: unknown) => String(point)) : [];
 
     // RULE: Use triage relationship_health as mood source when available (overrides memory strength).
     // Fall back to memory relationship_strength derivation.
@@ -280,17 +345,14 @@ export const adaptMemoryFromApi = (payload: unknown, triage?: AiTriageResult): A
     if (triage?.relationship_health) {
         const healthMap: Record<string, AiMemorySummary['sentiment']> = {
             positive: 'positive',
-            neutral:  'neutral',
+            neutral: 'neutral',
             strained: 'frustrated',
-            damaged:  'frustrated',
+            damaged: 'frustrated',
         };
         sentiment = healthMap[triage.relationship_health] ?? 'neutral';
     } else {
         const relationshipStrength = String(data.relationship_strength ?? 'neutral').toLowerCase();
-        sentiment =
-            relationshipStrength === 'strong' ? 'positive'
-            : relationshipStrength === 'weak'  ? 'frustrated'
-            : 'neutral';
+        sentiment = relationshipStrength === 'strong' ? 'positive' : relationshipStrength === 'weak' ? 'frustrated' : 'neutral';
     }
 
     return {

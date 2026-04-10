@@ -88,7 +88,7 @@ class ConversationAiTriageController extends Controller
             'thread_state' => $result->thread_state,
             'relationship_health' => $result->relationship_health,
             'actionability' => $result->actionability,
-            'ui_status' => $statusMap[$result->thread_state] ?? 'Pending',
+            'suggested_status' => $statusMap[$result->thread_state] ?? 'Pending',
             'success_probability' => (int) $result->success_probability,
             'behavioral_pulse' => $result->behavioral_pulse,
             'summary' => $result->summary,
