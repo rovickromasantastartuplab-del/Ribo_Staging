@@ -59,6 +59,11 @@ class ConversationAiReportController extends Controller
                 (string) ($validated['scope'] ?? 'overall'),
                 $contact
             );
+
+            // Process synchronously to bypass queue worker requirement on cPanel
+            $this->reportService->process($job);
+            $job->refresh();
+
         } catch (Throwable $e) {
             $this->telemetryService->recordFailure($companyId, 'report_generate', $thread->id, (string) ($config['model'] ?? null), ['reason' => 'provider_failure']);
             return response()->json(['message' => 'AI unavailable'], 422);
@@ -72,7 +77,7 @@ class ConversationAiReportController extends Controller
             [
                 'scope' => (string) ($validated['scope'] ?? 'overall'),
                 'prompt_version' => ReportPromptFactory::VERSION,
-                'phase' => 'queued',
+                'phase' => 'completed_sync',
             ]
         );
 
@@ -80,6 +85,7 @@ class ConversationAiReportController extends Controller
             'data' => [
                 'job_id' => $job->id,
                 'status' => $job->status,
+                'result' => $job->result_payload_json,
             ],
         ]);
     }
