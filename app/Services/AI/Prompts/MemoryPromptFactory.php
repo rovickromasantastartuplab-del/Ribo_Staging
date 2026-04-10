@@ -3,6 +3,7 @@
 namespace App\Services\AI\Prompts;
 
 use App\Models\Contact;
+use App\Models\Lead;
 
 class MemoryPromptFactory
 {
@@ -89,11 +90,11 @@ Good outcome: weak/moderate relationship with memory points describing the slowd
 PROMPT;
     }
 
-    public function buildUserPrompt(Contact $contact, array $triageContext = []): string
+    public function buildUserPrompt(Contact|Lead $entity, array $triageContext = []): string
     {
-        $name = $contact->name ?: 'Unknown contact';
-        $email = $contact->email ?: 'Unknown email';
-        $recentThreads = $contact->emailThreads()
+        $name = $entity->name ?: 'Unknown contact';
+        $email = $entity->email ?: 'Unknown email';
+        $recentThreads = $entity->emailThreads()
             ->orderByDesc('email_threads.last_message_at')
             ->limit(5)
             ->get(['email_threads.id', 'email_threads.subject', 'email_threads.snippet', 'email_threads.last_message_at']);

@@ -12,6 +12,7 @@ class AiTask extends Model
     protected $fillable = [
         'created_by',
         'contact_id',
+        'lead_id',
         'email_thread_id',
         'title',
         'description',
@@ -29,4 +30,9 @@ class AiTask extends Model
         'completed_at' => 'datetime',
         'metadata_json' => 'array',
     ];
+
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
+    }
 }

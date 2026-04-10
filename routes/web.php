@@ -1078,7 +1078,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/ai/triage/{thread}/refresh', [ConversationAiTriageController::class, 'refresh']);
 
             // Conversation AI memory/tasks routes (Phase 2)
-            Route::get('/ai/memory/{contact}', [ConversationAiMemoryController::class, 'show']);
+            Route::get('/ai/memory/{id}', [ConversationAiMemoryController::class, 'show']);
             Route::patch('/ai/tasks/{task}', [ConversationAiTasksController::class, 'update']);
 
             // Conversation AI drafting route (Phase 3)

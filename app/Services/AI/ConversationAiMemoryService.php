@@ -6,6 +6,7 @@ use App\Models\AiMemorySummary;
 use App\Models\AiTask;
 use App\Models\AiTriageResult;
 use App\Models\Contact;
+use App\Models\Lead;
 use App\Services\AI\Skills\MemorySkill;
 
 class ConversationAiMemoryService
@@ -16,25 +17,28 @@ class ConversationAiMemoryService
     ) {
     }
 
-    public function show(Contact $contact, int $companyId): array
+    public function show(Contact|Lead $entity, int $companyId): array
     {
+        $entityType = $entity instanceof Contact ? 'contact' : 'lead';
+        $column = $entityType . '_id';
+
         $telemetryMetadata = [];
         $summary = AiMemorySummary::query()
             ->where('created_by', $companyId)
-            ->where('contact_id', $contact->id)
+            ->where($column, $entity->id)
             ->latest('id')
             ->first();
 
         if ($summary) {
-            // Auto-refresh if the contact has new activity since the last summary (with 5s safety buffer)
-            $latestActivity = $contact->last_inbound_at;
-            $latestThread = $contact->emailThreads()->first();
+            // Auto-refresh if the entity has new activity since the last summary (with 5s safety buffer)
+            $latestActivity = $entity instanceof Contact ? $entity->last_inbound_at : $entity->last_activity_at;
+            $latestThread = $entity->emailThreads()->first();
             if ($latestThread && (!$latestActivity || $latestThread->last_message_at?->isAfter($latestActivity))) {
                 $latestActivity = $latestThread->last_message_at;
             }
 
             if ($latestActivity && $summary->summarized_at && $latestActivity->addSeconds(5)->isAfter($summary->summarized_at)) {
-                $generated = $this->generateSummary($contact, $companyId);
+                $generated = $this->generateSummary($entity, $companyId);
                 $summary = $generated['summary'];
                 $telemetryMetadata = $generated['metadata'];
             } else {
@@ -44,14 +48,14 @@ class ConversationAiMemoryService
                 ];
             }
         } else {
-            $generated = $this->generateSummary($contact, $companyId);
+            $generated = $this->generateSummary($entity, $companyId);
             $summary = $generated['summary'];
             $telemetryMetadata = $generated['metadata'];
         }
 
         $tasks = AiTask::query()
             ->where('created_by', $companyId)
-            ->where('contact_id', $contact->id)
+            ->where($column, $entity->id)
             ->orderByDesc('id')
             ->get();
 
@@ -80,12 +84,13 @@ class ConversationAiMemoryService
             ->firstOrFail();
     }
 
-    private function generateSummary(Contact $contact, int $companyId): array
+    private function generateSummary(Contact|Lead $entity, int $companyId): array
     {
         $config = $this->configService->resolve();
+        $entityType = $entity instanceof Contact ? 'contact' : 'lead';
 
-        // Build triage context from the contact's recent threads
-        $recentThreadIds = $contact->emailThreads()
+        // Build triage context from the entity's recent threads
+        $recentThreadIds = $entity->emailThreads()
             ->orderByDesc('last_message_at')
             ->limit(5)
             ->pluck('email_threads.id');
@@ -112,13 +117,13 @@ class ConversationAiMemoryService
             }
         }
 
-        $analysis = $this->memorySkill->summarize($contact, $config, $triageContext);
+        $analysis = $this->memorySkill->summarize($entity, $config, $triageContext);
         $result   = $analysis['result'];
         $metadata = $analysis['metadata'] ?? [];
 
         $data = array_merge($result, [
             'created_by' => $companyId,
-            'contact_id' => $contact->id,
+            $entityType . '_id' => $entity->id,
             'model_version' => (string) ($config['model'] ?? 'gpt-5.4-mini'),
             'summarized_at' => now(),
         ]);

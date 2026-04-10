@@ -12,6 +12,7 @@ class AiMemorySummary extends Model
     protected $fillable = [
         'created_by',
         'contact_id',
+        'lead_id',
         'relationship_summary',
         'relationship_strength',
         'memory_points_json',
@@ -24,4 +25,9 @@ class AiMemorySummary extends Model
         'memory_points_json' => 'array',
         'summarized_at' => 'datetime',
     ];
+
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
+    }
 }

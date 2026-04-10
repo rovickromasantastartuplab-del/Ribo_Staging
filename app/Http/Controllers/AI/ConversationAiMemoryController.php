@@ -4,7 +4,9 @@ namespace App\Http\Controllers\AI;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
+use App\Models\Lead;
 use App\Services\AI\ConversationAiMemoryService;
+use Illuminate\Http\Request;
 use App\Services\AI\ConversationAiTelemetryService;
 use App\Services\AI\Rules\ConversationAiRules;
 use Illuminate\Http\JsonResponse;
@@ -19,10 +21,18 @@ class ConversationAiMemoryController extends Controller
     ) {
     }
 
-    public function show(Contact $contact): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
+        $type = $request->query('entity_type', 'contact');
         $companyId = (int) auth()->user()->creatorId();
-        abort_if((int) $contact->created_by !== $companyId, 403);
+
+        if ($type === 'lead') {
+            $entity = Lead::findOrFail($id);
+        } else {
+            $entity = Contact::findOrFail($id);
+        }
+
+        abort_if((int) $entity->created_by !== $companyId, 403);
 
         $config = $this->rules->resolveConfig();
         if (!$this->rules->isAvailable($config)) {
@@ -31,7 +41,7 @@ class ConversationAiMemoryController extends Controller
         }
 
         try {
-            $payload = $this->memoryService->show($contact, $companyId);
+            $payload = $this->memoryService->show($entity, $companyId);
         } catch (Throwable $e) {
             $this->telemetryService->recordFailure($companyId, 'memory_show', null, (string) ($config['model'] ?? null), ['reason' => 'provider_failure']);
             return response()->json(['message' => 'AI unavailable'], 422);
@@ -54,7 +64,10 @@ class ConversationAiMemoryController extends Controller
 
         return response()->json([
             'data' => [
-                'contact_id' => $contact->id,
+                'entity_id' => $entity->id,
+                'entity_type' => $type,
+                'contact_id' => $type === 'contact' ? $entity->id : null,
+                'lead_id' => $type === 'lead' ? $entity->id : null,
                 'relationship_summary' => $summary->relationship_summary,
                 'relationship_strength' => $summary->relationship_strength,
                 'memory_points' => $summary->memory_points_json,

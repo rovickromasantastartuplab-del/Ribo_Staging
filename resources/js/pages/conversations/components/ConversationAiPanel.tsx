@@ -33,7 +33,7 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
     const [memory, setMemory] = useState<AiMemorySummary | null>(null);
     const [isUnavailable, setIsUnavailable] = useState(false);
 
-    const resolveContactId = (threadPayload: unknown): number | null => {
+    const resolveEntity = (threadPayload: unknown): { id: number; type: 'contact' | 'lead' } | null => {
         if (!threadPayload || typeof threadPayload !== 'object') {
             return null;
         }
@@ -41,19 +41,26 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
         const payload = threadPayload as Record<string, unknown>;
         const rootThread = payload.thread;
         const thread = rootThread && typeof rootThread === 'object' ? (rootThread as Record<string, unknown>) : payload;
+
+        // Try contacts first
         const contacts = thread.contacts;
-
-        if (!Array.isArray(contacts) || contacts.length === 0) {
-            return null;
+        if (Array.isArray(contacts) && contacts.length > 0) {
+            const contactId = (contacts[0] as Record<string, unknown>)?.id;
+            if (typeof contactId === 'number') {
+                return { id: contactId, type: 'contact' };
+            }
         }
 
-        const firstContact = contacts[0];
-        if (!firstContact || typeof firstContact !== 'object') {
-            return null;
+        // Fallback to leads
+        const leads = thread.leads;
+        if (Array.isArray(leads) && leads.length > 0) {
+            const leadId = (leads[0] as Record<string, unknown>)?.id;
+            if (typeof leadId === 'number') {
+                return { id: leadId, type: 'lead' };
+            }
         }
 
-        const contactId = (firstContact as Record<string, unknown>).id;
-        return typeof contactId === 'number' ? contactId : null;
+        return null;
     };
 
     const loadAiInsights = useCallback(
@@ -71,10 +78,12 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
                 try {
                     const threadRoute = typeof route === 'function' ? route('api.conversations.show', threadId) : `/api/conversations/${threadId}`;
                     const threadResponse = await axios.get(threadRoute, { params: { per_page: 1 } });
-                    const contactId = resolveContactId(threadResponse.data);
+                    const entityInfo = resolveEntity(threadResponse.data);
 
-                    if (contactId) {
-                        const memoryResponse = await axios.get(`/ai/memory/${contactId}`);
+                    if (entityInfo) {
+                        const memoryResponse = await axios.get(`/ai/memory/${entityInfo.id}`, {
+                            params: { entity_type: entityInfo.type }
+                        });
                         memoryData = adaptMemoryFromApi(memoryResponse.data?.data, triageData);
                     }
                 } catch (error: unknown) {

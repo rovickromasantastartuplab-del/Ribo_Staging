@@ -3,6 +3,7 @@
 namespace App\Services\AI\Skills;
 
 use App\Models\Contact;
+use App\Models\Lead;
 use App\Services\AI\Prompts\MemoryPromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
 
@@ -14,16 +15,16 @@ class MemorySkill
     ) {
     }
 
-    public function summarize(Contact $contact, array $config, array $triageContext = []): array
+    public function summarize(Contact|Lead $entity, array $config, array $triageContext = []): array
     {
         $systemPrompt = $this->promptFactory->buildSystemPrompt();
-        $userPrompt = $this->promptFactory->buildUserPrompt($contact, $triageContext);
+        $userPrompt = $this->promptFactory->buildUserPrompt($entity, $triageContext);
 
         $raw = $this->provider->summarizeMemory($config, [
             'system_prompt' => $systemPrompt,
             'user_prompt' => $userPrompt,
-            'contact_name' => $contact->name,
-            'contact_email' => $contact->email,
+            'contact_name' => $entity->name,
+            'contact_email' => $entity->email,
             'prompt_version' => MemoryPromptFactory::VERSION,
         ]);
 
