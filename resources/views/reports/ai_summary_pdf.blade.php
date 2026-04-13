@@ -4,15 +4,20 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>AI Strategic Summary Report</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; color: #111827; font-size: 12px; line-height: 1.45; margin: 22px; }
-        h1 { font-size: 20px; margin: 0 0 6px 0; letter-spacing: 0.5px; }
-        h2 { font-size: 12px; margin: 0 0 8px 0; text-transform: uppercase; color: #1f2937; letter-spacing: 0.8px; }
-        .muted { color: #6b7280; font-size: 10px; }
-        .section { margin-top: 16px; border-top: 1px solid #d1d5db; padding-top: 10px; }
+        body { font-family: DejaVu Sans, sans-serif; color: #111827; font-size: 12px; line-height: 1.6; margin: 28px; }
+        h1 { font-size: 32px; margin: 0 0 10px 0; letter-spacing: 0.4px; }
+        h2 { font-size: 12px; margin: 0 0 12px 0; text-transform: uppercase; color: #111827; letter-spacing: 1px; }
+        .muted { color: #475569; font-size: 11px; margin: 0; }
+        .header { border-bottom: 1px solid #d1d5db; padding-bottom: 14px; margin-bottom: 8px; }
+        .meta { margin-top: 4px; }
+        .section { margin-top: 22px; border-top: 1px solid #e5e7eb; padding-top: 14px; page-break-inside: avoid; }
+        .section-title { background: #f8fafc; border: 1px solid #e5e7eb; padding: 8px 10px; }
         .grid { width: 100%; border-collapse: collapse; }
-        .grid th, .grid td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
-        .grid th { background: #f3f4f6; font-size: 11px; }
-        .list { margin: 0; padding-left: 16px; }
+        .grid th, .grid td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; vertical-align: top; }
+        .grid th { background: #f3f4f6; font-size: 11px; font-weight: 700; }
+        .list { margin: 4px 0 0 0; padding-left: 18px; }
+        .list li { margin: 0 0 7px 0; }
+        .gaps { margin-top: 10px; color: #334155; }
         .status { font-weight: 700; }
     </style>
 </head>
@@ -33,13 +38,15 @@
         $additionalContext = $formatted['additional_context'] ?? [];
     @endphp
 
-    <h1>Client Account Snapshot</h1>
-    <p class="muted">
-        Account: {{ $accountName }} | Scope: {{ strtoupper((string) ($job->scope ?? 'overall')) }} | Generated: {{ optional($job->completed_at)->format('M d, Y H:i') ?? now()->format('M d, Y H:i') }}
-    </p>
+    <div class="header">
+        <h1>Client Account Snapshot</h1>
+        <p class="muted meta">
+            Account: {{ $accountName }} | Scope: {{ strtoupper((string) ($job->scope ?? 'overall')) }} | Generated: {{ optional($job->completed_at)->format('M d, Y H:i') ?? now()->format('M d, Y H:i') }}
+        </p>
+    </div>
 
     <div class="section">
-        <h2>Account Status</h2>
+        <h2 class="section-title">Account Status</h2>
         <ul class="list">
             <li>Status: {{ $accountStatus['status'] ?? 'Not available' }}</li>
             <li>Health Score: {{ $accountStatus['health'] ?? 'Not available' }} - {{ $accountStatus['health_reason'] ?? 'Not available' }}</li>
@@ -48,7 +55,7 @@
     </div>
 
     <div class="section">
-        <h2>Executive Insights</h2>
+        <h2 class="section-title">Executive Insights</h2>
         <ul class="list">
             @forelse($executiveInsights as $item)
                 <li>{{ $item }}</li>
@@ -59,7 +66,7 @@
     </div>
 
     <div class="section">
-        <h2>Key Relationships</h2>
+        <h2 class="section-title">Key Relationships</h2>
         <table class="grid">
             <tr>
                 <th>Name</th>
@@ -78,11 +85,11 @@
                 </tr>
             @endforelse
         </table>
-        <p>Gaps: {{ $relationshipGaps }}</p>
+        <p class="gaps">Gaps: {{ $relationshipGaps }}</p>
     </div>
 
     <div class="section">
-        <h2>Deals &amp; Pipeline Snapshot</h2>
+        <h2 class="section-title">Deals &amp; Pipeline Snapshot</h2>
         <ul class="list">
             <li>Active Deals: {{ $deals['active_deals'] ?? 'Not available' }}</li>
             <li>Top Deal: {{ $deals['top_deal'] ?? 'Not available' }}</li>
@@ -95,7 +102,7 @@
     </div>
 
     <div class="section">
-        <h2>Engagement &amp; Health Signals</h2>
+        <h2 class="section-title">Engagement &amp; Health Signals</h2>
         <ul class="list">
             <li>Usage: {{ $healthSignals['usage'] ?? 'Not available' }}</li>
             <li>Support: {{ $healthSignals['support'] ?? 'Not available' }}</li>
@@ -105,7 +112,7 @@
     </div>
 
     <div class="section">
-        <h2>Key Risks</h2>
+        <h2 class="section-title">Key Risks</h2>
         <ul class="list">
             @forelse($keyRisks as $item)
                 <li>{{ $item }}</li>
@@ -116,7 +123,7 @@
     </div>
 
     <div class="section">
-        <h2>Growth Opportunities</h2>
+        <h2 class="section-title">Growth Opportunities</h2>
         <ul class="list">
             @forelse($growthOpportunities as $item)
                 <li>{{ $item }}</li>
@@ -127,7 +134,7 @@
     </div>
 
     <div class="section">
-        <h2>Recommended Actions (Next 30–60 Days)</h2>
+        <h2 class="section-title">Recommended Actions (Next 30-60 Days)</h2>
         <ul class="list">
             @forelse($recommendedActions as $actionLine)
                 <li>{{ $actionLine }}</li>
@@ -142,7 +149,7 @@
 
     @if(!empty($additionalContext))
         <div class="section">
-            <h2>Additional Context</h2>
+            <h2 class="section-title">Additional Context</h2>
             <ul class="list">
                 @foreach($additionalContext as $line)
                     <li>{{ $line }}</li>
@@ -152,3 +159,5 @@
     @endif
 </body>
 </html>
+
+
