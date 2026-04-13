@@ -94,11 +94,14 @@ class ConversationAiReportController extends Controller
             'report_generate',
             $thread->id,
             (string) ($config['model'] ?? null),
-            [
+            array_merge([
                 'scope' => (string) ($validated['scope'] ?? 'overall'),
                 'prompt_version' => ReportPromptFactory::VERSION,
                 'phase' => 'completed_sync',
-            ]
+            ], (array) ($job->metadata_json ?? [])),
+            (int) (($job->metadata_json['prompt_tokens'] ?? 0)),
+            (int) (($job->metadata_json['completion_tokens'] ?? 0)),
+            (int) (($job->metadata_json['total_tokens'] ?? 0))
         );
 
         return response()->json([

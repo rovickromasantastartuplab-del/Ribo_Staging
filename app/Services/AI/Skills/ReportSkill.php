@@ -57,6 +57,9 @@ class ReportSkill
             'repair_type' => null,
             'fallback_applied' => false,
             'fallback_reason' => null,
+            'prompt_tokens' => (int) ($raw['prompt_tokens'] ?? 0),
+            'completion_tokens' => (int) ($raw['completion_tokens'] ?? 0),
+            'total_tokens' => (int) ($raw['total_tokens'] ?? 0),
         ];
 
         $validated = $this->validateParse($raw, $metadata);

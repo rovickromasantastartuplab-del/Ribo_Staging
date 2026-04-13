@@ -66,7 +66,10 @@ class ConversationAiTriageService
             'triage_refresh',
             $thread->id,
             $result->model_version,
-            $analysis['metadata']
+            $analysis['metadata'],
+            (int) (($analysis['metadata']['prompt_tokens'] ?? 0)),
+            (int) (($analysis['metadata']['completion_tokens'] ?? 0)),
+            (int) (($analysis['metadata']['total_tokens'] ?? 0))
         );
 
         return $result;

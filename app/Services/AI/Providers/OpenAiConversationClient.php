@@ -94,6 +94,8 @@ class OpenAiConversationClient
             $promptVersion = $defaultPromptVersion;
         }
 
+        $usage = $response['usage'];
+
         return [
             'intent' => $intent,
             'intent_confidence' => $this->clampPercentage((int) ($data['intent_confidence'] ?? 0)),
@@ -110,6 +112,9 @@ class OpenAiConversationClient
                 'recommendation' => trim((string) ($strategicAction['recommendation'] ?? 'Send a concise follow-up with next steps.')),
             ],
             'prompt_version' => $promptVersion,
+            'prompt_tokens' => (int) ($usage['prompt_tokens'] ?? 0),
+            'completion_tokens' => (int) ($usage['completion_tokens'] ?? 0),
+            'total_tokens' => (int) ($usage['total_tokens'] ?? 0),
         ];
     }
 
@@ -142,6 +147,8 @@ class OpenAiConversationClient
             $promptVersion = $defaultPromptVersion;
         }
 
+        $usage = $response['usage'];
+
         return [
             'relationship_summary' => trim((string) ($data['relationship_summary'] ?? 'No relationship summary available.')),
             'relationship_strength' => $relationshipStrength,
@@ -151,6 +158,9 @@ class OpenAiConversationClient
                 ->values()
                 ->all(),
             'prompt_version' => $promptVersion,
+            'prompt_tokens' => (int) ($usage['prompt_tokens'] ?? 0),
+            'completion_tokens' => (int) ($usage['completion_tokens'] ?? 0),
+            'total_tokens' => (int) ($usage['total_tokens'] ?? 0),
         ];
     }
 
@@ -174,6 +184,8 @@ class OpenAiConversationClient
             $promptVersion = $defaultPromptVersion;
         }
 
+        $usage = $response['usage'];
+
         return [
             'summary' => trim((string) ($data['summary'] ?? 'Report unavailable.')),
             'key_insights' => $this->normalizeStringList($data['key_insights'] ?? []),
@@ -184,6 +196,9 @@ class OpenAiConversationClient
             'risks_and_opportunities' => $this->normalizeStringList($data['risks_and_opportunities'] ?? []),
             'role_based_actions' => $this->normalizeRoleActions($data['role_based_actions'] ?? []),
             'prompt_version' => $promptVersion,
+            'prompt_tokens' => (int) ($usage['prompt_tokens'] ?? 0),
+            'completion_tokens' => (int) ($usage['completion_tokens'] ?? 0),
+            'total_tokens' => (int) ($usage['total_tokens'] ?? 0),
         ];
     }
 

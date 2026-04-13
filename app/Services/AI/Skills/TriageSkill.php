@@ -46,6 +46,9 @@ class TriageSkill
             'repair_type'              => null,
             'fallback_applied'         => false,
             'fallback_reason'          => null,
+            'prompt_tokens'            => (int) ($rawResponse['prompt_tokens'] ?? 0),
+            'completion_tokens'        => (int) ($rawResponse['completion_tokens'] ?? 0),
+            'total_tokens'             => (int) ($rawResponse['total_tokens'] ?? 0),
         ];
 
         $validated = $this->validateParse($rawResponse, $metadata);

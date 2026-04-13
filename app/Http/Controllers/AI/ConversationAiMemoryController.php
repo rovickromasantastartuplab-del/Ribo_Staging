@@ -59,7 +59,10 @@ class ConversationAiMemoryController extends Controller
             array_merge($metadata, [
                 'prompt_version' => (string) ($summary->prompt_version ?? ''),
                 'relationship_strength' => (string) ($summary->relationship_strength ?? ''),
-            ])
+            ]),
+            (int) ($metadata['prompt_tokens'] ?? 0),
+            (int) ($metadata['completion_tokens'] ?? 0),
+            (int) ($metadata['total_tokens'] ?? 0)
         );
 
         return response()->json([
