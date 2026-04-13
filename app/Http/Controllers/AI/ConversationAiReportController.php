@@ -144,29 +144,43 @@ class ConversationAiReportController extends Controller
         $companyId = (int) auth()->user()->creatorId();
         abort_if((int) $job->created_by !== $companyId, 403);
 
-        $reportJob = $this->reportService->get($job, $companyId);
-        $result = $reportJob->result_payload_json ?? [];
-        $context = $reportJob->context_payload_json ?? [];
-        $formatted = $this->reportTemplateFormatter->format(
-            $result,
-            $context,
-            (string) ($reportJob->scope ?? 'overall')
-        );
+        try {
+            $reportJob = $this->reportService->get($job, $companyId);
+            $result = $reportJob->result_payload_json ?? [];
+            $context = $reportJob->context_payload_json ?? [];
 
-        if (empty($result)) {
+            if (empty($result)) {
+                return response()->json([
+                    'message' => 'Report result unavailable',
+                    'code' => 'report_result_unavailable',
+                ], 409);
+            }
+
+            $formatted = $this->reportTemplateFormatter->format(
+                $result,
+                $context,
+                (string) ($reportJob->scope ?? 'overall')
+            );
+
+            $pdf = Pdf::loadView('reports.ai_summary_pdf', [
+                'job' => $reportJob,
+                'result' => $result,
+                'context' => $context,
+                'formatted' => $formatted,
+            ]);
+
+            return $pdf->download("AI-Summary-Report-{$reportJob->id}.pdf");
+        } catch (Throwable $e) {
+            Log::error('[ConversationAiReportController] Download failed', [
+                'job_id' => $job->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
-                'message' => 'Report result unavailable',
-                'code' => 'report_result_unavailable',
-            ], 409);
+                'message' => 'Failed to generate summary report. Please try again.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $pdf = Pdf::loadView('reports.ai_summary_pdf', [
-            'job' => $reportJob,
-            'result' => $result,
-            'context' => $context,
-            'formatted' => $formatted,
-        ]);
-
-        return $pdf->download("AI-Summary-Report-{$reportJob->id}.pdf");
     }
 }

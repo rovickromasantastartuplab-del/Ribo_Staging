@@ -22,8 +22,8 @@ class ReportTemplateFormatter
 
         $scavengePool = array_merge(
             [$result['summary'] ?? ''],
-            $result['executive_insights'] ?? [],
-            $result['key_insights'] ?? []
+            (array) ($result['executive_insights'] ?? []),
+            (array) ($result['key_insights'] ?? [])
         );
 
         $risks = $this->normalizeExecutiveInsights($result['key_risks'] ?? []);

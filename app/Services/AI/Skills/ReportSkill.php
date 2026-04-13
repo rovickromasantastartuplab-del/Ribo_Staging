@@ -450,12 +450,17 @@ class ReportSkill
 
     private function normalizeStringArray(mixed $value): array
     {
+        if (is_string($value)) {
+            $value = array_map('trim', explode("\n", $value));
+        }
+
         if (!is_array($value)) {
             return [];
         }
 
         return collect($value)
             ->map(static fn ($item): string => trim((string) $item))
+            ->map(static fn ($item): string => (string) preg_replace('/^[-•*]\s*/', '', $item))
             ->filter(static fn (string $item): bool => $item !== '')
             ->values()
             ->all();
