@@ -20,6 +20,22 @@ class ReportTemplateFormatter
 
         $engagementSignals = $this->deriveEngagementSignals($result, $activityStreams, $activityMeta);
 
+        $scavengePool = array_merge(
+            [$result['summary'] ?? ''],
+            $result['executive_insights'] ?? [],
+            $result['key_insights'] ?? []
+        );
+
+        $risks = $this->normalizeExecutiveInsights($result['key_risks'] ?? []);
+        if (count($risks) === 0) {
+            $risks = $this->extractRiskBullets($scavengePool);
+        }
+
+        $opportunities = $this->normalizeExecutiveInsights($result['growth_opportunities'] ?? []);
+        if (count($opportunities) === 0) {
+            $opportunities = $this->extractOpportunityBullets($scavengePool);
+        }
+
         return [
             'sections' => [
                 ['title' => 'Account Status'],
@@ -75,8 +91,8 @@ class ReportTemplateFormatter
                 $result['relationship_gaps'] ?? null,
                 $this->deriveRelationshipGap($relationships),
             ], 'Not available'),
-            'key_risks' => $this->normalizeExecutiveInsights($result['key_risks'] ?? []),
-            'growth_opportunities' => $this->normalizeExecutiveInsights($result['growth_opportunities'] ?? []),
+            'key_risks' => $risks,
+            'growth_opportunities' => $opportunities,
             'additional_context' => $this->normalizeStringArray($result['additional_context'] ?? []),
             'scope' => $scope,
         ];
@@ -192,20 +208,20 @@ class ReportTemplateFormatter
 
     private function extractRiskBullets(array $items): array
     {
-        $risks = array_values(array_filter($items, static function (string $item): bool {
-            return (bool) preg_match('/risk|threat|block|issue|friction|concern|stall/i', $item);
+        $risks = array_values(array_filter(array_map('strval', $items), static function (string $item): bool {
+            return (bool) preg_match('/risk|threat|block|issue|friction|concern|stall|delay|decline|churn|cancel|stopp/i', $item);
         }));
 
-        return count($risks) > 0 ? array_slice($risks, 0, 4) : ['Not available'];
+        return count($risks) > 0 ? array_slice($risks, 0, 4) : [];
     }
 
     private function extractOpportunityBullets(array $items): array
     {
-        $opportunities = array_values(array_filter($items, static function (string $item): bool {
-            return (bool) preg_match('/opportun|expansion|upsell|cross-sell|grow|unlock/i', $item);
+        $opportunities = array_values(array_filter(array_map('strval', $items), static function (string $item): bool {
+            return (bool) preg_match('/opportun|expansion|upsell|cross-sell|grow|unlock|interest|demo|referral|potential/i', $item);
         }));
 
-        return count($opportunities) > 0 ? array_slice($opportunities, 0, 4) : ['Not available'];
+        return count($opportunities) > 0 ? array_slice($opportunities, 0, 4) : [];
     }
 
     private function deriveRelationshipGap(array $relationships): string

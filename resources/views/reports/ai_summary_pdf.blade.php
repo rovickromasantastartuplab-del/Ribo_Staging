@@ -69,18 +69,16 @@
         </ul>
     </div>
 
-    @if(collect($executiveInsights)->filter(fn($i) => $i !== 'Not available')->isNotEmpty())
     <div class="section">
         <div class="section-header"><h2>Executive Insights</h2></div>
         <ul class="list">
-            @foreach($executiveInsights as $item)
-                @if($item !== 'Not available')
-                    <li>{{ $item }}</li>
-                @endif
-            @endforeach
+            @forelse(collect($executiveInsights)->filter(fn($i) => $i !== 'Not available') as $item)
+                <li>{{ $item }}</li>
+            @empty
+                <li>No specific strategic insights identified for this thread context.</li>
+            @endforelse
         </ul>
     </div>
-    @endif
 
     @if(collect($keyRelationships)->filter(fn($r) => ($r['name'] ?? 'Not available') !== 'Not available')->isNotEmpty())
     <div class="section">
@@ -158,44 +156,38 @@
         </ul>
     </div>
 
-    @if(!empty($keyRisks))
     <div class="section">
         <div class="section-header"><h2>Key Risks</h2></div>
         <ul class="list">
-            @foreach($keyRisks as $item)
-                @if($item !== 'Not available')
-                    <li>{{ $item }}</li>
-                @endif
-            @endforeach
+            @forelse(collect($keyRisks)->filter(fn($r) => $r !== 'Not available') as $item)
+                <li>{{ $item }}</li>
+            @empty
+                <li>No significant commercial risks detected in recent history.</li>
+            @endforelse
         </ul>
     </div>
-    @endif
 
-    @if(!empty($growthOpportunities))
     <div class="section">
         <div class="section-header"><h2>Growth Opportunities</h2></div>
         <ul class="list">
-            @foreach($growthOpportunities as $item)
-                @if($item !== 'Not available')
-                    <li>{{ $item }}</li>
-                @endif
-            @endforeach
+            @forelse(collect($growthOpportunities)->filter(fn($o) => $o !== 'Not available') as $item)
+                <li>{{ $item }}</li>
+            @empty
+                <li>No immediate expansion or growth signals identified.</li>
+            @endforelse
         </ul>
     </div>
-    @endif
 
-    @if(collect($recommendedActions)->filter(fn($a) => !str_contains($a, 'Not available'))->isNotEmpty())
     <div class="section">
         <div class="section-header"><h2>Recommended Actions (Next 30-60 Days)</h2></div>
         <ul class="list">
-            @foreach($recommendedActions as $actionLine)
-                @if(!str_contains($actionLine, 'Not available'))
-                    <li>{{ $actionLine }}</li>
-                @endif
-            @endforeach
+            @forelse(collect($recommendedActions)->filter(fn($a) => !str_contains($a, 'Not available')) as $actionLine)
+                <li>{{ $actionLine }}</li>
+            @empty
+                <li>Continue standard account monitoring and relationship maintenance.</li>
+            @endforelse
         </ul>
     </div>
-    @endif
 
     @if(!empty($additionalContext))
         <div class="section">
