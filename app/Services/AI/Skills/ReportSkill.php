@@ -21,11 +21,22 @@ class ReportSkill
         $systemPrompt = $this->promptFactory->buildSystemPrompt();
         $userPrompt = $this->promptFactory->buildUserPrompt($job, $triage);
 
+        Log::debug('[ReportSkill] Payload sent to AI provider', [
+            'job_id' => $job->id,
+            'system_prompt_snippet' => mb_substr($systemPrompt, 0, 500) . '...',
+            'user_prompt_full' => $userPrompt,
+        ]);
+
         $raw = $this->provider->generateReport($config, [
             'system_prompt' => $systemPrompt,
             'user_prompt' => $userPrompt,
             'scope' => $job->getAttribute('scope') ?: 'thread',
             'prompt_version' => ReportPromptFactory::VERSION,
+        ]);
+
+        Log::debug('[ReportSkill] Full raw AI response body', [
+            'job_id' => $job->id,
+            'raw_json' => json_encode($raw, JSON_PRETTY_PRINT),
         ]);
 
         Log::debug('[ReportSkill] Raw AI response received', [
