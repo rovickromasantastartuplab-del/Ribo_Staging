@@ -6,6 +6,7 @@ use App\Models\AiReportJob;
 use App\Models\AiTriageResult;
 use App\Services\AI\Prompts\ReportPromptFactory;
 use App\Services\AI\Providers\OpenAiConversationClient;
+use Illuminate\Support\Facades\Log;
 
 class ReportSkill
 {
@@ -27,6 +28,17 @@ class ReportSkill
             'prompt_version' => ReportPromptFactory::VERSION,
         ]);
 
+        Log::debug('[ReportSkill] Raw AI response received', [
+            'job_id' => $job->id,
+            'scope' => $job->scope,
+            'keys_returned' => array_keys($raw),
+            'has_summary' => isset($raw['summary']),
+            'has_key_insights' => isset($raw['key_insights']),
+            'has_next_actions' => isset($raw['next_actions']),
+            'has_key_risks' => isset($raw['key_risks']),
+            'has_usage_signal' => isset($raw['usage_signal']),
+        ]);
+
         $metadata = [
             'prompt_version' => ReportPromptFactory::VERSION,
             'validation_stage_failed' => null,
@@ -42,13 +54,32 @@ class ReportSkill
         }
 
         if ($metadata['fallback_applied']) {
+            Log::warning('[ReportSkill] Fallback triggered', [
+                'job_id' => $job->id,
+                'stage_failed' => $metadata['validation_stage_failed'],
+                'reason' => $metadata['fallback_reason'],
+            ]);
             $validated = $this->applyRepair($validated, $metadata);
         } else if ($triage !== null) {
+            Log::debug('[ReportSkill] Triage framing applied', [
+                'job_id' => $job->id,
+                'thread_state' => $triage->thread_state,
+                'actionability' => $triage->actionability,
+            ]);
             $validated = $this->enforceTriageFraming($validated, $triage, $metadata);
         }
 
         // Always ensure the structure is complete and normalized regardless of flow path
         $validated = $this->ensureStructuredSections($validated);
+
+        Log::debug('[ReportSkill] Final output ready', [
+            'job_id' => $job->id,
+            'fallback_applied' => $metadata['fallback_applied'],
+            'repair_type' => $metadata['repair_type'],
+            'key_risks_count' => count($validated['key_risks'] ?? []),
+            'growth_opps_count' => count($validated['growth_opportunities'] ?? []),
+            'exec_insights_count' => count($validated['executive_insights'] ?? []),
+        ]);
 
         $validated['prompt_version'] = ReportPromptFactory::VERSION;
 
@@ -60,14 +91,12 @@ class ReportSkill
 
     private function validateParse(array $data, array &$metadata): array
     {
-        $requiredKeys = [
-            'summary', 'key_insights', 'next_actions', 'account_status', 'status_value',
-            'health_score', 'account_status_reason', 'executive_insights', 'key_relationships',
-            'relationship_gaps', 'key_risks', 'growth_opportunities',
-            'usage_signal', 'support_signal', 'sentiment_signal', 'engagement_pattern'
-        ];
+        // Only fail-fast if the absolute core keys are missing.
+        // Secondary keys (health signals, risks, etc.) are filled gracefully by ensureStructuredSections().
+        $requiredKeys = ['summary', 'key_insights', 'next_actions'];
         foreach ($requiredKeys as $key) {
             if (!isset($data[$key])) {
+                Log::warning('[ReportSkill] validateParse failed — missing key', ['key' => $key, 'available_keys' => array_keys($data)]);
                 $metadata['validation_stage_failed'] = 'parse';
                 $metadata['fallback_applied'] = true;
                 $metadata['fallback_reason'] = "missing_required_key_{$key}";
