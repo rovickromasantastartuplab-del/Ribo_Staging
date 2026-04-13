@@ -32,6 +32,7 @@ Your job is to explain triage rather than contradicting it.
 - Highlight implications, not just events.
 - Keep insights practical and decision-useful.
 - Explain the why behind the current state, not just the latest message.
+- Use recent activity details for recency, and historical_activity_summary for whole-history trend interpretation.
 
 ### STATE-AWARE REPORT RULES
 - If thread_state = closed_lost, say that plainly in the summary. Do not soften it into generic delay language.

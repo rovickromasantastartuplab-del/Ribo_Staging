@@ -5,6 +5,7 @@ namespace App\Services\AI;
 use App\Models\Contact;
 use App\Models\EmailThread;
 use App\Models\Opportunity;
+use App\Services\AI\Reports\ActivityStreamDigestBuilder;
 use App\Services\LeadActivityStreamService;
 use App\Services\OpportunityActivityStreamService;
 use Illuminate\Support\Collection;
@@ -15,7 +16,8 @@ class ConversationAiReportContextBuilder
 
     public function __construct(
         private readonly LeadActivityStreamService $leadActivityStreamService,
-        private readonly OpportunityActivityStreamService $opportunityActivityStreamService
+        private readonly OpportunityActivityStreamService $opportunityActivityStreamService,
+        private readonly ActivityStreamDigestBuilder $activityStreamDigestBuilder
     ) {
     }
 
@@ -34,8 +36,14 @@ class ConversationAiReportContextBuilder
         $arr = (float) $opportunities->sum(fn (Opportunity $opp): float => (float) ($opp->amount ?? 0));
         $mrr = $arr / 12;
 
-        [$leadActivity, $leadActivityMeta] = $this->collectLeadActivityStream($leads);
-        [$opportunityActivity, $opportunityActivityMeta] = $this->collectOpportunityActivityStream($opportunities);
+        [$leadActivity, $leadActivityMeta, $leadFullStream] = $this->collectLeadActivityStream($leads);
+        [$opportunityActivity, $opportunityActivityMeta, $opportunityFullStream] = $this->collectOpportunityActivityStream($opportunities);
+
+        $combinedFullStream = collect($leadFullStream)
+            ->merge($opportunityFullStream)
+            ->sortByDesc('created_at')
+            ->values()
+            ->all();
 
         return [
             'scope' => $scope,
@@ -87,11 +95,19 @@ class ConversationAiReportContextBuilder
             'activity_streams' => [
                 'lead' => $leadActivity,
                 'opportunity' => $opportunityActivity,
+                'historical_summary' => [
+                    'lead' => $this->activityStreamDigestBuilder->build($leadFullStream),
+                    'opportunity' => $this->activityStreamDigestBuilder->build($opportunityFullStream),
+                    'combined' => $this->activityStreamDigestBuilder->build($combinedFullStream),
+                ],
                 'meta' => [
                     'lead_scanned_count' => $leadActivityMeta['scanned_count'],
                     'lead_included_count' => $leadActivityMeta['included_count'],
+                    'lead_older_count' => max(0, $leadActivityMeta['scanned_count'] - $leadActivityMeta['included_count']),
                     'opportunity_scanned_count' => $opportunityActivityMeta['scanned_count'],
                     'opportunity_included_count' => $opportunityActivityMeta['included_count'],
+                    'opportunity_older_count' => max(0, $opportunityActivityMeta['scanned_count'] - $opportunityActivityMeta['included_count']),
+                    'combined_scanned_count' => count($combinedFullStream),
                 ],
             ],
         ];
@@ -182,9 +198,10 @@ class ConversationAiReportContextBuilder
                     ->map(fn ($item) => $this->leadActivityStreamService->serializeItem($item));
             })
             ->sortByDesc('created_at')
-            ->values();
+            ->values()
+            ->all();
 
-        $included = $fullStream
+        $included = collect($fullStream)
             ->take(self::MAX_ACTIVITY_ITEMS_PER_STREAM)
             ->values()
             ->all();
@@ -192,9 +209,10 @@ class ConversationAiReportContextBuilder
         return [
             $included,
             [
-                'scanned_count' => $fullStream->count(),
+                'scanned_count' => count($fullStream),
                 'included_count' => count($included),
             ],
+            $fullStream,
         ];
     }
 
@@ -207,9 +225,10 @@ class ConversationAiReportContextBuilder
                     ->map(fn ($item) => $this->opportunityActivityStreamService->serializeItem($item));
             })
             ->sortByDesc('created_at')
-            ->values();
+            ->values()
+            ->all();
 
-        $included = $fullStream
+        $included = collect($fullStream)
             ->take(self::MAX_ACTIVITY_ITEMS_PER_STREAM)
             ->values()
             ->all();
@@ -217,9 +236,10 @@ class ConversationAiReportContextBuilder
         return [
             $included,
             [
-                'scanned_count' => $fullStream->count(),
+                'scanned_count' => count($fullStream),
                 'included_count' => count($included),
             ],
+            $fullStream,
         ];
     }
 }

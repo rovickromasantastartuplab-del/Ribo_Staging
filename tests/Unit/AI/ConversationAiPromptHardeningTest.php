@@ -158,6 +158,10 @@ class ConversationAiPromptHardeningTest extends TestCase
             'archive / do_not_pursue -> no prospect-facing meetings, demos, quotes, or commercial chase actions',
             $prompt
         );
+        $this->assertStringContainsString(
+            'Use recent activity details for recency, and historical_activity_summary for whole-history trend interpretation',
+            $prompt
+        );
     }
 
     public function test_draft_requests_use_json_schema_response_format(): void
