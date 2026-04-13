@@ -30,6 +30,7 @@
         $accountStatus = $formatted['account_status'] ?? [];
         $executiveInsights = $formatted['executive_insights'] ?? [];
         $keyRelationships = $formatted['key_relationships'] ?? [];
+        $visibleRelationships = collect($keyRelationships)->filter(fn($r) => ($r['name'] ?? 'Not available') !== 'Not available')->values();
         $relationshipGaps = $formatted['relationship_gaps'] ?? 'Not available';
         $deals = $formatted['deals'] ?? [];
         $healthSignals = $formatted['engagement_health_signals'] ?? [];
@@ -80,34 +81,36 @@
         </ul>
     </div>
 
-    @if(collect($keyRelationships)->filter(fn($r) => ($r['name'] ?? 'Not available') !== 'Not available')->isNotEmpty())
     <div class="section">
         <div class="section-header"><h2>Key Relationships</h2></div>
-        <table class="grid">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Strength</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($keyRelationships as $relationship)
-                    @if(($relationship['name'] ?? 'Not available') !== 'Not available')
+        @if($visibleRelationships->isNotEmpty())
+            <table class="grid">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Strength</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($visibleRelationships as $relationship)
                         <tr>
                             <td><span class="label">{{ $relationship['name'] }}</span></td>
                             <td>{{ $relationship['role'] ?? 'Stakeholder' }}</td>
                             <td>{{ $relationship['strength'] ?? 'Medium' }}</td>
                         </tr>
-                    @endif
-                @endforeach
-            </tbody>
-        </table>
-        @if(($relationshipGaps ?? 'Not available') !== 'Not available')
-            <p class="gaps"><span class="label">Coverage Insights:</span> {{ $relationshipGaps }}</p>
+                    @endforeach
+                </tbody>
+            </table>
+            @if(($relationshipGaps ?? 'Not available') !== 'Not available')
+                <p class="gaps"><span class="label">Coverage Insights:</span> {{ $relationshipGaps }}</p>
+            @endif
+        @else
+            <ul class="list">
+                <li>No relationship data available for this report context.</li>
+            </ul>
         @endif
     </div>
-    @endif
 
     <div class="section">
         <div class="section-header"><h2>Deals &amp; Pipeline Snapshot</h2></div>
@@ -201,5 +204,4 @@
     @endif
 </body>
 </html>
-
 

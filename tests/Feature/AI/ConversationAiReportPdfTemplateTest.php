@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Services\AI\Reports\ReportTemplateFormatter;
 
@@ -19,7 +19,7 @@ it('renders fixed template section headings in order', function () {
     expect($html)->toContain('Account Status');
     expect($html)->toContain('Executive Insights');
     expect($html)->toContain('Deals &amp; Pipeline Snapshot');
-    expect($html)->toContain('Recommended Actions (Next 30–60 Days)');
+    expect($html)->toContain('Recommended Actions (Next 30-60 Days)');
 });
 
 it('prints required labels and role-action-priority lines', function () {
@@ -38,3 +38,19 @@ it('prints required labels and role-action-priority lines', function () {
     expect($html)->toContain('Sales -&gt;');
     expect($html)->toContain('High');
 });
+
+it('renders key relationships section with fallback message when relationship rows are unavailable', function () {
+    $formatter = app(\App\Services\AI\Reports\ReportTemplateFormatter::class);
+    $formatted = $formatter->format([], ['crm' => []], 'overall');
+
+    $html = view('reports.ai_summary_pdf', [
+        'job' => (object) ['id' => 102, 'scope' => 'overall', 'completed_at' => now()],
+        'result' => [],
+        'context' => [],
+        'formatted' => $formatted,
+    ])->render();
+
+    expect($html)->toContain('Key Relationships');
+    expect($html)->toContain('No relationship data available for this report context.');
+});
+
