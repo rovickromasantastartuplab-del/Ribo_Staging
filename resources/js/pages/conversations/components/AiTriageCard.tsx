@@ -1,21 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import axios from 'axios';
-import { BookOpen, BrainCircuit, CheckCircle2, Download, Layout, MoreHorizontal, RefreshCw, TrendingUp } from 'lucide-react';
+import { BookOpen, BrainCircuit, Download, Layout, RefreshCw, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { AiTriageResult, deriveStateInfo } from '../utils/mockAiData';
+import { AiTriageResult } from '../utils/mockAiData';
 
 interface AiTriageCardProps {
     data: AiTriageResult;
@@ -32,7 +24,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
     const [selectedOppId, setSelectedOppId] = useState<string>('overall');
     const [isExporting, setIsExporting] = useState(false);
     const [opportunityOptions, setOpportunityOptions] = useState<OpportunityOption[]>([]);
-    const stateInfo = deriveStateInfo(data.thread_state);
 
     useEffect(() => {
         if (!data.email_thread_id) {
@@ -107,40 +98,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                         AI Summary
                     </div>
                     <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">{data.summary}</p>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 pt-2">
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 flex-1 border-emerald-500/20 text-[11px] font-medium text-emerald-500 hover:bg-emerald-500/5 hover:text-emerald-600"
-                        onClick={() => toast.success(`State updated to ${stateInfo.label}`)}
-                    >
-                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                        Set to {stateInfo.label}
-                    </Button>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 border border-slate-200 p-0 dark:border-slate-800">
-                                <MoreHorizontal className="text-muted-foreground h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel className="text-muted-foreground text-[10px] font-bold uppercase">Triage Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-xs" onClick={() => toast.success('Priority adjusted')}>
-                                Apply Recommended Priority
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs" onClick={() => toast.success('Intent labels updated')}>
-                                Apply Intent Labels
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-xs text-rose-500" onClick={() => toast.info('Feedback submitted')}>
-                                Report Misclassification
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
 
                 <Separator className="my-2 opacity-50" />

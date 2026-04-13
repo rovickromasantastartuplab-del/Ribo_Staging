@@ -90,7 +90,6 @@ use App\Http\Controllers\AI\ConversationAiMemoryController;
 use App\Http\Controllers\AI\ConversationAiTasksController;
 use App\Http\Controllers\AI\ConversationAiDraftController;
 use App\Http\Controllers\AI\ConversationAiReportController;
-use App\Http\Controllers\AI\ConversationAiFeedbackController;
 use App\Http\Controllers\QuoteCommentController;
 use App\Http\Controllers\SalesOrderCommentController;
 use App\Http\Controllers\AccountCommentController;
@@ -1090,8 +1089,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/ai/reports/{job}', [ConversationAiReportController::class, 'show']);
             Route::get('/ai/reports/{job}/download', [ConversationAiReportController::class, 'download']);
 
-            // Conversation AI feedback route (Phase 5)
-            Route::post('/ai/feedback', [ConversationAiFeedbackController::class, 'store']);
         });
 
 
