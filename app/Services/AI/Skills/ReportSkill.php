@@ -367,12 +367,32 @@ class ReportSkill
         if (empty($data['key_risks']) && empty($data['growth_opportunities'])) {
             $combined = $data['risks_and_opportunities'] ?? null;
             if (is_array($combined)) {
-                // Could be {risks: [...], opportunities: [...]} or {key_risks: [...], growth_opportunities: [...]}
-                $data['key_risks'] = $combined['risks'] ?? $combined['key_risks'] ?? $combined['risk'] ?? [];
-                $data['growth_opportunities'] = $combined['opportunities'] ?? $combined['growth_opportunities'] ?? $combined['opportunity'] ?? [];
+                // Log the actual structure to see what keys the AI used
+                Log::debug('[ReportSkill] risks_and_opportunities raw structure', [
+                    'keys' => array_keys($combined),
+                    'raw' => json_encode($combined),
+                ]);
+
+                // Try all known key variants
+                $data['key_risks'] = $combined['risks'] ?? $combined['key_risks'] ?? $combined['risk'] ?? $combined['Risks'] ?? [];
+                $data['growth_opportunities'] = $combined['opportunities'] ?? $combined['growth_opportunities'] ?? $combined['opportunity'] ?? $combined['Opportunities'] ?? [];
+
+                // If still empty, treat as flat list and split in half
+                if (count((array) $data['key_risks']) === 0 && count((array) $data['growth_opportunities']) === 0) {
+                    $flatItems = array_values(array_filter($combined, 'is_string'));
+                    $half = (int) ceil(count($flatItems) / 2);
+                    $data['key_risks'] = array_slice($flatItems, 0, $half);
+                    $data['growth_opportunities'] = array_slice($flatItems, $half);
+                }
+
                 Log::debug('[ReportSkill] Extracted from risks_and_opportunities', [
                     'risks_count' => count((array) $data['key_risks']),
                     'opps_count' => count((array) $data['growth_opportunities']),
+                ]);
+            } elseif ($combined !== null) {
+                Log::warning('[ReportSkill] risks_and_opportunities not an array', [
+                    'type' => gettype($combined),
+                    'value' => json_encode($combined),
                 ]);
             }
         }
