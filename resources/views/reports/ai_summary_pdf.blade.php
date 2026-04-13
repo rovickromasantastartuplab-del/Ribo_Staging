@@ -39,7 +39,7 @@
     @endphp
 
     <div class="header">
-        <h1>Client Account Snapshot</h1>
+        <h1>Account Summary</h1>
         <p class="muted meta">
             Account: {{ $accountName }} | Scope: {{ strtoupper((string) ($job->scope ?? 'overall')) }} | Generated: {{ optional($job->completed_at)->format('M d, Y H:i') ?? now()->format('M d, Y H:i') }}
         </p>
