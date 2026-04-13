@@ -33,18 +33,20 @@ class ActivityStreamDigestBuilder
             $text = strtolower($displayText);
 
             if ($text !== '') {
-                if ((bool) preg_match('/support|ticket|incident|bug|error|escalat|issue/', $text)) {
+                // Executive-grade Risk Detection
+                if ((bool) preg_match('/support|ticket|incident|bug|error|escalat|issue|friction|friction/', $text)) {
                     $support++;
                 }
                 
-                if ((bool) preg_match('/risk|block|delay|stalled|churn|friction|concern|lost/', $text)) {
+                if ((bool) preg_match('/risk|block|delay|stalled|churn|friction|concern|lost|postpone|pause|cancel|stop|reassess|misalign|cooling|unresponsive/', $text)) {
                     $risk++;
                     if (count($riskSnippets) < 10) {
                         $riskSnippets[] = "[{$createdAt}] {$displayText}";
                     }
                 }
                 
-                if ((bool) preg_match('/positive|win|progress|momentum|expansion|upsell|success|closed won/', $text)) {
+                // Executive-grade Positive/Opportunity Detection
+                if ((bool) preg_match('/positive|win|progress|momentum|expansion|upsell|success|closed won|interest|interested|reconnect|meeting|demo|proposal|alignment/', $text)) {
                     $positive++;
                     if (count($positiveSnippets) < 10) {
                         $positiveSnippets[] = "[{$createdAt}] {$displayText}";

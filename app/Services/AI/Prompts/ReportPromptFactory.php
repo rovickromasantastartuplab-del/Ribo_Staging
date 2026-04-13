@@ -129,11 +129,11 @@ PROMPT;
             $this->jsonEncode($context['activity_streams'] ?? []),
             'END <<untrusted_data>> ACTIVITY STREAMS',
             'IMPORTANT GUIDELINES FOR YOUR ANALYSIS:',
-            '- SCAN DEPTH: You have access to 250 items of recent activity. USE THEM to find specific signals.',
-            '- KEY SEPARATION: "key_risks" and "growth_opportunities" are SEPARATE sections. Do NOT combine them.',
-            '- MANDATORY BULLETS: You MUST provide 2-4 entries for both risks and opportunities. Even in a "Stable" account, there are future churn risks or expansion opportunities.',
-            'Output JSON only. Example of the required structure:',
-            '{"summary":"Executive summary of account health...","key_insights":["Insight 1","Insight 2"],"next_actions":["Action 1"],"account_status":"Strategic / Stalled / etc","status_value":"Stable","health_score":"Medium","account_status_reason":"Reason code","executive_insights":["Exec Insight 1","Exec Insight 2"],"key_relationships":[{"name":"John Doe","role":"VP","strength":"High"}],"relationship_gaps":"Gap description","key_risks":["Risk 1 - Based on activity","Risk 2 - Based on history"],"growth_opportunities":["Opp 1 - Based on activity","Opp 2 - Based on history"],"usage_signal":"Usage trend description","support_signal":"Support friction description","sentiment_signal":"Relationship tone description","engagement_pattern":"Activity frequency description","role_based_actions":{"sales":["Sales action"],"csm":["CSM action"],"support":["Support action"],"exec_sponsor":["Exec action"]},"prompt_version":"' . self::VERSION . '"}',
+            '- ZERO EMPTY SECTIONS: You MUST provide 2-4 entries for "key_risks" and "growth_opportunities". Silence or a "Stable" state does not mean zero risk or zero opportunity.',
+            '- KEY SEPARATION: Use "key_risks" and "growth_opportunities" as distinct top-level keys. NEVER use "risks_and_opportunities".',
+            '- INFERRED INTELLIGENCE: If specific event data is sparse for the last 24 hours, use the Triage state and historical summary to identify structural risks (e.g. single-threaded relationship, budget cycle risk, competitor footprint).',
+            'Output JSON ONLY. Use this EXACT structure:',
+            '{"summary":"...","key_risks":["...","..."],"growth_opportunities":["...","..."],"key_insights":["..."],"next_actions":["..."],"account_status":"...","status_value":"Stable","health_score":"Medium","account_status_reason":"...","executive_insights":["..."],"key_relationships":[{"name":"...","role":"...","strength":"..."}],"relationship_gaps":"...","usage_signal":"...","support_signal":"...","sentiment_signal":"...","engagement_pattern":"...","role_based_actions":{"sales":["..."],"csm":["..."],"support":["..."],"exec_sponsor":["..."]},"prompt_version":"' . self::VERSION . '"}',
         ]);
 
         return implode("\n", $parts);
