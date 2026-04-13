@@ -87,16 +87,17 @@ Good report shape: summary explains the state change, key insight links the new 
 - executive_insights: array (3-5) of commercial insights for leadership.
 - key_relationships: array of objects with keys: name, role, strength.
 - relationship_gaps: one concise line describing stakeholder coverage gaps.
-- key_risks: array (2-4 bullets) of specific commercial/operational risks.
-- growth_opportunities: array (2-4 bullets) of concrete growth/expansion pathways.
-- usage_signal: one-line summary of customer usage/adoption trends.
-- support_signal: one-line summary of support friction or stability.
-- sentiment_signal: one-line summary of relationship sentiment.
+- key_risks: array (2-4 bullets) of specific commercial/operational risks. MUST be a top-level key. Do NOT merge with opportunities.
+- growth_opportunities: array (2-4 bullets) of concrete growth/expansion pathways. MUST be a top-level key. Do NOT merge with risks.
+- usage_signal: one-line summary of customer usage/adoption trends derived from activity data.
+- support_signal: one-line summary of support friction or stability derived from activity data.
+- sentiment_signal: one-line summary of relationship sentiment derived from email tone and activity.
 - engagement_pattern: one-line summary of responsiveness and activity frequency.
 - role_based_actions: object with arrays for keys sales, csm, support, exec_sponsor.
 - role_based_actions lines should be compatible with Role -> Action -> Priority formatting.
 - prompt_version must be exactly: v2-expert-chief-of-staff
-- MANDATORY KEYS: You MUST include every key listed above in the JSON output, even if the value is "Not available". Never omit a key.
+- CRITICAL: Never use a combined "risks_and_opportunities" key. Always use the separate keys "key_risks" and "growth_opportunities".
+- MANDATORY KEYS: You MUST include every key listed above in the JSON output. Never omit a key.
 PROMPT;
     }
 

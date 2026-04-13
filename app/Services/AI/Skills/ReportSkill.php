@@ -363,20 +363,35 @@ class ReportSkill
             $data['key_relationships'] = [['name' => 'Not available', 'role' => 'Stakeholder', 'strength' => 'Medium']];
         }
 
+        // Handle AI returning combined 'risks_and_opportunities' key instead of separate keys
+        if (empty($data['key_risks']) && empty($data['growth_opportunities'])) {
+            $combined = $data['risks_and_opportunities'] ?? null;
+            if (is_array($combined)) {
+                // Could be {risks: [...], opportunities: [...]} or {key_risks: [...], growth_opportunities: [...]}
+                $data['key_risks'] = $combined['risks'] ?? $combined['key_risks'] ?? $combined['risk'] ?? [];
+                $data['growth_opportunities'] = $combined['opportunities'] ?? $combined['growth_opportunities'] ?? $combined['opportunity'] ?? [];
+                Log::debug('[ReportSkill] Extracted from risks_and_opportunities', [
+                    'risks_count' => count((array) $data['key_risks']),
+                    'opps_count' => count((array) $data['growth_opportunities']),
+                ]);
+            }
+        }
+
         $data['key_risks'] = $this->normalizeStringArray($data['key_risks'] ?? []);
         if (count($data['key_risks']) === 0) {
-            $data['key_risks'] = ['No critical operational risks were identified in the recent interaction stream.'];
+            $data['key_risks'] = [];
         }
 
         $data['growth_opportunities'] = $this->normalizeStringArray($data['growth_opportunities'] ?? []);
         if (count($data['growth_opportunities']) === 0) {
-            $data['growth_opportunities'] = ['Continue relationship maintenance to identify future expansion pathways.'];
+            $data['growth_opportunities'] = [];
         }
 
-        $data['usage_signal'] = trim((string) ($data['usage_signal'] ?? 'Stable - activities consistent with established account baseline.'));
-        $data['support_signal'] = trim((string) ($data['support_signal'] ?? 'Stable - no elevated support friction detected in activity logs.'));
-        $data['sentiment_signal'] = trim((string) ($data['sentiment_signal'] ?? 'Neutral - relationship quality appears stable with no recent pivots.'));
-        $data['engagement_pattern'] = trim((string) ($data['engagement_pattern'] ?? 'Steady - engagement frequency remains within normal parameters.'));
+        // Only use values if the AI explicitly provided them — empty string means hide the signal, not show a generic fallback
+        $data['usage_signal'] = trim((string) ($data['usage_signal'] ?? ''));
+        $data['support_signal'] = trim((string) ($data['support_signal'] ?? ''));
+        $data['sentiment_signal'] = trim((string) ($data['sentiment_signal'] ?? ''));
+        $data['engagement_pattern'] = trim((string) ($data['engagement_pattern'] ?? ''));
 
         $roleActions = is_array($data['role_based_actions'] ?? null) ? $data['role_based_actions'] : [];
         $data['role_based_actions'] = [
