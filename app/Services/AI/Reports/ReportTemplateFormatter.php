@@ -9,8 +9,13 @@ class ReportTemplateFormatter
         $crm = is_array($context['crm'] ?? null) ? $context['crm'] : [];
         $financials = is_array($crm['financials'] ?? null) ? $crm['financials'] : [];
         $opportunities = is_array($crm['opportunities'] ?? null) ? $crm['opportunities'] : [];
-        $relationships = $this->normalizeRelationships($result['key_relationships'] ?? ($crm['relationships'] ?? []));
+        $activityStreams = is_array($context['activity_streams'] ?? null) ? $context['activity_streams'] : [];
+        $activityMeta = is_array($activityStreams['meta'] ?? null) ? $activityStreams['meta'] : [];
+        $totalIncludedActivity = (int) ($activityMeta['lead_included_count'] ?? 0) + (int) ($activityMeta['opportunity_included_count'] ?? 0);
+
+        $relationships = $this->normalizeRelationships($result['key_relationships'] ?? ($crm['relationships'] ?? []), $totalIncludedActivity);
         $riskOpportunity = $this->normalizeStringArray($result['risks_and_opportunities'] ?? []);
+        $engagementSignals = $this->deriveEngagementSignals($result, $activityStreams, $activityMeta);
 
         return [
             'sections' => [
@@ -24,8 +29,8 @@ class ReportTemplateFormatter
                 ['title' => 'Recommended Actions (Next 30–60 Days)'],
             ],
             'account_status' => [
-                'status' => $this->enum($result['status_value'] ?? null, ['Strategic', 'Growth', 'At Risk', 'Stable'], 'Stable'),
-                'health' => $this->enum($result['health_score'] ?? null, ['High', 'Medium', 'Low'], 'Medium'),
+                'status' => $this->enum($result['status_value'] ?? ($result['normalized_status'] ?? null), ['Strategic', 'Growth', 'At Risk', 'Stable'], 'Stable'),
+                'health' => $this->enum($result['health_score'] ?? ($result['normalized_health_score'] ?? null), ['High', 'Medium', 'Low'], 'Medium'),
                 'health_reason' => $this->firstNonEmptyString([
                     $result['account_status_reason'] ?? null,
                     $result['account_status'] ?? null,
@@ -36,6 +41,7 @@ class ReportTemplateFormatter
                 'renewal' => $this->firstNonEmptyString([
                     $financials['renewal'] ?? null,
                     $financials['renewal_date'] ?? null,
+                    $this->deriveRenewalDate($opportunities),
                 ], 'Not available'),
             ],
             'deals' => [
@@ -44,21 +50,28 @@ class ReportTemplateFormatter
                     count($opportunities) > 0 ? (string) count($opportunities) : null,
                 ], 'Not available'),
                 'top_deal' => $this->firstNonEmptyString([$opportunities[0]['name'] ?? null], 'Not available'),
-                'expansion_potential' => $this->money($financials['expansion_potential'] ?? null),
-                'notable_won' => $this->firstNonEmptyString([$result['notable_deals']['won'] ?? null], 'Not available'),
-                'notable_lost' => $this->firstNonEmptyString([$result['notable_deals']['lost'] ?? null], 'Not available'),
-                'notable_stalled' => $this->firstNonEmptyString([$result['notable_deals']['stalled'] ?? null], 'Not available'),
+                'expansion_potential' => $this->deriveExpansionPotential($financials, $opportunities),
+                'notable_won' => $this->firstNonEmptyString([
+                    $result['notable_deals']['won'] ?? null,
+                    $this->deriveNotableDeal($opportunities, ['won', 'closed won', 'success']),
+                ], 'Not available'),
+                'notable_lost' => $this->firstNonEmptyString([
+                    $result['notable_deals']['lost'] ?? null,
+                    $this->deriveNotableDeal($opportunities, ['lost', 'closed lost']),
+                ], 'Not available'),
+                'notable_stalled' => $this->firstNonEmptyString([
+                    $result['notable_deals']['stalled'] ?? null,
+                    $this->deriveNotableDeal($opportunities, ['stalled', 'stuck', 'hold', 'blocked']),
+                ], 'Not available'),
             ],
-            'engagement_health_signals' => [
-                'usage' => $this->firstNonEmptyString([$result['usage_signal'] ?? null], 'Not available'),
-                'support' => $this->firstNonEmptyString([$result['support_signal'] ?? null], 'Not available'),
-                'sentiment' => $this->firstNonEmptyString([$result['sentiment_signal'] ?? null], 'Not available'),
-                'engagement_pattern' => $this->firstNonEmptyString([$result['engagement_pattern'] ?? null], 'Not available'),
-            ],
+            'engagement_health_signals' => $engagementSignals,
             'recommended_actions' => $this->buildRoleActions($result),
             'executive_insights' => $this->normalizeExecutiveInsights($result['executive_insights'] ?? ($result['key_insights'] ?? [])),
             'key_relationships' => $relationships,
-            'relationship_gaps' => $this->firstNonEmptyString([$result['relationship_gaps'] ?? null], 'Not available'),
+            'relationship_gaps' => $this->firstNonEmptyString([
+                $result['relationship_gaps'] ?? null,
+                $this->deriveRelationshipGap($relationships),
+            ], 'Not available'),
             'key_risks' => $this->extractRiskBullets($riskOpportunity),
             'growth_opportunities' => $this->extractOpportunityBullets($riskOpportunity),
             'additional_context' => $this->normalizeStringArray($result['additional_context'] ?? []),
@@ -68,10 +81,10 @@ class ReportTemplateFormatter
 
     private function buildRoleActions(array $result): array
     {
-        $sales = $this->firstNonEmptyString([$result['role_based_actions']['sales'][0] ?? null], 'Not available');
-        $csm = $this->firstNonEmptyString([$result['role_based_actions']['csm'][0] ?? null], 'Not available');
-        $support = $this->firstNonEmptyString([$result['role_based_actions']['support'][0] ?? null], 'Not available');
-        $exec = $this->firstNonEmptyString([$result['role_based_actions']['exec_sponsor'][0] ?? null], 'Not available');
+        $sales = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['sales'][0] ?? null], 'Review current commercial motion and send targeted follow-up'));
+        $csm = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['csm'][0] ?? null], 'Validate relationship health and confirm next stakeholder touchpoint'));
+        $support = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['support'][0] ?? null], 'Review open blockers and prepare resolution plan'));
+        $exec = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['exec_sponsor'][0] ?? null], 'Engage senior stakeholder on cross-functional value'));
 
         return [
             "Sales -> {$sales} -> High",
@@ -81,9 +94,11 @@ class ReportTemplateFormatter
         ];
     }
 
-    private function enum(?string $value, array $allowed, string $fallback): string
+    private function enum(mixed $value, array $allowed, string $fallback): string
     {
-        return in_array($value, $allowed, true) ? $value : $fallback;
+        $normalized = trim((string) $value);
+
+        return in_array($normalized, $allowed, true) ? $normalized : $fallback;
     }
 
     private function money(mixed $value): string
@@ -130,7 +145,7 @@ class ReportTemplateFormatter
         return $insights;
     }
 
-    private function normalizeRelationships(mixed $value): array
+    private function normalizeRelationships(mixed $value, int $activityCount = 0): array
     {
         if (!is_array($value)) {
             return [];
@@ -139,11 +154,12 @@ class ReportTemplateFormatter
         $rows = [];
         foreach ($value as $item) {
             if (is_array($item)) {
+                $role = trim((string) ($item['role'] ?? '')) ?: 'Stakeholder';
                 $rows[] = [
                     'name' => trim((string) ($item['name'] ?? '')) ?: 'Not available',
-                    'role' => trim((string) ($item['role'] ?? '')) ?: 'Not available',
-                    'type' => trim((string) ($item['type'] ?? '')) ?: 'Not available',
-                    'strength' => trim((string) ($item['strength'] ?? '')) ?: 'Not available',
+                    'role' => $role,
+                    'type' => trim((string) ($item['type'] ?? '')) ?: $this->inferRelationshipType($role),
+                    'strength' => trim((string) ($item['strength'] ?? '')) ?: $this->inferRelationshipStrength($activityCount),
                 ];
                 continue;
             }
@@ -155,13 +171,39 @@ class ReportTemplateFormatter
 
             $rows[] = [
                 'name' => $line,
-                'role' => 'Not available',
-                'type' => 'Not available',
-                'strength' => 'Not available',
+                'role' => 'Stakeholder',
+                'type' => 'Stakeholder',
+                'strength' => $this->inferRelationshipStrength($activityCount),
             ];
         }
 
         return $rows;
+    }
+
+    private function inferRelationshipType(string $role): string
+    {
+        $roleLower = strtolower($role);
+
+        if ((bool) preg_match('/vp|chief|c[- ]?level|director|head|owner|founder/', $roleLower)) {
+            return 'Decision-maker';
+        }
+        if ((bool) preg_match('/block|legal|procurement|security|finance/', $roleLower)) {
+            return 'Blocker';
+        }
+
+        return 'Champion';
+    }
+
+    private function inferRelationshipStrength(int $activityCount): string
+    {
+        if ($activityCount >= 20) {
+            return 'Strong';
+        }
+        if ($activityCount >= 1) {
+            return 'Medium';
+        }
+
+        return 'Medium';
     }
 
     private function extractRiskBullets(array $items): array
@@ -180,5 +222,158 @@ class ReportTemplateFormatter
         }));
 
         return count($opportunities) > 0 ? array_slice($opportunities, 0, 4) : ['Not available'];
+    }
+
+    private function deriveRelationshipGap(array $relationships): string
+    {
+        if (count($relationships) === 0) {
+            return 'No mapped stakeholder relationships in CRM context.';
+        }
+
+        $types = array_map(static fn (array $row): string => strtolower((string) ($row['type'] ?? '')), $relationships);
+        if (!in_array('decision-maker', $types, true)) {
+            return 'No explicit decision-maker relationship is mapped.';
+        }
+
+        if (count($relationships) < 2) {
+            return 'Relationship map appears single-threaded across stakeholders.';
+        }
+
+        return 'Relationship coverage appears multi-threaded.';
+    }
+
+    private function deriveExpansionPotential(array $financials, array $opportunities): string
+    {
+        if (is_numeric($financials['expansion_potential'] ?? null)) {
+            return $this->money($financials['expansion_potential']);
+        }
+
+        $amounts = array_values(array_filter(array_map(static fn (array $opp): float => (float) ($opp['amount'] ?? 0), $opportunities), static fn (float $amount): bool => $amount > 0));
+        if (count($amounts) === 0) {
+            return 'Not available';
+        }
+
+        rsort($amounts);
+        $total = array_sum($amounts);
+        $top = $amounts[0];
+        $derived = max(0, $total - $top);
+
+        if ($derived <= 0 && $top > 0) {
+            $derived = $top * 0.25;
+        }
+
+        return $this->money($derived);
+    }
+
+    private function deriveRenewalDate(array $opportunities): ?string
+    {
+        $dates = [];
+        foreach ($opportunities as $opportunity) {
+            $value = trim((string) ($opportunity['close_date'] ?? ''));
+            if ($value === '') {
+                continue;
+            }
+            $dates[] = $value;
+        }
+
+        if (count($dates) === 0) {
+            return null;
+        }
+
+        sort($dates);
+
+        return $dates[0];
+    }
+
+    private function deriveNotableDeal(array $opportunities, array $keywords): ?string
+    {
+        foreach ($opportunities as $opportunity) {
+            $haystack = strtolower(implode(' ', [
+                (string) ($opportunity['status'] ?? ''),
+                (string) ($opportunity['stage'] ?? ''),
+                (string) ($opportunity['name'] ?? ''),
+            ]));
+
+            foreach ($keywords as $keyword) {
+                if (str_contains($haystack, strtolower($keyword))) {
+                    return (string) ($opportunity['name'] ?? 'Not available');
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function deriveEngagementSignals(array $result, array $activityStreams, array $activityMeta): array
+    {
+        $leadIncluded = (int) ($activityMeta['lead_included_count'] ?? 0);
+        $oppIncluded = (int) ($activityMeta['opportunity_included_count'] ?? 0);
+        $leadScanned = (int) ($activityMeta['lead_scanned_count'] ?? 0);
+        $oppScanned = (int) ($activityMeta['opportunity_scanned_count'] ?? 0);
+        $totalIncluded = $leadIncluded + $oppIncluded;
+        $totalScanned = $leadScanned + $oppScanned;
+
+        $usage = $this->firstNonEmptyString([$result['usage_signal'] ?? null], '');
+        if ($usage === '') {
+            if ($totalIncluded >= 20) {
+                $usage = 'High - consistent cross-channel activity is present.';
+            } elseif ($totalIncluded >= 8) {
+                $usage = 'Medium - active engagement is present with room to improve.';
+            } elseif ($totalIncluded > 0) {
+                $usage = 'Low-Medium - limited recent activity was detected.';
+            } else {
+                $usage = 'Low - no recent CRM activity was detected.';
+            }
+        }
+
+        $support = $this->firstNonEmptyString([$result['support_signal'] ?? null], '');
+        if ($support === '') {
+            $serialized = strtolower(json_encode($activityStreams, JSON_UNESCAPED_SLASHES) ?: '');
+            if ((bool) preg_match('/ticket|support|bug|incident|escalat|error|issue/', $serialized)) {
+                $support = 'Issues - support-related activity exists and should be monitored.';
+            } else {
+                $support = 'Stable - no elevated support friction detected in activity logs.';
+            }
+        }
+
+        $sentiment = $this->firstNonEmptyString([$result['sentiment_signal'] ?? null], '');
+        if ($sentiment === '') {
+            $relationshipHealth = strtolower(trim((string) ($result['relationship_health'] ?? '')));
+            $sentiment = match ($relationshipHealth) {
+                'healthy' => 'Positive - relationship health indicates constructive momentum.',
+                'neutral', 'strained' => 'Neutral - relationship quality is mixed and requires monitoring.',
+                'damaged' => 'Negative - relationship health suggests elevated commercial risk.',
+                default => 'Neutral - direct sentiment signal is limited.',
+            };
+        }
+
+        $engagementPattern = $this->firstNonEmptyString([$result['engagement_pattern'] ?? null], '');
+        if ($engagementPattern === '') {
+            if ($totalScanned >= 30) {
+                $engagementPattern = 'High responsiveness across channels with sustained follow-through.';
+            } elseif ($totalScanned >= 10) {
+                $engagementPattern = 'Moderate responsiveness with periodic customer activity.';
+            } elseif ($totalScanned > 0) {
+                $engagementPattern = 'Light engagement pattern with intermittent activity.';
+            } else {
+                $engagementPattern = 'Limited engagement pattern due to sparse activity history.';
+            }
+        }
+
+        return [
+            'usage' => $usage,
+            'support' => $support,
+            'sentiment' => $sentiment,
+            'engagement_pattern' => $engagementPattern,
+        ];
+    }
+
+    private function sanitizeAction(string $action): string
+    {
+        $normalized = preg_replace('/\s*->\s*(High|Medium|Low)\b/i', '', $action);
+        $normalized = preg_replace('/\s*-\s*(High|Medium|Low)\s*priority\.?/i', '', (string) $normalized);
+        $normalized = trim((string) $normalized);
+
+        return $normalized !== '' ? $normalized : 'Not available';
     }
 }
