@@ -80,9 +80,25 @@ class ConversationAiReportController extends Controller
                 $selectedOpportunityId
             );
 
-            // Process synchronously to bypass queue worker requirement on cPanel
+            // Sync mode: process inline and return final status immediately.
             $this->reportService->process($job);
             $job->refresh();
+
+            if ($job->status === 'failed') {
+                $this->telemetryService->recordFailure(
+                    $companyId,
+                    'report_generate',
+                    $thread->id,
+                    (string) ($config['model'] ?? null),
+                    [
+                        'scope' => (string) ($validated['scope'] ?? 'overall'),
+                        'phase' => 'completed_sync',
+                        'reason' => 'process_failed',
+                    ]
+                );
+
+                return response()->json(['message' => 'AI unavailable'], 422);
+            }
 
         } catch (Throwable $e) {
             $this->telemetryService->recordFailure($companyId, 'report_generate', $thread->id, (string) ($config['model'] ?? null), ['reason' => 'provider_failure']);

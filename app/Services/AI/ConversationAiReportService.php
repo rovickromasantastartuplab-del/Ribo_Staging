@@ -2,7 +2,6 @@
 
 namespace App\Services\AI;
 
-use App\Jobs\AI\GenerateConversationAiReportJob;
 use App\Models\AiReportJob;
 use App\Models\AiTriageResult;
 use App\Models\Contact;
@@ -50,8 +49,6 @@ class ConversationAiReportService
             'context_payload_json' => $context,
             'requested_at' => now(),
         ]);
-
-        GenerateConversationAiReportJob::dispatch($job->id);
 
         return $job;
     }

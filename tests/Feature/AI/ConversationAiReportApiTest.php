@@ -90,7 +90,7 @@ function disableNonApiBlockingMiddlewareForReport(): void
     ]);
 }
 
-it('creates report job and returns processing status', function () {
+it('creates report job and returns processing status in sync mode without queue dispatch', function () {
     [$staff, , $thread] = createReportFixture();
     actingAs($staff);
     disableNonApiBlockingMiddlewareForReport();
@@ -104,7 +104,7 @@ it('creates report job and returns processing status', function () {
         'data' => ['job_id', 'status'],
     ]);
 
-    Queue::assertPushed(GenerateConversationAiReportJob::class);
+    Queue::assertNotPushed(GenerateConversationAiReportJob::class);
 });
 
 it('returns report job details', function () {
