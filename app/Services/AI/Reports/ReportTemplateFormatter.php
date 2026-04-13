@@ -141,13 +141,7 @@ class ReportTemplateFormatter
 
     private function normalizeExecutiveInsights(mixed $value): array
     {
-        $insights = array_slice($this->normalizeStringArray($value), 0, 5);
-
-        if (count($insights) < 3) {
-            $insights = array_pad($insights, 3, 'Not available');
-        }
-
-        return $insights;
+        return $this->normalizeStringArray($value);
     }
 
     private function normalizeRelationships(mixed $value, int $activityCount = 0): array
