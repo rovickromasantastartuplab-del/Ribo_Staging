@@ -49,17 +49,30 @@ class ConversationAiReportController extends Controller
             ->where('created_by', $companyId)
             ->firstOrFail();
 
+        $scopeOptions = $this->reportService->scopeOptions($companyId, $thread);
+
         $contact = null;
         if (!empty($validated['contactId'])) {
             $contact = Contact::query()
                 ->where('id', (int) $validated['contactId'])
                 ->where('created_by', $companyId)
                 ->firstOrFail();
+
+            $allowedContact = collect($scopeOptions['contacts'] ?? [])
+                ->pluck('id')
+                ->contains((int) $contact->id);
+
+            if (!$allowedContact) {
+                return response()->json([
+                    'message' => 'Selected contact is not linked to this report context.',
+                    'errors' => ['contactId' => ['Invalid contact selection for this thread.']],
+                ], 422);
+            }
         }
 
         $selectedOpportunityId = isset($validated['opportunityId']) ? (int) $validated['opportunityId'] : null;
         if (($validated['scope'] ?? null) === 'specific-opportunity' && $selectedOpportunityId !== null) {
-            $allowed = collect($this->reportService->scopeOptions($companyId, $thread)['opportunities'] ?? [])
+            $allowed = collect($scopeOptions['opportunities'] ?? [])
                 ->pluck('id')
                 ->contains($selectedOpportunityId);
 
@@ -199,7 +212,6 @@ class ConversationAiReportController extends Controller
 
             return response()->json([
                 'message' => 'Failed to generate summary report. Please try again.',
-                'error' => $e->getMessage(),
             ], 500);
         }
     }

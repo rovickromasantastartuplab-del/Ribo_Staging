@@ -1,5 +1,6 @@
 <?php
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Middleware\CheckInstallation;
 use App\Http\Middleware\CheckPlanAccess;
 use App\Http\Middleware\EnsureOnboardingCompleted;
@@ -328,4 +329,65 @@ it('rejects specific opportunity selection when not linked to thread context', f
         'opportunityId' => $unrelatedOpportunity->id,
     ])->assertStatus(422)
       ->assertJsonPath('message', 'Selected opportunity is not linked to this report context.');
+});
+
+it('rejects contact selection when contact is not linked to thread context', function () {
+    [$staff, $company, $thread, $linkedContact] = createReportFixture();
+    actingAs($staff);
+    disableNonApiBlockingMiddlewareForReport();
+
+    DB::table('email_threadables')->insert([
+        'email_thread_id' => $thread->id,
+        'email_threadable_type' => Contact::class,
+        'email_threadable_id' => $linkedContact->id,
+        'matched_via' => 'manual',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $otherAccount = Account::query()->create([
+        'name' => 'Unrelated Contact Account',
+        'email' => 'other-account@example.test',
+        'created_by' => $company->id,
+    ]);
+
+    $unrelatedContact = Contact::query()->create([
+        'name' => 'Unrelated Contact',
+        'email' => 'unrelated-contact@example.test',
+        'account_id' => $otherAccount->id,
+        'created_by' => $company->id,
+    ]);
+
+    postJson('/ai/reports/generate', [
+        'threadId' => $thread->id,
+        'scope' => 'overall',
+        'contactId' => $unrelatedContact->id,
+    ])->assertStatus(422)
+      ->assertJsonPath('message', 'Selected contact is not linked to this report context.');
+});
+
+it('sanitizes download errors without exposing internal exception details', function () {
+    [$staff, $company, $thread] = createReportFixture();
+    actingAs($staff);
+    disableNonApiBlockingMiddlewareForReport();
+
+    $job = AiReportJob::query()->create([
+        'created_by' => $company->id,
+        'email_thread_id' => $thread->id,
+        'scope' => 'overall',
+        'status' => 'completed',
+        'result_payload_json' => ['summary' => 'ready'],
+        'context_payload_json' => ['crm' => []],
+        'requested_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    Pdf::shouldReceive('loadView')
+        ->once()
+        ->andThrow(new \RuntimeException('Sensitive internal failure details'));
+
+    getJson("/ai/reports/{$job->id}/download")
+        ->assertStatus(500)
+        ->assertJsonPath('message', 'Failed to generate summary report. Please try again.')
+        ->assertJsonMissingPath('error');
 });

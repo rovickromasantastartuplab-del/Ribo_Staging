@@ -125,6 +125,13 @@ class ConversationAiReportContextBuilder
         $opportunities = $this->resolveOpportunities($companyId, $contacts, 'all-opps', null);
 
         return [
+            'contacts' => $contacts->map(function ($item): array {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'email' => $item->email,
+                ];
+            })->filter(fn (array $item): bool => !empty($item['id']))->values()->all(),
             'opportunities' => $opportunities->map(fn (Opportunity $item): array => [
                 'id' => $item->id,
                 'name' => $item->name,

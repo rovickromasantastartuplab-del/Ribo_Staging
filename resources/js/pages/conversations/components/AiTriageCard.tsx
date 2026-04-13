@@ -245,7 +245,14 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                         }
 
                                         if (status === 422) {
-                                            toast.warning('AI is currently unavailable.');
+                                            const responseData = error.response?.data as
+                                                | { message?: string; errors?: Record<string, string[] | undefined> }
+                                                | undefined;
+                                            const firstValidationMessage = responseData?.errors
+                                                ? Object.values(responseData.errors).flat().find((msg) => typeof msg === 'string' && msg.trim() !== '')
+                                                : undefined;
+
+                                            toast.warning(firstValidationMessage || responseData?.message || 'AI is currently unavailable.');
                                             return;
                                         }
                                     }
