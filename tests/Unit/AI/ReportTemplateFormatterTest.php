@@ -137,4 +137,54 @@ class ReportTemplateFormatterTest extends TestCase
 
         $this->assertSame('2026-08-15', $formatted['account_status']['renewal']);
     }
+
+    public function test_it_sanitizes_relationship_name_to_plain_person_name(): void
+    {
+        $formatter = new ReportTemplateFormatter();
+
+        $formatted = $formatter->format(
+            [
+                'key_relationships' => [
+                    'Rovick Romasanta - Primary contact for this account.',
+                ],
+            ],
+            [
+                'crm' => [],
+            ],
+            'overall'
+        );
+
+        $row = $formatted['key_relationships'][0];
+
+        $this->assertSame('Rovick Romasanta', $row['name']);
+    }
+
+    public function test_it_prefers_crm_relationship_names_over_ai_narrative_strings(): void
+    {
+        $formatter = new ReportTemplateFormatter();
+
+        $formatted = $formatter->format(
+            [
+                'key_relationships' => [
+                    'Rovick Romasanta - Primary contact for this account.',
+                ],
+            ],
+            [
+                'crm' => [
+                    'relationships' => [
+                        [
+                            'name' => 'Rovick Romasanta',
+                            'role' => 'Partner',
+                        ],
+                    ],
+                ],
+            ],
+            'overall'
+        );
+
+        $row = $formatted['key_relationships'][0];
+
+        $this->assertSame('Rovick Romasanta', $row['name']);
+        $this->assertSame('Partner', $row['role']);
+    }
 }

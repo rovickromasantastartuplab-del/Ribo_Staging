@@ -145,11 +145,17 @@ class ConversationAiReportContextBuilder
             ->with('account')
             ->get();
 
-        if ($threadContacts->isNotEmpty()) {
+        $fallbackContacts = $this->resolveLeadRelatedContactsFallback($companyId, $leads);
+
+        if ($threadContacts->isEmpty()) {
+            return $fallbackContacts;
+        }
+
+        if ($fallbackContacts->isEmpty()) {
             return $threadContacts;
         }
 
-        return $this->resolveLeadRelatedContactsFallback($companyId, $leads);
+        return $this->dedupeContacts($threadContacts->merge($fallbackContacts));
     }
 
     private function resolveLeadRelatedContactsFallback(int $companyId, Collection $leads): Collection
@@ -244,6 +250,24 @@ class ConversationAiReportContextBuilder
             'id' => $accountId,
             'name' => $accountName ?? 'Unassigned Account',
         ];
+    }
+
+    private function dedupeContacts(Collection $contacts): Collection
+    {
+        return $contacts
+            ->unique(function ($item): string {
+                $id = $item->id ?? null;
+                if ($id !== null) {
+                    return 'id:' . (string) $id;
+                }
+
+                $accountId = $item->account_id ?? null;
+                $email = strtolower(trim((string) ($item->email ?? '')));
+                $name = strtolower(trim((string) ($item->name ?? '')));
+
+                return 'fallback:' . (string) $accountId . ':' . $email . ':' . $name;
+            })
+            ->values();
     }
 
     private function resolveOpportunities(

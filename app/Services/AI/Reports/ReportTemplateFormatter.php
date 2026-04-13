@@ -13,7 +13,10 @@ class ReportTemplateFormatter
         $activityMeta = is_array($activityStreams['meta'] ?? null) ? $activityStreams['meta'] : [];
         $totalIncludedActivity = (int) ($activityMeta['lead_included_count'] ?? 0) + (int) ($activityMeta['opportunity_included_count'] ?? 0);
 
-        $relationships = $this->normalizeRelationships($result['key_relationships'] ?? ($crm['relationships'] ?? []), $totalIncludedActivity);
+        $crmRelationships = $this->normalizeRelationships($crm['relationships'] ?? [], $totalIncludedActivity);
+        $relationships = count($crmRelationships) > 0
+            ? $crmRelationships
+            : $this->normalizeRelationships($result['key_relationships'] ?? [], $totalIncludedActivity);
         $riskOpportunity = $this->normalizeStringArray($result['risks_and_opportunities'] ?? []);
         $engagementSignals = $this->deriveEngagementSignals($result, $activityStreams, $activityMeta);
 
@@ -156,7 +159,7 @@ class ReportTemplateFormatter
             if (is_array($item)) {
                 $role = trim((string) ($item['role'] ?? '')) ?: 'Stakeholder';
                 $rows[] = [
-                    'name' => trim((string) ($item['name'] ?? '')) ?: 'Not available',
+                    'name' => $this->extractCleanName((string) ($item['name'] ?? '')),
                     'role' => $role,
                     'type' => trim((string) ($item['type'] ?? '')) ?: $this->inferRelationshipType($role),
                     'strength' => trim((string) ($item['strength'] ?? '')) ?: $this->inferRelationshipStrength($activityCount),
@@ -170,7 +173,7 @@ class ReportTemplateFormatter
             }
 
             $rows[] = [
-                'name' => $line,
+                'name' => $this->extractCleanName($line),
                 'role' => 'Stakeholder',
                 'type' => 'Stakeholder',
                 'strength' => $this->inferRelationshipStrength($activityCount),
@@ -375,5 +378,22 @@ class ReportTemplateFormatter
         $normalized = trim((string) $normalized);
 
         return $normalized !== '' ? $normalized : 'Not available';
+    }
+
+    private function extractCleanName(string $raw): string
+    {
+        $value = trim($raw);
+        if ($value === '') {
+            return 'Not available';
+        }
+
+        // Remove narrative suffixes like " - Primary contact for this account."
+        $value = preg_replace('/\s+[-–—]\s+.+$/u', '', $value) ?? $value;
+        // Remove bracketed clarifiers like "(Primary contact...)"
+        $value = preg_replace('/\s*\(.+\)\s*$/u', '', $value) ?? $value;
+        // Remove trailing punctuation artifacts.
+        $value = trim((string) preg_replace('/[.,;:\-–—\s]+$/u', '', $value));
+
+        return $value !== '' ? $value : 'Not available';
     }
 }
