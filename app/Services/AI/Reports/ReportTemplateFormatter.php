@@ -8,7 +8,7 @@ class ReportTemplateFormatter
     {
         $crm = is_array($context['crm'] ?? null) ? $context['crm'] : [];
         $financials = is_array($crm['financials'] ?? null) ? $crm['financials'] : [];
-        $opportunities = is_array($crm['opportunities'] ?? null) ? $crm['opportunities'] : [];
+        $crmOpportunities = is_array($crm['opportunities'] ?? null) ? $crm['opportunities'] : [];
         $activityStreams = is_array($context['activity_streams'] ?? null) ? $context['activity_streams'] : [];
         $activityMeta = is_array($activityStreams['meta'] ?? null) ? $activityStreams['meta'] : [];
         $totalIncludedActivity = (int) ($activityMeta['lead_included_count'] ?? 0) + (int) ($activityMeta['opportunity_included_count'] ?? 0);
@@ -26,14 +26,14 @@ class ReportTemplateFormatter
             (array) ($result['key_insights'] ?? [])
         );
 
-        $risks = $this->normalizeExecutiveInsights($result['key_risks'] ?? []);
-        if (count($risks) === 0) {
-            $risks = $this->extractRiskBullets($scavengePool);
+        $aiRisks = $this->normalizeExecutiveInsights($result['key_risks'] ?? []);
+        if (count($aiRisks) === 0) {
+            $aiRisks = $this->extractRiskBullets($scavengePool);
         }
 
-        $opportunities = $this->normalizeExecutiveInsights($result['growth_opportunities'] ?? []);
-        if (count($opportunities) === 0) {
-            $opportunities = $this->extractOpportunityBullets($scavengePool);
+        $aiOpportunities = $this->normalizeExecutiveInsights($result['growth_opportunities'] ?? []);
+        if (count($aiOpportunities) === 0) {
+            $aiOpportunities = $this->extractOpportunityBullets($scavengePool);
         }
 
         return [
@@ -60,27 +60,27 @@ class ReportTemplateFormatter
                 'renewal' => $this->firstNonEmptyString([
                     $financials['renewal'] ?? null,
                     $financials['renewal_date'] ?? null,
-                    $this->deriveRenewalDate($opportunities),
+                    $this->deriveRenewalDate($crmOpportunities),
                 ], 'Not available'),
             ],
             'deals' => [
                 'active_deals' => $this->firstNonEmptyString([
                     isset($financials['active_deals_count']) ? (string) $financials['active_deals_count'] : null,
-                    count($opportunities) > 0 ? (string) count($opportunities) : null,
+                    count($crmOpportunities) > 0 ? (string) count($crmOpportunities) : null,
                 ], 'Not available'),
-                'top_deal' => $this->firstNonEmptyString([$opportunities[0]['name'] ?? null], 'Not available'),
-                'expansion_potential' => $this->deriveExpansionPotential($financials, $opportunities),
+                'top_deal' => $this->firstNonEmptyString([$crmOpportunities[0]['name'] ?? null], 'Not available'),
+                'expansion_potential' => $this->deriveExpansionPotential($financials, $crmOpportunities),
                 'notable_won' => $this->firstNonEmptyString([
                     $result['notable_deals']['won'] ?? null,
-                    $this->deriveNotableDeal($opportunities, ['won', 'closed won', 'success']),
+                    $this->deriveNotableDeal($crmOpportunities, ['won', 'closed won', 'success']),
                 ], 'Not available'),
                 'notable_lost' => $this->firstNonEmptyString([
                     $result['notable_deals']['lost'] ?? null,
-                    $this->deriveNotableDeal($opportunities, ['lost', 'closed lost']),
+                    $this->deriveNotableDeal($crmOpportunities, ['lost', 'closed lost']),
                 ], 'Not available'),
                 'notable_stalled' => $this->firstNonEmptyString([
                     $result['notable_deals']['stalled'] ?? null,
-                    $this->deriveNotableDeal($opportunities, ['stalled', 'stuck', 'hold', 'blocked']),
+                    $this->deriveNotableDeal($crmOpportunities, ['stalled', 'stuck', 'hold', 'blocked']),
                 ], 'Not available'),
             ],
             'engagement_health_signals' => $engagementSignals,
@@ -91,8 +91,8 @@ class ReportTemplateFormatter
                 $result['relationship_gaps'] ?? null,
                 $this->deriveRelationshipGap($relationships),
             ], 'Not available'),
-            'key_risks' => $risks,
-            'growth_opportunities' => $opportunities,
+            'key_risks' => $aiRisks,
+            'growth_opportunities' => $aiOpportunities,
             'additional_context' => $this->normalizeStringArray($result['additional_context'] ?? []),
             'scope' => $scope,
         ];

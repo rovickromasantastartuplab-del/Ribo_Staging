@@ -14,6 +14,7 @@ use App\Services\AI\ConversationAiTelemetryService;
 use App\Services\AI\Rules\ConversationAiRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ConversationAiReportController extends Controller
