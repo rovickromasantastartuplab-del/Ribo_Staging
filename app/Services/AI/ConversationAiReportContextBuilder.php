@@ -11,6 +11,8 @@ use Illuminate\Support\Collection;
 
 class ConversationAiReportContextBuilder
 {
+    private const MAX_ACTIVITY_ITEMS_PER_STREAM = 120;
+
     public function __construct(
         private readonly LeadActivityStreamService $leadActivityStreamService,
         private readonly OpportunityActivityStreamService $opportunityActivityStreamService
@@ -32,16 +34,8 @@ class ConversationAiReportContextBuilder
         $arr = (float) $opportunities->sum(fn (Opportunity $opp): float => (float) ($opp->amount ?? 0));
         $mrr = $arr / 12;
 
-        $leadActivity = $leads
-            ->flatMap(fn ($lead) => $this->leadActivityStreamService->previewItems($lead, 4))
-            ->take(8)
-            ->values()
-            ->all();
-        $opportunityActivity = $opportunityDetails
-            ->flatMap(fn (Opportunity $opp) => $this->opportunityActivityStreamService->previewItems($opp, 4))
-            ->take(10)
-            ->values()
-            ->all();
+        [$leadActivity, $leadActivityMeta] = $this->collectLeadActivityStream($leads);
+        [$opportunityActivity, $opportunityActivityMeta] = $this->collectOpportunityActivityStream($opportunities);
 
         return [
             'scope' => $scope,
@@ -93,6 +87,12 @@ class ConversationAiReportContextBuilder
             'activity_streams' => [
                 'lead' => $leadActivity,
                 'opportunity' => $opportunityActivity,
+                'meta' => [
+                    'lead_scanned_count' => $leadActivityMeta['scanned_count'],
+                    'lead_included_count' => $leadActivityMeta['included_count'],
+                    'opportunity_scanned_count' => $opportunityActivityMeta['scanned_count'],
+                    'opportunity_included_count' => $opportunityActivityMeta['included_count'],
+                ],
             ],
         ];
     }
@@ -171,5 +171,55 @@ class ConversationAiReportContextBuilder
         return $query
             ->orderByDesc('updated_at')
             ->get();
+    }
+
+    private function collectLeadActivityStream(Collection $leads): array
+    {
+        $fullStream = $leads
+            ->flatMap(function ($lead) {
+                return $this->leadActivityStreamService
+                    ->streamItemsCollection($lead)
+                    ->map(fn ($item) => $this->leadActivityStreamService->serializeItem($item));
+            })
+            ->sortByDesc('created_at')
+            ->values();
+
+        $included = $fullStream
+            ->take(self::MAX_ACTIVITY_ITEMS_PER_STREAM)
+            ->values()
+            ->all();
+
+        return [
+            $included,
+            [
+                'scanned_count' => $fullStream->count(),
+                'included_count' => count($included),
+            ],
+        ];
+    }
+
+    private function collectOpportunityActivityStream(Collection $opportunities): array
+    {
+        $fullStream = $opportunities
+            ->flatMap(function (Opportunity $opportunity) {
+                return $this->opportunityActivityStreamService
+                    ->streamItemsCollection($opportunity)
+                    ->map(fn ($item) => $this->opportunityActivityStreamService->serializeItem($item));
+            })
+            ->sortByDesc('created_at')
+            ->values();
+
+        $included = $fullStream
+            ->take(self::MAX_ACTIVITY_ITEMS_PER_STREAM)
+            ->values()
+            ->all();
+
+        return [
+            $included,
+            [
+                'scanned_count' => $fullStream->count(),
+                'included_count' => count($included),
+            ],
+        ];
     }
 }
