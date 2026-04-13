@@ -63,19 +63,17 @@
             <tr>
                 <th>Name</th>
                 <th>Role</th>
-                <th>Type</th>
                 <th>Strength</th>
             </tr>
             @forelse($keyRelationships as $relationship)
                 <tr>
                     <td>{{ $relationship['name'] ?? 'Not available' }}</td>
                     <td>{{ $relationship['role'] ?? 'Not available' }}</td>
-                    <td>{{ $relationship['type'] ?? 'Not available' }}</td>
                     <td>{{ $relationship['strength'] ?? 'Not available' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4">Not available</td>
+                    <td colspan="3">Not available</td>
                 </tr>
             @endforelse
         </table>

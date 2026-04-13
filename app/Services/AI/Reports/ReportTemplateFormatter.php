@@ -161,7 +161,6 @@ class ReportTemplateFormatter
                 $rows[] = [
                     'name' => $this->extractCleanName((string) ($item['name'] ?? '')),
                     'role' => $role,
-                    'type' => trim((string) ($item['type'] ?? '')) ?: $this->inferRelationshipType($role),
                     'strength' => trim((string) ($item['strength'] ?? '')) ?: $this->inferRelationshipStrength($activityCount),
                 ];
                 continue;
@@ -175,26 +174,11 @@ class ReportTemplateFormatter
             $rows[] = [
                 'name' => $this->extractCleanName($line),
                 'role' => 'Stakeholder',
-                'type' => 'Stakeholder',
                 'strength' => $this->inferRelationshipStrength($activityCount),
             ];
         }
 
         return $rows;
-    }
-
-    private function inferRelationshipType(string $role): string
-    {
-        $roleLower = strtolower($role);
-
-        if ((bool) preg_match('/vp|chief|c[- ]?level|director|head|owner|founder/', $roleLower)) {
-            return 'Decision-maker';
-        }
-        if ((bool) preg_match('/block|legal|procurement|security|finance/', $roleLower)) {
-            return 'Blocker';
-        }
-
-        return 'Champion';
     }
 
     private function inferRelationshipStrength(int $activityCount): string
@@ -233,8 +217,12 @@ class ReportTemplateFormatter
             return 'No mapped stakeholder relationships in CRM context.';
         }
 
-        $types = array_map(static fn (array $row): string => strtolower((string) ($row['type'] ?? '')), $relationships);
-        if (!in_array('decision-maker', $types, true)) {
+        $hasDecisionMakerRole = collect($relationships)->contains(function (array $row): bool {
+            $role = strtolower((string) ($row['role'] ?? ''));
+            return (bool) preg_match('/vp|chief|c[- ]?level|director|head|owner|founder|ceo|cto|cfo|coo|president/', $role);
+        });
+
+        if (!$hasDecisionMakerRole) {
             return 'No explicit decision-maker relationship is mapped.';
         }
 

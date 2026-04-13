@@ -82,7 +82,7 @@ class ReportTemplateFormatterTest extends TestCase
         $this->assertNotSame('Not available', $signals['engagement_pattern']);
     }
 
-    public function test_it_populates_relationship_type_and_strength_defaults_from_crm_relationships(): void
+    public function test_it_populates_relationship_strength_defaults_from_crm_relationships(): void
     {
         $formatter = new ReportTemplateFormatter();
 
@@ -103,7 +103,7 @@ class ReportTemplateFormatterTest extends TestCase
 
         $row = $formatted['key_relationships'][0];
 
-        $this->assertSame('Champion', $row['type']);
+        $this->assertArrayNotHasKey('type', $row);
         $this->assertSame('Medium', $row['strength']);
         $this->assertNotSame('Not available', $formatted['relationship_gaps']);
     }
