@@ -120,6 +120,7 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                     </div>
                 )}
             </CardContent>
+            {/*wah */}
         </Card>
     );
 }
