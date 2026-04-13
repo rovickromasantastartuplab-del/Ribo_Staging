@@ -178,6 +178,11 @@ class OpenAiConversationClient
             'summary' => trim((string) ($data['summary'] ?? 'Report unavailable.')),
             'key_insights' => $this->normalizeStringList($data['key_insights'] ?? []),
             'next_actions' => $this->normalizeStringList($data['next_actions'] ?? []),
+            'account_status' => trim((string) ($data['account_status'] ?? '')),
+            'executive_insights' => $this->normalizeStringList($data['executive_insights'] ?? []),
+            'key_relationships' => $this->normalizeStringList($data['key_relationships'] ?? []),
+            'risks_and_opportunities' => $this->normalizeStringList($data['risks_and_opportunities'] ?? []),
+            'role_based_actions' => $this->normalizeRoleActions($data['role_based_actions'] ?? []),
             'prompt_version' => $promptVersion,
         ];
     }
@@ -440,7 +445,17 @@ class OpenAiConversationClient
             'schema' => [
                 'type' => 'object',
                 'additionalProperties' => false,
-                'required' => ['summary', 'key_insights', 'next_actions', 'prompt_version'],
+                'required' => [
+                    'summary',
+                    'key_insights',
+                    'next_actions',
+                    'account_status',
+                    'executive_insights',
+                    'key_relationships',
+                    'risks_and_opportunities',
+                    'role_based_actions',
+                    'prompt_version',
+                ],
                 'properties' => [
                     'summary' => ['type' => 'string'],
                     'prompt_version' => ['type' => ['string', 'null']],
@@ -452,8 +467,53 @@ class OpenAiConversationClient
                         'type' => 'array',
                         'items' => ['type' => 'string'],
                     ],
+                    'account_status' => ['type' => 'string'],
+                    'executive_insights' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'key_relationships' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'risks_and_opportunities' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'role_based_actions' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'required' => ['sales', 'csm', 'support'],
+                        'properties' => [
+                            'sales' => [
+                                'type' => 'array',
+                                'items' => ['type' => 'string'],
+                            ],
+                            'csm' => [
+                                'type' => 'array',
+                                'items' => ['type' => 'string'],
+                            ],
+                            'support' => [
+                                'type' => 'array',
+                                'items' => ['type' => 'string'],
+                            ],
+                        ],
+                    ],
                 ],
             ],
+        ];
+    }
+
+    private function normalizeRoleActions(mixed $value): array
+    {
+        if (!is_array($value)) {
+            $value = [];
+        }
+
+        return [
+            'sales' => $this->normalizeStringList($value['sales'] ?? []),
+            'csm' => $this->normalizeStringList($value['csm'] ?? []),
+            'support' => $this->normalizeStringList($value['support'] ?? []),
         ];
     }
 }

@@ -13,7 +13,8 @@ class ConversationAiReportService
 {
     public function __construct(
         private readonly ConversationAiConfigService $configService,
-        private readonly ReportSkill $reportSkill
+        private readonly ReportSkill $reportSkill,
+        private readonly ConversationAiReportContextBuilder $contextBuilder
     ) {
     }
 
@@ -21,12 +22,22 @@ class ConversationAiReportService
         int $companyId,
         EmailThread $thread,
         string $scope,
-        ?Contact $contact
+        ?Contact $contact,
+        ?int $opportunityId = null
     ): AiReportJob {
+        $context = $this->contextBuilder->build(
+            $companyId,
+            $thread,
+            $scope,
+            $contact,
+            $opportunityId
+        );
+
         $payload = [
             'threadId' => $thread->id,
             'scope' => $scope,
             'contactId' => $contact?->id,
+            'opportunityId' => $opportunityId,
         ];
 
         $job = AiReportJob::query()->create([
@@ -36,6 +47,7 @@ class ConversationAiReportService
             'scope' => $scope,
             'status' => 'queued',
             'request_payload_json' => $payload,
+            'context_payload_json' => $context,
             'requested_at' => now(),
         ]);
 
@@ -108,5 +120,10 @@ class ConversationAiReportService
             ->where('created_by', $job->created_by)
             ->latest('analyzed_at')
             ->first();
+    }
+
+    public function scopeOptions(int $companyId, EmailThread $thread): array
+    {
+        return $this->contextBuilder->scopeOptions($companyId, $thread);
     }
 }

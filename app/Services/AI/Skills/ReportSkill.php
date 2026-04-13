@@ -39,6 +39,7 @@ class ReportSkill
         $validated = $this->validateParse($raw, $metadata);
         if (!$metadata['fallback_applied']) {
             $validated = $this->validatePolicy($validated, $metadata);
+            $validated = $this->ensureStructuredSections($validated);
         }
         if ($metadata['fallback_applied']) {
             $validated = $this->applyRepair($validated, $metadata);
@@ -117,6 +118,15 @@ class ReportSkill
         $data['summary'] = 'Manual executive review is recommended due to low confidence report quality.';
         $data['key_insights'] = ['Signal quality was insufficient for a reliable automated report.'];
         $data['next_actions'] = ['Assign an owner to manually review recent conversation context.'];
+        $data['account_status'] = 'Insufficient AI confidence to classify account status.';
+        $data['executive_insights'] = ['Automation fallback triggered due to schema or policy validation failure.'];
+        $data['key_relationships'] = ['Relationship map unavailable from automated output.'];
+        $data['risks_and_opportunities'] = ['Risk: incomplete signal quality. Opportunity: complete manual review with CRM owner.'];
+        $data['role_based_actions'] = [
+            'sales' => ['Confirm active commercial motion before outreach.'],
+            'csm' => ['Validate customer sentiment from recent interactions.'],
+            'support' => ['Review unresolved tickets that may impact relationship health.'],
+        ];
         $this->markRepair($metadata, 'fallback_report');
 
         return $data;
@@ -270,5 +280,75 @@ class ReportSkill
         $metadata['repair_type'] = $metadata['repair_type']
             ? $metadata['repair_type'] . ',' . $repairType
             : $repairType;
+    }
+
+    private function ensureStructuredSections(array $data): array
+    {
+        $summary = trim((string) ($data['summary'] ?? ''));
+        $insights = collect($data['key_insights'] ?? [])
+            ->map(static fn ($item): string => trim((string) $item))
+            ->filter(static fn (string $item): bool => $item !== '')
+            ->values()
+            ->all();
+        $actions = collect($data['next_actions'] ?? [])
+            ->map(static fn ($item): string => trim((string) $item))
+            ->filter(static fn (string $item): bool => $item !== '')
+            ->values()
+            ->all();
+
+        $data['account_status'] = trim((string) ($data['account_status'] ?? ''));
+        if ($data['account_status'] === '') {
+            $data['account_status'] = $summary !== '' ? $summary : 'Account status is currently unclear.';
+        }
+
+        $data['executive_insights'] = $this->normalizeStringArray($data['executive_insights'] ?? []);
+        if (count($data['executive_insights']) === 0) {
+            $data['executive_insights'] = $insights;
+        }
+
+        $data['key_relationships'] = $this->normalizeStringArray($data['key_relationships'] ?? []);
+        if (count($data['key_relationships']) === 0) {
+            $data['key_relationships'] = ['No explicit stakeholder mapping was returned.'];
+        }
+
+        $data['risks_and_opportunities'] = $this->normalizeStringArray($data['risks_and_opportunities'] ?? []);
+        if (count($data['risks_and_opportunities']) === 0 && count($insights) > 0) {
+            $data['risks_and_opportunities'] = [$insights[0]];
+        }
+        if (count($data['risks_and_opportunities']) === 0) {
+            $data['risks_and_opportunities'] = ['No explicit risks/opportunities were returned.'];
+        }
+
+        $roleActions = is_array($data['role_based_actions'] ?? null) ? $data['role_based_actions'] : [];
+        $data['role_based_actions'] = [
+            'sales' => $this->normalizeStringArray($roleActions['sales'] ?? []),
+            'csm' => $this->normalizeStringArray($roleActions['csm'] ?? []),
+            'support' => $this->normalizeStringArray($roleActions['support'] ?? []),
+        ];
+
+        if (count($data['role_based_actions']['sales']) === 0) {
+            $data['role_based_actions']['sales'] = $actions;
+        }
+        if (count($data['role_based_actions']['csm']) === 0) {
+            $data['role_based_actions']['csm'] = ['Track relationship health signals before changing customer plan.'];
+        }
+        if (count($data['role_based_actions']['support']) === 0) {
+            $data['role_based_actions']['support'] = ['Review product or delivery blockers referenced in the thread.'];
+        }
+
+        return $data;
+    }
+
+    private function normalizeStringArray(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return collect($value)
+            ->map(static fn ($item): string => trim((string) $item))
+            ->filter(static fn (string $item): bool => $item !== '')
+            ->values()
+            ->all();
     }
 }

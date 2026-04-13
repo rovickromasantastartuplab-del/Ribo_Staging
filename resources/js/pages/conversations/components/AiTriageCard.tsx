@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import axios from 'axios';
 import { BookOpen, BrainCircuit, CheckCircle2, Download, Layout, MoreHorizontal, RefreshCw, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AiTriageResult, deriveStateInfo } from '../utils/mockAiData';
 
@@ -21,10 +21,34 @@ interface AiTriageCardProps {
     data: AiTriageResult;
 }
 
+interface OpportunityOption {
+    id: number;
+    name: string;
+    amount: number;
+    stage: string;
+}
+
 export default function AiTriageCard({ data }: AiTriageCardProps) {
     const [selectedOppId, setSelectedOppId] = useState<string>('overall');
     const [isExporting, setIsExporting] = useState(false);
+    const [opportunityOptions, setOpportunityOptions] = useState<OpportunityOption[]>([]);
     const stateInfo = deriveStateInfo(data.thread_state);
+
+    useEffect(() => {
+        if (!data.email_thread_id) {
+            return;
+        }
+
+        axios
+            .get(`/ai/reports/options/${data.email_thread_id}`)
+            .then((response) => {
+                const options = response?.data?.data?.opportunities;
+                setOpportunityOptions(Array.isArray(options) ? options : []);
+            })
+            .catch(() => {
+                setOpportunityOptions([]);
+            });
+    }, [data.email_thread_id]);
 
     const getIntentColor = (intent: string) => {
         switch (intent.toLowerCase()) {
@@ -77,7 +101,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                     </Badge>
                 </div>
 
-
                 <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
                         <TrendingUp className="h-3.5 w-3.5 text-indigo-500" />
@@ -120,7 +143,6 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                     </DropdownMenu>
                 </div>
 
-
                 <Separator className="my-2 opacity-50" />
                 <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
@@ -147,6 +169,11 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                     <SelectItem value="all-opps" className="text-xs">
                                         All Opportunities Summary
                                     </SelectItem>
+                                    {opportunityOptions.map((opportunity) => (
+                                        <SelectItem key={opportunity.id} value={`opportunity:${opportunity.id}`} className="text-xs">
+                                            {opportunity.name} ({opportunity.stage})
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -164,64 +191,66 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                 setIsExporting(true);
                                 const toastId = toast.loading('AI is generating your summary report...');
 
-                                const scope = selectedOppId;
+                                const isSpecificOpportunity = selectedOppId.startsWith('opportunity:');
+                                const opportunityId = isSpecificOpportunity ? Number(selectedOppId.split(':')[1]) : null;
+                                const scope = isSpecificOpportunity
+                                    ? 'specific-opportunity'
+                                    : selectedOppId === 'lead-only'
+                                      ? 'leads-only'
+                                      : selectedOppId === 'all-opps'
+                                        ? 'all-opps'
+                                        : 'overall';
 
                                 try {
                                     const response = await axios.post('/ai/reports/generate', {
                                         threadId: data.email_thread_id,
                                         scope,
                                         contactId: null,
+                                        opportunityId,
                                     });
 
-                                    const result = response?.data?.data?.result;
-
-                                    if (result) {
-                                        // Format the report for a clean text download
-                                        const reportText = [
-                                            `AI SUMMARY REPORT - ${new Date().toLocaleString()}`,
-                                            '='.repeat(50),
-                                            '',
-                                            'EXECUTIVE SUMMARY',
-                                            '-'.repeat(50),
-                                            result.summary,
-                                            '',
-                                            'KEY INSIGHTS',
-                                            '-'.repeat(50),
-                                            ...(result.key_insights || []).map((i: string) => `• ${i}`),
-                                            '',
-                                            'RECOMMENDED NEXT ACTIONS',
-                                            '-'.repeat(50),
-                                            ...(result.next_actions || []).map((a: string) => `• ${a}`),
-                                            '',
-                                            '='.repeat(50),
-                                            'Generated by Ribo AI Sidekick Intelligence'
-                                        ].join('\n');
-
-                                        // Trigger download
-                                        const blob = new Blob([reportText], { type: 'text/plain' });
-                                        const url = window.URL.createObjectURL(blob);
-                                        const a = document.createElement('a');
-                                        a.style.display = 'none';
-                                        a.href = url;
-                                        a.download = `AI-Summary-Report-${data.email_thread_id}.txt`;
-                                        document.body.appendChild(a);
-                                        a.click();
-                                        window.URL.revokeObjectURL(url);
-                                        document.body.removeChild(a);
-
+                                    const jobId = response?.data?.data?.job_id;
+                                    if (!jobId) {
                                         toast.dismiss(toastId);
-                                        toast.success('Summary report generated and downloaded!');
-                                    } else {
-                                        toast.dismiss(toastId);
-                                        toast.warning('Report generated but result was unavailable.');
+                                        toast.warning('Report generated but job id was unavailable.');
+                                        return;
                                     }
+
+                                    const downloadResponse = await axios.get(`/ai/reports/${jobId}/download`, {
+                                        responseType: 'blob',
+                                    });
+
+                                    const blob = new Blob([downloadResponse.data], { type: 'application/pdf' });
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.style.display = 'none';
+                                    a.href = url;
+                                    a.download = `AI-Summary-Report-${data.email_thread_id}.pdf`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+
+                                    toast.dismiss(toastId);
+                                    toast.success('Summary PDF generated and downloaded!');
                                 } catch (error: unknown) {
                                     toast.dismiss(toastId);
-                                    if (axios.isAxiosError(error) && error.response?.status === 422) {
-                                        toast.warning('AI is currently unavailable.');
-                                    } else {
-                                        toast.error('Failed to generate summary report.');
+                                    if (axios.isAxiosError(error)) {
+                                        const status = error.response?.status;
+                                        const code = (error.response?.data as { code?: string } | undefined)?.code;
+
+                                        if (status === 409 || code === 'report_result_unavailable') {
+                                            toast.warning('Report generated but no downloadable result is available yet.');
+                                            return;
+                                        }
+
+                                        if (status === 422) {
+                                            toast.warning('AI is currently unavailable.');
+                                            return;
+                                        }
                                     }
+
+                                    toast.error('Failed to generate summary report.');
                                 } finally {
                                     setIsExporting(false);
                                 }

@@ -5,6 +5,7 @@ namespace Tests\Unit\AI;
 use App\Models\AiReportJob;
 use App\Models\AiTriageResult;
 use App\Services\AI\ConversationAiConfigService;
+use App\Services\AI\ConversationAiReportContextBuilder;
 use App\Services\AI\ConversationAiReportService;
 use App\Services\AI\Skills\ReportSkill;
 use Mockery;
@@ -77,7 +78,9 @@ class ConversationAiReportServiceTest extends TestCase
             ],
         ]);
 
-        $service = Mockery::mock(ConversationAiReportService::class, [$configService, $reportSkill])
+        $contextBuilder = Mockery::mock(ConversationAiReportContextBuilder::class);
+
+        $service = Mockery::mock(ConversationAiReportService::class, [$configService, $reportSkill, $contextBuilder])
             ->makePartial()
             ->shouldAllowMockingProtectedMethods();
 

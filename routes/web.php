@@ -1086,7 +1086,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // Conversation AI report routes (Phase 4)
             Route::post('/ai/reports/generate', [ConversationAiReportController::class, 'generate']);
+            Route::get('/ai/reports/options/{thread}', [ConversationAiReportController::class, 'options']);
             Route::get('/ai/reports/{job}', [ConversationAiReportController::class, 'show']);
+            Route::get('/ai/reports/{job}/download', [ConversationAiReportController::class, 'download']);
 
             // Conversation AI feedback route (Phase 5)
             Route::post('/ai/feedback', [ConversationAiFeedbackController::class, 'store']);

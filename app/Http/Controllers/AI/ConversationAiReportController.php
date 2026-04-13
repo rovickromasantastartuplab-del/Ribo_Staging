@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\AI;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\Controller;
 use App\Models\AiReportJob;
 use App\Models\Contact;
@@ -27,8 +28,9 @@ class ConversationAiReportController extends Controller
     {
         $validated = $request->validate([
             'threadId' => ['required', 'integer'],
-            'scope' => ['nullable', 'string', 'max:30'],
+            'scope' => ['nullable', 'string', 'in:overall,leads-only,all-opps,specific-opportunity'],
             'contactId' => ['nullable', 'integer'],
+            'opportunityId' => ['nullable', 'integer', 'required_if:scope,specific-opportunity'],
         ]);
 
         $companyId = (int) auth()->user()->creatorId();
@@ -52,12 +54,27 @@ class ConversationAiReportController extends Controller
                 ->firstOrFail();
         }
 
+        $selectedOpportunityId = isset($validated['opportunityId']) ? (int) $validated['opportunityId'] : null;
+        if (($validated['scope'] ?? null) === 'specific-opportunity' && $selectedOpportunityId !== null) {
+            $allowed = collect($this->reportService->scopeOptions($companyId, $thread)['opportunities'] ?? [])
+                ->pluck('id')
+                ->contains($selectedOpportunityId);
+
+            if (!$allowed) {
+                return response()->json([
+                    'message' => 'Selected opportunity is not linked to this report context.',
+                    'errors' => ['opportunityId' => ['Invalid opportunity selection for this thread.']],
+                ], 422);
+            }
+        }
+
         try {
             $job = $this->reportService->queue(
                 $companyId,
                 $thread,
                 (string) ($validated['scope'] ?? 'overall'),
-                $contact
+                $contact,
+                $selectedOpportunityId
             );
 
             // Process synchronously to bypass queue worker requirement on cPanel
@@ -108,5 +125,40 @@ class ConversationAiReportController extends Controller
                 'completed_at' => optional($reportJob->completed_at)->toIso8601String(),
             ],
         ]);
+    }
+
+    public function options(EmailThread $thread): JsonResponse
+    {
+        $companyId = (int) auth()->user()->creatorId();
+        abort_if((int) $thread->created_by !== $companyId, 403);
+
+        return response()->json([
+            'data' => $this->reportService->scopeOptions($companyId, $thread),
+        ]);
+    }
+
+    public function download(AiReportJob $job)
+    {
+        $companyId = (int) auth()->user()->creatorId();
+        abort_if((int) $job->created_by !== $companyId, 403);
+
+        $reportJob = $this->reportService->get($job, $companyId);
+        $result = $reportJob->result_payload_json ?? [];
+        $context = $reportJob->context_payload_json ?? [];
+
+        if (empty($result)) {
+            return response()->json([
+                'message' => 'Report result unavailable',
+                'code' => 'report_result_unavailable',
+            ], 409);
+        }
+
+        $pdf = Pdf::loadView('reports.ai_summary_pdf', [
+            'job' => $reportJob,
+            'result' => $result,
+            'context' => $context,
+        ]);
+
+        return $pdf->download("AI-Summary-Report-{$reportJob->id}.pdf");
     }
 }
