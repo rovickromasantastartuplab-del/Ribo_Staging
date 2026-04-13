@@ -19,6 +19,7 @@
 <body>
     @php
         $formatted = $formatted ?? [];
+        $accountName = $context['crm']['account']['name'] ?? 'Unassigned Account';
 
         $accountStatus = $formatted['account_status'] ?? [];
         $executiveInsights = $formatted['executive_insights'] ?? [];
@@ -34,7 +35,7 @@
 
     <h1>Client Account Snapshot</h1>
     <p class="muted">
-        Report #{{ $job->id }} | Scope: {{ strtoupper((string) ($job->scope ?? 'overall')) }} | Generated: {{ optional($job->completed_at)->format('M d, Y H:i') ?? now()->format('M d, Y H:i') }}
+        Account: {{ $accountName }} | Scope: {{ strtoupper((string) ($job->scope ?? 'overall')) }} | Generated: {{ optional($job->completed_at)->format('M d, Y H:i') ?? now()->format('M d, Y H:i') }}
     </p>
 
     <div class="section">
