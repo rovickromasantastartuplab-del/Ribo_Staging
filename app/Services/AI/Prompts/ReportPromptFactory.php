@@ -90,6 +90,7 @@ Good report shape: summary explains the state change, key insight links the new 
 - role_based_actions: object with arrays for keys sales, csm, support, exec_sponsor.
 - role_based_actions lines should be compatible with Role -> Action -> Priority formatting.
 - prompt_version must be exactly: v2-expert-chief-of-staff
+- MANDATORY KEYS: You MUST include every key listed above in the JSON output, even if the value is "Not available". Never omit a key.
 PROMPT;
     }
 
