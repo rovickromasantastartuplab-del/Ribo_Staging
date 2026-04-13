@@ -70,7 +70,7 @@ Good report shape: summary explains the state change, key insight links the new 
 
 ### OUTPUT RULES
 - Return JSON only with keys:
-  summary, key_insights, next_actions, account_status, status_value, health_score, account_status_reason, executive_insights, key_relationships, relationship_gaps, risks_and_opportunities, role_based_actions, prompt_version.
+  summary, key_insights, next_actions, account_status, status_value, health_score, account_status_reason, executive_insights, key_relationships, relationship_gaps, key_risks, growth_opportunities, usage_signal, support_signal, sentiment_signal, engagement_pattern, role_based_actions, prompt_version.
 - summary: concise, executive-ready.
 - key_insights: array of concise strings.
 - next_actions: array of concrete action strings.
@@ -79,10 +79,15 @@ Good report shape: summary explains the state change, key insight links the new 
 - health_score: one of High, Medium, Low.
 - account_status_reason: one concise reason sentence.
 - executive_insights: array (3-5) of commercial insights for leadership.
-- key_relationships: array of strings, include role and relationship signal where possible.
+- key_relationships: array of objects with keys: name, role, strength.
 - relationship_gaps: one concise line describing stakeholder coverage gaps.
-- risks_and_opportunities: array of strings combining commercial risk and upside.
-- role_based_actions: object with arrays for keys sales, csm, support.
+- key_risks: array (2-4 bullets) of specific commercial/operational risks.
+- growth_opportunities: array (2-4 bullets) of concrete growth/expansion pathways.
+- usage_signal: one-line summary of customer usage/adoption trends.
+- support_signal: one-line summary of support friction or stability.
+- sentiment_signal: one-line summary of relationship sentiment.
+- engagement_pattern: one-line summary of responsiveness and activity frequency.
+- role_based_actions: object with arrays for keys sales, csm, support, exec_sponsor.
 - role_based_actions lines should be compatible with Role -> Action -> Priority formatting.
 - prompt_version must be exactly: v2-expert-chief-of-staff
 PROMPT;
@@ -115,7 +120,7 @@ PROMPT;
             'BEGIN <<untrusted_data>> ACTIVITY STREAMS',
             $this->jsonEncode($context['activity_streams'] ?? []),
             'END <<untrusted_data>> ACTIVITY STREAMS',
-            'Output JSON only: {"summary":"...","key_insights":[...],"next_actions":[...],"account_status":"...","status_value":"Strategic|Growth|At Risk|Stable","health_score":"High|Medium|Low","account_status_reason":"...","executive_insights":[...],"key_relationships":[...],"relationship_gaps":"...","risks_and_opportunities":[...],"role_based_actions":{"sales":[...],"csm":[...],"support":[...]},"prompt_version":"' . self::VERSION . '"}',
+            'Output JSON only: {"summary":"...","key_insights":[...],"next_actions":[...],"account_status":"...","status_value":"Strategic|Growth|At Risk|Stable","health_score":"High|Medium|Low","account_status_reason":"...","executive_insights":[...],"key_relationships":[{"name":"...","role":"...","strength":"..."}],"relationship_gaps":"...","key_risks":[...],"growth_opportunities":[...],"usage_signal":"...","support_signal":"...","sentiment_signal":"...","engagement_pattern":"...","role_based_actions":{"sales":[...],"csm":[...],"support":[...],"exec_sponsor":[...]},"prompt_version":"' . self::VERSION . '"}',
         ]);
 
         return implode("\n", $parts);

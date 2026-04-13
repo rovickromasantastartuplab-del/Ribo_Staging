@@ -17,7 +17,7 @@ class ReportTemplateFormatter
         $relationships = count($crmRelationships) > 0
             ? $crmRelationships
             : $this->normalizeRelationships($result['key_relationships'] ?? [], $totalIncludedActivity);
-        $riskOpportunity = $this->normalizeStringArray($result['risks_and_opportunities'] ?? []);
+
         $engagementSignals = $this->deriveEngagementSignals($result, $activityStreams, $activityMeta);
 
         return [
@@ -29,7 +29,7 @@ class ReportTemplateFormatter
                 ['title' => 'Engagement & Health Signals'],
                 ['title' => 'Key Risks'],
                 ['title' => 'Growth Opportunities'],
-                ['title' => 'Recommended Actions (Next 30–60 Days)'],
+                ['title' => 'Recommended Actions (Next 30-60 Days)'],
             ],
             'account_status' => [
                 'status' => $this->enum($result['status_value'] ?? ($result['normalized_status'] ?? null), ['Strategic', 'Growth', 'At Risk', 'Stable'], 'Stable'),
@@ -75,8 +75,8 @@ class ReportTemplateFormatter
                 $result['relationship_gaps'] ?? null,
                 $this->deriveRelationshipGap($relationships),
             ], 'Not available'),
-            'key_risks' => $this->extractRiskBullets($riskOpportunity),
-            'growth_opportunities' => $this->extractOpportunityBullets($riskOpportunity),
+            'key_risks' => $this->normalizeExecutiveInsights($result['key_risks'] ?? []),
+            'growth_opportunities' => $this->normalizeExecutiveInsights($result['growth_opportunities'] ?? []),
             'additional_context' => $this->normalizeStringArray($result['additional_context'] ?? []),
             'scope' => $scope,
         ];
@@ -84,10 +84,12 @@ class ReportTemplateFormatter
 
     private function buildRoleActions(array $result): array
     {
-        $sales = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['sales'][0] ?? null], 'Review current commercial motion and send targeted follow-up'));
-        $csm = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['csm'][0] ?? null], 'Validate relationship health and confirm next stakeholder touchpoint'));
-        $support = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['support'][0] ?? null], 'Review open blockers and prepare resolution plan'));
-        $exec = $this->sanitizeAction($this->firstNonEmptyString([$result['role_based_actions']['exec_sponsor'][0] ?? null], 'Engage senior stakeholder on cross-functional value'));
+        $roleActions = $result['role_based_actions'] ?? [];
+
+        $sales = $this->sanitizeAction($this->firstNonEmptyString([$roleActions['sales'][0] ?? null], 'Review current commercial motion and send targeted follow-up'));
+        $csm = $this->sanitizeAction($this->firstNonEmptyString([$roleActions['csm'][0] ?? null], 'Validate relationship health and confirm next stakeholder touchpoint'));
+        $support = $this->sanitizeAction($this->firstNonEmptyString([$roleActions['support'][0] ?? null], 'Review open blockers and prepare resolution plan'));
+        $exec = $this->sanitizeAction($this->firstNonEmptyString([$roleActions['exec_sponsor'][0] ?? null], 'Engage senior stakeholder on cross-functional value'));
 
         return [
             "Sales -> {$sales} -> High",
@@ -158,10 +160,11 @@ class ReportTemplateFormatter
         foreach ($value as $item) {
             if (is_array($item)) {
                 $role = trim((string) ($item['role'] ?? '')) ?: 'Stakeholder';
+                $strength = trim((string) ($item['strength'] ?? '')) ?: $this->inferRelationshipStrength($activityCount);
                 $rows[] = [
                     'name' => $this->extractCleanName((string) ($item['name'] ?? '')),
                     'role' => $role,
-                    'strength' => trim((string) ($item['strength'] ?? '')) ?: $this->inferRelationshipStrength($activityCount),
+                    'strength' => $this->enum($strength, ['Strong', 'Medium', 'Weak'], 'Medium'),
                 ];
                 continue;
             }
@@ -305,6 +308,10 @@ class ReportTemplateFormatter
         $totalScanned = $leadScanned + $oppScanned;
 
         $usage = $this->firstNonEmptyString([$result['usage_signal'] ?? null], '');
+        $support = $this->firstNonEmptyString([$result['support_signal'] ?? null], '');
+        $sentiment = $this->firstNonEmptyString([$result['sentiment_signal'] ?? null], '');
+        $engagementPattern = $this->firstNonEmptyString([$result['engagement_pattern'] ?? null], '');
+
         if ($usage === '') {
             if ($totalIncluded >= 20) {
                 $usage = 'High - consistent cross-channel activity is present.';

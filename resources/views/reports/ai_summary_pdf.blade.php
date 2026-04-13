@@ -4,21 +4,22 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>AI Strategic Summary Report</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; color: #111827; font-size: 12px; line-height: 1.6; margin: 28px; }
-        h1 { font-size: 32px; margin: 0 0 10px 0; letter-spacing: 0.4px; }
-        h2 { font-size: 12px; margin: 0 0 12px 0; text-transform: uppercase; color: #111827; letter-spacing: 1px; }
-        .muted { color: #475569; font-size: 11px; margin: 0; }
-        .header { border-bottom: 1px solid #d1d5db; padding-bottom: 14px; margin-bottom: 8px; }
-        .meta { margin-top: 4px; }
-        .section { margin-top: 22px; border-top: 1px solid #e5e7eb; padding-top: 14px; page-break-inside: avoid; }
-        .section-title { background: #f8fafc; border: 1px solid #e5e7eb; padding: 8px 10px; }
-        .grid { width: 100%; border-collapse: collapse; }
-        .grid th, .grid td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; vertical-align: top; }
-        .grid th { background: #f3f4f6; font-size: 11px; font-weight: 700; }
-        .list { margin: 4px 0 0 0; padding-left: 18px; }
-        .list li { margin: 0 0 7px 0; }
-        .gaps { margin-top: 10px; color: #334155; }
-        .status { font-weight: 700; }
+        body { font-family: DejaVu Sans, sans-serif; color: #1f2937; font-size: 11px; line-height: 1.5; margin: 40px; }
+        h1 { font-size: 28px; margin: 0 0 4px 0; color: #111827; letter-spacing: -0.5px; }
+        h2 { font-size: 10px; margin: 0; text-transform: uppercase; color: #4b5563; letter-spacing: 1.5px; font-weight: 700; }
+        .muted { color: #6b7280; font-size: 10px; margin: 0; }
+        .header { border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 20px; }
+        .section { margin-top: 24px; page-break-inside: avoid; }
+        .section-header { background: #f9fafb; border-left: 4px solid #3b82f6; padding: 6px 12px; margin-bottom: 12px; }
+        .grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .grid th, .grid td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; vertical-align: middle; }
+        .grid th { background: #f9fafb; font-size: 9px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; }
+        .list { margin: 0; padding-left: 14px; list-style-type: none; }
+        .list li { margin-bottom: 8px; position: relative; padding-left: 12px; }
+        .list li::before { content: "•"; color: #3b82f6; position: absolute; left: 0; font-weight: bold; }
+        .gaps { margin-top: 12px; font-style: italic; color: #4b5563; border-left: 2px solid #e5e7eb; padding-left: 10px; }
+        .status-pill { display: inline-block; padding: 2px 8px; background: #eff6ff; color: #1e40af; border-radius: 4px; font-weight: 700; text-transform: uppercase; font-size: 9px; }
+        .label { font-weight: 700; color: #374151; }
     </style>
 </head>
 <body>
@@ -46,16 +47,16 @@
     </div>
 
     <div class="section">
-        <h2 class="section-title">Account Status</h2>
+        <div class="section-header"><h2>Account Status</h2></div>
         <ul class="list">
-            <li>Status: {{ $accountStatus['status'] ?? 'Not available' }}</li>
-            <li>Health Score: {{ $accountStatus['health'] ?? 'Not available' }} - {{ $accountStatus['health_reason'] ?? 'Not available' }}</li>
-            <li>ARR: {{ $accountStatus['arr'] ?? 'Not available' }} | MRR: {{ $accountStatus['mrr'] ?? 'Not available' }} | Renewal: {{ $accountStatus['renewal'] ?? 'Not available' }}</li>
+            <li><span class="label">Status:</span> <span class="status-pill">{{ $accountStatus['status'] ?? 'Not available' }}</span></li>
+            <li><span class="label">Health Score:</span> {{ $accountStatus['health'] ?? 'Not available' }} — {{ $accountStatus['health_reason'] ?? 'Not available' }}</li>
+            <li><span class="label">ARR:</span> {{ $accountStatus['arr'] ?? 'Not available' }} | <span class="label">MRR:</span> {{ $accountStatus['mrr'] ?? 'Not available' }} | <span class="label">Renewal:</span> {{ $accountStatus['renewal'] ?? 'Not available' }}</li>
         </ul>
     </div>
 
     <div class="section">
-        <h2 class="section-title">Executive Insights</h2>
+        <div class="section-header"><h2>Executive Insights</h2></div>
         <ul class="list">
             @forelse($executiveInsights as $item)
                 <li>{{ $item }}</li>
@@ -66,53 +67,58 @@
     </div>
 
     <div class="section">
-        <h2 class="section-title">Key Relationships</h2>
+        <div class="section-header"><h2>Key Relationships</h2></div>
         <table class="grid">
-            <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Strength</th>
-            </tr>
-            @forelse($keyRelationships as $relationship)
+            <thead>
                 <tr>
-                    <td>{{ $relationship['name'] ?? 'Not available' }}</td>
-                    <td>{{ $relationship['role'] ?? 'Not available' }}</td>
-                    <td>{{ $relationship['strength'] ?? 'Not available' }}</td>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Strength</th>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="3">Not available</td>
-                </tr>
-            @endforelse
+            </thead>
+            <tbody>
+                @forelse($keyRelationships as $relationship)
+                    <tr>
+                        <td><span class="label">{{ $relationship['name'] ?? 'Not available' }}</span></td>
+                        <td>{{ $relationship['role'] ?? 'Not available' }}</td>
+                        <td>{{ $relationship['strength'] ?? 'Not available' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="3">Not available</td>
+                    </tr>
+                @endforelse
+            </tbody>
         </table>
-        <p class="gaps">Gaps: {{ $relationshipGaps }}</p>
+        <p class="gaps"><span class="label">Coverage Insights:</span> {{ $relationshipGaps }}</p>
     </div>
 
     <div class="section">
-        <h2 class="section-title">Deals &amp; Pipeline Snapshot</h2>
+        <div class="section-header"><h2>Deals &amp; Pipeline Snapshot</h2></div>
         <ul class="list">
-            <li>Active Deals: {{ $deals['active_deals'] ?? 'Not available' }}</li>
-            <li>Top Deal: {{ $deals['top_deal'] ?? 'Not available' }}</li>
-            <li>Expansion Potential: {{ $deals['expansion_potential'] ?? 'Not available' }}</li>
-            <li>Notable Past Deals:</li>
-            <li>Won: {{ $deals['notable_won'] ?? 'Not available' }}</li>
-            <li>Lost: {{ $deals['notable_lost'] ?? 'Not available' }}</li>
-            <li>Stalled: {{ $deals['notable_stalled'] ?? 'Not available' }}</li>
+            <li><span class="label">Active Deals:</span> {{ $deals['active_deals'] ?? 'Not available' }}</li>
+            <li><span class="label">Top Deal:</span> {{ $deals['top_deal'] ?? 'Not available' }}</li>
+            <li><span class="label">Expansion Potential:</span> {{ $deals['expansion_potential'] ?? 'Not available' }}</li>
+            <li><span class="label">Notable Past Deals:</span>
+                Won: {{ $deals['notable_won'] ?? 'Not available' }} | 
+                Lost: {{ $deals['notable_lost'] ?? 'Not available' }} | 
+                Stalled: {{ $deals['notable_stalled'] ?? 'Not available' }}
+            </li>
         </ul>
     </div>
 
     <div class="section">
-        <h2 class="section-title">Engagement &amp; Health Signals</h2>
+        <div class="section-header"><h2>Engagement &amp; Health Signals</h2></div>
         <ul class="list">
-            <li>Usage: {{ $healthSignals['usage'] ?? 'Not available' }}</li>
-            <li>Support: {{ $healthSignals['support'] ?? 'Not available' }}</li>
-            <li>Sentiment: {{ $healthSignals['sentiment'] ?? 'Not available' }}</li>
-            <li>Engagement Pattern: {{ $healthSignals['engagement_pattern'] ?? 'Not available' }}</li>
+            <li><span class="label">Usage:</span> {{ $healthSignals['usage'] ?? 'Not available' }}</li>
+            <li><span class="label">Support:</span> {{ $healthSignals['support'] ?? 'Not available' }}</li>
+            <li><span class="label">Sentiment:</span> {{ $healthSignals['sentiment'] ?? 'Not available' }}</li>
+            <li><span class="label">Engagement Pattern:</span> {{ $healthSignals['engagement_pattern'] ?? 'Not available' }}</li>
         </ul>
     </div>
 
     <div class="section">
-        <h2 class="section-title">Key Risks</h2>
+        <div class="section-header"><h2>Key Risks</h2></div>
         <ul class="list">
             @forelse($keyRisks as $item)
                 <li>{{ $item }}</li>
@@ -123,7 +129,7 @@
     </div>
 
     <div class="section">
-        <h2 class="section-title">Growth Opportunities</h2>
+        <div class="section-header"><h2>Growth Opportunities</h2></div>
         <ul class="list">
             @forelse($growthOpportunities as $item)
                 <li>{{ $item }}</li>
@@ -134,7 +140,7 @@
     </div>
 
     <div class="section">
-        <h2 class="section-title">Recommended Actions (Next 30-60 Days)</h2>
+        <div class="section-header"><h2>Recommended Actions (Next 30-60 Days)</h2></div>
         <ul class="list">
             @forelse($recommendedActions as $actionLine)
                 <li>{{ $actionLine }}</li>
@@ -149,7 +155,7 @@
 
     @if(!empty($additionalContext))
         <div class="section">
-            <h2 class="section-title">Additional Context</h2>
+            <div class="section-header"><h2>Additional Context</h2></div>
             <ul class="list">
                 @foreach($additionalContext as $line)
                     <li>{{ $line }}</li>

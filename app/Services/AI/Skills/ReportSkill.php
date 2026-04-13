@@ -120,12 +120,18 @@ class ReportSkill
         $data['next_actions'] = ['Assign an owner to manually review recent conversation context.'];
         $data['account_status'] = 'Insufficient AI confidence to classify account status.';
         $data['executive_insights'] = ['Automation fallback triggered due to schema or policy validation failure.'];
-        $data['key_relationships'] = ['Relationship map unavailable from automated output.'];
-        $data['risks_and_opportunities'] = ['Risk: incomplete signal quality. Opportunity: complete manual review with CRM owner.'];
+        $data['key_relationships'] = [['name' => 'Not available', 'role' => 'Stakeholder', 'strength' => 'Medium']];
+        $data['key_risks'] = ['Signal quality was insufficient for granular risk detection.'];
+        $data['growth_opportunities'] = ['Signal quality was insufficient for granular opportunity detection.'];
+        $data['usage_signal'] = 'Not available';
+        $data['support_signal'] = 'Not available';
+        $data['sentiment_signal'] = 'Not available';
+        $data['engagement_pattern'] = 'Not available';
         $data['role_based_actions'] = [
             'sales' => ['Confirm active commercial motion before outreach.'],
             'csm' => ['Validate customer sentiment from recent interactions.'],
             'support' => ['Review unresolved tickets that may impact relationship health.'],
+            'exec_sponsor' => ['Monitor account for senior stakeholder engagement signals.'],
         ];
         $this->markRepair($metadata, 'fallback_report');
 
@@ -317,24 +323,32 @@ class ReportSkill
             $data['executive_insights'] = array_pad($data['executive_insights'], 3, 'Not available');
         }
 
-        $data['key_relationships'] = $this->normalizeStringArray($data['key_relationships'] ?? []);
+        $data['key_relationships'] = is_array($data['key_relationships'] ?? null) ? $data['key_relationships'] : [];
         if (count($data['key_relationships']) === 0) {
-            $data['key_relationships'] = ['No explicit stakeholder mapping was returned.'];
+            $data['key_relationships'] = [['name' => 'Not available', 'role' => 'Stakeholder', 'strength' => 'Medium']];
         }
 
-        $data['risks_and_opportunities'] = $this->normalizeStringArray($data['risks_and_opportunities'] ?? []);
-        if (count($data['risks_and_opportunities']) === 0 && count($insights) > 0) {
-            $data['risks_and_opportunities'] = [$insights[0]];
+        $data['key_risks'] = $this->normalizeStringArray($data['key_risks'] ?? []);
+        if (count($data['key_risks']) === 0) {
+            $data['key_risks'] = ['Not available'];
         }
-        if (count($data['risks_and_opportunities']) === 0) {
-            $data['risks_and_opportunities'] = ['No explicit risks/opportunities were returned.'];
+
+        $data['growth_opportunities'] = $this->normalizeStringArray($data['growth_opportunities'] ?? []);
+        if (count($data['growth_opportunities']) === 0) {
+            $data['growth_opportunities'] = ['Not available'];
         }
+
+        $data['usage_signal'] = trim((string) ($data['usage_signal'] ?? 'Not available'));
+        $data['support_signal'] = trim((string) ($data['support_signal'] ?? 'Not available'));
+        $data['sentiment_signal'] = trim((string) ($data['sentiment_signal'] ?? 'Not available'));
+        $data['engagement_pattern'] = trim((string) ($data['engagement_pattern'] ?? 'Not available'));
 
         $roleActions = is_array($data['role_based_actions'] ?? null) ? $data['role_based_actions'] : [];
         $data['role_based_actions'] = [
             'sales' => $this->normalizeStringArray($roleActions['sales'] ?? []),
             'csm' => $this->normalizeStringArray($roleActions['csm'] ?? []),
             'support' => $this->normalizeStringArray($roleActions['support'] ?? []),
+            'exec_sponsor' => $this->normalizeStringArray($roleActions['exec_sponsor'] ?? []),
         ];
 
         if (count($data['role_based_actions']['sales']) === 0) {
@@ -345,6 +359,9 @@ class ReportSkill
         }
         if (count($data['role_based_actions']['support']) === 0) {
             $data['role_based_actions']['support'] = ['Review product or delivery blockers referenced in the thread.'];
+        }
+        if (count($data['role_based_actions']['exec_sponsor']) === 0) {
+            $data['role_based_actions']['exec_sponsor'] = ['Monitor relationship for senior sponsorship opportunities.'];
         }
 
         return $data;
