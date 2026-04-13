@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 
 class ConversationAiReportContextBuilder
 {
-    private const MAX_ACTIVITY_ITEMS_PER_STREAM = 120;
+    private const MAX_ACTIVITY_ITEMS_PER_STREAM = 250;
 
     public function __construct(
         private readonly LeadActivityStreamService $leadActivityStreamService,

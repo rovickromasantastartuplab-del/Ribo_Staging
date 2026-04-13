@@ -69,17 +69,20 @@
         </ul>
     </div>
 
+    @if(collect($executiveInsights)->filter(fn($i) => $i !== 'Not available')->isNotEmpty())
     <div class="section">
         <div class="section-header"><h2>Executive Insights</h2></div>
         <ul class="list">
-            @forelse($executiveInsights as $item)
-                <li>{{ $item }}</li>
-            @empty
-                <li>Not available</li>
-            @endforelse
+            @foreach($executiveInsights as $item)
+                @if($item !== 'Not available')
+                    <li>{{ $item }}</li>
+                @endif
+            @endforeach
         </ul>
     </div>
+    @endif
 
+    @if(collect($keyRelationships)->filter(fn($r) => ($r['name'] ?? 'Not available') !== 'Not available')->isNotEmpty())
     <div class="section">
         <div class="section-header"><h2>Key Relationships</h2></div>
         <table class="grid">
@@ -91,21 +94,22 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($keyRelationships as $relationship)
-                    <tr>
-                        <td><span class="label">{{ $relationship['name'] ?? 'Not available' }}</span></td>
-                        <td>{{ $relationship['role'] ?? 'Not available' }}</td>
-                        <td>{{ $relationship['strength'] ?? 'Not available' }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3">Not available</td>
-                    </tr>
-                @endforelse
+                @foreach($keyRelationships as $relationship)
+                    @if(($relationship['name'] ?? 'Not available') !== 'Not available')
+                        <tr>
+                            <td><span class="label">{{ $relationship['name'] }}</span></td>
+                            <td>{{ $relationship['role'] ?? 'Stakeholder' }}</td>
+                            <td>{{ $relationship['strength'] ?? 'Medium' }}</td>
+                        </tr>
+                    @endif
+                @endforeach
             </tbody>
         </table>
-        <p class="gaps"><span class="label">Coverage Insights:</span> {{ $relationshipGaps }}</p>
+        @if(($relationshipGaps ?? 'Not available') !== 'Not available')
+            <p class="gaps"><span class="label">Coverage Insights:</span> {{ $relationshipGaps }}</p>
+        @endif
     </div>
+    @endif
 
     <div class="section">
         <div class="section-header"><h2>Deals &amp; Pipeline Snapshot</h2></div>
@@ -180,19 +184,18 @@
     </div>
     @endif
 
+    @if(collect($recommendedActions)->filter(fn($a) => !str_contains($a, 'Not available'))->isNotEmpty())
     <div class="section">
         <div class="section-header"><h2>Recommended Actions (Next 30-60 Days)</h2></div>
         <ul class="list">
-            @forelse($recommendedActions as $actionLine)
-                <li>{{ $actionLine }}</li>
-            @empty
-                <li>Sales -> Not available -> High</li>
-                <li>CSM -> Not available -> High</li>
-                <li>Support/Product -> Not available -> Medium</li>
-                <li>Exec Sponsor -> Not available -> Medium</li>
-            @endforelse
+            @foreach($recommendedActions as $actionLine)
+                @if(!str_contains($actionLine, 'Not available'))
+                    <li>{{ $actionLine }}</li>
+                @endif
+            @endforeach
         </ul>
     </div>
+    @endif
 
     @if(!empty($additionalContext))
         <div class="section">
