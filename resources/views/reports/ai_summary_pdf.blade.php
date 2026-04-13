@@ -18,11 +18,18 @@
 </head>
 <body>
     @php
-        $crm = $context['crm'] ?? [];
-        $financials = $crm['financials'] ?? [];
-        $opportunities = $crm['opportunities'] ?? [];
-        $relationships = $result['key_relationships'] ?? ($crm['relationships'] ?? []);
-        $roleActions = $result['role_based_actions'] ?? [];
+        $formatted = $formatted ?? [];
+
+        $accountStatus = $formatted['account_status'] ?? [];
+        $executiveInsights = $formatted['executive_insights'] ?? [];
+        $keyRelationships = $formatted['key_relationships'] ?? [];
+        $relationshipGaps = $formatted['relationship_gaps'] ?? 'Not available';
+        $deals = $formatted['deals'] ?? [];
+        $healthSignals = $formatted['engagement_health_signals'] ?? [];
+        $keyRisks = $formatted['key_risks'] ?? [];
+        $growthOpportunities = $formatted['growth_opportunities'] ?? [];
+        $recommendedActions = $formatted['recommended_actions'] ?? [];
+        $additionalContext = $formatted['additional_context'] ?? [];
     @endphp
 
     <h1>Client Account Snapshot</h1>
@@ -32,112 +39,117 @@
 
     <div class="section">
         <h2>Account Status</h2>
-        <p class="status">{{ $result['account_status'] ?? ($result['summary'] ?? 'Status unavailable.') }}</p>
-    </div>
-
-    <div class="section">
-        <h2>Financial Snapshot</h2>
-        <table class="grid">
-            <tr>
-                <th>ARR</th>
-                <th>MRR</th>
-                <th>Active Deals</th>
-            </tr>
-            <tr>
-                <td>${{ number_format((float) ($financials['arr'] ?? 0), 2) }}</td>
-                <td>${{ number_format((float) ($financials['mrr'] ?? 0), 2) }}</td>
-                <td>{{ (int) ($financials['active_deals_count'] ?? 0) }}</td>
-            </tr>
-        </table>
+        <ul class="list">
+            <li>Status: {{ $accountStatus['status'] ?? 'Not available' }}</li>
+            <li>Health Score: {{ $accountStatus['health'] ?? 'Not available' }} - {{ $accountStatus['health_reason'] ?? 'Not available' }}</li>
+            <li>ARR: {{ $accountStatus['arr'] ?? 'Not available' }} | MRR: {{ $accountStatus['mrr'] ?? 'Not available' }} | Renewal: {{ $accountStatus['renewal'] ?? 'Not available' }}</li>
+        </ul>
     </div>
 
     <div class="section">
         <h2>Executive Insights</h2>
         <ul class="list">
-            @foreach(($result['executive_insights'] ?? $result['key_insights'] ?? []) as $item)
+            @forelse($executiveInsights as $item)
                 <li>{{ $item }}</li>
-            @endforeach
+            @empty
+                <li>Not available</li>
+            @endforelse
         </ul>
-    </div>
-
-    <div class="section">
-        <h2>Deals</h2>
-        @if(count($opportunities) === 0)
-            <p>No active deals found.</p>
-        @else
-            <table class="grid">
-                <tr>
-                    <th>Opportunity</th>
-                    <th>Stage</th>
-                    <th>Amount</th>
-                    <th>Close Date</th>
-                </tr>
-                @foreach($opportunities as $opportunity)
-                    <tr>
-                        <td>{{ $opportunity['name'] ?? 'N/A' }}</td>
-                        <td>{{ $opportunity['stage'] ?? 'N/A' }}</td>
-                        <td>${{ number_format((float) ($opportunity['amount'] ?? 0), 2) }}</td>
-                        <td>{{ $opportunity['close_date'] ?? 'N/A' }}</td>
-                    </tr>
-                @endforeach
-            </table>
-        @endif
     </div>
 
     <div class="section">
         <h2>Key Relationships</h2>
-        <ul class="list">
-            @foreach($relationships as $rel)
-                @if(is_array($rel))
-                    <li>{{ $rel['name'] ?? 'Unknown' }} - {{ $rel['role'] ?? 'Stakeholder' }}</li>
-                @else
-                    <li>{{ $rel }}</li>
-                @endif
-            @endforeach
-        </ul>
-    </div>
-
-    <div class="section">
-        <h2>Risks & Opportunities</h2>
-        <ul class="list">
-            @foreach(($result['risks_and_opportunities'] ?? []) as $item)
-                <li>{{ $item }}</li>
-            @endforeach
-        </ul>
-    </div>
-
-    <div class="section">
-        <h2>Role-Based Actions</h2>
         <table class="grid">
             <tr>
-                <th>Sales</th>
-                <th>CSM</th>
-                <th>Support</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Type</th>
+                <th>Strength</th>
             </tr>
-            <tr>
-                <td>
-                    <ul class="list">
-                        @foreach(($roleActions['sales'] ?? $result['next_actions'] ?? []) as $action)
-                            <li>{{ $action }}</li>
-                        @endforeach
-                    </ul>
-                </td>
-                <td>
-                    <ul class="list">
-                        @foreach(($roleActions['csm'] ?? []) as $action)
-                            <li>{{ $action }}</li>
-                        @endforeach
-                    </ul>
-                </td>
-                <td>
-                    <ul class="list">
-                        @foreach(($roleActions['support'] ?? []) as $action)
-                            <li>{{ $action }}</li>
-                        @endforeach
-                    </ul>
-                </td>
-            </tr>
+            @forelse($keyRelationships as $relationship)
+                <tr>
+                    <td>{{ $relationship['name'] ?? 'Not available' }}</td>
+                    <td>{{ $relationship['role'] ?? 'Not available' }}</td>
+                    <td>{{ $relationship['type'] ?? 'Not available' }}</td>
+                    <td>{{ $relationship['strength'] ?? 'Not available' }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4">Not available</td>
+                </tr>
+            @endforelse
         </table>
+        <p>Gaps: {{ $relationshipGaps }}</p>
     </div>
+
+    <div class="section">
+        <h2>Deals &amp; Pipeline Snapshot</h2>
+        <ul class="list">
+            <li>Active Deals: {{ $deals['active_deals'] ?? 'Not available' }}</li>
+            <li>Top Deal: {{ $deals['top_deal'] ?? 'Not available' }}</li>
+            <li>Expansion Potential: {{ $deals['expansion_potential'] ?? 'Not available' }}</li>
+            <li>Notable Past Deals:</li>
+            <li>Won: {{ $deals['notable_won'] ?? 'Not available' }}</li>
+            <li>Lost: {{ $deals['notable_lost'] ?? 'Not available' }}</li>
+            <li>Stalled: {{ $deals['notable_stalled'] ?? 'Not available' }}</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Engagement &amp; Health Signals</h2>
+        <ul class="list">
+            <li>Usage: {{ $healthSignals['usage'] ?? 'Not available' }}</li>
+            <li>Support: {{ $healthSignals['support'] ?? 'Not available' }}</li>
+            <li>Sentiment: {{ $healthSignals['sentiment'] ?? 'Not available' }}</li>
+            <li>Engagement Pattern: {{ $healthSignals['engagement_pattern'] ?? 'Not available' }}</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Key Risks</h2>
+        <ul class="list">
+            @forelse($keyRisks as $item)
+                <li>{{ $item }}</li>
+            @empty
+                <li>Not available</li>
+            @endforelse
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Growth Opportunities</h2>
+        <ul class="list">
+            @forelse($growthOpportunities as $item)
+                <li>{{ $item }}</li>
+            @empty
+                <li>Not available</li>
+            @endforelse
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Recommended Actions (Next 30–60 Days)</h2>
+        <ul class="list">
+            @forelse($recommendedActions as $actionLine)
+                <li>{{ $actionLine }}</li>
+            @empty
+                <li>Sales -> Not available -> High</li>
+                <li>CSM -> Not available -> High</li>
+                <li>Support/Product -> Not available -> Medium</li>
+                <li>Exec Sponsor -> Not available -> Medium</li>
+            @endforelse
+        </ul>
+    </div>
+
+    @if(!empty($additionalContext))
+        <div class="section">
+            <h2>Additional Context</h2>
+            <ul class="list">
+                @foreach($additionalContext as $line)
+                    <li>{{ $line }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 </body>
 </html>

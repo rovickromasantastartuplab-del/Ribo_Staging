@@ -267,4 +267,38 @@ class ReportValidatorTest extends TestCase
         $hasInternal = collect($nextActions)->contains(fn ($a) => str_contains(strtolower($a), 'notify the team'));
         $this->assertTrue($hasInternal, 'Internal team notification must be preserved');
     }
+
+    public function test_it_normalizes_invalid_status_and_health_to_allowed_values(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateReport')->andReturn([
+            'summary' => 'Summary',
+            'key_insights' => ['One'],
+            'next_actions' => ['One'],
+            'account_status' => 'Status: Excellent',
+            'health_score' => 'Critical',
+        ]);
+
+        $skill = new ReportSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockJob, ['enabled' => true]);
+
+        $this->assertContains($response['result']['normalized_status'], ['Strategic', 'Growth', 'At Risk', 'Stable']);
+        $this->assertContains($response['result']['normalized_health_score'], ['High', 'Medium', 'Low']);
+    }
+
+    public function test_it_enforces_executive_insights_count_bounds(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('generateReport')->andReturn([
+            'summary' => 'Summary',
+            'key_insights' => ['One'],
+            'next_actions' => ['One'],
+            'executive_insights' => ['a', 'b', 'c', 'd', 'e', 'f'],
+        ]);
+
+        $skill = new ReportSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->generate($this->mockJob, ['enabled' => true]);
+
+        $this->assertCount(5, $response['result']['executive_insights']);
+    }
 }

@@ -296,6 +296,13 @@ class ReportSkill
             ->values()
             ->all();
 
+        $data['normalized_status'] = $this->normalizeStatus($data);
+        $data['normalized_health_score'] = $this->normalizeEnum(
+            $data['health_score'] ?? null,
+            ['High', 'Medium', 'Low'],
+            'Medium'
+        );
+
         $data['account_status'] = trim((string) ($data['account_status'] ?? ''));
         if ($data['account_status'] === '') {
             $data['account_status'] = $summary !== '' ? $summary : 'Account status is currently unclear.';
@@ -304,6 +311,10 @@ class ReportSkill
         $data['executive_insights'] = $this->normalizeStringArray($data['executive_insights'] ?? []);
         if (count($data['executive_insights']) === 0) {
             $data['executive_insights'] = $insights;
+        }
+        $data['executive_insights'] = array_slice($data['executive_insights'], 0, 5);
+        if (count($data['executive_insights']) < 3) {
+            $data['executive_insights'] = array_pad($data['executive_insights'], 3, 'Not available');
         }
 
         $data['key_relationships'] = $this->normalizeStringArray($data['key_relationships'] ?? []);
@@ -350,5 +361,45 @@ class ReportSkill
             ->filter(static fn (string $item): bool => $item !== '')
             ->values()
             ->all();
+    }
+
+    private function normalizeEnum(mixed $value, array $allowed, string $fallback): string
+    {
+        $normalized = trim((string) $value);
+
+        if (in_array($normalized, $allowed, true)) {
+            return $normalized;
+        }
+
+        return $fallback;
+    }
+
+    private function normalizeStatus(array $data): string
+    {
+        $statusValue = $this->normalizeEnum(
+            $data['status_value'] ?? null,
+            ['Strategic', 'Growth', 'At Risk', 'Stable'],
+            ''
+        );
+
+        if ($statusValue !== '') {
+            return $statusValue;
+        }
+
+        $accountStatusText = strtolower(trim((string) ($data['account_status'] ?? '')));
+        if (str_contains($accountStatusText, 'strategic')) {
+            return 'Strategic';
+        }
+        if (str_contains($accountStatusText, 'growth')) {
+            return 'Growth';
+        }
+        if (str_contains($accountStatusText, 'risk') || str_contains($accountStatusText, 'at risk')) {
+            return 'At Risk';
+        }
+        if (str_contains($accountStatusText, 'stable')) {
+            return 'Stable';
+        }
+
+        return 'Stable';
     }
 }

@@ -8,6 +8,7 @@ use App\Models\AiReportJob;
 use App\Models\Contact;
 use App\Models\EmailThread;
 use App\Services\AI\Prompts\ReportPromptFactory;
+use App\Services\AI\Reports\ReportTemplateFormatter;
 use App\Services\AI\ConversationAiReportService;
 use App\Services\AI\ConversationAiTelemetryService;
 use App\Services\AI\Rules\ConversationAiRules;
@@ -20,7 +21,8 @@ class ConversationAiReportController extends Controller
     public function __construct(
         private readonly ConversationAiReportService $reportService,
         private readonly ConversationAiRules $rules,
-        private readonly ConversationAiTelemetryService $telemetryService
+        private readonly ConversationAiTelemetryService $telemetryService,
+        private readonly ReportTemplateFormatter $reportTemplateFormatter
     ) {
     }
 
@@ -145,6 +147,11 @@ class ConversationAiReportController extends Controller
         $reportJob = $this->reportService->get($job, $companyId);
         $result = $reportJob->result_payload_json ?? [];
         $context = $reportJob->context_payload_json ?? [];
+        $formatted = $this->reportTemplateFormatter->format(
+            $result,
+            $context,
+            (string) ($reportJob->scope ?? 'overall')
+        );
 
         if (empty($result)) {
             return response()->json([
@@ -157,6 +164,7 @@ class ConversationAiReportController extends Controller
             'job' => $reportJob,
             'result' => $result,
             'context' => $context,
+            'formatted' => $formatted,
         ]);
 
         return $pdf->download("AI-Summary-Report-{$reportJob->id}.pdf");
