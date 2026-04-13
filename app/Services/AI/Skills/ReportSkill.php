@@ -102,7 +102,7 @@ class ReportSkill
 
     private function validateParse(array $data, array &$metadata): array
     {
-        // Only fail-fast if the absolute core keys are missing.
+        // Only fail-fast if the absolute core keys are missings.
         // Secondary keys (health signals, risks, etc.) are filled gracefully by ensureStructuredSections().
         $requiredKeys = ['summary', 'key_insights', 'next_actions'];
         foreach ($requiredKeys as $key) {
