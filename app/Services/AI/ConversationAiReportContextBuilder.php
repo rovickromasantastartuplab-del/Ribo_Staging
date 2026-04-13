@@ -2,6 +2,7 @@
 
 namespace App\Services\AI;
 
+use App\Models\Account;
 use App\Models\Contact;
 use App\Models\EmailThread;
 use App\Models\Opportunity;
@@ -28,10 +29,10 @@ class ConversationAiReportContextBuilder
         ?Contact $contact = null,
         ?int $opportunityId = null
     ): array {
-        $linkedContacts = $this->resolveContacts($thread, $companyId, $contact);
+        $leads = $thread->leads()->where('created_by', $companyId)->get();
+        $linkedContacts = $this->resolveContacts($thread, $companyId, $contact, $leads);
         $opportunities = $this->resolveOpportunities($companyId, $linkedContacts, $scope, $opportunityId);
         $opportunityDetails = $opportunities->take(20);
-        $leads = $thread->leads()->where('created_by', $companyId)->get();
 
         $arr = (float) $opportunities->sum(fn (Opportunity $opp): float => (float) ($opp->amount ?? 0));
         $mrr = $arr / 12;
@@ -57,10 +58,7 @@ class ConversationAiReportContextBuilder
                 ],
             ],
             'crm' => [
-                'account' => [
-                    'id' => $linkedContacts->first()?->account_id,
-                    'name' => $linkedContacts->first()?->account?->name ?? 'Unassigned Account',
-                ],
+                'account' => $this->resolveAccountSnapshot($linkedContacts),
                 'financials' => [
                     // ARR/MRR are computed from scoped CRM deal amounts for deterministic reporting.
                     'arr' => round($arr, 2),
@@ -84,13 +82,20 @@ class ConversationAiReportContextBuilder
                         'contact' => $opportunity->contact?->name,
                     ];
                 })->values()->all(),
-                'relationships' => $linkedContacts->map(fn (Contact $item): array => [
+                'relationships' => $linkedContacts->map(function ($item): array {
+                    $account = $item->account ?? null;
+                    if ($account === null && isset($item->account_id) && $item->account_id) {
+                        $account = Account::query()->find($item->account_id);
+                    }
+
+                    return [
                     'id' => $item->id,
                     'name' => $item->name,
                     'email' => $item->email,
                     'role' => $item->position ?: 'Stakeholder',
-                    'account' => $item->account?->name,
-                ])->values()->all(),
+                    'account' => $account?->name,
+                    ];
+                })->values()->all(),
             ],
             'activity_streams' => [
                 'lead' => $leadActivity,
@@ -115,7 +120,8 @@ class ConversationAiReportContextBuilder
 
     public function scopeOptions(int $companyId, EmailThread $thread): array
     {
-        $contacts = $this->resolveContacts($thread, $companyId, null);
+        $leads = $thread->leads()->where('created_by', $companyId)->get();
+        $contacts = $this->resolveContacts($thread, $companyId, null, $leads);
         $opportunities = $this->resolveOpportunities($companyId, $contacts, 'all-opps', null);
 
         return [
@@ -128,16 +134,116 @@ class ConversationAiReportContextBuilder
         ];
     }
 
-    private function resolveContacts(EmailThread $thread, int $companyId, ?Contact $contact): Collection
+    private function resolveContacts(EmailThread $thread, int $companyId, ?Contact $contact, Collection $leads): Collection
     {
         if ($contact !== null) {
             return collect([$contact->loadMissing('account')]);
         }
 
-        return $thread->contacts()
+        $threadContacts = $thread->contacts()
             ->where('contacts.created_by', $companyId)
             ->with('account')
             ->get();
+
+        if ($threadContacts->isNotEmpty()) {
+            return $threadContacts;
+        }
+
+        return $this->resolveLeadRelatedContactsFallback($companyId, $leads);
+    }
+
+    private function resolveLeadRelatedContactsFallback(int $companyId, Collection $leads): Collection
+    {
+        $leadCandidates = $leads
+            ->map(function ($lead): array {
+                return [
+                    'company' => trim((string) ($lead->company ?? '')),
+                    'email' => trim((string) ($lead->email ?? '')),
+                    'is_converted' => (bool) ($lead->is_converted ?? false),
+                ];
+            })
+            ->filter(fn (array $item): bool => $item['company'] !== '' || $item['email'] !== '')
+            ->values();
+
+        if ($leadCandidates->isEmpty()) {
+            return collect();
+        }
+
+        // Prefer converted-lead anchors first to match Lead page "Related Accounts" behavior.
+        $preferredCandidates = $leadCandidates->where('is_converted', true)->values();
+        if ($preferredCandidates->isEmpty()) {
+            $preferredCandidates = $leadCandidates;
+        }
+
+        $accounts = Account::query()
+            ->where('created_by', $companyId)
+            ->where(function ($query) use ($preferredCandidates): void {
+                foreach ($preferredCandidates as $candidate) {
+                    $query->orWhere(function ($nested) use ($candidate): void {
+                        if ($candidate['company'] !== '') {
+                            $nested->where('name', 'like', '%' . $candidate['company'] . '%');
+                        }
+                        if ($candidate['email'] !== '') {
+                            if ($candidate['company'] !== '') {
+                                $nested->orWhere('email', $candidate['email']);
+                            } else {
+                                $nested->where('email', $candidate['email']);
+                            }
+                        }
+                    });
+                }
+            })
+            ->get(['id', 'name', 'email', 'created_by']);
+
+        if ($accounts->isEmpty()) {
+            return collect();
+        }
+
+        $contacts = Contact::query()
+            ->where('created_by', $companyId)
+            ->whereIn('account_id', $accounts->pluck('id')->all())
+            ->with('account')
+            ->get();
+
+        if ($contacts->isNotEmpty()) {
+            return $contacts;
+        }
+
+        // If related accounts exist but no contacts are attached, create synthetic stakeholder rows
+        // so report context still reflects account-level relationship coverage.
+        return $accounts->map(function (Account $account) {
+            return (object) [
+                'id' => null,
+                'name' => $account->name,
+                'email' => $account->email,
+                'position' => 'Account',
+                'account_id' => $account->id,
+                'account' => $account,
+            ];
+        })->values();
+    }
+
+    private function resolveAccountSnapshot(Collection $linkedContacts): array
+    {
+        $first = $linkedContacts->first();
+        if ($first === null) {
+            return [
+                'id' => null,
+                'name' => 'Unassigned Account',
+            ];
+        }
+
+        $accountId = $first->account_id ?? null;
+        $accountName = $first->account?->name ?? null;
+
+        if ($accountName === null && $accountId) {
+            $accountName = Account::query()->where('id', $accountId)->value('name');
+        }
+
+        return [
+            'id' => $accountId,
+            'name' => $accountName ?? 'Unassigned Account',
+        ];
     }
 
     private function resolveOpportunities(
