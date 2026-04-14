@@ -69,14 +69,14 @@
         }
         .takeaway-list { margin: 0; padding-left: 16px; }
         .takeaway-list li { margin-bottom: 5px; }
-        .axis {
+        .axis-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 5px;
             font-size: 9px;
             color: {{ $styleTokens['text_muted'] ?? '#6b7280' }};
-            display: flex;
-            justify-content: space-between;
         }
-        .axis span { display: inline-block; min-width: 52px; text-align: center; }
+        .axis-table td { text-align: center; padding: 0; }
         .legend {
             margin-top: 5px;
             font-size: 9px;
@@ -300,11 +300,11 @@
                         </svg>
                     @endif
 
-                    <div class="axis">
+                    <table class="axis-table"><tr>
                         @foreach($tickLabels as $label)
-                            <span>{{ $label }}</span>
+                            <td>{{ $label }}</td>
                         @endforeach
-                    </div>
+                    </tr></table>
                     <div class="legend">
                         Weekly date ticks (MMM dd); missing days are zero-filled for continuity.
                     </div>
