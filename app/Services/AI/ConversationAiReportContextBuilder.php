@@ -125,6 +125,8 @@ class ConversationAiReportContextBuilder
         $opportunities = $this->resolveOpportunities($companyId, $contacts, 'all-opps', null);
 
         return [
+            'leads_count' => $leads->count(),
+            'opportunities_count' => $opportunities->count(),
             'contacts' => $contacts->map(function ($item): array {
                 return [
                     'id' => $item->id,

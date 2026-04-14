@@ -25,6 +25,8 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
     const [selectedOppId, setSelectedOppId] = useState<string>('overall');
     const [isExporting, setIsExporting] = useState(false);
     const [opportunityOptions, setOpportunityOptions] = useState<OpportunityOption[]>([]);
+    const [leadsCount, setLeadsCount] = useState(0);
+    const [opportunitiesCount, setOpportunitiesCount] = useState(0);
 
     useEffect(() => {
         if (!data.email_thread_id) {
@@ -34,11 +36,16 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
         axios
             .get(`/ai/reports/options/${data.email_thread_id}`)
             .then((response) => {
-                const options = response?.data?.data?.opportunities;
+                const optionsPayload = response?.data?.data;
+                const options = optionsPayload?.opportunities;
                 setOpportunityOptions(Array.isArray(options) ? options : []);
+                setLeadsCount(Number.isFinite(optionsPayload?.leads_count) ? Number(optionsPayload.leads_count) : 0);
+                setOpportunitiesCount(Number.isFinite(optionsPayload?.opportunities_count) ? Number(optionsPayload.opportunities_count) : 0);
             })
             .catch(() => {
                 setOpportunityOptions([]);
+                setLeadsCount(0);
+                setOpportunitiesCount(0);
             });
     }, [data.email_thread_id]);
 
@@ -66,6 +73,17 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                 return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
         }
     };
+
+    const leadsOptionDisabled = leadsCount <= 0;
+    const allOpportunitiesOptionDisabled = opportunitiesCount <= 0;
+
+    const scopeAvailabilityHint = leadsOptionDisabled
+        ? allOpportunitiesOptionDisabled
+            ? 'No leads or opportunities found for this thread yet.'
+            : 'No leads found for this thread yet.'
+        : allOpportunitiesOptionDisabled
+          ? 'No opportunities found for this thread yet.'
+          : null;
 
     return (
         <Card className="border-none bg-gradient-to-br from-white to-slate-50/50 shadow-sm dark:from-slate-950 dark:to-slate-900/50">
@@ -121,10 +139,10 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                     <SelectItem value="overall" className="text-xs font-semibold italic">
                                         Full History (Leads & All Opportunities)
                                     </SelectItem>
-                                    <SelectItem value="lead-only" className="text-xs">
+                                    <SelectItem value="lead-only" className="text-xs" disabled={leadsOptionDisabled}>
                                         Leads History Only
                                     </SelectItem>
-                                    <SelectItem value="all-opps" className="text-xs">
+                                    <SelectItem value="all-opps" className="text-xs" disabled={allOpportunitiesOptionDisabled}>
                                         All Opportunities Summary
                                     </SelectItem>
                                     {opportunityOptions.map((opportunity) => (
@@ -134,14 +152,16 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {scopeAvailabilityHint ? (
+                                <p className="ml-1 text-[10px] text-slate-500 dark:text-slate-400">{scopeAvailabilityHint}</p>
+                            ) : null}
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <AiReportHistoryDialog threadId={data.email_thread_id} />
+                        <div className="flex flex-col gap-2">
                             <Button
                                 variant="default"
                                 size="sm"
-                                className="group relative h-10 flex-1 gap-2.5 overflow-hidden bg-indigo-600 text-xs font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:scale-[1.01] hover:bg-indigo-700 dark:shadow-none"
+                                className="group relative h-10 w-full gap-2.5 overflow-hidden bg-indigo-600 text-xs font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:scale-[1.01] hover:bg-indigo-700 dark:shadow-none"
                                 onClick={async () => {
                                     if (!data.email_thread_id) {
                                         toast.warning('No thread context available for report generation.');
@@ -236,6 +256,7 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                                     </>
                                 )}
                             </Button>
+                            <AiReportHistoryDialog threadId={data.email_thread_id} />
                         </div>
                     </div>
                 </div>
