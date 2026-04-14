@@ -69,6 +69,23 @@
             font-size: 9px;
             color: {{ $styleTokens['text_muted'] ?? '#6b7280' }};
         }
+        .bars {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+        }
+        .bars td {
+            vertical-align: bottom;
+            width: 3%;
+            height: 48px;
+            padding: 0 1px;
+        }
+        .bar {
+            display: block;
+            width: 100%;
+            background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};
+            min-height: 2px;
+        }
         .section { margin-bottom: 10px; page-break-inside: avoid; }
         .section-header {
             border-left: 4px solid {{ $styleTokens['brand_color'] ?? '#10b77f' }};
@@ -180,15 +197,30 @@
                     $y = 120.0 - (((float) $value / $max) * 100.0);
                     return number_format($x, 2, '.', '') . ',' . number_format($y, 2, '.', '');
                 })->implode(' ');
+                $step = max(1, (int) ceil($count / 30));
+                $barSeries = [];
+                for ($idx = 0; $idx < $count; $idx += $step) {
+                    $barSeries[] = (float) ($series[$idx] ?? 0);
+                }
             @endphp
             <div class="card">
                 <div class="card-head">{{ $graph['title'] ?? 'Graph' }}</div>
                 <div class="card-body">
-                    <svg viewBox="0 0 560 140" width="100%" height="130" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
                         <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
                         <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
                         <polyline fill="none" stroke="{{ $styleTokens['brand_color'] ?? '#10b77f' }}" stroke-width="2" points="{{ $points }}"></polyline>
                     </svg>
+                    <table class="bars" aria-hidden="true">
+                        <tr>
+                            @foreach($barSeries as $bar)
+                                @php
+                                    $barHeight = 2 + (int) round(((float) $bar / $max) * 44);
+                                @endphp
+                                <td><span class="bar" style="height: {{ $barHeight }}px;"></span></td>
+                            @endforeach
+                        </tr>
+                    </table>
                     <div class="axis">
                         <span>{{ $axisStart }}</span>
                         <span>{{ $axisMid }}</span>
@@ -372,4 +404,3 @@
     </div>
 </body>
 </html>
-
