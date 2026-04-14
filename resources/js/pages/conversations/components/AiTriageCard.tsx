@@ -100,7 +100,7 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2">
                     <Badge variant="outline" className={getIntentColor(data.intent)}>
                         {data.intent.toUpperCase()}
                     </Badge>
