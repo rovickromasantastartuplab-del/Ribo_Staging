@@ -159,7 +159,11 @@ class ConversationAiPromptHardeningTest extends TestCase
             $prompt
         );
         $this->assertStringContainsString(
-            'Use recent activity details for recency, and historical_activity_summary for whole-history trend interpretation',
+            'Use recent activity details for recency and narrative nuance.',
+            $prompt
+        );
+        $this->assertStringContainsString(
+            'Use historical_summary snippets for permanent-memory markers',
             $prompt
         );
     }
@@ -202,5 +206,80 @@ class ConversationAiPromptHardeningTest extends TestCase
                 && data_get($payload, 'text.format.name') === 'conversation_ai_draft'
                 && data_get($payload, 'text.format.strict') === true;
         });
+    }
+
+    public function test_report_requests_use_object_relationship_schema(): void
+    {
+        Http::fake([
+            'https://api.openai.com/v1/responses' => Http::response([
+                'output_text' => json_encode([
+                    'summary' => 'Account remains active.',
+                    'key_insights' => ['Stakeholder engaged'],
+                    'next_actions' => ['Send follow-up'],
+                    'account_status' => 'Stable relationship with active opportunity.',
+                    'executive_insights' => ['Decision-maker is responsive'],
+                    'key_relationships' => [
+                        [
+                            'name' => 'Rovick Romasanta',
+                            'role' => 'Decision-Maker',
+                            'strength' => 'Strong',
+                        ],
+                    ],
+                    'risks_and_opportunities' => [],
+                    'role_based_actions' => [
+                        'sales' => ['Send pricing recap'],
+                        'csm' => ['Confirm onboarding needs'],
+                        'support' => ['Monitor blockers'],
+                    ],
+                    'prompt_version' => 'v2-expert-chief-of-staff',
+                ], JSON_THROW_ON_ERROR),
+                'usage' => [
+                    'input_tokens' => 21,
+                    'output_tokens' => 15,
+                    'total_tokens' => 36,
+                ],
+            ], 200),
+        ]);
+
+        $client = new OpenAiConversationClient();
+        $response = $client->generateReport(
+            [
+                'enabled' => true,
+                'api_key' => 'test-key',
+                'model' => 'gpt-5.4-mini',
+                'timeout_seconds' => 30,
+            ],
+            [
+                'system_prompt' => 'System prompt',
+                'user_prompt' => 'User prompt',
+            ]
+        );
+
+        Http::assertSent(function ($request): bool {
+            $payload = $request->data();
+
+            return data_get($payload, 'text.format.name') === 'conversation_ai_report'
+                && data_get($payload, 'text.format.schema.properties.key_relationships.items.type') === 'object'
+                && data_get($payload, 'text.format.schema.properties.key_relationships.items.required') === ['name', 'role', 'strength'];
+        });
+    }
+
+    public function test_report_relationship_normalizer_preserves_objects(): void
+    {
+        $client = new OpenAiConversationClient();
+        $method = new \ReflectionMethod(OpenAiConversationClient::class, 'normalizeRelationshipList');
+        $method->setAccessible(true);
+
+        $relationships = $method->invoke($client, [
+            [
+                'name' => 'Rovick Romasanta',
+                'role' => 'Decision-Maker',
+                'strength' => 'Strong',
+            ],
+        ]);
+
+        $this->assertSame('Rovick Romasanta', $relationships[0]['name']);
+        $this->assertSame('Decision-Maker', $relationships[0]['role']);
+        $this->assertSame('Strong', $relationships[0]['strength']);
     }
 }

@@ -192,7 +192,7 @@ class OpenAiConversationClient
             'next_actions' => $this->normalizeStringList($data['next_actions'] ?? []),
             'account_status' => trim((string) ($data['account_status'] ?? '')),
             'executive_insights' => $this->normalizeStringList($data['executive_insights'] ?? []),
-            'key_relationships' => $this->normalizeStringList($data['key_relationships'] ?? []),
+            'key_relationships' => $this->normalizeRelationshipList($data['key_relationships'] ?? []),
             'risks_and_opportunities' => $this->normalizeStringList($data['risks_and_opportunities'] ?? []),
             'role_based_actions' => $this->normalizeRoleActions($data['role_based_actions'] ?? []),
             'prompt_version' => $promptVersion,
@@ -360,6 +360,30 @@ class OpenAiConversationClient
             ->all();
     }
 
+    private function normalizeRelationshipList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return collect($value)
+            ->filter(static fn ($item): bool => is_array($item))
+            ->map(function (array $item): array {
+                $name = trim((string) ($item['name'] ?? ''));
+                $role = trim((string) ($item['role'] ?? ''));
+                $strength = trim((string) ($item['strength'] ?? ''));
+
+                return [
+                    'name' => $name,
+                    'role' => $role,
+                    'strength' => $strength,
+                ];
+            })
+            ->filter(static fn (array $item): bool => $item['name'] !== '' || $item['role'] !== '' || $item['strength'] !== '')
+            ->values()
+            ->all();
+    }
+
     private function clampPercentage(int $value): int
     {
         return max(0, min(100, $value));
@@ -489,7 +513,16 @@ class OpenAiConversationClient
                     ],
                     'key_relationships' => [
                         'type' => 'array',
-                        'items' => ['type' => 'string'],
+                        'items' => [
+                            'type' => 'object',
+                            'additionalProperties' => false,
+                            'required' => ['name', 'role', 'strength'],
+                            'properties' => [
+                                'name' => ['type' => 'string'],
+                                'role' => ['type' => 'string'],
+                                'strength' => ['type' => 'string'],
+                            ],
+                        ],
                     ],
                     'risks_and_opportunities' => [
                         'type' => 'array',

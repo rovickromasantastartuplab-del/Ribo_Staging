@@ -9,10 +9,11 @@ class ReportTemplateFormatterTest extends TestCase
 {
     public function test_it_emits_required_sections_in_fixed_order(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
         $formatted = $formatter->format([], ['crm' => []], 'overall');
 
         $this->assertSame([
+            'Client Account Snapshot',
             'Account Status',
             'Executive Insights',
             'Key Relationships',
@@ -20,13 +21,13 @@ class ReportTemplateFormatterTest extends TestCase
             'Engagement & Health Signals',
             'Key Risks',
             'Growth Opportunities',
-            'Recommended Actions (Next 30–60 Days)',
+            'Recommended Actions (Next 30-60 Days)',
         ], array_column($formatted['sections'], 'title'));
     }
 
     public function test_it_backfills_missing_values_with_not_available(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
         $formatted = $formatter->format([], ['crm' => []], 'leads-only');
 
         $this->assertSame('Not available', $formatted['account_status']['arr']);
@@ -35,7 +36,7 @@ class ReportTemplateFormatterTest extends TestCase
 
     public function test_it_normalizes_recommended_actions_into_role_action_priority_lines(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
 
         $formatted = $formatter->format([
             'role_based_actions' => [
@@ -53,7 +54,7 @@ class ReportTemplateFormatterTest extends TestCase
 
     public function test_it_derives_engagement_signals_from_activity_stream_meta(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
 
         $formatted = $formatter->format(
             [],
@@ -84,7 +85,7 @@ class ReportTemplateFormatterTest extends TestCase
 
     public function test_it_populates_relationship_strength_defaults_from_crm_relationships(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
 
         $formatted = $formatter->format(
             [],
@@ -103,14 +104,14 @@ class ReportTemplateFormatterTest extends TestCase
 
         $row = $formatted['key_relationships'][0];
 
-        $this->assertArrayNotHasKey('type', $row);
+        $this->assertSame('Stakeholder', $row['type']);
         $this->assertSame('Medium', $row['strength']);
         $this->assertNotSame('Not available', $formatted['relationship_gaps']);
     }
 
     public function test_it_derives_renewal_from_opportunity_close_dates_when_financial_renewal_missing(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
 
         $formatted = $formatter->format(
             [],
@@ -140,7 +141,7 @@ class ReportTemplateFormatterTest extends TestCase
 
     public function test_it_sanitizes_relationship_name_to_plain_person_name(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
 
         $formatted = $formatter->format(
             [
@@ -161,7 +162,7 @@ class ReportTemplateFormatterTest extends TestCase
 
     public function test_it_prefers_crm_relationship_names_over_ai_narrative_strings(): void
     {
-        $formatter = new ReportTemplateFormatter();
+        $formatter = app(ReportTemplateFormatter::class);
 
         $formatted = $formatter->format(
             [
@@ -186,5 +187,25 @@ class ReportTemplateFormatterTest extends TestCase
 
         $this->assertSame('Rovick Romasanta', $row['name']);
         $this->assertSame('Partner', $row['role']);
+    }
+
+    public function test_it_recovers_flattened_key_relationship_pairs_into_single_row(): void
+    {
+        $formatter = app(ReportTemplateFormatter::class);
+
+        $formatted = $formatter->format(
+            [
+                'key_relationships' => ['name', 'Rovick Romasanta', 'role', 'Decision-Maker', 'strength', 'Strong'],
+            ],
+            [
+                'crm' => [],
+            ],
+            'overall'
+        );
+
+        $this->assertCount(1, $formatted['key_relationships']);
+        $this->assertSame('Rovick Romasanta', $formatted['key_relationships'][0]['name']);
+        $this->assertSame('Decision-Maker', $formatted['key_relationships'][0]['role']);
+        $this->assertSame('Strong', $formatted['key_relationships'][0]['strength']);
     }
 }

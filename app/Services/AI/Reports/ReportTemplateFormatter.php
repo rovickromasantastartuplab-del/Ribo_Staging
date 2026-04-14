@@ -187,6 +187,11 @@ class ReportTemplateFormatter
             return [];
         }
 
+        $flattenedObject = $this->recoverFlattenedRelationshipObject($value);
+        if ($flattenedObject !== null) {
+            $value = [$flattenedObject];
+        }
+
         $rows = [];
         foreach ($value as $item) {
             if (is_array($item)) {
@@ -215,6 +220,36 @@ class ReportTemplateFormatter
         }
 
         return $rows;
+    }
+
+    private function recoverFlattenedRelationshipObject(array $value): ?array
+    {
+        if ($value === [] || array_is_list($value) === false || count($value) % 2 !== 0) {
+            return null;
+        }
+
+        $pairs = [];
+        for ($i = 0; $i < count($value); $i += 2) {
+            $key = strtolower(trim((string) $value[$i]));
+            $pairValue = trim((string) $value[$i + 1]);
+
+            if ($key === '' || $pairValue === '') {
+                return null;
+            }
+
+            $pairs[$key] = $pairValue;
+        }
+
+        if (!isset($pairs['name']) && !isset($pairs['role']) && !isset($pairs['strength'])) {
+            return null;
+        }
+
+        return [
+            'name' => $pairs['name'] ?? '',
+            'role' => $pairs['role'] ?? '',
+            'strength' => $pairs['strength'] ?? '',
+            'type' => $pairs['type'] ?? '',
+        ];
     }
 
     private function inferRelationshipStrength(int $activityCount): string
