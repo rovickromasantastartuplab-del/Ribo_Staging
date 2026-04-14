@@ -117,3 +117,23 @@ it('renders not available placeholders instead of omitting rows', function () {
     expect(substr_count($html, 'Not available'))->toBeGreaterThanOrEqual(6);
 });
 
+it('prefers normalized status when status_value is invalid enum text', function () {
+    $formatter = app(ReportTemplateFormatter::class);
+
+    $formatted = $formatter->format([
+        'status_value' => 'Closed Lost',
+        'normalized_status' => 'At Risk',
+    ], ['crm' => []], 'leads-only');
+
+    $html = view('reports.ai_summary_pdf', [
+        'job' => (object) ['id' => 203, 'scope' => 'leads-only', 'completed_at' => now()],
+        'result' => [],
+        'context' => [],
+        'formatted' => $formatted,
+    ])->render();
+
+    expect($html)->toContain('Status:');
+    expect($html)->toContain('At Risk');
+    expect($html)->not->toContain('Status:</span> Stable');
+});
+

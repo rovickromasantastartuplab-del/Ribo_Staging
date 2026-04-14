@@ -48,7 +48,11 @@ class ReportTemplateFormatter
                 ['title' => 'Recommended Actions (Next 30-60 Days)'],
             ],
             'account_status' => [
-                'status' => $this->enum($result['status_value'] ?? ($result['normalized_status'] ?? null), ['Strategic', 'Growth', 'At Risk', 'Stable'], 'Stable'),
+                'status' => $this->enum(
+                    $result['status_value'] ?? null,
+                    ['Strategic', 'Growth', 'At Risk', 'Stable'],
+                    $this->enum($result['normalized_status'] ?? null, ['Strategic', 'Growth', 'At Risk', 'Stable'], 'Stable')
+                ),
                 'health' => $this->enum($result['health_score'] ?? ($result['normalized_health_score'] ?? null), ['High', 'Medium', 'Low'], 'Medium'),
                 'health_reason' => $this->firstNonEmptyString([
                     $result['account_status_reason'] ?? null,
