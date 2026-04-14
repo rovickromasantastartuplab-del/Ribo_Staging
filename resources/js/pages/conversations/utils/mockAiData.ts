@@ -90,13 +90,13 @@ export const normalizeBehavioralPulse = (value?: string | null): 'heating_up' | 
 export const deriveStateLabel = (threadState?: string | null): string => {
     const labels: Record<string, string> = {
         active: 'Active',
-        nurturing: 'Nurturing',
-        stalled: 'Stalled',
-        objection: 'Objection',
-        misaligned: 'Misaligned',
-        closed_lost: 'Closed Lost',
+        nurturing: 'Following Up',
+        stalled: 'No Response',
+        objection: 'Has Objection',
+        misaligned: 'Wrong Fit',
+        closed_lost: 'Lost',
         reopened: 'Reopened',
-        non_commercial: 'Non-Commercial',
+        non_commercial: 'Not a Lead',
         spam: 'Spam',
     };
     return labels[threadState ?? ''] ?? 'Pending';
@@ -135,11 +135,11 @@ export const deriveStateInfo = (threadState?: string | null): { label: string; c
 export const deriveHealthLabel = (health?: string | null): { label: string; severity: 'positive' | 'neutral' | 'warning' | 'danger' } => {
     switch (health) {
         case 'positive':
-            return { label: 'Positive', severity: 'positive' };
+            return { label: 'Good', severity: 'positive' };
         case 'strained':
-            return { label: 'Strained', severity: 'warning' };
+            return { label: 'Tense', severity: 'warning' };
         case 'damaged':
-            return { label: 'Damaged', severity: 'danger' };
+            return { label: 'Bad', severity: 'danger' };
         default:
             return { label: 'Neutral', severity: 'neutral' };
     }
@@ -179,40 +179,39 @@ export const deriveActionabilityInfo = (actionability?: string | null): { label:
 export const derivePulseInfo = (pulse: string, probability: number, state: string): { label: string; className: string; description: string } => {
     if (pulse === 'broken') {
         return {
-            label: 'Broken',
+            label: 'Dead',
             className: 'bg-red-500/10 text-red-700 border-red-500/20',
-            description: 'The latest thread movement is broken or commercially inactive.',
+            description: 'No meaningful activity. This conversation may need to be closed.',
         };
     }
 
     if (pulse === 'cooling_down') {
         return {
-            label: 'Cooling Down',
+            label: 'Fading',
             className: 'bg-blue-500/10 text-blue-700 border-blue-500/20',
-            description: 'Momentum is fading, so follow-up should stay measured.',
+            description: 'Engagement is slowing down. Consider a follow-up soon.',
         };
     }
 
     if (pulse === 'heating_up') {
-        // Tie HOT/WARM to probability
         if (state === 'reopened' && probability <= 45) {
             return {
-                label: 'Warming',
+                label: 'Picking Up',
                 className: 'bg-orange-500/10 text-orange-700 border-orange-500/20',
-                description: 'The thread has revived, but it still needs a cautious next step.',
+                description: 'Conversation is picking up again, but proceed carefully.',
             };
         }
         return {
-            label: 'Heating Up',
+            label: 'Rising',
             className: 'bg-orange-500/10 text-orange-700 border-orange-500/20',
-            description: 'Recent engagement is strengthening and ready for a timely response.',
+            description: 'Good engagement. Now is a great time to respond.',
         };
     }
 
     return {
-        label: 'Stable',
+        label: 'Steady',
         className: 'bg-slate-500/10 text-slate-700 border-slate-500/20',
-        description: 'Conversation rhythm is steady with no major recent change.',
+        description: 'Conversation is moving at a normal pace.',
     };
 };
 

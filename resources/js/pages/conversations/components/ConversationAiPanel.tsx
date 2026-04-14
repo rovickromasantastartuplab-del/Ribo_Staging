@@ -189,7 +189,7 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
                     <div className="rounded-lg border border-slate-200/80 bg-white/70 p-2 dark:border-slate-800 dark:bg-slate-900/60">
                         <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-tight text-slate-500 uppercase">
                             <Activity className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                            Pulse
+                            Activity
                         </div>
                         <div className="flex items-center gap-2">
                             <Badge variant="outline" className={`h-5 border ${pulseInfo.className}`}>
