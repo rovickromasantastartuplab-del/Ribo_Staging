@@ -54,6 +54,19 @@
             letter-spacing: 0.5px;
         }
         .card-body { padding: 10px; }
+        .chart-metrics {
+            margin: 0 0 8px 0;
+            font-size: 9px;
+            color: {{ $styleTokens['text_muted'] ?? '#6b7280' }};
+        }
+        .chart-metrics span {
+            display: inline-block;
+            margin-right: 8px;
+            padding: 2px 6px;
+            border: 1px solid {{ $styleTokens['border'] ?? '#e5e7eb' }};
+            border-radius: 4px;
+            background: #ffffff;
+        }
         .takeaway-list { margin: 0; padding-left: 16px; }
         .takeaway-list li { margin-bottom: 5px; }
         .axis {
@@ -69,22 +82,12 @@
             font-size: 9px;
             color: {{ $styleTokens['text_muted'] ?? '#6b7280' }};
         }
-        .bars {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 4px;
-        }
-        .bars td {
-            vertical-align: bottom;
-            width: 3%;
-            height: 48px;
-            padding: 0 1px;
-        }
-        .bar {
-            display: block;
-            width: 100%;
-            background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};
-            min-height: 2px;
+        .legend-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            margin-right: 4px;
         }
         .section { margin-bottom: 10px; page-break-inside: avoid; }
         .section-header {
@@ -189,45 +192,121 @@
 
         @forelse($graphs as $graph)
             @php
+                $graphId = (string) ($graph['id'] ?? '');
                 $series = is_array($graph['series'] ?? null) ? array_values($graph['series']) : [];
                 $max = max(1, (float) max($series ?: [0]));
+                $min = (float) min($series ?: [0]);
                 $count = max(1, count($series));
                 $points = collect($series)->map(function ($value, $idx) use ($count, $max) {
                     $x = $count > 1 ? (($idx / ($count - 1)) * 560.0) : 0.0;
                     $y = 120.0 - (((float) $value / $max) * 100.0);
                     return number_format($x, 2, '.', '') . ',' . number_format($y, 2, '.', '');
                 })->implode(' ');
-                $step = max(1, (int) ceil($count / 30));
-                $barSeries = [];
-                for ($idx = 0; $idx < $count; $idx += $step) {
-                    $barSeries[] = (float) ($series[$idx] ?? 0);
+
+                $avg = $count > 0 ? (float) (array_sum($series) / $count) : 0.0;
+                $latest = $count > 0 ? (float) $series[$count - 1] : 0.0;
+
+                $tickCount = 7;
+                $tickLabels = [];
+                for ($t = 0; $t < $tickCount; $t++) {
+                    $idx = $count > 1 ? (int) round(($t / ($tickCount - 1)) * ($count - 1)) : 0;
+                    $tickLabels[] = $dateLabels[$idx] ?? '';
                 }
+
+                $yBase = 70;
+                $sentimentMin = min(-1.0, $min);
+                $sentimentMax = max(1.0, $max);
             @endphp
             <div class="card">
                 <div class="card-head">{{ $graph['title'] ?? 'Graph' }}</div>
                 <div class="card-body">
-                    <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                        <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                        <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                        <polyline fill="none" stroke="{{ $styleTokens['brand_color'] ?? '#10b77f' }}" stroke-width="2" points="{{ $points }}"></polyline>
-                    </svg>
-                    <table class="bars" aria-hidden="true">
-                        <tr>
-                            @foreach($barSeries as $bar)
+                    <div class="chart-metrics">
+                        <span>Latest: {{ number_format($latest, 1) }}</span>
+                        <span>Avg: {{ number_format($avg, 1) }}</span>
+                        <span>Min: {{ number_format($min, 1) }}</span>
+                        <span>Max: {{ number_format($max, 1) }}</span>
+                    </div>
+
+                    @if($graphId === 'interaction_volume' || $graphId === 'inactivity_gap')
+                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="70" x2="560" y2="70" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
+                            @foreach($series as $idx => $value)
                                 @php
-                                    $barHeight = 2 + (int) round(((float) $bar / $max) * 44);
+                                    $x = $count > 0 ? (($idx / max(1, ($count - 1))) * 548.0) + 6.0 : 6.0;
+                                    $h = ((float) $value / $max) * 96.0;
+                                    $y = 120.0 - $h;
                                 @endphp
-                                <td><span class="bar" style="height: {{ $barHeight }}px;"></span></td>
+                                <rect x="{{ number_format($x, 2, '.', '') }}" y="{{ number_format($y, 2, '.', '') }}" width="8" height="{{ number_format(max(2, $h), 2, '.', '') }}" fill="{{ $styleTokens['brand_color'] ?? '#10b77f' }}"></rect>
                             @endforeach
-                        </tr>
-                    </table>
+                        </svg>
+                        <div class="legend"><span class="legend-dot" style="background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};"></span>Column chart (daily values)</div>
+                    @elseif($graphId === 'response_time')
+                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="70" x2="560" y2="70" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
+                            <polyline fill="none" stroke="{{ $styleTokens['warning'] ?? '#f59e0b' }}" stroke-width="2" points="{{ $points }}"></polyline>
+                            @foreach($series as $idx => $value)
+                                @php
+                                    $x = $count > 1 ? (($idx / ($count - 1)) * 560.0) : 0.0;
+                                    $y = 120.0 - (((float) $value / $max) * 100.0);
+                                @endphp
+                                <circle cx="{{ number_format($x, 2, '.', '') }}" cy="{{ number_format($y, 2, '.', '') }}" r="2.3" fill="{{ $styleTokens['warning'] ?? '#f59e0b' }}"></circle>
+                            @endforeach
+                        </svg>
+                        <div class="legend"><span class="legend-dot" style="background: {{ $styleTokens['warning'] ?? '#f59e0b' }};"></span>Line chart (hours)</div>
+                    @elseif($graphId === 'relationship_strength')
+                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="87" x2="560" y2="87" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
+                            <line x1="0" y1="54" x2="560" y2="54" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
+                            <polyline fill="none" stroke="{{ $styleTokens['brand_color'] ?? '#10b77f' }}" stroke-width="2" points="{{ $points }}"></polyline>
+                            <text x="3" y="87" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Weak</text>
+                            <text x="3" y="54" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Medium</text>
+                            <text x="3" y="22" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Strong</text>
+                        </svg>
+                        <div class="legend"><span class="legend-dot" style="background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};"></span>Ordinal trend line (1=Weak, 2=Medium, 3=Strong)</div>
+                    @elseif($graphId === 'sentiment_trend')
+                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+                            <line x1="0" y1="{{ $yBase }}" x2="560" y2="{{ $yBase }}" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            @foreach($series as $idx => $value)
+                                @php
+                                    $x = $count > 0 ? (($idx / max(1, ($count - 1))) * 548.0) + 6.0 : 6.0;
+                                    $scale = max(abs($sentimentMin), abs($sentimentMax));
+                                    $delta = ((float) $value / max(1, $scale)) * 44.0;
+                                    $y = $delta >= 0 ? ($yBase - $delta) : $yBase;
+                                    $h = max(2, abs($delta));
+                                    $color = ((float) $value) > 0 ? ($styleTokens['brand_color'] ?? '#10b77f') : (((float) $value) < 0 ? ($styleTokens['danger'] ?? '#ef4444') : '#9ca3af');
+                                @endphp
+                                <rect x="{{ number_format($x, 2, '.', '') }}" y="{{ number_format($y, 2, '.', '') }}" width="8" height="{{ number_format($h, 2, '.', '') }}" fill="{{ $color }}"></rect>
+                            @endforeach
+                            <text x="3" y="{{ $yBase - 46 }}" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Positive</text>
+                            <text x="3" y="{{ $yBase + 14 }}" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Negative</text>
+                        </svg>
+                        <div class="legend">
+                            <span class="legend-dot" style="background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};"></span>Positive
+                            <span class="legend-dot" style="background: {{ $styleTokens['danger'] ?? '#ef4444' }}; margin-left: 10px;"></span>Negative
+                            <span class="legend-dot" style="background: #9ca3af; margin-left: 10px;"></span>Neutral
+                        </div>
+                    @else
+                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
+                            <polyline fill="none" stroke="{{ $styleTokens['brand_color'] ?? '#10b77f' }}" stroke-width="2" points="{{ $points }}"></polyline>
+                        </svg>
+                    @endif
+
                     <div class="axis">
-                        <span>{{ $axisStart }}</span>
-                        <span>{{ $axisMid }}</span>
-                        <span>{{ $axisEnd }}</span>
+                        @foreach($tickLabels as $label)
+                            <span>{{ $label }}</span>
+                        @endforeach
                     </div>
                     <div class="legend">
-                        Date axis uses explicit labels (MMM dd); missing days are zero-filled for continuity.
+                        Weekly date ticks (MMM dd); missing days are zero-filled for continuity.
                     </div>
                 </div>
             </div>
