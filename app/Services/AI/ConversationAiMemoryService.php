@@ -8,12 +8,15 @@ use App\Models\AiTriageResult;
 use App\Models\Contact;
 use App\Models\Lead;
 use App\Services\AI\Skills\MemorySkill;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ConversationAiMemoryService
 {
     public function __construct(
         private readonly ConversationAiConfigService $configService,
-        private readonly MemorySkill $memorySkill
+        private readonly MemorySkill $memorySkill,
+        private readonly OpenLoopTaskService $openLoopTaskService
     ) {
     }
 
@@ -51,6 +54,17 @@ class ConversationAiMemoryService
             $generated = $this->generateSummary($entity, $companyId);
             $summary = $generated['summary'];
             $telemetryMetadata = $generated['metadata'];
+        }
+
+        try {
+            $this->openLoopTaskService->reconcileEntity($entity, $companyId);
+        } catch (Throwable $e) {
+            Log::warning('Open-loop reconciliation failed during memory show', [
+                'entity_type' => $entityType,
+                'entity_id' => $entity->id,
+                'created_by' => $companyId,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         $tasks = AiTask::query()

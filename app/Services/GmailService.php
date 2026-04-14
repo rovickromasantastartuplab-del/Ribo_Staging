@@ -8,6 +8,7 @@ use App\Models\EmailMessage;
 use App\Models\Lead;
 use App\Models\Contact;
 use App\Models\GmailAccountActivity;
+use App\Services\AI\OpenLoopTaskService;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Illuminate\Support\Facades\Cache;
@@ -389,6 +390,7 @@ class GmailService
         }
 
         $this->autoLinkThread($emailThread, $companyId);
+        $this->syncOpenLoopTasks($emailThread, $companyId);
     }
 
     /**
@@ -1127,6 +1129,7 @@ class GmailService
 
             // Auto-link the thread to lead/contact if it was just created or emails match
             $this->autoLinkThread($emailThread, $companyId);
+            $this->syncOpenLoopTasks($emailThread, $companyId);
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to record sent message locally', [
@@ -1155,6 +1158,20 @@ class GmailService
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to log Gmail activity', [
                 'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function syncOpenLoopTasks(EmailThread $thread, int $companyId): void
+    {
+        try {
+            app(OpenLoopTaskService::class)->upsertFromThread($thread, $companyId);
+        } catch (\Throwable $e) {
+            Log::warning('Open-loop task sync failed for thread', [
+                'email_thread_id' => $thread->id,
+                'gmail_thread_id' => $thread->gmail_thread_id,
+                'created_by' => $companyId,
+                'error' => $e->getMessage(),
             ]);
         }
     }
