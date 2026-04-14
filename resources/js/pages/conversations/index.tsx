@@ -1787,7 +1787,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                         threadId={selectedThread?.id}
                                                         disabled={submittingReply || selectedThread.status === 'Archive'}
                                                         onInsertDraft={(body) => {
-                                                            replyEditor?.commands.setContent(body);
+                                                            replyEditor?.commands.setContent(body, true);
+                                                            setReplyBody(body);
                                                         }}
                                                     />
                                                 </div>
@@ -1830,7 +1831,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         isOpen={isAiDrawerOpen} 
                         onToggle={() => setIsAiDrawerOpen(!isAiDrawerOpen)} 
                         onInsertDraft={(body: string) => {
-                            replyEditor?.commands.setContent(body);
+                            replyEditor?.commands.setContent(body, true);
+                            setReplyBody(body);
                             setShowCrmModal(false); // Close modal if open
                         }}
                     />
