@@ -9,6 +9,7 @@ use App\Models\AiReportVersion;
 use App\Models\Contact;
 use App\Models\EmailThread;
 use App\Services\AI\Prompts\ReportPromptFactory;
+use App\Services\AI\Reports\ReportBrandStyleResolver;
 use App\Services\AI\Reports\ReportTemplateFormatter;
 use App\Services\AI\ConversationAiReportService;
 use App\Services\AI\ConversationAiTelemetryService;
@@ -26,6 +27,7 @@ class ConversationAiReportController extends Controller
         private readonly ConversationAiRules $rules,
         private readonly ConversationAiTelemetryService $telemetryService,
         private readonly ReportTemplateFormatter $reportTemplateFormatter,
+        private readonly ReportBrandStyleResolver $reportBrandStyleResolver,
         private readonly ConversationAiReportVersionService $reportVersionService
     ) {
     }
@@ -318,6 +320,7 @@ class ConversationAiReportController extends Controller
             'result' => $result,
             'context' => $context,
             'formatted' => $formatted,
+            'styleTokens' => $this->reportBrandStyleResolver->resolve(getBrandColor($reportJob->created_by)),
         ]);
 
         return $pdf->output();

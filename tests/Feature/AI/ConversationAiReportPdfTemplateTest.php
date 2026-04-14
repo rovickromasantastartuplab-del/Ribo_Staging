@@ -16,10 +16,17 @@ it('renders fixed template section headings in order', function () {
         'formatted' => $formatted,
     ])->render();
 
+    expect($html)->toContain('Page 1: Relationship Analytics');
+    expect($html)->toContain('Page 2: Executive Summary');
+    expect($html)->toContain('Interaction volume over time');
+    expect($html)->toContain('Average response time trend');
+    expect($html)->toContain('Client Account Snapshot');
     expect($html)->toContain('Account Status');
     expect($html)->toContain('Executive Insights');
     expect($html)->toContain('Deals &amp; Pipeline Snapshot');
     expect($html)->toContain('Recommended Actions (Next 30-60 Days)');
+
+    expect(strpos($html, 'Page 1: Relationship Analytics'))->toBeLessThan(strpos($html, 'Page 2: Executive Summary'));
 });
 
 it('prints required labels and role-action-priority lines', function () {
@@ -135,5 +142,20 @@ it('prefers normalized status when status_value is invalid enum text', function 
     expect($html)->toContain('Status:');
     expect($html)->toContain('At Risk');
     expect($html)->not->toContain('Status:</span> Stable');
+});
+
+it('prints explicit date labels on graph axis', function () {
+    $formatter = app(ReportTemplateFormatter::class);
+
+    $formatted = $formatter->format([], ['crm' => []], 'overall');
+
+    $html = view('reports.ai_summary_pdf', [
+        'job' => (object) ['id' => 204, 'scope' => 'overall', 'completed_at' => now()],
+        'result' => [],
+        'context' => [],
+        'formatted' => $formatted,
+    ])->render();
+
+    expect($html)->toMatch('/\b[A-Z][a-z]{2}\s\d{2}\b/');
 });
 

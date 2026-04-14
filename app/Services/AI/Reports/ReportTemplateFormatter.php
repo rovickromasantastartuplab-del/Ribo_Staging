@@ -4,6 +4,11 @@ namespace App\Services\AI\Reports;
 
 class ReportTemplateFormatter
 {
+    public function __construct(
+        private readonly ReportAnalyticsFormatter $analyticsFormatter
+    ) {
+    }
+
     public function format(array $result, array $context, string $scope): array
     {
         $crm = is_array($context['crm'] ?? null) ? $context['crm'] : [];
@@ -36,8 +41,14 @@ class ReportTemplateFormatter
             $aiOpportunities = $this->extractOpportunityBullets($scavengePool);
         }
 
+        $analytics = $this->analyticsFormatter->build([
+            'timeline' => $this->extractTimelineRows($activityStreams),
+            'events' => $this->extractEventMarkers($result, $context),
+        ]);
+
         return [
             'sections' => [
+                ['title' => 'Client Account Snapshot'],
                 ['title' => 'Account Status'],
                 ['title' => 'Executive Insights'],
                 ['title' => 'Key Relationships'],
@@ -47,6 +58,11 @@ class ReportTemplateFormatter
                 ['title' => 'Growth Opportunities'],
                 ['title' => 'Recommended Actions (Next 30-60 Days)'],
             ],
+            'client_account_snapshot' => [
+                'account_name' => (string) ($crm['account']['name'] ?? 'Unassigned Account'),
+                'scope' => $scope,
+            ],
+            'analytics' => $analytics,
             'account_status' => [
                 'status' => $this->enum(
                     $result['status_value'] ?? null,
@@ -98,6 +114,7 @@ class ReportTemplateFormatter
             'key_risks' => $aiRisks,
             'growth_opportunities' => $aiOpportunities,
             'additional_context' => $this->normalizeStringArray($result['additional_context'] ?? []),
+            'evidence_trace' => $this->buildEvidenceTrace($activityStreams, $result),
             'scope' => $scope,
         ];
     }
@@ -178,6 +195,7 @@ class ReportTemplateFormatter
                 $rows[] = [
                     'name' => $this->extractCleanName((string) ($item['name'] ?? '')),
                     'role' => $role,
+                    'type' => $this->inferRelationshipType((string) ($item['type'] ?? ''), $role),
                     'strength' => $this->enum($strength, ['Strong', 'Medium', 'Weak'], 'Medium'),
                 ];
                 continue;
@@ -191,6 +209,7 @@ class ReportTemplateFormatter
             $rows[] = [
                 'name' => $this->extractCleanName($line),
                 'role' => 'Stakeholder',
+                'type' => 'Stakeholder',
                 'strength' => $this->inferRelationshipStrength($activityCount),
             ];
         }
@@ -404,5 +423,203 @@ class ReportTemplateFormatter
         $value = trim((string) preg_replace('/[.,;:\-–—\s]+$/u', '', $value));
 
         return $value !== '' ? $value : 'Not available';
+    }
+
+    private function inferRelationshipType(string $rawType, string $role): string
+    {
+        $rawType = trim($rawType);
+        if ($rawType !== '') {
+            return $rawType;
+        }
+
+        $role = strtolower($role);
+        if ((bool) preg_match('/ceo|cto|cfo|chief|director|head|vp|president|owner|founder/', $role)) {
+            return 'Decision-maker';
+        }
+        if ((bool) preg_match('/support|ops|admin|legal|procurement|finance/', $role)) {
+            return 'Influencer';
+        }
+
+        return 'Stakeholder';
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractTimelineRows(array $activityStreams): array
+    {
+        $lead = is_array($activityStreams['lead'] ?? null) ? $activityStreams['lead'] : [];
+        $opportunity = is_array($activityStreams['opportunity'] ?? null) ? $activityStreams['opportunity'] : [];
+        $items = array_merge($lead, $opportunity);
+
+        if (count($items) === 0) {
+            return [];
+        }
+
+        $daily = [];
+        $timestamps = [];
+
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $createdAtRaw = trim((string) ($item['created_at'] ?? ''));
+            if ($createdAtRaw === '') {
+                continue;
+            }
+
+            $ts = strtotime($createdAtRaw);
+            if ($ts === false) {
+                continue;
+            }
+
+            $date = date('Y-m-d', $ts);
+            if (!isset($daily[$date])) {
+                $daily[$date] = [
+                    'date' => $date,
+                    'emails' => 0,
+                    'replies' => 0,
+                    'meetings' => 0,
+                    'response_sum' => 0.0,
+                    'response_count' => 0,
+                    'negative' => 0,
+                    'positive' => 0,
+                ];
+            }
+
+            $type = strtolower(trim((string) ($item['activity_type'] ?? '')));
+            $title = strtolower(trim((string) ($item['title'] ?? '')));
+            $description = strtolower(trim((string) ($item['description'] ?? '')));
+            $text = trim($title . ' ' . $description);
+
+            if ($type === 'email' || $type === 'message' || str_contains($title, 'email')) {
+                $daily[$date]['emails']++;
+            }
+            if (str_contains($title, 'email from') || str_contains($title, 'received message')) {
+                $daily[$date]['replies']++;
+            }
+            if ((bool) preg_match('/meeting|demo|call|sync|review|workshop/', $text)) {
+                $daily[$date]['meetings']++;
+            }
+            if ((bool) preg_match('/risk|block|delay|stalled|churn|issue|escalat|friction|cancel/', $text)) {
+                $daily[$date]['negative']++;
+            }
+            if ((bool) preg_match('/win|progress|momentum|success|expansion|upsell|alignment|positive/', $text)) {
+                $daily[$date]['positive']++;
+            }
+
+            $timestamps[] = ['date' => $date, 'timestamp' => $ts];
+        }
+
+        usort($timestamps, static fn (array $a, array $b): int => $a['timestamp'] <=> $b['timestamp']);
+        for ($i = 1; $i < count($timestamps); $i++) {
+            $deltaHours = max(0.0, min(72.0, ($timestamps[$i]['timestamp'] - $timestamps[$i - 1]['timestamp']) / 3600));
+            $date = $timestamps[$i]['date'];
+            $daily[$date]['response_sum'] += $deltaHours;
+            $daily[$date]['response_count']++;
+        }
+
+        ksort($daily);
+        $lastActivityDate = null;
+        $rows = [];
+        foreach ($daily as $date => $row) {
+            $volume = (int) $row['emails'] + (int) $row['replies'] + (int) $row['meetings'];
+            $strength = $volume >= 4 ? 'Strong' : ($volume >= 2 ? 'Medium' : 'Weak');
+            $sentiment = $row['positive'] > $row['negative']
+                ? 'Positive'
+                : ($row['negative'] > $row['positive'] ? 'Negative' : 'Neutral');
+
+            $inactivityDays = 0;
+            if ($lastActivityDate !== null) {
+                $inactivityDays = max(0, (int) floor((strtotime($date) - strtotime($lastActivityDate)) / 86400));
+            }
+            $lastActivityDate = $date;
+
+            $rows[] = [
+                'date' => $date,
+                'emails' => (int) $row['emails'],
+                'replies' => (int) $row['replies'],
+                'meetings' => (int) $row['meetings'],
+                'response_hours' => $row['response_count'] > 0
+                    ? round((float) $row['response_sum'] / (int) $row['response_count'], 2)
+                    : 0.0,
+                'strength' => $strength,
+                'inactivity_days' => $inactivityDays,
+                'sentiment' => $sentiment,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function extractEventMarkers(array $result, array $context): array
+    {
+        $events = [];
+
+        $renewal = trim((string) ($context['crm']['financials']['renewal_date'] ?? ''));
+        if ($renewal !== '') {
+            $events[] = ['label' => 'Renewal Milestone', 'date' => $renewal];
+        }
+
+        $opps = is_array($context['crm']['opportunities'] ?? null) ? $context['crm']['opportunities'] : [];
+        if (isset($opps[0]['close_date']) && trim((string) $opps[0]['close_date']) !== '') {
+            $events[] = ['label' => 'Top Opportunity Close Date', 'date' => (string) $opps[0]['close_date']];
+        }
+
+        $riskSignalDate = trim((string) ($result['risk_signal_date'] ?? ''));
+        if ($riskSignalDate !== '') {
+            $events[] = ['label' => 'Risk Signal', 'date' => $riskSignalDate];
+        }
+
+        return $events;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function buildEvidenceTrace(array $activityStreams, array $result): array
+    {
+        $historical = is_array($activityStreams['historical_summary']['combined'] ?? null)
+            ? $activityStreams['historical_summary']['combined']
+            : [];
+
+        $riskEvents = is_array($historical['significant_risk_events'] ?? null)
+            ? $historical['significant_risk_events']
+            : [];
+        $positiveEvents = is_array($historical['significant_positive_events'] ?? null)
+            ? $historical['significant_positive_events']
+            : [];
+
+        $lines = [];
+
+        foreach (array_slice($riskEvents, 0, 2) as $line) {
+            $value = trim((string) $line);
+            if ($value !== '') {
+                $lines[] = "Risk signal: {$value}";
+            }
+        }
+        foreach (array_slice($positiveEvents, 0, 2) as $line) {
+            $value = trim((string) $line);
+            if ($value !== '') {
+                $lines[] = "Positive signal: {$value}";
+            }
+        }
+
+        if (count($lines) === 0) {
+            $summary = trim((string) ($result['summary'] ?? ''));
+            if ($summary !== '') {
+                $lines[] = "Primary summary signal: {$summary}";
+            }
+        }
+
+        if (count($lines) === 0) {
+            $lines[] = 'Not available: no evidence trace signals were detected in current scoped history.';
+        }
+
+        return array_slice($lines, 0, 4);
     }
 }
