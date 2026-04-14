@@ -175,6 +175,39 @@ it('does not reopen completed task for weak signal', function () {
     expect($task->is_completed)->toBeTrue();
 });
 
+it('does not reopen a completed task when strong evidence is older than completion', function () {
+    [$company, $contact, $thread] = createOpenLoopFixture();
+
+    $task = AiTask::query()->create([
+        'created_by' => $company->id,
+        'contact_id' => $contact->id,
+        'email_thread_id' => $thread->id,
+        'title' => 'send proposal by friday',
+        'is_completed' => true,
+        'completed_at' => now(),
+        'metadata_json' => ['loop_key' => 'send proposal by friday'],
+    ]);
+
+    EmailMessage::query()->create([
+        'email_thread_id' => $thread->id,
+        'gmail_message_id' => 'msg-older-strong',
+        'from_email' => 'contact@example.test',
+        'from_name' => 'Contact',
+        'to_emails' => ['owner@example.test'],
+        'subject' => 'Old reminder',
+        'body_preview' => 'Please send proposal by Friday.',
+        'body_html' => 'Please send proposal by Friday.',
+        'sent_at' => now()->subDay(),
+        'gmail_labels' => ['INBOX'],
+        'created_by' => $company->id,
+    ]);
+
+    app(OpenLoopTaskService::class)->upsertFromThread($thread, $company->id);
+
+    $task->refresh();
+    expect($task->is_completed)->toBeTrue();
+});
+
 it('reconciles missing tasks during memory show', function () {
     [$company, $contact, $thread] = createOpenLoopFixture();
 

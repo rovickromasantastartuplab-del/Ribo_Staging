@@ -6,6 +6,7 @@ use App\Models\AiTask;
 use App\Models\Contact;
 use App\Models\EmailThread;
 use App\Models\Lead;
+use Carbon\Carbon;
 
 class OpenLoopTaskService
 {
@@ -88,7 +89,11 @@ class OpenLoopTaskService
             'metadata_json' => $metadata,
         ];
 
-        if ($existingTask->is_completed && (string) ($candidate['confidence'] ?? 'weak') === 'strong') {
+        if (
+            $existingTask->is_completed
+            && (string) ($candidate['confidence'] ?? 'weak') === 'strong'
+            && $this->canReopenTask($existingTask, (string) ($candidate['detected_at'] ?? ''))
+        ) {
             $metadata['reopened_count'] = (int) ($metadata['reopened_count'] ?? 0) + 1;
             $metadata['last_reopened_at'] = now()->toIso8601String();
 
@@ -145,5 +150,20 @@ class OpenLoopTaskService
         }
 
         return $metadata;
+    }
+
+    private function canReopenTask(AiTask $task, string $detectedAt): bool
+    {
+        if (!$task->completed_at) {
+            return true;
+        }
+
+        try {
+            $detected = Carbon::parse($detectedAt);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $detected->isAfter($task->completed_at);
     }
 }
