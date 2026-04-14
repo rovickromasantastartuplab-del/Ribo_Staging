@@ -50,22 +50,12 @@
     <div class="section">
         <div class="section-header"><h2>Account Status</h2></div>
         <ul class="list">
-            @if(($accountStatus['status'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Status:</span> <span class="status-pill">{{ $accountStatus['status'] }}</span></li>
-            @endif
-            @if(($accountStatus['health'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Health Score:</span> {{ $accountStatus['health'] }} — {{ $accountStatus['health_reason'] ?? 'Not available' }}</li>
-            @endif
+            <li><span class="label">Status:</span> {{ $accountStatus['status'] ?? 'Not available' }}</li>
+            <li><span class="label">Health Score:</span> {{ $accountStatus['health'] ?? 'Not available' }} - {{ $accountStatus['health_reason'] ?? 'Not available' }}</li>
             <li>
-                @if(($accountStatus['arr'] ?? 'Not available') !== 'Not available')
-                    <span class="label">ARR:</span> {{ $accountStatus['arr'] }}
-                @endif
-                @if(($accountStatus['mrr'] ?? 'Not available') !== 'Not available')
-                    | <span class="label">MRR:</span> {{ $accountStatus['mrr'] }}
-                @endif
-                @if(($accountStatus['renewal'] ?? 'Not available') !== 'Not available')
-                    | <span class="label">Renewal:</span> {{ $accountStatus['renewal'] }}
-                @endif
+                <span class="label">ARR:</span> {{ $accountStatus['arr'] ?? 'Not available' }} |
+                <span class="label">MRR:</span> {{ $accountStatus['mrr'] ?? 'Not available' }} |
+                <span class="label">Renewal:</span> {{ $accountStatus['renewal'] ?? 'Not available' }}
             </li>
         </ul>
     </div>
@@ -102,60 +92,35 @@
                     @endforeach
                 </tbody>
             </table>
-            @if(($relationshipGaps ?? 'Not available') !== 'Not available')
-                <p class="gaps"><span class="label">Coverage Insights:</span> {{ $relationshipGaps }}</p>
-            @endif
         @else
             <ul class="list">
                 <li>No relationship data available for this report context.</li>
             </ul>
         @endif
+        <p class="gaps"><span class="label">Gaps:</span> {{ $relationshipGaps ?? 'Not available' }}</p>
     </div>
 
     <div class="section">
         <div class="section-header"><h2>Deals &amp; Pipeline Snapshot</h2></div>
         <ul class="list">
-            @if(($deals['active_deals'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Active Deals:</span> {{ $deals['active_deals'] }}</li>
-            @endif
-            @if(($deals['top_deal'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Top Deal:</span> {{ $deals['top_deal'] }}</li>
-            @endif
-            @if(($deals['expansion_potential'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Expansion Potential:</span> {{ $deals['expansion_potential'] }}</li>
-            @endif
-            @php
-                $notableWon = ($deals['notable_won'] ?? 'Not available') !== 'Not available';
-                $notableLost = ($deals['notable_lost'] ?? 'Not available') !== 'Not available';
-                $notableStalled = ($deals['notable_stalled'] ?? 'Not available') !== 'Not available';
-            @endphp
-            @if($notableWon || $notableLost || $notableStalled)
-                <li><span class="label">Notable Past Deals:</span>
-                    @if($notableWon) Won: {{ $deals['notable_won'] }} @endif
-                    @if($notableWon && ($notableLost || $notableStalled)) | @endif
-                    @if($notableLost) Lost: {{ $deals['notable_lost'] }} @endif
-                    @if($notableLost && $notableStalled) | @endif
-                    @if($notableStalled) Stalled: {{ $deals['notable_stalled'] }} @endif
-                </li>
-            @endif
+            <li><span class="label">Active Deals:</span> {{ $deals['active_deals'] ?? 'Not available' }}</li>
+            <li><span class="label">Top Deal:</span> {{ $deals['top_deal'] ?? 'Not available' }}</li>
+            <li><span class="label">Expansion Potential:</span> {{ $deals['expansion_potential'] ?? 'Not available' }}</li>
+            <li><span class="label">Notable Past Deals:</span>
+                Won: {{ $deals['notable_won'] ?? 'Not available' }} |
+                Lost: {{ $deals['notable_lost'] ?? 'Not available' }} |
+                Stalled: {{ $deals['notable_stalled'] ?? 'Not available' }}
+            </li>
         </ul>
     </div>
 
     <div class="section">
         <div class="section-header"><h2>Engagement &amp; Health Signals</h2></div>
         <ul class="list">
-            @if(($healthSignals['usage'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Usage:</span> {{ $healthSignals['usage'] }}</li>
-            @endif
-            @if(($healthSignals['support'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Support:</span> {{ $healthSignals['support'] }}</li>
-            @endif
-            @if(($healthSignals['sentiment'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Sentiment:</span> {{ $healthSignals['sentiment'] }}</li>
-            @endif
-            @if(($healthSignals['engagement_pattern'] ?? 'Not available') !== 'Not available')
-                <li><span class="label">Engagement Pattern:</span> {{ $healthSignals['engagement_pattern'] }}</li>
-            @endif
+            <li><span class="label">Usage:</span> {{ $healthSignals['usage'] ?? 'Not available' }}</li>
+            <li><span class="label">Support:</span> {{ $healthSignals['support'] ?? 'Not available' }}</li>
+            <li><span class="label">Sentiment:</span> {{ $healthSignals['sentiment'] ?? 'Not available' }}</li>
+            <li><span class="label">Engagement Pattern:</span> {{ $healthSignals['engagement_pattern'] ?? 'Not available' }}</li>
         </ul>
     </div>
 
@@ -204,4 +169,5 @@
     @endif
 </body>
 </html>
+
 
