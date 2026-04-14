@@ -12,7 +12,7 @@ class TriageSkill
     private const MODULE_PREFIXES = ['Tasks', 'Quotes', 'Meetings', 'Contacts', 'Leads', 'Invoices'];
 
     private const MODULE_KEYWORDS = [
-        'Tasks' => ['task', 'follow up', 'remind', 'assign', 'review', 'investigate', 'research', 'fix', 'bug', 'issue'],
+        'Tasks' => ['task', 'follow up', 'remind', 'assign', 'review', 'investigate', 'research', 'fix', 'bug', 'issue', 'wait', 'hold', 'archive', 'monitor', 'respond'],
         'Quotes' => ['quote', 'proposal', 'pricing', 'price', 'cost', 'estimate', 'send proposal'],
         'Meetings' => ['meeting', 'demo', 'call', 'sync', 'walkthrough', 'propose', 'schedule', 'book'],
         'Contacts' => ['contact', 'stakeholder', 'participant', 'member', 'owner', 'profile'],

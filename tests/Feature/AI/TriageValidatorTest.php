@@ -148,5 +148,34 @@ class TriageValidatorTest extends TestCase
         $this->assertEquals('Meetings: Propose a demo walkthrough.', $response['result']['strategic_action_json']['recommendation']);
         $this->assertEquals('urgent', $response['result']['priority']);
     }
-}
 
+    public function test_it_accepts_valid_tasks_wait_recommendations_without_fallback(): void
+    {
+        $mockClient = Mockery::mock(OpenAiConversationClient::class);
+        $mockClient->shouldReceive('analyzeTriage')->andReturn([
+            'intent' => 'follow_up',
+            'intent_confidence' => 88,
+            'priority' => 'low',
+            'success_probability' => 18,
+            'behavioral_pulse' => 'stable',
+            'summary' => 'Waiting for explicit inbound confirmation.',
+            'thread_state' => 'reopened',
+            'relationship_health' => 'neutral',
+            'actionability' => 'monitor',
+            'strategic_action_json' => [
+                'goal' => 'Wait for explicit revival',
+                'reason' => 'Only inbound customer/prospect confirmation should revive this thread.',
+                'recommendation' => 'Tasks: Wait for explicit inbound customer/prospect confirmation before treating this thread as revived.',
+            ],
+        ]);
+
+        $skill = new TriageSkill($this->mockPromptFactory, $mockClient);
+        $response = $skill->analyze($this->mockThread, ['enabled' => true]);
+
+        $this->assertFalse($response['metadata']['fallback_applied']);
+        $this->assertSame(
+            'Tasks: Wait for explicit inbound customer/prospect confirmation before treating this thread as revived.',
+            $response['result']['strategic_action_json']['recommendation']
+        );
+    }
+}
