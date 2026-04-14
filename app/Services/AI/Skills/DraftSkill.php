@@ -9,6 +9,23 @@ use App\Services\AI\Providers\OpenAiConversationClient;
 
 class DraftSkill
 {
+    private const OPERATOR_ONLY_PATTERNS = [
+        'why is this thread closed',
+        'why this thread is closed',
+        'why is this thread',
+        'why thread is',
+        'explain this thread',
+        'explain why',
+        'what is the thread state',
+        'what is this thread state',
+        'why closed',
+        'is this closed',
+        'why did ai',
+        'what does triage mean',
+        'what is actionability',
+        'summarize for me',
+    ];
+
     public function __construct(
         private readonly DraftPromptFactory $promptFactory,
         private readonly OpenAiConversationClient $provider
@@ -77,6 +94,12 @@ class DraftSkill
 
     private function applyTriageGuards(?AiTriageResult $triage, string $instruction, array &$metadata): ?array
     {
+        if ($this->isOperatorOnlyInstruction($instruction)) {
+            $metadata['fallback_applied'] = true;
+            $metadata['fallback_reason']  = 'draft_blocked_internal_question';
+            return ['result' => ['subject' => '', 'body' => ''], 'metadata' => $metadata];
+        }
+
         if ($triage === null) {
             return null;
         }
@@ -92,6 +115,37 @@ class DraftSkill
         }
 
         return null;
+    }
+
+    private function isOperatorOnlyInstruction(string $instruction): bool
+    {
+        $normalized = mb_strtolower(trim($instruction));
+        if ($normalized === '') {
+            return false;
+        }
+
+        foreach (self::OPERATOR_ONLY_PATTERNS as $pattern) {
+            if (str_contains($normalized, $pattern)) {
+                return true;
+            }
+        }
+
+        // Generic "why..." question that references system state/AI behavior instead of customer reply intent.
+        $isWhyQuestion = str_starts_with($normalized, 'why') || str_contains($normalized, ' why ');
+        if (
+            $isWhyQuestion
+            && (
+                str_contains($normalized, 'thread')
+                || str_contains($normalized, 'closed')
+                || str_contains($normalized, 'triage')
+                || str_contains($normalized, 'ai')
+                || str_contains($normalized, 'state')
+            )
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     private function validateParse(array $data, array &$metadata): array
