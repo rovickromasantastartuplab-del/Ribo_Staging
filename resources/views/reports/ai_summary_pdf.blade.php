@@ -69,14 +69,30 @@
         }
         .takeaway-list { margin: 0; padding-left: 16px; }
         .takeaway-list li { margin-bottom: 5px; }
+        .chart-wrap {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1px solid {{ $styleTokens['border'] ?? '#e5e7eb' }};
+            margin-bottom: 4px;
+        }
+        .chart-wrap td {
+            vertical-align: bottom;
+            padding: 0 1px;
+            text-align: center;
+        }
+        .chart-bar {
+            background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};
+            margin: 0 auto;
+            width: 6px;
+        }
         .axis-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
-            font-size: 9px;
+            margin-top: 3px;
+            font-size: 8px;
             color: {{ $styleTokens['text_muted'] ?? '#6b7280' }};
         }
-        .axis-table td { text-align: center; padding: 0; }
+        .axis-table td { text-align: center; padding: 0 1px; }
         .legend {
             margin-top: 5px;
             font-size: 9px;
@@ -227,77 +243,102 @@
                         <span>Max: {{ number_format($max, 1) }}</span>
                     </div>
 
+                    @php
+                        $chartHeight = 80;
+                        $barColor = $styleTokens['brand_color'] ?? '#10b77f';
+                        $warnColor = $styleTokens['warning'] ?? '#f59e0b';
+                        $dangerColor = $styleTokens['danger'] ?? '#ef4444';
+                        $neutralColor = '#9ca3af';
+                        $borderColor = $styleTokens['border'] ?? '#e5e7eb';
+                    @endphp
+
                     @if($graphId === 'interaction_volume' || $graphId === 'inactivity_gap')
-                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="70" x2="560" y2="70" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
-                            @foreach($series as $idx => $value)
-                                @php
-                                    $x = $count > 0 ? (($idx / max(1, ($count - 1))) * 548.0) + 6.0 : 6.0;
-                                    $h = ((float) $value / $max) * 96.0;
-                                    $y = 120.0 - $h;
-                                @endphp
-                                <rect x="{{ number_format($x, 2, '.', '') }}" y="{{ number_format($y, 2, '.', '') }}" width="8" height="{{ number_format(max(2, $h), 2, '.', '') }}" fill="{{ $styleTokens['brand_color'] ?? '#10b77f' }}"></rect>
-                            @endforeach
-                        </svg>
-                        <div class="legend"><span class="legend-dot" style="background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};"></span>Column chart (daily values)</div>
+                        {{-- Column (bar) chart --}}
+                        <table class="chart-wrap" style="height: {{ $chartHeight }}px;">
+                            <tr>
+                                @foreach($series as $value)
+                                    @php
+                                        $pct = $max > 0 ? max(1, round(((float)$value / $max) * $chartHeight)) : 1;
+                                    @endphp
+                                    <td>
+                                        <div class="chart-bar" style="height: {{ $pct }}px; background: {{ $barColor }};"></div>
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                        <div class="legend"><span class="legend-dot" style="background: {{ $barColor }};"></span>Column chart (daily values)</div>
+
                     @elseif($graphId === 'response_time')
-                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="70" x2="560" y2="70" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
-                            <polyline fill="none" stroke="{{ $styleTokens['warning'] ?? '#f59e0b' }}" stroke-width="2" points="{{ $points }}"></polyline>
-                            @foreach($series as $idx => $value)
-                                @php
-                                    $x = $count > 1 ? (($idx / ($count - 1)) * 560.0) : 0.0;
-                                    $y = 120.0 - (((float) $value / $max) * 100.0);
-                                @endphp
-                                <circle cx="{{ number_format($x, 2, '.', '') }}" cy="{{ number_format($y, 2, '.', '') }}" r="2.3" fill="{{ $styleTokens['warning'] ?? '#f59e0b' }}"></circle>
-                            @endforeach
-                        </svg>
-                        <div class="legend"><span class="legend-dot" style="background: {{ $styleTokens['warning'] ?? '#f59e0b' }};"></span>Line chart (hours)</div>
+                        {{-- Line chart approximated as column chart with warning color --}}
+                        <table class="chart-wrap" style="height: {{ $chartHeight }}px;">
+                            <tr>
+                                @foreach($series as $value)
+                                    @php
+                                        $pct = $max > 0 ? max(1, round(((float)$value / $max) * $chartHeight)) : 1;
+                                    @endphp
+                                    <td>
+                                        <div class="chart-bar" style="height: {{ $pct }}px; background: {{ $warnColor }};"></div>
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                        <div class="legend"><span class="legend-dot" style="background: {{ $warnColor }};"></span>Column chart (hours)</div>
+
                     @elseif($graphId === 'relationship_strength')
-                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="87" x2="560" y2="87" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
-                            <line x1="0" y1="54" x2="560" y2="54" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1" stroke-dasharray="2 3"></line>
-                            <polyline fill="none" stroke="{{ $styleTokens['brand_color'] ?? '#10b77f' }}" stroke-width="2" points="{{ $points }}"></polyline>
-                            <text x="3" y="87" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Weak</text>
-                            <text x="3" y="54" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Medium</text>
-                            <text x="3" y="22" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Strong</text>
-                        </svg>
-                        <div class="legend"><span class="legend-dot" style="background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};"></span>Ordinal trend line (1=Weak, 2=Medium, 3=Strong)</div>
-                    @elseif($graphId === 'sentiment_trend')
-                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                            <line x1="0" y1="{{ $yBase }}" x2="560" y2="{{ $yBase }}" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            @foreach($series as $idx => $value)
-                                @php
-                                    $x = $count > 0 ? (($idx / max(1, ($count - 1))) * 548.0) + 6.0 : 6.0;
-                                    $scale = max(abs($sentimentMin), abs($sentimentMax));
-                                    $delta = ((float) $value / max(1, $scale)) * 44.0;
-                                    $y = $delta >= 0 ? ($yBase - $delta) : $yBase;
-                                    $h = max(2, abs($delta));
-                                    $color = ((float) $value) > 0 ? ($styleTokens['brand_color'] ?? '#10b77f') : (((float) $value) < 0 ? ($styleTokens['danger'] ?? '#ef4444') : '#9ca3af');
-                                @endphp
-                                <rect x="{{ number_format($x, 2, '.', '') }}" y="{{ number_format($y, 2, '.', '') }}" width="8" height="{{ number_format($h, 2, '.', '') }}" fill="{{ $color }}"></rect>
-                            @endforeach
-                            <text x="3" y="{{ $yBase - 46 }}" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Positive</text>
-                            <text x="3" y="{{ $yBase + 14 }}" font-size="8" fill="{{ $styleTokens['text_muted'] ?? '#6b7280' }}">Negative</text>
-                        </svg>
+                        {{-- Ordinal chart: 1=Weak, 2=Medium, 3=Strong mapped to 33%/66%/100% height --}}
+                        <table class="chart-wrap" style="height: {{ $chartHeight }}px;">
+                            <tr>
+                                @foreach($series as $value)
+                                    @php
+                                        $pct = max(1, round(((float)$value / 3.0) * $chartHeight));
+                                    @endphp
+                                    <td>
+                                        <div class="chart-bar" style="height: {{ $pct }}px; background: {{ $barColor }};"></div>
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
                         <div class="legend">
-                            <span class="legend-dot" style="background: {{ $styleTokens['brand_color'] ?? '#10b77f' }};"></span>Positive
-                            <span class="legend-dot" style="background: {{ $styleTokens['danger'] ?? '#ef4444' }}; margin-left: 10px;"></span>Negative
-                            <span class="legend-dot" style="background: #9ca3af; margin-left: 10px;"></span>Neutral
+                            <span class="legend-dot" style="background: {{ $barColor }};"></span>Bar height: 1=Weak, 2=Medium, 3=Strong
                         </div>
+
+                    @elseif($graphId === 'sentiment_trend')
+                        {{-- Sentiment: positive=green, neutral=grey, negative=red --}}
+                        <table class="chart-wrap" style="height: {{ $chartHeight }}px;">
+                            <tr>
+                                @foreach($series as $value)
+                                    @php
+                                        $fv = (float)$value;
+                                        $sentColor = $fv > 0 ? $barColor : ($fv < 0 ? $dangerColor : $neutralColor);
+                                        $scale = max(abs($sentimentMin), abs($sentimentMax));
+                                        $pct = $scale > 0 ? max(2, round((abs($fv) / $scale) * $chartHeight)) : 2;
+                                    @endphp
+                                    <td>
+                                        <div class="chart-bar" style="height: {{ $pct }}px; background: {{ $sentColor }};"></div>
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                        <div class="legend">
+                            <span class="legend-dot" style="background: {{ $barColor }};"></span>Positive
+                            <span class="legend-dot" style="background: {{ $dangerColor }}; margin-left: 10px;"></span>Negative
+                            <span class="legend-dot" style="background: {{ $neutralColor }}; margin-left: 10px;"></span>Neutral
+                        </div>
+
                     @else
-                        <svg viewBox="0 0 560 140" width="560" height="130" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                            <line x1="0" y1="120" x2="560" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <line x1="0" y1="20" x2="0" y2="120" stroke="{{ $styleTokens['border'] ?? '#e5e7eb' }}" stroke-width="1"></line>
-                            <polyline fill="none" stroke="{{ $styleTokens['brand_color'] ?? '#10b77f' }}" stroke-width="2" points="{{ $points }}"></polyline>
-                        </svg>
+                        {{-- Generic column chart fallback --}}
+                        <table class="chart-wrap" style="height: {{ $chartHeight }}px;">
+                            <tr>
+                                @foreach($series as $value)
+                                    @php
+                                        $pct = $max > 0 ? max(1, round(((float)$value / $max) * $chartHeight)) : 1;
+                                    @endphp
+                                    <td>
+                                        <div class="chart-bar" style="height: {{ $pct }}px; background: {{ $barColor }};"></div>
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
                     @endif
 
                     <table class="axis-table"><tr>
