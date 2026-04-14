@@ -133,10 +133,13 @@ class DraftValidatorTest extends TestCase
         $this->assertEquals('draft_blocked_do_not_pursue', $response['metadata']['fallback_reason']);
     }
 
-    public function test_it_blocks_draft_for_closed_lost_without_recovery_instruction(): void
+    public function test_it_allows_draft_for_closed_lost_without_recovery_instruction(): void
     {
         $mockClient = Mockery::mock(OpenAiConversationClient::class);
-        $mockClient->shouldNotReceive('generateDraft');
+        $mockClient->shouldReceive('generateDraft')->andReturn([
+            'subject' => 'Checking in respectfully',
+            'body'    => '<p>Thank you for the update. If priorities change, we are here to help.</p>',
+        ]);
 
         $triage = new AiTriageResult([
             'thread_state'        => 'closed_lost',
@@ -148,8 +151,8 @@ class DraftValidatorTest extends TestCase
         $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
         $response = $skill->generate($this->mockThread, 'Send a standard update', 'professional', [], $triage);
 
-        $this->assertTrue($response['metadata']['fallback_applied']);
-        $this->assertEquals('draft_blocked_terminal_state', $response['metadata']['fallback_reason']);
+        $this->assertFalse($response['metadata']['fallback_applied']);
+        $this->assertEquals('Checking in respectfully', $response['result']['subject']);
     }
 
     public function test_it_allows_draft_for_closed_lost_with_recovery_instruction(): void
@@ -242,8 +245,8 @@ class DraftValidatorTest extends TestCase
 
         $skill    = new DraftSkill($this->mockPromptFactory, $mockClient);
 
-        // Note: closed_lost without recovery keyword is hard-blocked before AI call (draft_blocked_terminal_state)
-        // So to test fallback body content, we use a state that triggers fallback AFTER the AI call.
+        // Closed-lost is no longer hard-blocked before AI call.
+        // To test fallback body content deterministically, we use a state that triggers fallback AFTER the AI call.
         // Test with misaligned + scheduling body that triggers misaligned_scheduling_blocked fallback:
         $mockClient2 = Mockery::mock(OpenAiConversationClient::class);
         $mockClient2->shouldReceive('generateDraft')->andReturn([

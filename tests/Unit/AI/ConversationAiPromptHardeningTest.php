@@ -79,7 +79,7 @@ class ConversationAiPromptHardeningTest extends TestCase
             $prompt
         );
         $this->assertStringContainsString(
-            'blocked closed_lost draft',
+            'closed_lost constrained draft',
             $prompt
         );
         $this->assertStringContainsString(

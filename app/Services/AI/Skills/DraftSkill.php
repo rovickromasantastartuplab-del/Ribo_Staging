@@ -9,19 +9,6 @@ use App\Services\AI\Providers\OpenAiConversationClient;
 
 class DraftSkill
 {
-    private const RECOVERY_KEYWORDS = [
-        'recovery',
-        'win-back',
-        'win back',
-        'closing',
-        'farewell',
-        'reopen',
-        'revival',
-        're-engage',
-        'reengage',
-        'reactivate',
-    ];
-
     public function __construct(
         private readonly DraftPromptFactory $promptFactory,
         private readonly OpenAiConversationClient $provider
@@ -102,18 +89,6 @@ class DraftSkill
             $metadata['fallback_applied'] = true;
             $metadata['fallback_reason']  = 'draft_blocked_do_not_pursue';
             return ['result' => ['subject' => '', 'body' => ''], 'metadata' => $metadata];
-        }
-
-        // Hard block: closed_lost without explicit recovery intent
-        if ($threadState === 'closed_lost') {
-            $isRecovery = collect(self::RECOVERY_KEYWORDS)
-                ->contains(fn($kw) => stripos($instruction, $kw) !== false);
-
-            if (!$isRecovery) {
-                $metadata['fallback_applied'] = true;
-                $metadata['fallback_reason']  = 'draft_blocked_terminal_state';
-                return ['result' => ['subject' => '', 'body' => ''], 'metadata' => $metadata];
-            }
         }
 
         return null;

@@ -56,9 +56,9 @@ State pattern: misalignment repair reply
 Customer context: "This sounds like a custom build, not what we asked for."
 Good reply shape: Restate scope in plain language, repair misunderstanding first, avoid scheduling ask.
 
-State pattern: blocked closed_lost draft
+State pattern: closed_lost constrained draft
 Customer context: "We are not moving forward. Please close this."
-Good reply shape: No proactive sales push. If no recovery instruction is requested, draft should be blocked.
+Good reply shape: Acknowledge and keep it respectful. No proactive sales push or urgency.
 
 State pattern: careful revival reply
 Customer context: "We might revisit this in Q3 if priorities change."
