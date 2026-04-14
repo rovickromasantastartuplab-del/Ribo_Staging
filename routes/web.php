@@ -1086,8 +1086,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Conversation AI report routes (Phase 4)
             Route::post('/ai/reports/generate', [ConversationAiReportController::class, 'generate']);
             Route::get('/ai/reports/options/{thread}', [ConversationAiReportController::class, 'options']);
+            Route::get('/ai/reports/history/{thread}', [ConversationAiReportController::class, 'history']);
             Route::get('/ai/reports/{job}', [ConversationAiReportController::class, 'show']);
             Route::get('/ai/reports/{job}/download', [ConversationAiReportController::class, 'download']);
+            Route::get('/ai/reports/version/{version}/download', [ConversationAiReportController::class, 'downloadVersion']);
 
         });
 

@@ -5,12 +5,14 @@ namespace App\Http\Controllers\AI;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\Controller;
 use App\Models\AiReportJob;
+use App\Models\AiReportVersion;
 use App\Models\Contact;
 use App\Models\EmailThread;
 use App\Services\AI\Prompts\ReportPromptFactory;
 use App\Services\AI\Reports\ReportTemplateFormatter;
 use App\Services\AI\ConversationAiReportService;
 use App\Services\AI\ConversationAiTelemetryService;
+use App\Services\AI\ConversationAiReportVersionService;
 use App\Services\AI\Rules\ConversationAiRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +25,8 @@ class ConversationAiReportController extends Controller
         private readonly ConversationAiReportService $reportService,
         private readonly ConversationAiRules $rules,
         private readonly ConversationAiTelemetryService $telemetryService,
-        private readonly ReportTemplateFormatter $reportTemplateFormatter
+        private readonly ReportTemplateFormatter $reportTemplateFormatter,
+        private readonly ConversationAiReportVersionService $reportVersionService
     ) {
     }
 
@@ -179,30 +182,25 @@ class ConversationAiReportController extends Controller
 
         try {
             $reportJob = $this->reportService->get($job, $companyId);
-            $result = $reportJob->result_payload_json ?? [];
-            $context = $reportJob->context_payload_json ?? [];
-
-            if (empty($result)) {
+            $pdfContent = $this->buildReportPdfBinary($reportJob);
+            if ($pdfContent === null) {
                 return response()->json([
                     'message' => 'Report result unavailable',
                     'code' => 'report_result_unavailable',
                 ], 409);
             }
 
-            $formatted = $this->reportTemplateFormatter->format(
-                $result,
-                $context,
-                (string) ($reportJob->scope ?? 'overall')
+            $this->reportVersionService->recordSuccessfulDownload(
+                $reportJob,
+                (int) auth()->id(),
+                $pdfContent,
+                'ai-summary-v1'
             );
 
-            $pdf = Pdf::loadView('reports.ai_summary_pdf', [
-                'job' => $reportJob,
-                'result' => $result,
-                'context' => $context,
-                'formatted' => $formatted,
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=AI-Summary-Report-{$reportJob->id}.pdf",
             ]);
-
-            return $pdf->download("AI-Summary-Report-{$reportJob->id}.pdf");
         } catch (Throwable $e) {
             Log::error('[ConversationAiReportController] Download failed', [
                 'job_id' => $job->id,
@@ -214,5 +212,114 @@ class ConversationAiReportController extends Controller
                 'message' => 'Failed to generate summary report. Please try again.',
             ], 500);
         }
+    }
+
+    public function history(EmailThread $thread): JsonResponse
+    {
+        $companyId = (int) auth()->user()->creatorId();
+        abort_if((int) $thread->created_by !== $companyId, 403);
+
+        $rows = AiReportVersion::query()
+            ->where('created_by', $companyId)
+            ->where('email_thread_id', $thread->id)
+            ->with(['lastDownloader:id,name'])
+            ->orderByDesc('last_downloaded_at')
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'data' => $rows->map(static fn (AiReportVersion $row): array => [
+                'id' => $row->id,
+                'ai_report_job_id' => $row->ai_report_job_id,
+                'scope' => $row->scope,
+                'download_count' => $row->download_count,
+                'first_downloaded_at' => optional($row->first_downloaded_at)->toIso8601String(),
+                'last_downloaded_at' => optional($row->last_downloaded_at)->toIso8601String(),
+                'last_downloaded_by' => $row->lastDownloader ? [
+                    'id' => $row->lastDownloader->id,
+                    'name' => $row->lastDownloader->name,
+                ] : null,
+                'created_at' => optional($row->created_at)->toIso8601String(),
+            ])->values(),
+        ]);
+    }
+
+    public function downloadVersion(AiReportVersion $version)
+    {
+        $companyId = (int) auth()->user()->creatorId();
+        abort_if((int) $version->created_by !== $companyId, 403);
+
+        try {
+            $reportJob = $this->reportService->get(
+                AiReportJob::query()->findOrFail($version->ai_report_job_id),
+                $companyId
+            );
+
+            $pdfContent = $this->reportVersionService->getOrRestorePdf(
+                $version,
+                function () use ($reportJob, $version): string {
+                    $snapshot = is_array($version->snapshot_json) ? $version->snapshot_json : [];
+                    $regenerated = $this->buildReportPdfBinary($reportJob, $snapshot);
+                    if ($regenerated === null) {
+                        throw new \RuntimeException('report_result_unavailable');
+                    }
+
+                    return $regenerated;
+                }
+            );
+
+            $this->reportVersionService->markRedownload($version, (int) auth()->id());
+
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=AI-Summary-Report-{$reportJob->id}.pdf",
+            ]);
+        } catch (Throwable $e) {
+            if ($e->getMessage() === 'report_result_unavailable') {
+                return response()->json([
+                    'message' => 'Report result unavailable',
+                    'code' => 'report_result_unavailable',
+                ], 409);
+            }
+
+            Log::error('[ConversationAiReportController] Version download failed', [
+                'version_id' => $version->id,
+                'job_id' => $version->ai_report_job_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to generate summary report. Please try again.',
+            ], 500);
+        }
+    }
+
+    private function buildReportPdfBinary(AiReportJob $reportJob, array $snapshot = []): ?string
+    {
+        $result = $reportJob->result_payload_json ?? ($snapshot['result'] ?? null);
+        if (!is_array($result) || empty($result)) {
+            return null;
+        }
+
+        $context = $reportJob->context_payload_json ?? ($snapshot['context'] ?? []);
+        if (!is_array($context)) {
+            $context = [];
+        }
+
+        $formatted = $this->reportTemplateFormatter->format(
+            $result,
+            $context,
+            (string) ($reportJob->scope ?? 'overall')
+        );
+
+        $pdf = Pdf::loadView('reports.ai_summary_pdf', [
+            'job' => $reportJob,
+            'result' => $result,
+            'context' => $context,
+            'formatted' => $formatted,
+        ]);
+
+        return $pdf->output();
     }
 }

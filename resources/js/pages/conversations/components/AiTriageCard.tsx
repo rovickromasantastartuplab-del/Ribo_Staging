@@ -7,6 +7,7 @@ import axios from 'axios';
 import { BookOpen, BrainCircuit, Download, Layout, RefreshCw, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import AiReportHistoryDialog from './AiReportHistoryDialog';
 import { AiTriageResult } from '../utils/mockAiData';
 
 interface AiTriageCardProps {
@@ -135,102 +136,107 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                             </Select>
                         </div>
 
-                        <Button
-                            variant="default"
-                            size="sm"
-                            className="group relative h-10 w-full gap-2.5 overflow-hidden bg-indigo-600 text-xs font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:scale-[1.01] hover:bg-indigo-700 dark:shadow-none"
-                            onClick={async () => {
-                                if (!data.email_thread_id) {
-                                    toast.warning('No thread context available for report generation.');
-                                    return;
-                                }
-
-                                setIsExporting(true);
-                                const toastId = toast.loading('AI is generating your summary report...');
-
-                                const isSpecificOpportunity = selectedOppId.startsWith('opportunity:');
-                                const opportunityId = isSpecificOpportunity ? Number(selectedOppId.split(':')[1]) : null;
-                                const scope = isSpecificOpportunity
-                                    ? 'specific-opportunity'
-                                    : selectedOppId === 'lead-only'
-                                      ? 'leads-only'
-                                      : selectedOppId === 'all-opps'
-                                        ? 'all-opps'
-                                        : 'overall';
-
-                                try {
-                                    const response = await axios.post('/ai/reports/generate', {
-                                        threadId: data.email_thread_id,
-                                        scope,
-                                        contactId: null,
-                                        opportunityId,
-                                    });
-
-                                    const jobId = response?.data?.data?.job_id;
-                                    if (!jobId) {
-                                        toast.dismiss(toastId);
-                                        toast.warning('Report generated but job id was unavailable.');
+                        <div className="flex items-center gap-2">
+                            <AiReportHistoryDialog threadId={data.email_thread_id} />
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className="group relative h-10 flex-1 gap-2.5 overflow-hidden bg-indigo-600 text-xs font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:scale-[1.01] hover:bg-indigo-700 dark:shadow-none"
+                                onClick={async () => {
+                                    if (!data.email_thread_id) {
+                                        toast.warning('No thread context available for report generation.');
                                         return;
                                     }
 
-                                    const downloadResponse = await axios.get(`/ai/reports/${jobId}/download`, {
-                                        responseType: 'blob',
-                                    });
+                                    setIsExporting(true);
+                                    const toastId = toast.loading('AI is generating your summary report...');
 
-                                    const blob = new Blob([downloadResponse.data], { type: 'application/pdf' });
-                                    const url = window.URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.style.display = 'none';
-                                    a.href = url;
-                                    a.download = `AI-Summary-Report-${data.email_thread_id}.pdf`;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    window.URL.revokeObjectURL(url);
-                                    document.body.removeChild(a);
+                                    const isSpecificOpportunity = selectedOppId.startsWith('opportunity:');
+                                    const opportunityId = isSpecificOpportunity ? Number(selectedOppId.split(':')[1]) : null;
+                                    const scope = isSpecificOpportunity
+                                        ? 'specific-opportunity'
+                                        : selectedOppId === 'lead-only'
+                                          ? 'leads-only'
+                                          : selectedOppId === 'all-opps'
+                                            ? 'all-opps'
+                                            : 'overall';
 
-                                    toast.dismiss(toastId);
-                                    toast.success('Summary PDF generated and downloaded!');
-                                } catch (error: unknown) {
-                                    toast.dismiss(toastId);
-                                    if (axios.isAxiosError(error)) {
-                                        const status = error.response?.status;
-                                        const code = (error.response?.data as { code?: string } | undefined)?.code;
+                                    try {
+                                        const response = await axios.post('/ai/reports/generate', {
+                                            threadId: data.email_thread_id,
+                                            scope,
+                                            contactId: null,
+                                            opportunityId,
+                                        });
 
-                                        if (status === 409 || code === 'report_result_unavailable') {
-                                            toast.warning('Report generated but no downloadable result is available yet.');
+                                        const jobId = response?.data?.data?.job_id;
+                                        if (!jobId) {
+                                            toast.dismiss(toastId);
+                                            toast.warning('Report generated but job id was unavailable.');
                                             return;
                                         }
 
-                                        if (status === 422) {
-                                            const responseData = error.response?.data as
-                                                | { message?: string; errors?: Record<string, string[] | undefined> }
-                                                | undefined;
-                                            const firstValidationMessage = responseData?.errors
-                                                ? Object.values(responseData.errors).flat().find((msg) => typeof msg === 'string' && msg.trim() !== '')
-                                                : undefined;
+                                        const downloadResponse = await axios.get(`/ai/reports/${jobId}/download`, {
+                                            responseType: 'blob',
+                                        });
 
-                                            toast.warning(firstValidationMessage || responseData?.message || 'AI is currently unavailable.');
-                                            return;
+                                        const blob = new Blob([downloadResponse.data], { type: 'application/pdf' });
+                                        const url = window.URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.style.display = 'none';
+                                        a.href = url;
+                                        a.download = `AI-Summary-Report-${data.email_thread_id}.pdf`;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        window.URL.revokeObjectURL(url);
+                                        document.body.removeChild(a);
+
+                                        toast.dismiss(toastId);
+                                        toast.success('Summary PDF generated and downloaded!');
+                                    } catch (error: unknown) {
+                                        toast.dismiss(toastId);
+                                        if (axios.isAxiosError(error)) {
+                                            const status = error.response?.status;
+                                            const code = (error.response?.data as { code?: string } | undefined)?.code;
+
+                                            if (status === 409 || code === 'report_result_unavailable') {
+                                                toast.warning('Report generated but no downloadable result is available yet.');
+                                                return;
+                                            }
+
+                                            if (status === 422) {
+                                                const responseData = error.response?.data as
+                                                    | { message?: string; errors?: Record<string, string[] | undefined> }
+                                                    | undefined;
+                                                const firstValidationMessage = responseData?.errors
+                                                    ? Object.values(responseData.errors)
+                                                          .flat()
+                                                          .find((msg) => typeof msg === 'string' && msg.trim() !== '')
+                                                    : undefined;
+
+                                                toast.warning(firstValidationMessage || responseData?.message || 'AI is currently unavailable.');
+                                                return;
+                                            }
                                         }
+
+                                        toast.error('Failed to generate summary report.');
+                                    } finally {
+                                        setIsExporting(false);
                                     }
-
-                                    toast.error('Failed to generate summary report.');
-                                } finally {
-                                    setIsExporting(false);
-                                }
-                            }}
-                            disabled={isExporting}
-                        >
-                            {isExporting ? (
-                                <RefreshCw className="h-4 w-4 animate-spin text-white/50" />
-                            ) : (
-                                <>
-                                    <BookOpen className="h-4 w-4 text-indigo-200 transition-transform group-hover:scale-110" />
-                                    Download Summary Report
-                                    <Download className="ml-auto h-3.5 w-3.5 opacity-50 transition-transform group-hover:translate-y-0.5" />
-                                </>
-                            )}
-                        </Button>
+                                }}
+                                disabled={isExporting}
+                            >
+                                {isExporting ? (
+                                    <RefreshCw className="h-4 w-4 animate-spin text-white/50" />
+                                ) : (
+                                    <>
+                                        <BookOpen className="h-4 w-4 text-indigo-200 transition-transform group-hover:scale-110" />
+                                        Download Summary Report
+                                        <Download className="ml-auto h-3.5 w-3.5 opacity-50 transition-transform group-hover:translate-y-0.5" />
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </CardContent>
