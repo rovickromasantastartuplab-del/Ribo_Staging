@@ -1,5 +1,5 @@
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info, Zap } from 'lucide-react';
 import { AiTriageResult } from '../utils/mockAiData';
 
@@ -12,7 +12,7 @@ interface AiStrategicActionCardProps {
     triageData?: AiTriageResult;
 }
 
-export default function AiStrategicActionCard({ data, triageData }: AiStrategicActionCardProps) {
+export default function AiStrategicActionCard({ data }: AiStrategicActionCardProps) {
     if (!data) return null;
 
     return (
@@ -25,6 +25,20 @@ export default function AiStrategicActionCard({ data, triageData }: AiStrategicA
                     <CardTitle className="text-[11px] font-black tracking-widest text-indigo-600 uppercase dark:text-indigo-400">
                         AI Suggested Action
                     </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                type="button"
+                                className="rounded p-0.5 text-slate-400 hover:text-indigo-500"
+                                aria-label="AI Suggested Action data source"
+                            >
+                                <Info className="h-3.5 w-3.5" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-[11px] leading-relaxed">
+                            Based on this thread&apos;s message flow plus linked CRM context from the triage analysis.
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             </CardHeader>
             <CardContent className="space-y-3 px-4 pt-1 pb-4">

@@ -1,8 +1,8 @@
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
-import { CheckSquare, History, Square, Zap } from 'lucide-react';
+import { CheckSquare, History, Info, Square, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { AiMemorySummary, AiTriageResult } from '../utils/mockAiData';
@@ -12,7 +12,7 @@ interface AiMemoryCardProps {
     triageData?: AiTriageResult;
 }
 
-export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
+export default function AiMemoryCard({ data }: AiMemoryCardProps) {
     const [completedLoops, setCompletedLoops] = useState<string[]>([]);
     const [taskCompletionOverrides, setTaskCompletionOverrides] = useState<Record<number, boolean>>({});
     const [updatingTaskIds, setUpdatingTaskIds] = useState<number[]>([]);
@@ -67,6 +67,20 @@ export default function AiMemoryCard({ data, triageData }: AiMemoryCardProps) {
                         <History className="h-4 w-4 text-rose-500" />
                     </div>
                     <CardTitle className="text-sm font-semibold text-slate-900 dark:text-slate-100">Relationship History</CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                type="button"
+                                className="rounded p-0.5 text-slate-400 hover:text-rose-500"
+                                aria-label="Relationship History data source"
+                            >
+                                <Info className="h-3.5 w-3.5" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-[11px] leading-relaxed">
+                            Built from linked contact/lead memory, CRM activity history, and AI task/open-loop tracking for this thread context.
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">

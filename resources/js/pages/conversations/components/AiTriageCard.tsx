@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import axios from 'axios';
-import { BookOpen, BrainCircuit, Download, Layout, RefreshCw, TrendingUp } from 'lucide-react';
+import { BookOpen, BrainCircuit, Download, Info, Layout, RefreshCw, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import AiReportHistoryDialog from './AiReportHistoryDialog';
@@ -115,6 +116,20 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                     <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
                         <TrendingUp className="h-3.5 w-3.5 text-indigo-500" />
                         AI Summary
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="rounded p-0.5 text-slate-400 hover:text-indigo-500"
+                                    aria-label="AI Summary data source"
+                                >
+                                    <Info className="h-3.5 w-3.5" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs text-[11px] leading-relaxed">
+                                Summary is based on this thread&apos;s message flow and triage analysis context.
+                            </TooltipContent>
+                        </Tooltip>
                     </div>
                     <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">{data.summary}</p>
                 </div>
@@ -125,6 +140,20 @@ export default function AiTriageCard({ data }: AiTriageCardProps) {
                         <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-indigo-500 uppercase">
                             <Layout className="h-3 w-3" />
                             AI Summary Reports
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="rounded p-0.5 text-slate-400 hover:text-indigo-500"
+                                        aria-label="AI Summary Reports data source"
+                                    >
+                                        <Info className="h-3.5 w-3.5" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs text-[11px] leading-relaxed normal-case tracking-normal">
+                                    Report scope controls source data: thread messages only, leads stream, all opportunities stream, or a specific opportunity.
+                                </TooltipContent>
+                            </Tooltip>
                         </div>
                     </div>
 
