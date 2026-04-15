@@ -1593,7 +1593,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             )}
 
                                             <div
-                                                className="w-full min-h-[3.75rem] lg:min-h-[5rem] cursor-text bg-background"
+                                                className="w-full min-h-[3.75rem] lg:min-h-[5rem] max-h-[15rem] md:max-h-[25rem] overflow-y-auto cursor-text bg-background scrollbar-thin"
                                                 onClick={() => replyEditor?.commands.focus()}
                                             >
                                                 <EditorContent editor={replyEditor} />
@@ -2350,7 +2350,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 />
                             </div>
                             <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
-                                <div className="min-h-[15.625rem] cursor-text" onClick={() => composeEditor?.commands.focus()}>
+                                <div className="min-h-[15.625rem] max-h-[35rem] overflow-y-auto cursor-text scrollbar-thin" onClick={() => composeEditor?.commands.focus()}>
                                     <EditorContent editor={composeEditor} />
                                 </div>
                                 {/* Compose attachment previews */}
