@@ -238,6 +238,21 @@ export default function LandingPage() {
         document.documentElement.classList.toggle('dark', isDark);
         document.body.classList.toggle('dark', isDark);
     }, [globalSettings?.themeMode]);
+
+    // Handle hash scrolling for SPA navigation
+    React.useEffect(() => {
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            // Wait slightly for DOM to fully hydrate/render before trying to scroll
+            setTimeout(() => {
+                const element = document.getElementById(hash);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 150);
+        }
+    }, []);
+
     // SEO Meta tags
     React.useEffect(() => {
         const seo = settings.config_sections?.seo;

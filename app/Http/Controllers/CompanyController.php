@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use App\Models\CompanyFeatureFlag;
+use App\Services\ModuleVisibilityService;
 
 class CompanyController extends Controller
 {
@@ -368,5 +370,61 @@ class CompanyController extends Controller
                 'created_by' => $companyId,
             ]);
         }
+    }
+
+    public function getModuleOverrides(User $company)
+    {
+        $modules = ModuleVisibilityService::modules();
+        $globalDisabled = ModuleVisibilityService::getDisabledModules();
+
+        $overrides = CompanyFeatureFlag::where('company_id', $company->id)
+            ->whereIn('feature_key', array_keys($modules))
+            ->get()
+            ->keyBy('feature_key');
+
+        $result = [];
+        foreach ($modules as $key => $label) {
+            if ($overrides->has($key)) {
+                $enabled = $overrides->get($key)->is_enabled;
+                $isOverridden = true;
+            } else {
+                $enabled = !in_array($key, $globalDisabled);
+                $isOverridden = false;
+            }
+
+            $result[] = [
+                'key'          => $key,
+                'label'        => $label,
+                'enabled'      => $enabled,
+                'is_overridden' => $isOverridden,
+            ];
+        }
+
+        return response()->json(['modules' => $result]);
+    }
+
+    public function saveModuleOverrides(Request $request, User $company)
+    {
+        $modules = ModuleVisibilityService::modules();
+
+        $validated = $request->validate([
+            'modules'           => 'required|array',
+            'modules.*.key'     => 'required|string|in:' . implode(',', array_keys($modules)),
+            'modules.*.enabled' => 'required|boolean',
+        ]);
+
+        foreach ($validated['modules'] as $module) {
+            CompanyFeatureFlag::updateOrCreate(
+                [
+                    'company_id'  => $company->id,
+                    'feature_key' => $module['key'],
+                ],
+                [
+                    'is_enabled' => $module['enabled'],
+                ]
+            );
+        }
+
+        return response()->json(['success' => true, 'message' => 'Module overrides saved successfully.']);
     }
 }

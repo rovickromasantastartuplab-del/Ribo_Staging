@@ -23,7 +23,6 @@ class EmailThread extends BaseModel
         'created_by',
         'status',
         'priority',
-        'follow_up_at',
     ];
 
     protected function casts(): array
@@ -33,7 +32,6 @@ class EmailThread extends BaseModel
             'labels' => 'array',
             'last_message_at' => 'datetime',
             'is_read' => 'boolean',
-            'follow_up_at' => 'datetime',
         ];
     }
 
@@ -96,5 +94,13 @@ class EmailThread extends BaseModel
         return $this->morphedByMany(Contact::class, 'email_threadable', 'email_threadables')
             ->withPivot('matched_via')
             ->withTimestamps();
+    }
+
+    /**
+     * Automated follow-up stages configured for this thread.
+     */
+    public function followUpStages(): HasMany
+    {
+        return $this->hasMany(ThreadFollowUpStage::class)->orderBy('stage_number');
     }
 }

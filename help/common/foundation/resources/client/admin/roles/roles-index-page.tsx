@@ -108,7 +108,7 @@ export function Component() {
     ? roleTypes?.findIndex(type => type.type === searchParams.type)
     : 0;
 
-  const roleTypeTabs = !!roleTypes?.length ? (
+  const roleTypeTabs = roleTypes?.length ? (
     <Tabs
       selectedTab={selectedTab}
       onTabChange={newTab => {

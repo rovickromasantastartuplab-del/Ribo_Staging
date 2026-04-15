@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\NotificationTemplate;
 use App\Models\NotificationTemplateLang;
+use App\Models\UserNotificationTemplate;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class NotificationTemplateSeeder extends Seeder
@@ -440,6 +442,77 @@ class NotificationTemplateSeeder extends Seeder
                     ]
                 ]
             ],
+            // Automated Follow-up Sent
+            [
+                'name' => 'Conversation Follow Up',
+                'type' => 'twilio',
+                'translations' => [
+                    'en' => [
+                        'title' => 'Conversation Follow Up',
+                        'content' => 'Automated follow-up (Stage {stage}) sent to {recipient} for thread: {subject}'
+                    ],
+                    'es' => [
+                        'title' => 'Seguimiento Automático Enviado',
+                        'content' => 'Seguimiento automático (Etapa {stage}) enviado a {recipient} para el hilo: {subject}'
+                    ],
+                    'ar' => [
+                        'title' => 'تم إرسال المتابعة التلقائية',
+                        'content' => 'تم إرسال متابعة تلقائية (المرحلة {stage}) إلى {recipient} للموضوع: {subject}'
+                    ],
+                    'da' => [
+                        'title' => 'Automatisk Opfølgning Sendt',
+                        'content' => 'Automatisk opfølgning (Trin {stage}) sendt til {recipient} for tråd: {subject}'
+                    ],
+                    'de' => [
+                        'title' => 'Automatisches Follow-up Gesendet',
+                        'content' => 'Automatisches Follow-up (Stufe {stage}) an {recipient} für Thread gesendet: {subject}'
+                    ],
+                    'fr' => [
+                        'title' => 'Suivi Automatique Envoyé',
+                        'content' => 'Suivi automatique (Étape {stage}) envoyé à {recipient} pour le fil: {subject}'
+                    ],
+                    'he' => [
+                        'title' => 'מעקב אוטומטי נשלח',
+                        'content' => 'מעקב אוטומטי (שלב {stage}) נשלח אל {recipient} עבור השרשור: {subject}'
+                    ],
+                    'it' => [
+                        'title' => 'Follow-up Automatico Inviato',
+                        'content' => 'Follow-up automatico (Fase {stage}) inviato a {recipient} per il thread: {subject}'
+                    ],
+                    'ja' => [
+                        'title' => '自動フォローアップ送信済み',
+                        'content' => '自動フォローアップ（ステージ {stage}）が {recipient} にスレッド: {subject} のために送信されました'
+                    ],
+                    'nl' => [
+                        'title' => 'Automatische Follow-up Verzonden',
+                        'content' => 'Automatische follow-up (Fase {stage}) verzonden naar {recipient} voor thread: {subject}'
+                    ],
+                    'pl' => [
+                        'title' => 'Automatyczne Śledzenie Wysłane',
+                        'content' => 'Automatyczne śledzenie (Etap {stage}) wysłane do {recipient} dla wątku: {subject}'
+                    ],
+                    'pt' => [
+                        'title' => 'Acompanhamento Automático Enviado',
+                        'content' => 'Acompanhamento automático (Fase {stage}) enviado para {recipient} para o thread: {subject}'
+                    ],
+                    'pt-BR' => [
+                        'title' => 'Acompanhamento Automático Enviado',
+                        'content' => 'Acompanhamento automático (Fase {stage}) enviado para {recipient} para o thread: {subject}'
+                    ],
+                    'ru' => [
+                        'title' => 'Автоматическое сообщение отправлено',
+                        'content' => 'Автоматическое сообщение (Этап {stage}) отправлено {recipient} для темы: {subject}'
+                    ],
+                    'tr' => [
+                        'title' => 'Otomatik Takip Gönderildi',
+                        'content' => '{recipient} alıcısına {subject} konusu için otomatik takip (Aşama {stage}) gönderildi'
+                    ],
+                    'zh' => [
+                        'title' => '自动跟进已发送',
+                        'content' => '已为主题 {subject} 向 {recipient} 发送自动跟进（第 {stage} 阶段）'
+                    ]
+                ]
+            ],
         ];
 
         // Get all companies
@@ -473,6 +546,19 @@ class NotificationTemplateSeeder extends Seeder
                         'content' => $translation['content'],
                         'created_by' => $company->id
                     ]);
+                }
+
+                // Seed user_notification_templates for company owner and all their staff
+                // so isNotificationTemplateEnabled() returns true for this template by default.
+                $usersToSeed = User::where('created_by', $company->id)
+                    ->orWhere('id', $company->id)
+                    ->get();
+
+                foreach ($usersToSeed as $user) {
+                    UserNotificationTemplate::updateOrCreate(
+                        ['user_id' => $user->id, 'template_id' => $template->id],
+                        ['is_active' => true]
+                    );
                 }
             }
             // Create content for global template

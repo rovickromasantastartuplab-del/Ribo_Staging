@@ -8,6 +8,7 @@ use App\Models\EmailMessage;
 use App\Models\Lead;
 use App\Models\Contact;
 use App\Models\GmailAccountActivity;
+use App\Services\AI\OpenLoopTaskService;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Illuminate\Support\Facades\Cache;
@@ -237,68 +238,6 @@ class GmailService
     }
 
     /**
-     * Perform a deep sync for a specific contact's historical emails (paged).
-     * Fetches ONE page of results and returns the nextPageToken if available.
-     */
-    public function syncContactHistory(string $email, ?string $pageToken = null, int $maxResults = 20): array
-    {
-        $stats = ['synced' => 0, 'errors' => 0, 'nextPageToken' => null];
-        $companyId = $this->resolveCompanyId();
-        
-        $email = trim(strtolower($email));
-
-        try {
-            $params = [
-                'q' => "from:{$email} OR to:{$email} OR cc:{$email}",
-                'maxResults' => $maxResults,
-            ];
-            
-            if ($pageToken) {
-                $params['pageToken'] = $pageToken;
-            }
-
-            $response = $this->gmail->users_threads->listUsersThreads('me', $params);
-            $threads = $response->getThreads();
-            $stats['nextPageToken'] = $response->getNextPageToken();
-
-            if ($threads) {
-                foreach ($threads as $threadMeta) {
-                    try {
-                        // OPTIMIZATION: Skip full fetch if snippet hasn't changed (Fix 2.3)
-                        $existingSnippet = EmailThread::where('gmail_thread_id', $threadMeta->getId())->value('snippet');
-                        if ($existingSnippet === $threadMeta->getSnippet()) {
-                            $stats['synced']++;
-                            continue;
-                        }
-
-                        $thread = $this->getThread($threadMeta->getId());
-                        if ($thread) {
-                            $this->syncSingleThread($thread, $companyId);
-                            $stats['synced']++;
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Failed to sync contact thread during deep sync', [
-                            'email' => $email,
-                            'thread_id' => $threadMeta->getId(),
-                            'error' => $e->getMessage(),
-                        ]);
-                        $stats['errors']++;
-                    }
-                }
-            }
-
-            return $stats;
-
-        } catch (\Exception $e) {
-            Log::error('Deep sync page failed for contact', [
-                'email' => $email,
-                'error' => $e->getMessage(),
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
      * Perform incremental sync using Gmail history.list API.
      * Only fetches changes since the last known historyId.
      * Returns ['synced' => N, 'errors' => N] or null if fallback to full sync is needed.
@@ -451,6 +390,7 @@ class GmailService
         }
 
         $this->autoLinkThread($emailThread, $companyId);
+        $this->syncOpenLoopTasks($emailThread, $companyId);
     }
 
     /**
@@ -985,52 +925,75 @@ class GmailService
      */
     private function syncAttachments(EmailMessage $emailMessage, $gmailMessage): void
     {
-        // Skip if this message already has attachments synced
-        if ($emailMessage->getMedia('attachments')->count() > 0) {
-            return;
-        }
+        // NO-OP: We no longer store attachments locally to save space.
+        // Attachments are now proxied live from the Gmail API on demand.
+        return;
+    }
 
-        $payload = $gmailMessage->getPayload();
-        if (!$payload) {
-            return;
-        }
+    /**
+     * Fetch attachment metadata for a message directly from the Gmail API.
+     */
+    public function getMessageAttachmentsInfo(string $gmailMessageId): array
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+            
+            // Use 'metadata' format with only parts/filename fields to keep the request lightweight
+            $message = $this->gmail->users_messages->get('me', $gmailMessageId, [
+                'format' => 'full', 
+            ]);
 
-        $parts = $this->collectAttachmentParts($payload->getParts() ?? []);
-
-        foreach ($parts as $part) {
-            try {
-                $attachmentId = $part->getBody()?->getAttachmentId();
-                $filename = $part->getFilename();
-
-                if (!$attachmentId || !$filename) {
-                    continue;
-                }
-
-                // Download the attachment data from Gmail
-                $attachmentData = $this->gmail->users_messages_attachments->get(
-                    'me',
-                    $gmailMessage->getId(),
-                    $attachmentId
-                );
-
-                $rawData = $this->decodeBody($attachmentData->getData());
-
-                // Save to a temp file and add to Spatie Media Library
-                $tempPath = tempnam(sys_get_temp_dir(), 'gmail_attach_');
-                file_put_contents($tempPath, $rawData);
-
-                $emailMessage->addMedia($tempPath)
-                    ->usingFileName($filename)
-                    ->usingName(pathinfo($filename, PATHINFO_FILENAME))
-                    ->toMediaCollection('attachments');
-
-            } catch (\Exception $e) {
-                Log::warning('Failed to sync attachment', [
-                    'gmail_message_id' => $gmailMessage->getId(),
-                    'filename' => $filename ?? 'unknown',
-                    'error' => $e->getMessage(),
-                ]);
+            $payload = $message->getPayload();
+            if (!$payload) {
+                return [];
             }
+
+            $parts = $this->collectAttachmentParts($payload->getParts() ?? []);
+            $attachments = [];
+
+            foreach ($parts as $part) {
+                $attachmentId = $part->getBody()?->getAttachmentId();
+                if ($attachmentId) {
+                    $attachments[] = [
+                        'attachment_id' => $attachmentId,
+                        'file_name' => $part->getFilename(),
+                        'mime_type' => $part->getMimeType(),
+                        'size' => $part->getBody()?->getSize(),
+                    ];
+                }
+            }
+
+            return $attachments;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to fetch Gmail attachment info', [
+                'gmail_message_id' => $gmailMessageId,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Download the raw data for a specific attachment from the Gmail API.
+     */
+    public function downloadAttachmentRaw(string $gmailMessageId, string $attachmentId): ?array
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+
+            $attachment = $this->gmail->users_messages_attachments->get('me', $gmailMessageId, $attachmentId);
+            
+            return [
+                'data' => $this->decodeBody($attachment->getData()),
+                'size' => $attachment->getSize(),
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to download raw Gmail attachment', [
+                'gmail_message_id' => $gmailMessageId,
+                'attachment_id' => $attachmentId,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 
@@ -1166,6 +1129,7 @@ class GmailService
 
             // Auto-link the thread to lead/contact if it was just created or emails match
             $this->autoLinkThread($emailThread, $companyId);
+            $this->syncOpenLoopTasks($emailThread, $companyId);
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to record sent message locally', [
@@ -1195,6 +1159,154 @@ class GmailService
             \Illuminate\Support\Facades\Log::error('Failed to log Gmail activity', [
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    private function syncOpenLoopTasks(EmailThread $thread, int $companyId): void
+    {
+        try {
+            app(OpenLoopTaskService::class)->upsertFromThread($thread, $companyId);
+        } catch (\Throwable $e) {
+            Log::warning('Open-loop task sync failed for thread', [
+                'email_thread_id' => $thread->id,
+                'gmail_thread_id' => $thread->gmail_thread_id,
+                'created_by' => $companyId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Check if a Gmail thread has received a reply (more than 1 message).
+     * Fails open: returns false on API error so we never cancel a follow-up due to connectivity.
+     */
+    public function hasReply(string $gmailThreadId, string $recipientEmail): bool
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+
+            // Fetch the entire thread to see all messages
+            $thread = $this->gmail->users_threads->get('me', $gmailThreadId, [
+                'format' => 'metadata',
+                'metadataHeaders' => ['From'],
+            ]);
+
+            $messages = $thread->getMessages() ?? [];
+
+            // If only one message exists, no reply is possible (it's the original outreach)
+            if (count($messages) <= 1) {
+                return false;
+            }
+
+            foreach ($messages as $message) {
+                $payload = $message->getPayload();
+                $headers = $payload ? $payload->getHeaders() : [];
+                $fromHeader = '';
+
+                foreach ($headers as $header) {
+                    if (strtolower($header->getName()) === 'from') {
+                        $fromHeader = $header->getValue();
+                        break;
+                    }
+                }
+
+                if (empty($fromHeader)) {
+                    continue;
+                }
+
+                // Extract email from "Name <email@example.com>" or just "email@example.com"
+                $email = $fromHeader;
+                if (preg_match('/<([^>]+)>/', $fromHeader, $matches)) {
+                    $email = $matches[1];
+                }
+
+                // If this message was sent by the client, it counts as a reply.
+                // We ignore messages from our own Gmail account address.
+                if (strtolower(trim($email)) === strtolower(trim($recipientEmail))) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            Log::warning('hasReply check failed, failing open (no cancel)', [
+                'gmail_thread_id' => $gmailThreadId,
+                'recipient' => $recipientEmail,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send an automated follow-up reply in an existing Gmail thread.
+     * Constructs proper In-Reply-To and References headers for correct threading.
+     *
+     * @return string|null  The new Gmail message ID on success, null on failure.
+     */
+    public function sendFollowUpReply(\App\Models\ThreadFollowUpQueue $item, string $body): ?string
+    {
+        try {
+            $this->refreshTokenIfNeeded();
+
+            // Fetch the original message to get threading headers
+            $originalMessage = $this->gmail->users_messages->get('me', $item->gmail_message_id, [
+                'format' => 'metadata',
+                'metadataHeaders' => ['Subject', 'Message-ID', 'References'],
+            ]);
+
+            $subject = $this->extractHeader($originalMessage, 'Subject') ?? '';
+            $messageId = $this->extractHeader($originalMessage, 'Message-ID');
+            $references = $this->extractHeader($originalMessage, 'References');
+
+            // Ensure subject starts with "Re:" for proper threading
+            if (!preg_match('/^Re:\s/i', $subject)) {
+                $subject = 'Re: ' . $subject;
+            }
+
+            // Build References chain: existing references + the message we're replying to
+            $referencesChain = trim(($references ? $references . ' ' : '') . ($messageId ?? ''));
+
+            // Build the raw RFC 2822 message
+            $rawMessage = "From: {$this->account->gmail_address}\r\n";
+            $rawMessage .= "To: {$item->recipient_email}\r\n";
+            $rawMessage .= "Subject: {$subject}\r\n";
+            $rawMessage .= "Content-Type: text/html; charset=utf-8\r\n";
+            $rawMessage .= "MIME-Version: 1.0\r\n";
+
+            if ($messageId) {
+                $rawMessage .= "In-Reply-To: {$messageId}\r\n";
+            }
+            if ($referencesChain) {
+                $rawMessage .= "References: {$referencesChain}\r\n";
+            }
+
+            $rawMessage .= "\r\n{$body}";
+
+            // Encode and send
+            $gmailMessage = new \Google\Service\Gmail\Message();
+            $gmailMessage->setRaw(strtr(base64_encode($rawMessage), '+/', '-_'));
+            $gmailMessage->setThreadId($item->gmail_thread_id);
+
+            $sentMessage = $this->gmail->users_messages->send('me', $gmailMessage);
+
+            // Record locally
+            $this->recordSentMessage($sentMessage, $item->recipient_email, $subject, $body);
+
+            Log::info('Follow-up reply sent', [
+                'gmail_thread_id' => $item->gmail_thread_id,
+                'recipient' => $item->recipient_email,
+                'new_message_id' => $sentMessage->getId(),
+            ]);
+
+            return $sentMessage->getId();
+        } catch (\Exception $e) {
+            Log::error('Failed to send follow-up reply', [
+                'queue_id' => $item->id,
+                'gmail_thread_id' => $item->gmail_thread_id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
         }
     }
 }

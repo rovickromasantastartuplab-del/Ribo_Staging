@@ -168,6 +168,7 @@ export const ProjectTaskKanbanBoard: React.FC<ProjectTaskKanbanBoardProps> = ({
     <div className="h-full flex flex-col overflow-hidden">
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll h-full">
+          {statuses.map((status) => (
             <div key={status.id} className="flex-shrink-0" style={{ minWidth: '280px', width: '280px' }}>
               <div className="bg-gray-100 rounded-lg flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
                 <div className="p-3 border-b border-gray-200">

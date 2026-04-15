@@ -324,6 +324,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
         return <Sparkles className="h-4 w-4" />;
       case 'Wedding Suppliers':
         return <Store className="h-4 w-4" />;
+      case 'E-commerce':
+        return <Store className="h-4 w-4" />;
       case 'Analytics':
         return <BarChart2 className="h-4 w-4" />;
       case 'Email Support':
@@ -380,7 +382,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
   const commonFeatures = [
     'AI Integration',
     'Branding',
-    'Wedding Suppliers'
+    'Wedding Suppliers',
+    'E-commerce'
   ];
 
   // Define stat icons
@@ -560,25 +563,21 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
                     {t("Features")}
                   </h4>
                   <ul className="space-y-2.5">
-                    {commonFeatures.map((feature, index) => {
-                      const included = isFeatureIncluded(plan, feature);
-                      return (
-                        <li key={index} className="flex items-center gap-3">
-                          {included ? (
-                            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                            </div>
-                          ) : (
-                            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
-                              <X className="h-3.5 w-3.5" />
-                            </div>
-                          )}
-                          <span className={`text-sm ${included ? 'font-medium' : 'text-muted-foreground'}`}>
-                            {t(feature)}
-                          </span>
-                        </li>
-                      );
-                    })}
+                    {commonFeatures.filter(feature => isFeatureIncluded(plan, feature)).map((feature, index) => (
+                      <li key={index} className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="text-sm font-medium">
+                          {t(feature)}
+                        </span>
+                      </li>
+                    ))}
+                    {commonFeatures.filter(feature => isFeatureIncluded(plan, feature)).length === 0 && (
+                      <li className="text-sm text-muted-foreground italic">
+                        {t('No additional features included')}
+                      </li>
+                    )}
                   </ul>
                 </div>
 

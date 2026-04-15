@@ -85,6 +85,11 @@ use App\Http\Controllers\TargetListController;
 use App\Http\Controllers\ShippingProviderTypeController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\ChatGptController;
+use App\Http\Controllers\AI\ConversationAiTriageController;
+use App\Http\Controllers\AI\ConversationAiMemoryController;
+use App\Http\Controllers\AI\ConversationAiTasksController;
+use App\Http\Controllers\AI\ConversationAiDraftController;
+use App\Http\Controllers\AI\ConversationAiReportController;
 use App\Http\Controllers\QuoteCommentController;
 use App\Http\Controllers\SalesOrderCommentController;
 use App\Http\Controllers\AccountCommentController;
@@ -158,6 +163,9 @@ Route::match(['GET', 'POST'], 'webhooks/facebook', [\App\Http\Controllers\Webhoo
 Route::match(['GET', 'POST'], 'webhooks/whatsapp', [\App\Http\Controllers\Webhooks\WhatsAppWebhookController::class, 'handle'])->name('webhooks.whatsapp')->withoutMiddleware($webhookExcludedMiddleware);
 Route::match(['GET', 'POST'], 'api/webhooks/gmail', [\App\Http\Controllers\GmailWebhookController::class, 'handle'])->name('webhooks.gmail')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
 Route::post('api/inbound/wordpress/leads', [\App\Http\Controllers\Webhooks\WordPressWebhookController::class, 'handle'])->name('api.inbound.wordpress.leads')->middleware('throttle:60,1')->withoutMiddleware($webhookExcludedMiddleware);
+
+// Email open tracking pixel (public — loaded by recipient's email client)
+Route::get('t/{messageId}', [\App\Http\Controllers\TrackingController::class, 'pixel'])->name('tracking.pixel')->withoutMiddleware($webhookExcludedMiddleware);
 
 // Health check endpoint for external plugins to verify connection
 Route::get('api/health', function (\Illuminate\Http\Request $request) {
@@ -235,6 +243,21 @@ Route::post('payments/hitpay/webhook', [HitPayPaymentController::class, 'callbac
 Route::get('/landing-page', [LandingPageController::class, 'settings'])->name('landing-page');
 Route::post('/landing-page/contact', [LandingPageController::class, 'submitContact'])->name('landing-page.contact');
 Route::post('/landing-page/subscribe', [LandingPageController::class, 'subscribe'])->name('landing-page.subscribe');
+Route::get('/pricing', function() {
+    $landingSettings = \App\Models\LandingPageSetting::getSettings();
+    $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+
+    $formattedPlans = \App\Services\PlanPricingService::getFormattedPlans();
+    $plans = \App\Services\PlanPricingService::applyRecommendation($formattedPlans)->toArray();
+
+    return Inertia::render('landing-page/Pricing', [
+        'plans'       => $plans,
+        'customPages' => \App\Models\LandingPageCustomPage::active()->ordered()->get() ?? [],
+        'settings'    => array_merge($landingSettings->toArray(), [
+            'footerText' => getSetting('footerText', '', $superadmin->id ?? null)
+        ])
+    ]);
+})->name('pricing');
 Route::get('/page/{slug}', [CustomPageController::class, 'show'])->name('custom-page.show');
 
 Route::get('/translations/{locale}', [TranslationController::class, 'getTranslations'])->name('translations');
@@ -368,7 +391,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('media-library', function () {
             return Inertia::render('media-library');
-        })->name('media-library');
+        })->middleware('checkModuleVisibility:media_library')->name('media-library');
 
 
 
@@ -383,7 +406,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('api/storage-settings', [SystemSettingsController::class, 'getStorageSettings'])->name('api.storage-settings');
 
         // Notification Templates routes
-        Route::middleware('permission:manage-notification-templates')->group(function () {
+        Route::middleware(['permission:manage-notification-templates', 'checkModuleVisibility:notification_templates'])->group(function () {
             Route::get('notification-templates', [\App\Http\Controllers\NotificationTemplateController::class, 'index'])->name('notification-templates.index');
             Route::get('notification-templates/{notificationTemplate}', [\App\Http\Controllers\NotificationTemplateController::class, 'show'])->name('notification-templates.show');
             Route::put('notification-templates/{notificationTemplate}/content', [\App\Http\Controllers\NotificationTemplateController::class, 'updateContent'])->name('notification-templates.update-content');
@@ -464,6 +487,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('companies/{company}/toggle-status', [CompanyController::class, 'toggleStatus'])->middleware('permission:toggle-status-companies')->name('companies.toggle-status');
             Route::get('companies/{company}/plans', [CompanyController::class, 'getPlans'])->middleware('permission:manage-plans-companies')->name('companies.plans');
             Route::put('companies/{company}/upgrade-plan', [CompanyController::class, 'upgradePlan'])->middleware('permission:upgrade-plan-companies')->name('companies.upgrade-plan');
+            Route::get('companies/{company}/module-overrides', [CompanyController::class, 'getModuleOverrides'])->name('companies.module-overrides.index');
+            Route::post('companies/{company}/module-overrides', [CompanyController::class, 'saveModuleOverrides'])->name('companies.module-overrides.save');
         });
 
 
@@ -485,7 +510,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Referral routes
-        Route::middleware('permission:manage-referral')->group(function () {
+        Route::middleware(['permission:manage-referral', 'checkModuleVisibility:referral'])->group(function () {
             Route::get('referral', [ReferralController::class, 'index'])->middleware('permission:manage-referral')->name('referral.index');
             Route::get('referral/referred-users', [ReferralController::class, 'getReferredUsers'])->middleware('permission:manage-users-referral')->name('referral.referred-users');
             Route::post('referral/settings', [ReferralController::class, 'updateSettings'])->middleware('permission:manage-setting-referral')->name('referral.settings.update');
@@ -534,7 +559,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Products routes
         Route::middleware('permission:manage-products')->group(function () {
-            Route::get('products', [ProductController::class, 'index'])->middleware('permission:manage-products')->name('products.index');
+            Route::get('products', [ProductController::class, 'index'])->middleware(['permission:manage-products', 'checkModuleVisibility:products'])->name('products.index');
             Route::get('products/create', [ProductController::class, 'create'])->middleware('permission:create-products')->name('products.create');
             Route::get('products/{product}', [ProductController::class, 'show'])->middleware('permission:view-products')->name('products.show');
             Route::get('products/{product}/edit', [ProductController::class, 'edit'])->middleware('permission:edit-products')->name('products.edit');
@@ -552,7 +577,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Reports routes
-        Route::middleware('permission:manage-reports')->group(function () {
+        Route::middleware(['permission:manage-reports', 'checkModuleVisibility:reports'])->group(function () {
             Route::get('reports/leads', [ReportsController::class, 'leads'])->name('reports.leads');
             Route::get('reports/sales', [ReportsController::class, 'sales'])->name('reports.sales');
             Route::get('reports/product-reports', [ReportsController::class, 'products'])->name('reports.product-reports');
@@ -582,7 +607,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Accounts routes
         Route::middleware('permission:manage-accounts')->group(function () {
-            Route::get('accounts', [AccountController::class, 'index'])->middleware('permission:manage-accounts')->name('accounts.index');
+            Route::get('accounts', [AccountController::class, 'index'])->middleware(['permission:manage-accounts', 'checkModuleVisibility:accounts'])->name('accounts.index');
             Route::get('accounts/{account}', [AccountController::class, 'show'])->middleware('permission:view-accounts')->name('accounts.show');
             Route::post('accounts', [AccountController::class, 'store'])->middleware('permission:create-accounts')->name('accounts.store');
             Route::put('accounts/{account}', [AccountController::class, 'update'])->middleware('permission:edit-accounts')->name('accounts.update');
@@ -599,7 +624,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Contacts routes
         Route::middleware('permission:manage-contacts')->group(function () {
-            Route::get('contacts', [ContactController::class, 'index'])->middleware('permission:manage-contacts')->name('contacts.index');
+            Route::get('contacts', [ContactController::class, 'index'])->middleware(['permission:manage-contacts', 'checkModuleVisibility:contacts'])->name('contacts.index');
             Route::get('contacts/{contact}', [ContactController::class, 'show'])->middleware('permission:view-contacts')->name('contacts.show');
             Route::post('contacts', [ContactController::class, 'store'])->middleware('permission:create-contacts')->name('contacts.store');
             Route::put('contacts/{contact}', [ContactController::class, 'update'])->middleware('permission:edit-contacts')->name('contacts.update');
@@ -610,13 +635,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Conversations Hub routes
         Route::middleware('permission:view-conversations')->group(function () {
-            Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
+            Route::get('conversations', [ConversationController::class, 'index'])->middleware('checkModuleVisibility:conversations')->name('conversations.index');
             Route::get('api/conversations/threads', [ConversationController::class, 'threads'])->name('api.conversations.threads');
             Route::get('api/conversations/calendar-events', [ConversationController::class, 'calendarEvents'])->name('api.conversations.calendar_events');
             Route::post('api/conversations/sync-inbox-more', [ConversationController::class, 'syncInboxHistory'])->name('api.conversations.sync_inbox_more');
             Route::get('api/conversations/activities', [ConversationController::class, 'activities'])->name('api.conversations.activities');
-            Route::get('api/conversations/history/participants', [ConversationController::class, 'historyParticipants'])->name('api.conversations.history.participants');
-            Route::post('api/conversations/history/sync', [ConversationController::class, 'syncContactHistory'])->name('api.conversations.history.sync');
             Route::get('api/conversations/threads/{thread}', [ConversationController::class, 'show'])->name('api.conversations.show');
             Route::post('api/conversations/threads/{thread}/update', [ConversationController::class, 'update'])
                 ->middleware('permission:manage-conversations')
@@ -628,9 +651,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('api.conversations.compose');
             Route::post('api/conversations/threads/{thread}/reply', [ConversationController::class, 'reply'])
                 ->name('api.conversations.reply');
+            Route::get('api/conversations/messages/{message}/attachments/{attachmentId}/download', [ConversationController::class, 'downloadAttachment'])
+                ->name('api.conversations.attachments.download');
             Route::post('api/conversations/threads/{thread}/link-to-lead', [ConversationController::class, 'linkToLead'])
                 ->middleware('permission:manage-conversations')
                 ->name('api.conversations.link_to_lead');
+            Route::get('api/conversations/threads/{thread}/follow-up-stages', [ConversationController::class, 'getFollowUpStages'])
+                ->name('api.conversations.follow_up_stages.index');
+            Route::post('api/conversations/threads/{thread}/follow-up-stages', [ConversationController::class, 'storeFollowUpStages'])
+                ->name('api.conversations.follow_up_stages.store');
+            Route::get('api/conversations/follow-up-templates', [ConversationController::class, 'getFollowUpTemplates'])
+                ->name('api.conversations.follow_up_templates');
         });
 
         Route::middleware('permission:manage-lead-statuses')->group(function () {
@@ -655,7 +686,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Lead routes
         Route::middleware('permission:manage-leads')->group(function () {
-            Route::get('leads', [LeadController::class, 'index'])->middleware('permission:manage-leads')->name('leads.index');
+            Route::get('leads', [LeadController::class, 'index'])->middleware(['permission:manage-leads', 'checkModuleVisibility:leads'])->name('leads.index');
             Route::get('leads/kanban', [LeadController::class, 'kanban'])->middleware('permission:manage-leads')->name('leads.kanban');
             Route::get('leads/{lead}', [LeadController::class, 'show'])->middleware('permission:view-leads')->name('leads.show');
             Route::post('leads', [LeadController::class, 'store'])->middleware('permission:create-leads')->name('leads.store');
@@ -707,7 +738,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Opportunity routes
         Route::middleware('permission:manage-opportunities')->group(function () {
-            Route::get('opportunities', [OpportunityController::class, 'index'])->middleware('permission:manage-opportunities')->name('opportunities.index');
+            Route::get('opportunities', [OpportunityController::class, 'index'])->middleware(['permission:manage-opportunities', 'checkModuleVisibility:opportunities'])->name('opportunities.index');
             Route::get('opportunities/{opportunity}', [OpportunityController::class, 'show'])->middleware('permission:view-opportunities')->name('opportunities.show');
             Route::post('opportunities', [OpportunityController::class, 'store'])->middleware('permission:create-opportunities')->name('opportunities.store');
             Route::put('opportunities/{opportunity}', [OpportunityController::class, 'update'])->middleware('permission:edit-opportunities')->name('opportunities.update');
@@ -745,7 +776,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Campaign routes
         Route::middleware('permission:manage-campaigns')->group(function () {
-            Route::get('campaigns', [CampaignController::class, 'index'])->middleware('permission:manage-campaigns')->name('campaigns.index');
+            Route::get('campaigns', [CampaignController::class, 'index'])->middleware(['permission:manage-campaigns', 'checkModuleVisibility:campaigns'])->name('campaigns.index');
             Route::post('campaigns', [CampaignController::class, 'store'])->middleware('permission:create-campaigns')->name('campaigns.store');
             Route::put('campaigns/{campaign}', [CampaignController::class, 'update'])->middleware('permission:edit-campaigns')->name('campaigns.update');
             Route::delete('campaigns/bulk-delete', [\App\Http\Controllers\CampaignController::class, 'bulkDelete'])->middleware('permission:delete-campaigns')->name('campaigns.bulk-delete');
@@ -778,7 +809,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Cases routes
         Route::middleware('permission:manage-cases')->group(function () {
-            Route::get('cases', [CaseController::class, 'index'])->middleware('permission:manage-cases')->name('cases.index');
+            Route::get('cases', [CaseController::class, 'index'])->middleware(['permission:manage-cases', 'checkModuleVisibility:cases'])->name('cases.index');
             Route::get('cases/create', [CaseController::class, 'create'])->middleware('permission:create-cases')->name('cases.create');
             Route::get('cases/{case}', [CaseController::class, 'show'])->middleware('permission:view-cases')->name('cases.show');
             Route::get('cases/{case}/edit', [CaseController::class, 'edit'])->middleware('permission:edit-cases')->name('cases.edit');
@@ -791,7 +822,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Quote routes
         Route::middleware('permission:manage-quotes')->group(function () {
-            Route::get('quotes', [QuoteController::class, 'index'])->middleware('permission:manage-quotes')->name('quotes.index');
+            Route::get('quotes', [QuoteController::class, 'index'])->middleware(['permission:manage-quotes', 'checkModuleVisibility:quotes'])->name('quotes.index');
             Route::get('quotes/{quote}', [QuoteController::class, 'show'])->middleware('permission:view-quotes')->name('quotes.show');
             Route::post('quotes', [QuoteController::class, 'store'])->middleware('permission:create-quotes')->name('quotes.store');
             Route::put('quotes/{quote}', [QuoteController::class, 'update'])->middleware('permission:edit-quotes')->name('quotes.update');
@@ -816,7 +847,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Sales Order routes
         Route::middleware('permission:manage-sales-orders')->group(function () {
-            Route::get('sales-orders', [SalesOrderController::class, 'index'])->middleware('permission:manage-sales-orders')->name('sales-orders.index');
+            Route::get('sales-orders', [SalesOrderController::class, 'index'])->middleware(['permission:manage-sales-orders', 'checkModuleVisibility:sales_orders'])->name('sales-orders.index');
             Route::get('sales-orders/{salesOrder}', [SalesOrderController::class, 'show'])->middleware('permission:view-sales-orders')->name('sales-orders.show');
             Route::post('sales-orders', [SalesOrderController::class, 'store'])->middleware('permission:create-sales-orders')->name('sales-orders.store');
             Route::put('sales-orders/{salesOrder}', [SalesOrderController::class, 'update'])->middleware('permission:edit-sales-orders')->name('sales-orders.update');
@@ -850,7 +881,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Invoice routes
         Route::middleware('permission:manage-invoices')->group(function () {
-            Route::get('invoices', [InvoiceController::class, 'index'])->middleware('permission:manage-invoices')->name('invoices.index');
+            Route::get('invoices', [InvoiceController::class, 'index'])->middleware(['permission:manage-invoices', 'checkModuleVisibility:invoices'])->name('invoices.index');
             Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('permission:view-invoices')->name('invoices.show');
             Route::post('invoices', [InvoiceController::class, 'store'])->middleware('permission:create-invoices')->name('invoices.store');
             Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])->middleware('permission:edit-invoices')->name('invoices.update');
@@ -874,7 +905,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Delivery Order routes
         Route::middleware('permission:manage-delivery-orders')->group(function () {
-            Route::get('delivery-orders', [DeliveryOrderController::class, 'index'])->middleware('permission:manage-delivery-orders')->name('delivery-orders.index');
+            Route::get('delivery-orders', [DeliveryOrderController::class, 'index'])->middleware(['permission:manage-delivery-orders', 'checkModuleVisibility:delivery_orders'])->name('delivery-orders.index');
             Route::get('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'show'])->middleware('permission:view-delivery-orders')->name('delivery-orders.show');
             Route::post('delivery-orders', [DeliveryOrderController::class, 'store'])->middleware('permission:create-delivery-orders')->name('delivery-orders.store');
             Route::put('delivery-orders/{deliveryOrder}', [DeliveryOrderController::class, 'update'])->middleware('permission:edit-delivery-orders')->name('delivery-orders.update');
@@ -887,7 +918,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Return Order routes
         Route::middleware('permission:manage-delivery-orders')->group(function () {
-            Route::get('return-orders', [ReturnOrderController::class, 'index'])->middleware('permission:manage-delivery-orders')->name('return-orders.index');
+            Route::get('return-orders', [ReturnOrderController::class, 'index'])->middleware(['permission:manage-delivery-orders', 'checkModuleVisibility:return_orders'])->name('return-orders.index');
             Route::get('return-orders/{returnOrder}', [ReturnOrderController::class, 'show'])->middleware('permission:view-return-orders')->name('return-orders.show');
             Route::post('return-orders', [ReturnOrderController::class, 'store'])->middleware('permission:create-return-orders')->name('return-orders.store');
             Route::put('return-orders/{returnOrder}', [ReturnOrderController::class, 'update'])->middleware('permission:edit-return-orders')->name('return-orders.update');
@@ -897,7 +928,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Purchase Order routes
         Route::middleware('permission:manage-purchase-orders')->group(function () {
-            Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->middleware('permission:manage-purchase-orders')->name('purchase-orders.index');
+            Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->middleware(['permission:manage-purchase-orders', 'checkModuleVisibility:purchase_orders'])->name('purchase-orders.index');
             Route::get('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->middleware('permission:view-purchase-orders')->name('purchase-orders.show');
             Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->middleware('permission:create-purchase-orders')->name('purchase-orders.store');
             Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->middleware('permission:edit-purchase-orders')->name('purchase-orders.update');
@@ -914,7 +945,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Receipt Order routes
         Route::middleware('permission:manage-receipt-orders')->group(function () {
-            Route::get('receipt-orders', [ReceiptOrderController::class, 'index'])->middleware('permission:manage-receipt-orders')->name('receipt-orders.index');
+            Route::get('receipt-orders', [ReceiptOrderController::class, 'index'])->middleware(['permission:manage-receipt-orders', 'checkModuleVisibility:receipt_orders'])->name('receipt-orders.index');
             Route::get('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'show'])->middleware('permission:view-receipt-orders')->name('receipt-orders.show');
             Route::post('receipt-orders', [ReceiptOrderController::class, 'store'])->middleware('permission:create-receipt-orders')->name('receipt-orders.store');
             Route::put('receipt-orders/{receiptOrder}', [ReceiptOrderController::class, 'update'])->middleware('permission:edit-receipt-orders')->name('receipt-orders.update');
@@ -928,7 +959,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Project routes
         Route::middleware('permission:manage-projects')->group(function () {
-            Route::get('projects', [ProjectController::class, 'index'])->middleware('permission:manage-projects')->name('projects.index');
+            Route::get('projects', [ProjectController::class, 'index'])->middleware(['permission:manage-projects', 'checkModuleVisibility:projects'])->name('projects.index');
             Route::get('projects/{project}', [ProjectController::class, 'show'])->middleware('permission:view-projects')->name('projects.show');
             Route::post('projects', [ProjectController::class, 'store'])->middleware('permission:create-projects')->name('projects.store');
             Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware('permission:edit-projects')->name('projects.update');
@@ -971,7 +1002,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Meeting routes
         Route::middleware('permission:manage-meetings')->group(function () {
-            Route::get('meetings', [MeetingController::class, 'index'])->middleware('permission:manage-meetings')->name('meetings.index');
+            Route::get('meetings', [MeetingController::class, 'index'])->middleware(['permission:manage-meetings', 'checkModuleVisibility:meetings'])->name('meetings.index');
             Route::get('meetings/{meeting}', [MeetingController::class, 'show'])->middleware('permission:view-meetings')->name('meetings.show');
             Route::post('meetings', [MeetingController::class, 'store'])->middleware('permission:create-meetings')->name('meetings.store');
             Route::put('meetings/{meeting}', [MeetingController::class, 'update'])->middleware('permission:edit-meetings')->name('meetings.update');
@@ -984,7 +1015,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Call routes
         Route::middleware('permission:manage-calls')->group(function () {
-            Route::get('calls', [CallController::class, 'index'])->middleware('permission:manage-calls')->name('calls.index');
+            Route::get('calls', [CallController::class, 'index'])->middleware(['permission:manage-calls', 'checkModuleVisibility:calls'])->name('calls.index');
             Route::get('calls/{call}', [CallController::class, 'show'])->middleware('permission:view-calls')->name('calls.show');
             Route::post('calls', [CallController::class, 'store'])->middleware('permission:create-calls')->name('calls.store');
             Route::put('calls/{call}', [CallController::class, 'update'])->middleware('permission:edit-calls')->name('calls.update');
@@ -996,7 +1027,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Calendar route
-        Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
+        Route::get('calendar', [CalendarController::class, 'index'])->middleware('checkModuleVisibility:calendar')->name('calendar.index');
 
         // Google Calendar API routes
         Route::get('api/google-calendar/events', [\App\Http\Controllers\GoogleCalendarController::class, 'getEvents'])->name('google-calendar.events');
@@ -1027,7 +1058,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Document management
         Route::middleware('permission:manage-documents')->group(function () {
-            Route::get('documents', [DocumentController::class, 'index'])->middleware('permission:manage-documents')->name('documents.index');
+            Route::get('documents', [DocumentController::class, 'index'])->middleware(['permission:manage-documents', 'checkModuleVisibility:documents'])->name('documents.index');
             Route::get('documents/{document}', [DocumentController::class, 'show'])->middleware('permission:view-documents')->name('documents.show');
             Route::get('documents/{document}/download', [DocumentController::class, 'download'])->middleware('permission:view-documents')->name('documents.download');
             Route::post('documents', [DocumentController::class, 'store'])->middleware('permission:create-documents')->name('documents.store');
@@ -1039,6 +1070,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // ChatGPT routes
         Route::post('api/chatgpt/generate', [ChatGptController::class, 'generate'])->name('chatgpt.generate');
+
+        Route::middleware('throttle:30,1')->group(function () {
+            // Conversation AI triage routes (Phase 1)
+            Route::get('/ai/triage/{thread}', [ConversationAiTriageController::class, 'show']);
+            Route::post('/ai/triage/{thread}/refresh', [ConversationAiTriageController::class, 'refresh']);
+
+            // Conversation AI memory/tasks routes (Phase 2)
+            Route::get('/ai/memory/{id}', [ConversationAiMemoryController::class, 'show']);
+            Route::patch('/ai/tasks/{task}', [ConversationAiTasksController::class, 'update']);
+
+            // Conversation AI drafting route (Phase 3)
+            Route::post('/ai/draft', [ConversationAiDraftController::class, 'store']);
+
+            // Conversation AI report routes (Phase 4)
+            Route::post('/ai/reports/generate', [ConversationAiReportController::class, 'generate']);
+            Route::get('/ai/reports/options/{thread}', [ConversationAiReportController::class, 'options']);
+            Route::get('/ai/reports/history/{thread}', [ConversationAiReportController::class, 'history']);
+            Route::get('/ai/reports/{job}', [ConversationAiReportController::class, 'show']);
+            Route::get('/ai/reports/{job}/download', [ConversationAiReportController::class, 'download']);
+            Route::get('/ai/reports/version/{version}/download', [ConversationAiReportController::class, 'downloadVersion']);
+
+        });
 
 
         // Language management

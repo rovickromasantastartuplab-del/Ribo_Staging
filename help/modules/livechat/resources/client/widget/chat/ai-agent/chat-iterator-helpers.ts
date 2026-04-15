@@ -291,7 +291,7 @@ async function* smoothAsyncIterator<T>(
       .filter(time => time > anomalyThresholdMS)
       .reduce((a, b) => a + b, 0);
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+     
     const totalTimeMSBetweenValues = sampledTimesMS.at(-1)! - sampledTimesMS[0];
     const timeMSBetweenValues = totalTimeMSBetweenValues - anomalyDurationMS;
 

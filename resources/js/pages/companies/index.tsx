@@ -21,6 +21,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { CrudFormModal } from '@/components/CrudFormModal';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { UpgradePlanModal } from '@/components/UpgradePlanModal';
+import { Switch } from '@/components/ui/switch';
 
 export default function Companies() {
   const { t } = useTranslation();
@@ -44,6 +45,9 @@ export default function Companies() {
 
   const [currentCompany, setCurrentCompany] = useState<any>(null);
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
+  const [isModuleOverrideModalOpen, setIsModuleOverrideModalOpen] = useState(false);
+  const [moduleOverrides, setModuleOverrides] = useState<any[]>([]);
+  const [isModuleOverrideSaving, setIsModuleOverrideSaving] = useState(false);
 
 
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
@@ -328,6 +332,57 @@ export default function Companies() {
     }, { preserveState: true, preserveScroll: true });
   };
 
+  const handleModuleOverride = (company: any) => {
+    setCurrentCompany(company);
+    toast.loading(t('Loading module overrides...'));
+    fetch(route('companies.module-overrides.index', company.id))
+      .then(res => res.json())
+      .then(data => {
+        setModuleOverrides(data.modules);
+        setIsModuleOverrideModalOpen(true);
+        toast.dismiss();
+      })
+      .catch(() => {
+        toast.dismiss();
+        toast.error(t('Failed to load module overrides'));
+      });
+  };
+
+  const handleModuleOverrideSave = () => {
+    setIsModuleOverrideSaving(true);
+    toast.loading(t('Saving module overrides...'));
+    fetch(route('companies.module-overrides.save', currentCompany.id), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+      },
+      body: JSON.stringify({ modules: moduleOverrides }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        setIsModuleOverrideSaving(false);
+        toast.dismiss();
+        if (data.success) {
+          toast.success(t('Module overrides saved successfully'));
+          setIsModuleOverrideModalOpen(false);
+        } else {
+          toast.error(t('Failed to save module overrides'));
+        }
+      })
+      .catch(() => {
+        setIsModuleOverrideSaving(false);
+        toast.dismiss();
+        toast.error(t('Failed to save module overrides'));
+      });
+  };
+
+  const handleModuleOverrideToggle = (moduleKey: string) => {
+    setModuleOverrides(prev =>
+      prev.map(m => m.key === moduleKey ? { ...m, enabled: !m.enabled } : m)
+    );
+  };
+
   const handleUpgradePlan = (company: any) => {
     setCurrentCompany(company);
 
@@ -601,6 +656,20 @@ export default function Companies() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>{t("Upgrade Plan")}</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleModuleOverride(company)}
+                              className="text-purple-500 hover:text-purple-700"
+                            >
+                              <LayoutGrid className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t("Module Visibility Override")}</TooltipContent>
                         </Tooltip>
 
 
@@ -921,6 +990,55 @@ export default function Companies() {
         companyName={currentCompany?.name || ''}
         directUpgrade={true}
       />
+
+      {/* Module Override Modal */}
+      <Dialog open={isModuleOverrideModalOpen} onOpenChange={setIsModuleOverrideModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {t('Module Visibility Override')} — {currentCompany?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            {t('Override which modules are visible for this company. Toggled modules override the global default.')}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {moduleOverrides.map((module: any) => (
+              <div
+                key={module.key}
+                className={`flex items-center justify-between rounded-lg border px-4 py-3 ${module.is_overridden ? 'border-purple-300 bg-purple-50 dark:bg-purple-950 dark:border-purple-700' : ''}`}
+              >
+                <div>
+                  <span className="text-sm font-medium">{t(module.label)}</span>
+                  {module.is_overridden && (
+                    <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">({t('overridden')})</span>
+                  )}
+                </div>
+                <Switch
+                  checked={module.enabled}
+                  disabled={isModuleOverrideSaving}
+                  onCheckedChange={() => handleModuleOverrideToggle(module.key)}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsModuleOverrideModalOpen(false)}
+              disabled={isModuleOverrideSaving}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              onClick={handleModuleOverrideSave}
+              disabled={isModuleOverrideSaving}
+            >
+              {isModuleOverrideSaving ? t('Saving...') : t('Save Changes')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
 
     </PageTemplate>

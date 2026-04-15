@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use App\Jobs\SyncGmailThreadsJob;
 
-uses(Tests\TestCase::class);
+
 
 beforeEach(function () {
     // Basic setup - we need a company user to test settings routes

@@ -27,6 +27,7 @@ export function AppSidebar() {
     const userRole = auth.user?.type || auth.user?.role;
     const permissions = auth?.permissions || [];
     const companyFeatures = auth?.company_features || [];
+    const disabledModules: string[] = auth?.disabled_modules || [];
 
     // Get current direction
     const isRtl = document.documentElement.dir === 'rtl';
@@ -63,19 +64,19 @@ export function AppSidebar() {
 
 
         {
-            title: t('Plans'),
+            title: t('Billing & Subscriptions'),
             icon: CreditCard,
             children: [
                 {
-                    title: t('Plan'),
+                    title: t('Available Plans'),
                     href: route('plans.index')
                 },
                 {
-                    title: t('Plan Request'),
+                    title: t('Subscription Requests'),
                     href: route('plan-requests.index')
                 },
                 {
-                    title: t('Plan Orders'),
+                    title: t('Subscription History'),
                     href: route('plan-orders.index')
                 }
             ]
@@ -167,90 +168,96 @@ export function AppSidebar() {
 
         // 3. Lead Management
         const leadChildren = [];
-        if (hasPermission(permissions, 'manage-lead-statuses')) {
-            leadChildren.push({
-                title: t('Lead Statuses'),
-                href: route('lead-statuses.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-lead-sources')) {
-            leadChildren.push({
-                title: t('Lead Sources'),
-                href: route('lead-sources.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-leads')) {
-            leadChildren.push({
-                title: t('Leads'),
-                href: route('leads.index')
-            });
-        }
-        if (leadChildren.length > 0) {
-            items.push({
-                title: t('Lead Management'),
-                icon: Users,
-                children: leadChildren
-            });
-        }
+        if (!disabledModules.includes('leads')) {
+            if (hasPermission(permissions, 'manage-lead-statuses')) {
+                leadChildren.push({
+                    title: t('Lead Statuses'),
+                    href: route('lead-statuses.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-lead-sources')) {
+                leadChildren.push({
+                    title: t('Lead Sources'),
+                    href: route('lead-sources.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-leads')) {
+                leadChildren.push({
+                    title: t('Leads'),
+                    href: route('leads.index')
+                });
+            }
+            if (leadChildren.length > 0) {
+                items.push({
+                    title: t('Lead Management'),
+                    icon: Users,
+                    children: leadChildren
+                });
+            }
+        } // end !disabledModules.includes('leads')
 
         // 4. Opportunity Management
         const opportunityChildren = [];
-        if (hasPermission(permissions, 'manage-opportunity-stages')) {
-            opportunityChildren.push({
-                title: t('Opportunity Stages'),
-                href: route('opportunity-stages.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-opportunity-sources')) {
-            opportunityChildren.push({
-                title: t('Opportunity Sources'),
-                href: route('opportunity-sources.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-opportunities')) {
-            opportunityChildren.push({
-                title: t('Opportunities'),
-                href: route('opportunities.index')
-            });
-        }
-        if (opportunityChildren.length > 0) {
-            items.push({
-                title: t('Opportunity Management'),
-                icon: Briefcase,
-                children: opportunityChildren
-            });
-        }
+        if (!disabledModules.includes('opportunities')) {
+            if (hasPermission(permissions, 'manage-opportunity-stages')) {
+                opportunityChildren.push({
+                    title: t('Opportunity Stages'),
+                    href: route('opportunity-stages.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-opportunity-sources')) {
+                opportunityChildren.push({
+                    title: t('Opportunity Sources'),
+                    href: route('opportunity-sources.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-opportunities')) {
+                opportunityChildren.push({
+                    title: t('Opportunities'),
+                    href: route('opportunities.index')
+                });
+            }
+            if (opportunityChildren.length > 0) {
+                items.push({
+                    title: t('Opportunity Management'),
+                    icon: Briefcase,
+                    children: opportunityChildren
+                });
+            }
+        } // end !disabledModules.includes('opportunities')
 
         // 5. Account Management
         const accountChildren = [];
-        if (hasPermission(permissions, 'manage-account-types')) {
-            accountChildren.push({
-                title: t('Account Types'),
-                href: route('account-types.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-account-industries')) {
-            accountChildren.push({
-                title: t('Account Industries'),
-                href: route('account-industries.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-accounts')) {
-            accountChildren.push({
-                title: t('Accounts'),
-                href: route('accounts.index')
-            });
-        }
-        if (accountChildren.length > 0) {
-            items.push({
-                title: t('Account Management'),
-                icon: Building2,
-                children: accountChildren
-            });
-        }
+        if (!disabledModules.includes('accounts')) {
+            if (hasPermission(permissions, 'manage-account-types')) {
+                accountChildren.push({
+                    title: t('Account Types'),
+                    href: route('account-types.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-account-industries')) {
+                accountChildren.push({
+                    title: t('Account Industries'),
+                    href: route('account-industries.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-accounts')) {
+                accountChildren.push({
+                    title: t('Accounts'),
+                    href: route('accounts.index')
+                });
+            }
+            if (accountChildren.length > 0) {
+                items.push({
+                    title: t('Account Management'),
+                    icon: Building2,
+                    children: accountChildren
+                });
+            }
+        } // end !disabledModules.includes('accounts')
 
         // 6. Contacts
-        if (hasPermission(permissions, 'manage-contacts')) {
+        if (!disabledModules.includes('contacts') && hasPermission(permissions, 'manage-contacts')) {
             items.push({
                 title: t('Contacts'),
                 href: route('contacts.index'),
@@ -258,13 +265,39 @@ export function AppSidebar() {
             });
         }
 
-        // Conversations (Moved below Contacts)
-        if (hasPermission(permissions, 'view-conversations')) {
+        // Conversations Group
+        const chatChildren = [];
+        if (!disabledModules.includes('conversations') && hasPermission(permissions, 'view-conversations')) {
+            chatChildren.push({
+                title: t('Chat'),
+                href: route('conversations.index'),
+                badge: { label: t('New') }
+            });
+        }
+        if (!disabledModules.includes('calendar') && (hasPermission(permissions, 'manage-meetings') || hasPermission(permissions, 'manage-calls') || hasPermission(permissions, 'manage-project-tasks'))) {
+            chatChildren.push({
+                title: t('Calendar'),
+                href: route('calendar.index')
+            });
+        }
+        if (!disabledModules.includes('meetings') && hasPermission(permissions, 'manage-meetings')) {
+            chatChildren.push({
+                title: t('Meetings'),
+                href: route('meetings.index')
+            });
+        }
+        if (!disabledModules.includes('calls') && hasPermission(permissions, 'manage-calls')) {
+            chatChildren.push({
+                title: t('Calls'),
+                href: route('calls.index')
+            });
+        }
+
+        if (chatChildren.length > 0) {
             items.push({
                 title: t('Conversations'),
-                href: route('conversations.index'),
                 icon: MessageSquare,
-                badge: { label: t('New') }
+                children: chatChildren
             });
         }
 
@@ -282,201 +315,205 @@ export function AppSidebar() {
             });
         }
 
-        // 7. Product Setup
-        const productSetupChildren = [];
-        if (hasPermission(permissions, 'manage-taxes')) {
-            productSetupChildren.push({
-                title: t('Taxes'),
-                href: route('taxes.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-brands')) {
-            productSetupChildren.push({
-                title: t('Brands'),
-                href: route('brands.index')
+        // Product Management
+        const productManagementChildren = [];
+        if (!disabledModules.includes('products') && hasPermission(permissions, 'manage-products')) {
+            productManagementChildren.push({
+                title: t('Products'),
+                href: route('products.index')
             });
         }
         if (hasPermission(permissions, 'manage-categories')) {
-            productSetupChildren.push({
+            productManagementChildren.push({
                 title: t('Categories'),
                 href: route('categories.index')
             });
         }
-        if (productSetupChildren.length > 0) {
+        if (hasPermission(permissions, 'manage-brands')) {
+            productManagementChildren.push({
+                title: t('Brands'),
+                href: route('brands.index')
+            });
+        }
+        if (hasPermission(permissions, 'manage-taxes')) {
+            productManagementChildren.push({
+                title: t('Taxes'),
+                href: route('taxes.index')
+            });
+        }
+
+        if (productManagementChildren.length > 0) {
             items.push({
-                title: t('Product Setup'),
+                title: t('Product Management'),
                 icon: Package,
-                children: productSetupChildren
+                children: productManagementChildren
             });
         }
 
-        // 8. Products
-        if (hasPermission(permissions, 'manage-products')) {
-            items.push({
-                title: t('Products'),
-                href: route('products.index'),
-                icon: ShoppingBag,
-            });
-        }
-
-        // 9. Quotes
-        if (hasPermission(permissions, 'manage-quotes')) {
-            items.push({
+        // Order Management
+        const orderManagementChildren = [];
+        if (!disabledModules.includes('quotes') && hasPermission(permissions, 'manage-quotes')) {
+            orderManagementChildren.push({
                 title: t('Quotes'),
-                href: route('quotes.index'),
-                icon: FileText,
+                href: route('quotes.index')
             });
         }
-
-        // 10. Sales Orders
-        if (hasPermission(permissions, 'manage-sales-orders')) {
-            items.push({
+        if (!disabledModules.includes('sales_orders') && hasPermission(permissions, 'manage-sales-orders')) {
+            orderManagementChildren.push({
                 title: t('Sales Orders'),
-                href: route('sales-orders.index'),
-                icon: ShoppingBag,
+                href: route('sales-orders.index')
             });
         }
-
-        // 11. Invoices
-        if (hasPermission(permissions, 'manage-invoices')) {
-            items.push({
+        if (!disabledModules.includes('invoices') && hasPermission(permissions, 'manage-invoices')) {
+            orderManagementChildren.push({
                 title: t('Invoices'),
-                href: route('invoices.index'),
-                icon: FileText,
+                href: route('invoices.index')
             });
         }
 
-        // 12. Delivery Orders
-        if (hasPermission(permissions, 'manage-delivery-orders')) {
+        if (orderManagementChildren.length > 0) {
             items.push({
+                title: t('Order Management'),
+                icon: FileText,
+                children: orderManagementChildren
+            });
+        }
+
+        // E-commerce
+        const ecommerceChildren = [];
+        if (!disabledModules.includes('delivery_orders') && hasPermission(permissions, 'manage-delivery-orders')) {
+            ecommerceChildren.push({
                 title: t('Delivery Orders'),
-                href: route('delivery-orders.index'),
-                icon: Ticket,
+                href: route('delivery-orders.index')
             });
         }
-
-        // 13. Return Orders
-        if (hasPermission(permissions, 'view-return-orders')) {
-            items.push({
+        if (!disabledModules.includes('return_orders') && hasPermission(permissions, 'view-return-orders')) {
+            ecommerceChildren.push({
                 title: t('Return Orders'),
-                href: route('return-orders.index'),
-                icon: FileText,
+                href: route('return-orders.index')
             });
         }
-
-        // 14. Receipt Orders
-        if (hasPermission(permissions, 'manage-receipt-orders')) {
-            items.push({
+        if (!disabledModules.includes('receipt_orders') && hasPermission(permissions, 'manage-receipt-orders')) {
+            ecommerceChildren.push({
                 title: t('Receipt Orders'),
-                href: route('receipt-orders.index'),
-                icon: FileText,
+                href: route('receipt-orders.index')
+            });
+        }
+        if (!disabledModules.includes('purchase_orders') && hasPermission(permissions, 'manage-purchase-orders')) {
+            ecommerceChildren.push({
+                title: t('Purchase Orders'),
+                href: route('purchase-orders.index')
+            });
+        }
+        if (hasPermission(permissions, 'manage-shipping-provider-types')) {
+            ecommerceChildren.push({
+                title: t('Shipping Provider Types'),
+                href: route('shipping-provider-types.index')
             });
         }
 
-        // 15. Purchase Orders
-        if (hasPermission(permissions, 'manage-purchase-orders')) {
+        if (ecommerceChildren.length > 0) {
             items.push({
-                title: t('Purchase Orders'),
-                href: route('purchase-orders.index'),
+                title: t('E-commerce'),
                 icon: ShoppingBag,
+                children: ecommerceChildren
             });
         }
 
         // 17. Document Management
         const documentChildren = [];
-        if (hasPermission(permissions, 'manage-document-folders')) {
-            documentChildren.push({
-                title: t('Folders'),
-                href: route('document-folders.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-document-types')) {
-            documentChildren.push({
-                title: t('Types'),
-                href: route('document-types.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-documents')) {
-            documentChildren.push({
-                title: t('Documents'),
-                href: route('documents.index')
-            });
-        }
-        if (documentChildren.length > 0) {
-            items.push({
-                title: t('Document Management'),
-                icon: Folder,
-                children: documentChildren
-            });
-        }
+        if (!disabledModules.includes('documents')) {
+            if (hasPermission(permissions, 'manage-document-folders')) {
+                documentChildren.push({
+                    title: t('Folders'),
+                    href: route('document-folders.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-document-types')) {
+                documentChildren.push({
+                    title: t('Types'),
+                    href: route('document-types.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-documents')) {
+                documentChildren.push({
+                    title: t('Documents'),
+                    href: route('documents.index')
+                });
+            }
+            if (documentChildren.length > 0) {
+                items.push({
+                    title: t('Document Management'),
+                    icon: Folder,
+                    children: documentChildren
+                });
+            }
+        } // end !disabledModules.includes('documents')
 
         // 18. Campaign Management
         const campaignChildren = [];
-        if (hasPermission(permissions, 'manage-campaign-types')) {
-            campaignChildren.push({
-                title: t('Campaign Types'),
-                href: route('campaign-types.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-target-lists')) {
-            campaignChildren.push({
-                title: t('Target Lists'),
-                href: route('target-lists.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-campaigns')) {
-            campaignChildren.push({
-                title: t('Campaigns'),
-                href: route('campaigns.index')
-            });
-        }
-        if (campaignChildren.length > 0) {
-            items.push({
-                title: t('Campaign Management'),
-                icon: Megaphone,
-                children: campaignChildren
-            });
-        }
+        if (!disabledModules.includes('campaigns')) {
+            if (hasPermission(permissions, 'manage-campaign-types')) {
+                campaignChildren.push({
+                    title: t('Campaign Types'),
+                    href: route('campaign-types.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-target-lists')) {
+                campaignChildren.push({
+                    title: t('Target Lists'),
+                    href: route('target-lists.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-campaigns')) {
+                campaignChildren.push({
+                    title: t('Campaigns'),
+                    href: route('campaigns.index')
+                });
+            }
+            if (campaignChildren.length > 0) {
+                items.push({
+                    title: t('Campaign Management'),
+                    icon: Megaphone,
+                    children: campaignChildren
+                });
+            }
+        } // end !disabledModules.includes('campaigns')
 
         // 19. Project Management
         const projectChildren = [];
-        if (hasPermission(permissions, 'manage-task-statuses')) {
-            projectChildren.push({
-                title: t('Task Statuses'),
-                href: route('task-statuses.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-project-tasks')) {
-            projectChildren.push({
-                title: t('Project Tasks'),
-                href: route('project-tasks.index')
-            });
-        }
-        if (hasPermission(permissions, 'manage-projects')) {
-            projectChildren.push({
-                title: t('Projects'),
-                href: route('projects.index')
-            });
-        }
-        if (projectChildren.length > 0) {
-            items.push({
-                title: t('Project Management'),
-                icon: Briefcase,
-                children: projectChildren
-            });
-        }
+        if (!disabledModules.includes('projects')) {
+            if (hasPermission(permissions, 'manage-task-statuses')) {
+                projectChildren.push({
+                    title: t('Task Statuses'),
+                    href: route('task-statuses.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-project-tasks')) {
+                projectChildren.push({
+                    title: t('Project Tasks'),
+                    href: route('project-tasks.index')
+                });
+            }
+            if (hasPermission(permissions, 'manage-projects')) {
+                projectChildren.push({
+                    title: t('Projects'),
+                    href: route('projects.index')
+                });
+            }
+            if (projectChildren.length > 0) {
+                items.push({
+                    title: t('Project Management'),
+                    icon: Briefcase,
+                    children: projectChildren
+                });
+            }
+        } // end !disabledModules.includes('projects')
 
-        // 20. Calendar
-        if (hasPermission(permissions, 'manage-meetings') || hasPermission(permissions, 'manage-calls') || hasPermission(permissions, 'manage-project-tasks')) {
-            items.push({
-                title: t('Calendar'),
-                href: route('calendar.index'),
-                icon: Calendar,
-            });
-        }
+
 
         // 21. Cases
-        if (hasPermission(permissions, 'manage-cases')) {
+        if (!disabledModules.includes('cases') && hasPermission(permissions, 'manage-cases')) {
             items.push({
                 title: t('Cases'),
                 href: route('cases.index'),
@@ -484,26 +521,10 @@ export function AppSidebar() {
             });
         }
 
-        // 22. Meetings
-        if (hasPermission(permissions, 'manage-meetings')) {
-            items.push({
-                title: t('Meetings'),
-                href: route('meetings.index'),
-                icon: CalendarDays,
-            });
-        }
 
-        // 23. Calls
-        if (hasPermission(permissions, 'manage-calls')) {
-            items.push({
-                title: t('Calls'),
-                href: route('calls.index'),
-                icon: Phone,
-            });
-        }
 
         // 24. Reports
-        if (hasPermission(permissions, 'manage-reports')) {
+        if (!disabledModules.includes('reports') && hasPermission(permissions, 'manage-reports')) {
             items.push({
                 title: t('Reports'),
                 icon: TrendingUp,
@@ -532,14 +553,7 @@ export function AppSidebar() {
             });
         }
 
-        // 25. Shipping Provider Types
-        if (hasPermission(permissions, 'manage-shipping-provider-types')) {
-            items.push({
-                title: t('Shipping Provider Types'),
-                href: route('shipping-provider-types.index'),
-                icon: Ticket,
-            });
-        }
+
 
 
 
@@ -547,32 +561,32 @@ export function AppSidebar() {
         const planChildren = [];
         if (hasPermission(permissions, 'manage-plans')) {
             planChildren.push({
-                title: t('Plans'),
+                title: t('Available Plans'),
                 href: route('plans.index')
             });
         }
         if (hasPermission(permissions, 'manage-plan-requests')) {
             planChildren.push({
-                title: t('Plan Requests'),
+                title: t('Subscription Requests'),
                 href: route('plan-requests.index')
             });
         }
         if (hasPermission(permissions, 'manage-plan-orders')) {
             planChildren.push({
-                title: t('Plan Orders'),
+                title: t('Subscription History'),
                 href: route('plan-orders.index')
             });
         }
         if (planChildren.length > 0) {
             items.push({
-                title: t('Plans'),
+                title: t('Billing & Subscriptions'),
                 icon: CreditCard,
                 children: planChildren
             });
         }
 
         // 27. Referral Program
-        if (hasPermission(permissions, 'manage-referral')) {
+        if (!disabledModules.includes('referral') && hasPermission(permissions, 'manage-referral')) {
             items.push({
                 title: t('Referral Program'),
                 href: route('referral.index'),
@@ -581,7 +595,7 @@ export function AppSidebar() {
         }
 
         // 28. Media Library
-        if (hasPermission(permissions, 'manage-media')) {
+        if (!disabledModules.includes('media_library') && hasPermission(permissions, 'manage-media')) {
             items.push({
                 title: t('Media Library'),
                 href: route('media-library'),
@@ -589,21 +603,26 @@ export function AppSidebar() {
             });
         }
 
-        // 29. Notification Templates
-        if (hasPermission(permissions, 'manage-notification-templates')) {
-            items.push({
+        // System Configuration
+        const configChildren = [];
+        if (!disabledModules.includes('notification_templates') && hasPermission(permissions, 'manage-notification-templates')) {
+            configChildren.push({
                 title: t('Notification Templates'),
-                href: route('notification-templates.index'),
-                icon: Mail,
+                href: route('notification-templates.index')
+            });
+        }
+        if (hasPermission(permissions, 'manage-settings')) {
+            configChildren.push({
+                title: t('Settings'),
+                href: route('settings')
             });
         }
 
-        // 30. Settings
-        if (hasPermission(permissions, 'manage-settings')) {
+        if (configChildren.length > 0) {
             items.push({
-                title: t('Settings'),
-                href: route('settings'),
+                title: t('System Configuration'),
                 icon: Settings,
+                children: configChildren
             });
         }
 

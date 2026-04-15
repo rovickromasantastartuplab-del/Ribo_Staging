@@ -277,6 +277,14 @@ class HandleInertiaRequests extends Middleware
 
                     return [];
                 },
+                'disabled_modules' => function () use ($request) {
+                    $user = $request->user();
+                    if (!$user || $user->isSuperAdmin()) {
+                        return [];
+                    }
+
+                    return \App\Services\ModuleVisibilityService::getEffectiveDisabledModules($user);
+                },
                 'debug_plan' => function () use ($request) {
                     $user = $request->user();
                     if (!$user || $user->type !== 'company')

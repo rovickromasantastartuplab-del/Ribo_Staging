@@ -34,6 +34,8 @@ if (!function_exists('getCacheSize')) {
 if (!function_exists('settings')) {
     function settings($user_id = null)
     {
+        $requestedUserId = $user_id;
+
         // Skip database queries during installation
         if (request()->is('install/*') || request()->is('update/*') || !file_exists(storage_path('installed'))) {
             return [];
@@ -94,6 +96,9 @@ if (!function_exists('settings')) {
                     'pusher_app_secret',
                     'pusher_app_cluster',
                     'google_gmail_pub_sub_topic',
+                    'ai_conversation_enabled',
+                    'ai_conversation_model',
+                    'ai_conversation_timeout_seconds',
                 ];
 
                 // These keys fall back to superadmin ONLY when company has not set them
@@ -121,6 +126,8 @@ if (!function_exists('settings')) {
                     }
                 }
             }
+
+            unset($userSettings['ai_conversation_api_key']);
         }
 
         // Auto-decrypt sensitive keys safely
@@ -133,6 +140,11 @@ if (!function_exists('settings')) {
                     // Ignore error, it was likely stored as plaintext before the encryption update
                 }
             }
+        }
+
+        $isImplicitGuestContext = is_null($requestedUserId) && !auth()->check();
+        if ($isImplicitGuestContext) {
+            unset($userSettings['ai_conversation_api_key']);
         }
 
         return $userSettings;
@@ -1155,6 +1167,10 @@ if (!function_exists('defaultSettings')) {
             'defaultTimezone' => 'UTC',
             'emailVerification' => false,
             'landingPageEnabled' => true,
+            'ai_conversation_enabled' => false,
+            'ai_conversation_api_key' => '',
+            'ai_conversation_model' => 'gpt-5.4-mini',
+            'ai_conversation_timeout_seconds' => '30',
 
             // Brand Settings
             'logoDark' => '/images/logos/logo-dark.png',

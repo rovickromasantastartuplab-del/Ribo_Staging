@@ -133,7 +133,7 @@ function RightSidenav({nav}: RightSidenavProps) {
 
   return (
     <div className="dashboard-grid-sidenav-right compact-scrollbar hidden w-224 xl:flex xl:w-288">
-      {!!nav?.length ? (
+      {nav?.length ? (
         <nav className="sticky top-64 h-[calc(100dvh-64px)] w-full py-64 pr-32 xl:pr-64">
           <div className="flex items-center gap-8">
             <AlignLeftIcon size="xs" />

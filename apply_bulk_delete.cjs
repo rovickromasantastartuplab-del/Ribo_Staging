@@ -34,7 +34,7 @@ function processFile(filepath) {
 
     // 2. Update handleBulkAction
     // We need to replace the `if (confirm(...))` block with our new state update
-    const handleBulkRegex = /const handleBulkAction = \(action: string, selectedIds: any\[\]\) => {([\s\S]*?)};\n\n  const handleDeleteConfirm/m;
+    const handleBulkRegex = /const handleBulkAction = \(action: string, selectedIds: any\[\]\) => {([\s\S]*?)};\n\n {2}const handleDeleteConfirm/m;
     const match = content.match(handleBulkRegex);
     
     if (match) {

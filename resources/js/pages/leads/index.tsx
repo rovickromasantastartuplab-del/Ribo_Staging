@@ -16,6 +16,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 import { useInitials } from '@/hooks/use-initials';
 import { formatCurrency } from '@/utils/currency';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 
 
@@ -550,6 +551,37 @@ export default function Leads() {
     }
   }, [fetchColumnPage]);
 
+  const handleDragEnd = (result: any) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    if (!hasPermission(permissions, 'edit-leads')) {
+      toast.error(t('Permission denied.'));
+      return;
+    }
+
+    const currentLead = Object.values(kanbanColumnsRef.current)
+      .flatMap((c: any) => c.items || [])
+      .find((lead: any) => lead.id.toString() === draggableId);
+
+    if (currentLead) {
+      const destStatusId = parseInt(destination.droppableId, 10);
+      const currentStatusId = currentLead.lead_status_id || currentLead.lead_status?.id;
+
+      if (parseInt(currentStatusId) !== destStatusId) {
+        handleMoveTo(currentLead, destStatusId);
+      }
+    }
+  };
+
   // Define page actions
   const pageActions = [];
 
@@ -948,48 +980,25 @@ export default function Leads() {
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-4 overflow-x-auto pb-4" style={{ height: 'calc(100vh - 280px)', width: '100%' }}>
-                  {leadStatuses.map((status: any) => {
-                    const col = kanbanColumns[status.id.toString()];
-                    const statusLeads = col?.items || [];
-                    const totalCount = col?.totalCount ?? 0;
-                    const colIsLoading = col?.isLoading ?? false;
-                    const hasMore = col?.hasMore ?? false;
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <div className="flex gap-4 overflow-x-auto pb-4" style={{ height: 'calc(100vh - 280px)', width: '100%' }}>
+                    {leadStatuses.map((status: any) => {
+                      const col = kanbanColumns[status.id.toString()];
+                      const statusLeads = col?.items || [];
+                      const totalCount = col?.totalCount ?? 0;
+                      const colIsLoading = col?.isLoading ?? false;
+                      const hasMore = col?.hasMore ?? false;
 
-                    return (
-                      <div
-                        key={status.id}
-                        style={{ minWidth: '280px', width: '280px' }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.classList.remove('bg-blue-50');
-                          const leadId = e.dataTransfer.getData('leadId');
-                          if (leadId) {
-                            if (!hasPermission(permissions, 'edit-leads')) {
-                              toast.error(t('Permission denied.'));
-                              return;
-                            }
-                            // Find the lead across all columns
-                            const currentLead = Object.values(kanbanColumnsRef.current)
-                              .flatMap((c: any) => c.items || [])
-                              .find((lead: any) => lead.id.toString() === leadId);
-                            if (currentLead) {
-                              const currentStatusId = currentLead.lead_status_id || currentLead.lead_status?.id;
-                              if (parseInt(currentStatusId) !== parseInt(status.id)) {
-                                handleMoveTo(currentLead, status.id);
-                              }
-                            }
-                          }
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.classList.add('bg-blue-50');
-                        }}
-                        onDragLeave={(e) => {
-                          e.currentTarget.classList.remove('bg-blue-50');
-                        }}
-                      >
-                        <div className="bg-gray-100 rounded-lg h-full flex flex-col">
+                      return (
+                        <Droppable key={status.id} droppableId={status.id.toString()}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              data-status-id={status.id.toString()}
+                              style={{ minWidth: '280px', width: '280px' }}
+                            >
+                              <div className={`bg-gray-100 rounded-lg h-full flex flex-col transition-colors ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}>
                           {/* Column header */}
                           <div className="p-3 border-b border-gray-200">
                             <div className="flex items-center justify-between mb-2">
@@ -1019,23 +1028,21 @@ export default function Leads() {
                             style={{ maxHeight: 'calc(100vh - 350px)' }}
                             onScroll={(e) => handleColumnScroll(e, status.id)}
                           >
-                            {statusLeads.map((lead: any) => (
-                              <div
+                            {statusLeads.map((lead: any, index: number) => (
+                              <Draggable
                                 key={lead.id}
-                                draggable={hasPermission(permissions, 'edit-leads')}
-                                onDragStart={(e) => {
-                                  if (!hasPermission(permissions, 'edit-leads')) {
-                                    e.preventDefault();
-                                    return;
-                                  }
-                                  e.dataTransfer.setData('leadId', lead.id.toString());
-                                  e.currentTarget.classList.add('opacity-50', 'scale-95');
-                                }}
-                                onDragEnd={(e) => {
-                                  e.currentTarget.classList.remove('opacity-50', 'scale-95');
-                                }}
-                                className={`transition-all duration-200 ${hasPermission(permissions, 'edit-leads') ? 'cursor-move' : 'cursor-default'}`}
+                                draggableId={lead.id.toString()}
+                                index={index}
+                                isDragDisabled={!hasPermission(permissions, 'edit-leads')}
                               >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`transition-all duration-200 ${hasPermission(permissions, 'edit-leads') ? 'cursor-move' : 'cursor-default'} ${snapshot.isDragging ? 'opacity-70 scale-105 z-50' : ''}`}
+                                    style={{ ...provided.draggableProps.style }}
+                                  >
                                 <Card className="hover:shadow-md transition-all duration-200 border-l-4 hover:scale-105" style={{ borderLeftColor: status.color }}>
                                   <div className="p-3">
                                     <div className="space-y-2">
@@ -1145,8 +1152,11 @@ export default function Leads() {
                                     </div>
                                   </div>
                                 </Card>
-                              </div>
+                                  </div>
+                                )}
+                              </Draggable>
                             ))}
+                            {provided.placeholder}
 
                             {/* Empty state */}
                             {statusLeads.length === 0 && !colIsLoading && (
@@ -1170,11 +1180,14 @@ export default function Leads() {
                               </div>
                             )}
                           </div>
-                        </div>
-                      </div>
+                              </div>
+                            </div>
+                          )}
+                        </Droppable>
                     );
                   })}
-                </div>
+                  </div>
+                </DragDropContext>
               )}
             </div>
           </div>

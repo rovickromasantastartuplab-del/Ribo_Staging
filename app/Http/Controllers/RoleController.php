@@ -7,6 +7,7 @@ use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Http\Requests\RoleRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ModuleVisibilityService;
 
 class RoleController extends BaseController
 {
@@ -44,7 +45,9 @@ class RoleController extends BaseController
         }
 
         // Get allowed modules - use company config for both company and staff users
-        $allowedModules = config('role-permissions.company');
+        $configAllowedModules = config('role-permissions.company');
+        $disabledModules = ModuleVisibilityService::getEffectiveDisabledModules(auth()->user());
+        $allowedModules = array_diff($configAllowedModules, $disabledModules);
 
         // Filter permissions by allowed modules
         $query = Permission::whereIn('module', $allowedModules);
@@ -92,7 +95,9 @@ class RoleController extends BaseController
         }
 
         // Get allowed modules for current user role
-        $allowedModules = config('role-permissions.' . $userType, config('role-permissions.company'));
+        $configAllowedModules = config('role-permissions.' . $userType, config('role-permissions.company'));
+        $disabledModules = ModuleVisibilityService::getEffectiveDisabledModules(auth()->user());
+        $allowedModules = array_diff($configAllowedModules, $disabledModules);
 
         // Build query to get valid permissions within allowed modules
         $query = Permission::whereIn('module', $allowedModules)

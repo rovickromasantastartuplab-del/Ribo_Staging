@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { useEffect, useRef, useState } from 'react';
-import { Settings as SettingsIcon, Building, DollarSign, Users, RefreshCw, Palette, BookOpen, Award, FileText, Mail, Bell, Link2, CreditCard, Calendar, HardDrive, Shield, Bot, Cookie, Search, Webhook, Wallet, MessageSquare, ShoppingBag } from 'lucide-react';
+import { Settings as SettingsIcon, Building, DollarSign, Users, RefreshCw, Palette, BookOpen, Award, FileText, Mail, Bell, Link2, CreditCard, Calendar, HardDrive, Shield, Bot, Cookie, Search, Webhook, Wallet, MessageSquare, ShoppingBag, LayoutGrid } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SystemSettings from './components/system-settings';
 import CompanySystemSettings from './components/company-system-settings';
@@ -30,6 +30,7 @@ import QuoteTemplateSettings from './components/quote-template-settings';
 import SalesOrderTemplateSettings from './components/sales-order-template-settings';
 
 import StorageSettings from './components/storage-settings';
+import ModuleVisibilitySettings from './components/module-visibility-settings';
 import { Toaster } from '@/components/ui/toaster';
 import { useTranslation } from 'react-i18next';
 import { hasPermission } from '@/utils/permissions';
@@ -164,6 +165,12 @@ export default function Settings() {
             icon: <Link2 className="h-4 w-4 mr-2" />,
             permission: 'settings'
         },
+        {
+            title: t('Module Visibility'),
+            href: '#module-visibility-settings',
+            icon: <LayoutGrid className="h-4 w-4 mr-2" />,
+            permission: 'manage-system-settings'
+        },
 
     ];
 
@@ -180,6 +187,7 @@ export default function Settings() {
         // Hard block for non-superadmin users
         if (!isSuperAdmin) {
             if (item.href === '#currency-settings') return false;
+            if (item.href === '#module-visibility-settings') return false;
             // Removed: if (item.href === '#email-settings') return false;
             // Removed email-notification-settings
             // Removed twilio-notification-settings
@@ -248,6 +256,7 @@ export default function Settings() {
     const integrationsSettingsRef = useRef<HTMLDivElement>(null);
 
     const storageSettingsRef = useRef<HTMLDivElement>(null);
+    const moduleVisibilitySettingsRef = useRef<HTMLDivElement>(null);
 
 
     // Smart scroll functionality
@@ -278,9 +287,12 @@ export default function Settings() {
             const integrationsSettingsPosition = integrationsSettingsRef.current?.offsetTop || 0;
 
             const storageSettingsPosition = storageSettingsRef.current?.offsetTop || 0;
+            const moduleVisibilitySettingsPosition = moduleVisibilitySettingsRef.current?.offsetTop || 0;
 
             // Determine active section based on scroll position
-            if (scrollPosition >= storageSettingsPosition) {
+            if (scrollPosition >= moduleVisibilitySettingsPosition && moduleVisibilitySettingsPosition > 0) {
+                setActiveSection('module-visibility-settings');
+            } else if (scrollPosition >= storageSettingsPosition) {
                 setActiveSection('storage-settings');
 
             } else if (scrollPosition >= integrationsSettingsPosition) {
@@ -363,13 +375,10 @@ export default function Settings() {
             url="/settings"
             breadcrumbs={breadcrumbs}
         >
-            <div className={`flex flex-col md:flex-row gap-4 md:gap-8`} dir={position === 'right' ? 'rtl' : 'ltr'}>
-                {/* <div className={`flex flex-col md:flex-row gap-8 ${position === 'right' ? 'md:flex-row-reverse' : ''}`}> */}
-                {/* <div className="flex flex-col md:flex-row gap-8"> */}
+            <div className={`flex flex-col md:flex-row gap-4 md:gap-8 items-start`} dir={position === 'right' ? 'rtl' : 'ltr'}>
                 {/* Sidebar Navigation */}
-                <div className="md:w-64 flex-shrink-0">
-                    <div className="sticky top-20">
-                        <ScrollArea className="h-[calc(100vh-5rem)]">
+                <div className="md:w-64 flex-shrink-0 sticky top-4 self-start max-h-screen">
+                        <ScrollArea className="max-h-[calc(100vh-6rem)] overflow-y-auto">
                             <div className={`space-y-1 ${position === 'right' ? 'pl-4' : 'pr-4'}`}>
                                 {/* <div className="pr-4 space-y-1"> */}
                                 {filteredSidebarNavItems
@@ -392,7 +401,6 @@ export default function Settings() {
                                     })}
                             </div>
                         </ScrollArea>
-                    </div>
                 </div>
 
                 {/* Main Content */}
@@ -550,6 +558,13 @@ export default function Settings() {
                     {(auth.permissions?.includes('manage-webhook-settings') || auth.roles?.includes('company')) && (
                         <section id="webhook-settings" ref={webhookSettingsRef} className="mb-8">
                             <WebhookSettings webhooks={webhooks} />
+                        </section>
+                    )}
+
+                    {/* Module Visibility Settings Section */}
+                    {isSuperAdmin && (
+                        <section id="module-visibility-settings" ref={moduleVisibilitySettingsRef} className="mb-8">
+                            <ModuleVisibilitySettings />
                         </section>
                     )}
 

@@ -81,8 +81,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="p-2 space-y-2 overflow-y-auto flex-1 column-scroll"
-              style={{ maxHeight: 'calc(100vh - 350px)' }}
+              className="p-2 space-y-2 flex-1 column-scroll"
+              style={{ maxHeight: 'calc(100vh - 350px)', overflowY: 'auto', touchAction: 'none' }}
             >
               {leads.map((lead, index) => (
                 <KanbanCard

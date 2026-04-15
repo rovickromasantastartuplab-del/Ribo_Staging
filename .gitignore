@@ -23,6 +23,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/.worktrees
 /storage/logs
 /storage/uploads
 /storage/framework

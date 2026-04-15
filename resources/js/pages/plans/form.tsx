@@ -37,6 +37,7 @@ interface Plan {
   storage_limit: number;
   enable_branding: string;
   enable_chatgpt: string;
+  enable_ecommerce: string;
   enable_wedding_suppliers: string;
   module: string[] | null;
   is_trial: string | null;
@@ -72,6 +73,7 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
     storage_limit: plan?.storage_limit || 0,
     enable_branding: plan?.enable_branding || 'on',
     enable_chatgpt: plan?.enable_chatgpt || 'off',
+    enable_ecommerce: plan?.enable_ecommerce || 'off',
     enable_wedding_suppliers: plan?.enable_wedding_suppliers || 'off',
     is_trial: plan?.is_trial || null,
     trial_day: plan?.trial_day || 0,
@@ -439,6 +441,15 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
                   id="is_trial"
                   checked={formData.is_trial === 'on'}
                   onCheckedChange={(checked) => handleSwitchChange('is_trial', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="enable_ecommerce">{t("E-commerce")}</Label>
+                <Switch
+                  id="enable_ecommerce"
+                  checked={formData.enable_ecommerce === 'on'}
+                  onCheckedChange={(checked) => handleSwitchChange('enable_ecommerce', checked)}
                 />
               </div>
 

@@ -8,21 +8,21 @@ export function Breadcrumbs({ items }: { items: Array<{ label: string; href?: st
         <>
             {items && items.length > 0 && (
                 <Breadcrumb>
-                    <BreadcrumbList className="flex-wrap overflow-hidden">
+                    <BreadcrumbList className="flex-nowrap items-center overflow-hidden">
                         {items.map((item, index) => {
                             const isLast = index === items.length - 1;
                             return (
                                 <Fragment key={index}>
-                                    <BreadcrumbItem>
+                                    <BreadcrumbItem className={!isLast ? "max-lg:hidden" : "truncate"}>
                                         {isLast ? (
-                                            <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                                            <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
                                         ) : (
                                             <BreadcrumbLink asChild>
-                                                <Link href={item.href || '#'}>{item.label}</Link>
+                                                <Link href={item.href || '#'} className="truncate">{item.label}</Link>
                                             </BreadcrumbLink>
                                         )}
                                     </BreadcrumbItem>
-                                    {!isLast && <BreadcrumbSeparator />}
+                                    {!isLast && <BreadcrumbSeparator className="max-lg:hidden" />}
                                 </Fragment>
                             );
                         })}

@@ -43,7 +43,7 @@ export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps
   };
 
   return (
-    <Card className="mb-6 p-4">
+    <Card className="mb-6 p-4 print:hidden">
       <form onSubmit={handleFilterSubmit} className="flex flex-col sm:flex-row sm:items-end flex-wrap gap-2 sm:gap-4">
         <div className="w-full sm:w-auto sm:flex-1">
           <Label htmlFor="date_from">{t('From Date')}</Label>

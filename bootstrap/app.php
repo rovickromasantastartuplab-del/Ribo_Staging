@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'plan.access' => \App\Http\Middleware\CheckPlanAccess::class,
             'plan.feature' => CheckPlanFeature::class,
             'onboarding' => \App\Http\Middleware\EnsureOnboardingCompleted::class,
+            'checkModuleVisibility' => \App\Http\Middleware\CheckModuleVisibility::class,
         ]);
 
         $middleware->validateCsrfTokens(

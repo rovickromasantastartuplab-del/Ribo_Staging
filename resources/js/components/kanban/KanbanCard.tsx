@@ -79,6 +79,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             ? 'shadow-2xl rotate-2 bg-white dark:bg-gray-900 scale-105 border-blue-300 dark:border-blue-600 z-50'
             : 'hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 hover:scale-[1.02]'
             } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          style={{ ...provided.draggableProps.style, touchAction: 'none' }}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <div className="space-y-2">
             {/* Drag indicator */}

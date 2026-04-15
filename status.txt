@@ -1,0 +1,7 @@
+ M app/Http/Controllers/CompanyController.php
+ M app/Http/Middleware/CheckModuleVisibility.php
+ M app/Services/ModuleVisibilityService.php
+ M resources/js/pages/companies/index.tsx
+ M resources/js/pages/plans/index.tsx
+ M routes/web.php
+?? status.txt

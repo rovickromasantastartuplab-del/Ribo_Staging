@@ -58,6 +58,9 @@ class PlanPricingService
             if (is_array($plan->module) && in_array('wedding_suppliers_module', $plan->module)) {
                 $features[] = 'Wedding Suppliers';
             }
+            if (is_array($plan->module) && in_array('ecommerce', $plan->module)) {
+                $features[] = 'E-commerce';
+            }
 
             // Determine if passing a specific cycle (used by /plans page)
             $activePrice = $specificCycle === 'yearly' ? $yearlyPrice : $monthlyPrice;

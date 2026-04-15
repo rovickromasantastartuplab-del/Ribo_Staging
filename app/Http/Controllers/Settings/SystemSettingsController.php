@@ -155,15 +155,34 @@ class SystemSettingsController extends Controller
      */
     public function updateChatgpt(Request $request)
     {
+        if (!auth()->user() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Forbidden');
+        }
+
         try {
             $validated = $request->validate([
-                'chatgptKey' => 'required|string',
-                'chatgptModel' => 'required|string',
+                'chatgptKey' => 'nullable|string',
+                'chatgptModel' => 'nullable|string',
+                'ai_conversation_enabled' => 'nullable|boolean',
+                'ai_conversation_api_key' => 'nullable|string',
+                'ai_conversation_model' => 'nullable|string',
+                'ai_conversation_timeout_seconds' => 'nullable|integer|min:5|max:120',
             ]);
 
-            foreach ($validated as $key => $value) {
-                updateSetting($key, $value);
+            if (isset($validated['chatgptKey']) && trim((string) $validated['chatgptKey']) !== '') {
+                updateSetting('chatgptKey', $validated['chatgptKey']);
             }
+
+            if (isset($validated['chatgptModel']) && trim((string) $validated['chatgptModel']) !== '') {
+                updateSetting('chatgptModel', $validated['chatgptModel']);
+            }
+
+            updateSetting('ai_conversation_enabled', ($validated['ai_conversation_enabled'] ?? false) ? '1' : '0');
+            if (isset($validated['ai_conversation_api_key']) && trim((string) $validated['ai_conversation_api_key']) !== '') {
+                updateSetting('ai_conversation_api_key', $validated['ai_conversation_api_key']);
+            }
+            updateSetting('ai_conversation_model', $validated['ai_conversation_model'] ?? 'gpt-5.4-mini');
+            updateSetting('ai_conversation_timeout_seconds', (string) ($validated['ai_conversation_timeout_seconds'] ?? 30));
 
             return redirect()->back()->with('success', __('Chat GPT settings updated successfully.'));
         } catch (\Exception $e) {

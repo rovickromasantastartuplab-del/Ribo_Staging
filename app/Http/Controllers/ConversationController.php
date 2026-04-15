@@ -5,14 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\GmailAccount;
 use App\Models\EmailThread;
 use App\Models\EmailMessage;
+use App\Models\ThreadFollowUpStage;
+use App\Models\ThreadFollowUpQueue;
 use App\Services\GmailService;
 use App\Models\LeadStatus;
 use App\Models\LeadSource;
 use App\Models\AccountIndustry;
 use App\Models\Campaign;
 use App\Models\User;
+use App\Models\Account;
+use App\Models\Opportunity;
+use App\Models\OpportunityStage;
+use App\Services\LeadActivityStreamService;
+use App\Services\OpportunityActivityStreamService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ConversationController extends Controller
@@ -60,7 +68,59 @@ class ConversationController extends Controller
             'campaigns' => Campaign::where('created_by', createdBy())->where('status', 'active')
                 ->get(['id', 'name']),
             'users' => User::where('created_by', createdBy())->where('status', 'active')->get(['id', 'name', 'email']),
+            'opportunityStages' => OpportunityStage::where('created_by', createdBy())->where('status', 'active')
+                ->orderBy('order', 'asc')->orderBy('id', 'asc')
+                ->get(['id', 'name', 'color', 'probability']),
         ]);
+    }
+
+    /**
+     * Attach opportunities to each linked lead (matched by account email = lead email).
+     */
+    protected function attachLeadOpportunities(EmailThread $thread): void
+    {
+        $companyId = $thread->created_by;
+        foreach ($thread->leads as $lead) {
+            $opps = collect();
+            if ($lead->email) {
+                $email = strtolower(trim($lead->email));
+                $accountIds = Account::where('created_by', $companyId)
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->pluck('id');
+                if ($accountIds->isNotEmpty()) {
+                    $opps = Opportunity::whereIn('account_id', $accountIds)
+                        ->where('created_by', $companyId)
+                        ->with('opportunityStage')
+                        ->orderByDesc('updated_at')
+                        ->get();
+                }
+            }
+            $lead->setRelation('opportunities', $opps);
+        }
+    }
+
+    /**
+     * Attach the latest 3 items from the same global lead activity stream as the Lead Detail page.
+     */
+    protected function attachLeadRecentStreamPreview(EmailThread $thread): void
+    {
+        $service = app(LeadActivityStreamService::class);
+        foreach ($thread->leads as $lead) {
+            $lead->setAttribute('recent_stream_preview', $service->previewItems($lead, 3));
+        }
+    }
+
+    /**
+     * Latest 3 items from the same opportunity activity stream as the Opportunity Detail page (per linked opportunity).
+     */
+    protected function attachOpportunityRecentStreamPreview(EmailThread $thread): void
+    {
+        $service = app(OpportunityActivityStreamService::class);
+        foreach ($thread->leads as $lead) {
+            foreach ($lead->opportunities ?? [] as $opp) {
+                $opp->setAttribute('recent_stream_preview', $service->previewItems($opp, 3));
+            }
+        }
     }
 
     /**
@@ -202,14 +262,19 @@ class ConversationController extends Controller
     {
         $companyId = auth()->user()->creatorId();
         
-        $threads = EmailThread::where('created_by', $companyId)
-            ->whereNotNull('follow_up_at')
-            ->get(['id', 'subject', 'participants', 'follow_up_at', 'status']);
+        // Fetch pending automated follow-ups from the queue
+        $queueItems = ThreadFollowUpQueue::where('status', 'pending')
+            ->whereNotNull('scheduled_at')
+            ->whereHas('stage.emailThread', function($q) use ($companyId) {
+                $q->where('created_by', $companyId);
+            })
+            ->with(['stage.emailThread'])
+            ->get();
 
-        $events = $threads->map(function ($thread) {
-            $title = $thread->subject ?: 'Follow up (No Subject)';
+        $events = $queueItems->map(function ($item) {
+            $thread = $item->stage->emailThread;
+            $title = $thread->subject ?: 'Automated Follow up (No Subject)';
             if (empty($thread->subject) && is_array($thread->participants) && count($thread->participants) > 0) {
-                // Try to extract just the name or email from "Name <email@example.com>"
                 $firstParticipant = $thread->participants[0];
                 if (preg_match('/^(.*)</', $firstParticipant, $matches)) {
                     $title = trim($matches[1]) ?: $title;
@@ -220,10 +285,11 @@ class ConversationController extends Controller
             
             return [
                 'id' => $thread->id,
-                'title' => $title,
-                'start' => $thread->follow_up_at->toIso8601String(),
-                'allDay' => true,
-                'type' => 'follow_up',
+                'queue_id' => $item->id,
+                'title' => $title . " (Stage " . $item->stage->stage_number . ")",
+                'start' => $item->scheduled_at->toIso8601String(),
+                'allDay' => false,
+                'type' => 'automated_follow_up',
                 'status' => $thread->status
             ];
         });
@@ -243,7 +309,6 @@ class ConversationController extends Controller
         $validated = $request->validate([
             'status' => 'nullable|string|in:Open,Closed,Archive',
             'priority' => 'nullable|string|in:Low,Medium,High',
-            'follow_up_at' => 'nullable|date',
         ]);
 
         $statusChanged = isset($validated['status']) && $validated['status'] !== $thread->status;
@@ -277,18 +342,23 @@ class ConversationController extends Controller
             }
         }
 
+        $thread->load([
+            'messages' => function ($query) {
+                $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
+            },
+            'leads.leadStatus',
+            'contacts',
+            'assignments:id,name,avatar',
+            'gmailAccount',
+        ]);
+        $this->attachLeadOpportunities($thread);
+        $this->attachLeadRecentStreamPreview($thread);
+        $this->attachOpportunityRecentStreamPreview($thread);
+
         return response()->json([
             'success' => true,
             'message' => 'Thread updated successfully.',
-            'thread' => $thread->load([
-                'messages' => function($query) {
-                    $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
-                },
-                'leads.leadStatus', 
-                'contacts', 
-                'assignments:id,name,avatar', 
-                'gmailAccount'
-            ])
+            'thread' => $thread,
         ]);
     }
 
@@ -309,18 +379,23 @@ class ConversationController extends Controller
         $thread->assignments()->sync($request->user_ids);
         $thread = $thread->fresh();
 
+        $thread->load([
+            'messages' => function ($query) {
+                $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
+            },
+            'leads.leadStatus',
+            'contacts',
+            'assignments:id,name,avatar',
+            'gmailAccount',
+        ]);
+        $this->attachLeadOpportunities($thread);
+        $this->attachLeadRecentStreamPreview($thread);
+        $this->attachOpportunityRecentStreamPreview($thread);
+
         return response()->json([
             'success' => true,
             'message' => 'Thread assignments updated.',
-            'thread' => $thread->load([
-                'messages' => function($query) {
-                    $query->with(['media', 'sender'])->reorder('sent_at', 'desc');
-                },
-                'leads.leadStatus', 
-                'contacts', 
-                'assignments:id,name,avatar', 
-                'gmailAccount'
-            ])
+            'thread' => $thread,
         ]);
     }
 
@@ -521,53 +596,6 @@ class ConversationController extends Controller
     }
 
     /**
-     * Perform a deep sync for a specific contact's historical emails.
-     */
-    public function syncContactHistory(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-        ]);
-
-        $companyId = auth()->user()->creatorId();
-        $email = $request->get('email');
-        $pageToken = $request->get('pageToken');
-
-        // Find the Gmail account for this company
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
-        if (!$gmailAccount) {
-            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
-                $q->where('created_by', $companyId);
-            })->first();
-        }
-
-        if (!$gmailAccount) {
-            return response()->json(['error' => 'No Gmail account connected'], 400);
-        }
-
-        try {
-            $service = new GmailService($gmailAccount);
-            
-            // BUG-FIX: Ensure token is fresh before deep sync (solves 401)
-            $service->refreshTokenIfNeeded();
-            
-            $stats = $service->syncContactHistory($email, $pageToken);
-
-            return response()->json([
-                'success' => true,
-                'message' => "Successfully updated history for {$email}.",
-                'stats' => $stats,
-                'nextPageToken' => $stats['nextPageToken'] ?? null
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
      * Paged background sync for the general inbox (Infinite Scroll).
      */
     public function syncInboxHistory(Request $request)
@@ -602,106 +630,6 @@ class ConversationController extends Controller
     }
 
     /**
-     * Fetch unique participants who have emailed the company.
-     */
-    public function historyParticipants(Request $request)
-    {
-        $companyId = auth()->user()->creatorId();
-        $search = $request->get('search');
-
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
-        if (!$gmailAccount) {
-            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
-                $q->where('created_by', $companyId);
-            })->first();
-        }
-        
-        $companyEmail = $gmailAccount ? strtolower($gmailAccount->gmail_address) : null;
-
-        // OPTIMIZATION: Use cursor to iterate through threads to avoid memory exhaustion (Fix 2.1)
-        // Select only necessary columns and eager load names only
-        $threads = EmailThread::where('created_by', $companyId)
-            ->select(['id', 'participants', 'last_message_at'])
-            ->with(['leads:id,name,email', 'contacts:id,name,email']) // Eager load email for leads/contacts
-            ->orderByDesc('last_message_at')
-            ->cursor();
-
-        $participants = [];
-
-        foreach ($threads as $thread) {
-            $linkedLead = $thread->leads->first();
-            $linkedContact = $thread->contacts->first();
-            
-            // Priority 1: Group by Lead
-            if ($linkedLead) {
-                $pId = "lead_{$linkedLead->id}";
-                if (!isset($participants[$pId])) {
-                    $participants[$pId] = [
-                        'type' => 'lead',
-                        'id' => $linkedLead->id,
-                        'name' => $linkedLead->name,
-                        'email' => $linkedLead->email,
-                        'last_activity_at' => $thread->last_message_at,
-                    ];
-                } else if ($thread->last_message_at > $participants[$pId]['last_activity_at']) {
-                    $participants[$pId]['last_activity_at'] = $thread->last_message_at;
-                }
-                continue; // Move to next thread
-            }
-
-            // Priority 2: Group by Contact
-            if ($linkedContact) {
-                $pId = "contact_{$linkedContact->id}";
-                if (!isset($participants[$pId])) {
-                    $participants[$pId] = [
-                        'type' => 'contact',
-                        'id' => $linkedContact->id,
-                        'name' => $linkedContact->name,
-                        'email' => $linkedContact->email,
-                        'last_activity_at' => $thread->last_message_at,
-                    ];
-                } else if ($thread->last_message_at > $participants[$pId]['last_activity_at']) {
-                    $participants[$pId]['last_activity_at'] = $thread->last_message_at;
-                }
-                continue;
-            }
-
-            // Priority 3: Fallback to unique email (for unlinked participants)
-            $threadParticipants = $thread->participants ?? [];
-            foreach ($threadParticipants as $pEmail) {
-                $pEmail = strtolower($pEmail);
-                if ($pEmail === $companyEmail) continue;
-                if ($search && !str_contains($pEmail, strtolower($search))) continue;
-
-                if (!isset($participants[$pEmail])) {
-                    $participants[$pEmail] = [
-                        'type' => 'email',
-                        'name' => explode('@', $pEmail)[0],
-                        'email' => $pEmail,
-                        'last_activity_at' => $thread->last_message_at,
-                    ];
-                } else if ($thread->last_message_at > $participants[$pEmail]['last_activity_at']) {
-                    $participants[$pEmail]['last_activity_at'] = $thread->last_message_at;
-                }
-            }
-        }
-
-        $perPage = 20;
-        $page = $request->get('page', 1);
-        $offset = ($page - 1) * $perPage;
-        
-        $sorted = collect($participants)->sortByDesc('last_activity_at')->values();
-        $paginated = $sorted->slice($offset, $perPage)->values();
-        
-        return response()->json([
-            'data' => $paginated,
-            'current_page' => (int)$page,
-            'last_page' => ceil($sorted->count() / $perPage),
-            'total' => $sorted->count()
-        ]);
-    }
-
-    /**
      * Display a specific thread's full history.
      */
     public function show(EmailThread $thread, Request $request)
@@ -721,11 +649,24 @@ class ConversationController extends Controller
             ->reorder('sent_at', 'desc')
             ->paginate($perPage);
 
+        $service = new GmailService($thread->gmailAccount);
+
         // Return newest to oldest for flex-col-reverse display
         $messages = collect($messagesPaginated->items())->values();
 
+        // Inject live attachment metadata from Gmail for messages without local storage
+        $messages->each(function($msg) use ($service) {
+            if ($msg->media->isEmpty()) {
+                // This is a lightweight call to fetch only the file names/IDs from Gmail
+                $msg->live_attachments = $service->getMessageAttachmentsInfo($msg->gmail_message_id);
+            }
+        });
+
         $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
-        
+        $this->attachLeadOpportunities($thread);
+        $this->attachLeadRecentStreamPreview($thread);
+        $this->attachOpportunityRecentStreamPreview($thread);
+
         // Ensure relations are attached so they are serialized in the response
         $thread->setRelation('messages', $messages);
 
@@ -744,6 +685,30 @@ class ConversationController extends Controller
             ],
             'unread_count' => $this->getGlobalUnreadCount($thread->created_by, $thread->gmailAccount),
         ]);
+    }
+
+    /**
+     * Proxy a download request directly from the Gmail API to the user's browser.
+     * This avoids storing the file on the CRM's server.
+     */
+    public function downloadAttachment(Request $request, EmailMessage $message, string $attachmentId)
+    {
+        if ($message->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $filename = $request->query('filename', 'attachment');
+
+        $service = new GmailService($message->thread->gmailAccount);
+        $result = $service->downloadAttachmentRaw($message->gmail_message_id, $attachmentId);
+
+        if (!$result) {
+            abort(404, 'Attachment not found or failed to download from Gmail.');
+        }
+
+        return response()->streamDownload(function () use ($result) {
+            echo $result['data'];
+        }, $filename);
     }
 
     /**
@@ -953,5 +918,121 @@ class ConversationController extends Controller
         }
 
         return $unreadCountQuery->count();
+    }
+
+    /**
+     * Save follow-up stages for a thread.
+     */
+    public function storeFollowUpStages(Request $request, EmailThread $thread)
+    {
+        if ($thread->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'stages' => 'array|max:3',
+            'stages.*.trigger_type' => 'required|in:no_reply,no_open,no_click,drip',
+            'stages.*.delay_days' => 'required|integer|min:1|max:90',
+            'stages.*.subject' => 'required|string|max:255',
+            'stages.*.body' => 'required|string',
+        ]);
+
+        // Replace all existing stages for this thread (wrapped in transaction to prevent partial state)
+        DB::transaction(function () use ($thread, $request) {
+            $thread->followUpStages()->delete();
+
+            if ($request->has('stages') && is_array($request->stages)) {
+                foreach ($request->stages as $index => $stageData) {
+                    $stage = ThreadFollowUpStage::create([
+                        'email_thread_id' => $thread->id,
+                        'stage_number' => $index + 1,
+                        'trigger_type' => $stageData['trigger_type'],
+                        'delay_days' => $stageData['delay_days'],
+                        'subject' => $stageData['subject'],
+                        'body' => $stageData['body'],
+                    ]);
+
+                    // Auto-kickoff for Stage 1
+                    if ($index === 0) {
+                        // Find the latest message in this thread to act as the anchor
+                        // We typically follow up based on our last message to them
+                        $lastMessage = $thread->messages()->whereNotNull('gmail_message_id')->latest('sent_at')->first();
+                        
+                        if ($lastMessage) {
+                            // Determine recipient: if we sent the last message, send to 'to_emails'
+                            // If they sent the last message, send to 'from_email'
+                            $myEmail = $thread->gmailAccount->gmail_address;
+                            $recipient = $lastMessage->from_email === $myEmail 
+                                ? ($lastMessage->to_emails[0] ?? null) 
+                                : $lastMessage->from_email;
+
+                            if ($recipient) {
+                                ThreadFollowUpQueue::create([
+                                    'thread_follow_up_stage_id' => $stage->id,
+                                    'recipient_email' => $recipient,
+                                    'gmail_thread_id' => $thread->gmail_thread_id,
+                                    'gmail_message_id' => $lastMessage->gmail_message_id,
+                                    'status' => 'pending',
+                                    'scheduled_at' => ($lastMessage->sent_at ?? now())->addDays($stage->delay_days),
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Follow-up stages saved.',
+            'stages' => $thread->followUpStages()->get(),
+        ]);
+    }
+
+    /**
+     * Get follow-up stages and queue status for a thread.
+     */
+    public function getFollowUpStages(EmailThread $thread)
+    {
+        if ($thread->created_by !== auth()->user()->creatorId()) {
+            abort(403);
+        }
+
+        $stages = $thread->followUpStages()->with(['queueItems' => function ($q) {
+            $q->orderBy('scheduled_at');
+        }])->get();
+
+        return response()->json([
+            'stages' => $stages,
+        ]);
+    }
+
+    /**
+     * Get default follow-up templates for the frontend.
+     */
+    public function getFollowUpTemplates()
+    {
+        return response()->json([
+            'templates' => [
+                [
+                    'id' => 'nudge',
+                    'name' => 'Gentle Nudge',
+                    'subject' => 'Re: {Subject}',
+                    'body' => "Hi {FirstName},\n\nJust a quick nudge on this to make sure it didn't get buried in your inbox. Would love to hear your thoughts when you have a moment.\n\nBest,\n{SenderName}\n\n{TrackingPixel}",
+                ],
+                [
+                    'id' => 'value_add',
+                    'name' => 'Value Add',
+                    'subject' => 'Quick resource for {Company}',
+                    'body' => "Hi {FirstName},\n\nI was just thinking about {Company} and wanted to share this resource that might be helpful for your team.\n\nWe've helped similar companies achieve great results, and I'd love to chat about how we can do the same for you.\n\nBest,\n{SenderName}\n\n{TrackingPixel}",
+                ],
+                [
+                    'id' => 'breakup',
+                    'name' => 'Break-up',
+                    'subject' => 'Closing files',
+                    'body' => "Hi {FirstName},\n\nI haven't heard back from you, so I'm assuming your priorities have shifted. I'll go ahead and close your file for now.\n\nFeel free to reach out if you'd like to reconnect in the future.\n\nBest,\n{SenderName}\n\n{TrackingPixel}",
+                ],
+            ]
+        ]);
     }
 }

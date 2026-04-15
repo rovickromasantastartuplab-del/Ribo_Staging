@@ -83,6 +83,7 @@ class PlanController extends Controller
             'storage_limit' => 'required|numeric|min:0',
             'enable_branding' => 'nullable|in:on,off',
             'enable_chatgpt' => 'nullable|in:on,off',
+            'enable_ecommerce' => 'nullable|in:on,off',
             'enable_wedding_suppliers' => 'nullable|in:on,off',
             'module' => 'nullable|array',
             'is_trial' => 'nullable|in:on,off',
@@ -98,6 +99,7 @@ class PlanController extends Controller
         // Set default values for nullable fields
         $validated['enable_branding'] = $validated['enable_branding'] ?? 'on';
         $validated['enable_chatgpt'] = $validated['enable_chatgpt'] ?? 'off';
+        $validated['enable_ecommerce'] = $validated['enable_ecommerce'] ?? 'off';
         $validated['enable_wedding_suppliers'] = $validated['enable_wedding_suppliers'] ?? 'off';
         $validated['is_trial'] = $validated['is_trial'] ?? null;
         $validated['is_plan_enable'] = $validated['is_plan_enable'] ?? 'on';
@@ -119,6 +121,9 @@ class PlanController extends Controller
         }
         if ($validated['enable_chatgpt'] === 'on' && !in_array('ai_integration', $features, true)) {
             $features[] = 'ai_integration';
+        }
+        if ($validated['enable_ecommerce'] === 'on' && !in_array('ecommerce', $features, true)) {
+            $features[] = 'ecommerce';
         }
         if ($validated['enable_wedding_suppliers'] === 'on' && !in_array('wedding_suppliers_module', $features, true)) {
             $features[] = 'wedding_suppliers_module';
@@ -160,6 +165,7 @@ class PlanController extends Controller
         // so the form toggle correctly reflects the stored module state
         $module = is_array($plan->module) ? $plan->module : [];
         $planData = array_merge($plan->toArray(), [
+            'enable_ecommerce' => in_array('ecommerce', $module) ? 'on' : 'off',
             'enable_wedding_suppliers' => in_array('wedding_suppliers_module', $module) ? 'on' : 'off',
         ]);
 
@@ -193,6 +199,7 @@ class PlanController extends Controller
             'storage_limit' => 'required|numeric|min:0',
             'enable_branding' => 'nullable|in:on,off',
             'enable_chatgpt' => 'nullable|in:on,off',
+            'enable_ecommerce' => 'nullable|in:on,off',
             'enable_wedding_suppliers' => 'nullable|in:on,off',
             'module' => 'nullable|array',
             'is_trial' => 'nullable|in:on,off',
@@ -208,6 +215,7 @@ class PlanController extends Controller
         // Set default values for nullable fields
         $validated['enable_branding'] = $validated['enable_branding'] ?? 'on';
         $validated['enable_chatgpt'] = $validated['enable_chatgpt'] ?? 'off';
+        $validated['enable_ecommerce'] = $validated['enable_ecommerce'] ?? 'off';
         $validated['enable_wedding_suppliers'] = $validated['enable_wedding_suppliers'] ?? 'off';
         $validated['is_trial'] = $validated['is_trial'] ?? null;
         $validated['is_plan_enable'] = $validated['is_plan_enable'] ?? 'on';
@@ -229,6 +237,9 @@ class PlanController extends Controller
         }
         if ($validated['enable_chatgpt'] === 'on' && !in_array('ai_integration', $features, true)) {
             $features[] = 'ai_integration';
+        }
+        if ($validated['enable_ecommerce'] === 'on' && !in_array('ecommerce', $features, true)) {
+            $features[] = 'ecommerce';
         }
         if ($validated['enable_wedding_suppliers'] === 'on' && !in_array('wedding_suppliers_module', $features, true)) {
             $features[] = 'wedding_suppliers_module';

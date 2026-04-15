@@ -5,21 +5,37 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useModalStack } from "@/contexts/ModalStackContext"
 
-const Dialog = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>
->(({ onOpenChange, ...props }, ref) => {
+const DialogOpenContext = React.createContext(false)
+
+const Dialog = ({
+  onOpenChange,
+  open,
+  defaultOpen,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => {
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false);
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+
   const handleOpenChange = (open: boolean) => {
-    // Only call onOpenChange for explicit close actions, not focus loss
+    if (!isControlled) {
+      setInternalOpen(open);
+    }
+
     if (onOpenChange) {
       onOpenChange(open);
     }
   };
   
   return (
-     <DialogPrimitive.Root {...props} modal={false} onOpenChange={handleOpenChange} />
+    <DialogOpenContext.Provider value={!!isOpen}>
+      <DialogPrimitive.Root {...props} modal={false} open={isOpen} onOpenChange={handleOpenChange}>
+        {children}
+      </DialogPrimitive.Root>
+    </DialogOpenContext.Provider>
   );
-})
+}
 Dialog.displayName = "Dialog"
 
 const DialogTrigger = DialogPrimitive.Trigger
@@ -57,14 +73,19 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { modalId?: string }
 >(({ className, children, modalId, ...props }, ref) => {
   const { registerModal, unregisterModal, getZIndex, modalStack } = useModalStack();
+  const isDialogOpen = React.useContext(DialogOpenContext);
   const [currentModalId] = React.useState(() => modalId || `modal-${Date.now()}-${Math.random()}`);
   
   React.useEffect(() => {
+    if (!isDialogOpen) {
+      return;
+    }
+
     registerModal(currentModalId);
     return () => unregisterModal(currentModalId);
-  }, [currentModalId, registerModal, unregisterModal]);
+  }, [currentModalId, isDialogOpen, registerModal, unregisterModal]);
   
-  const zIndex = getZIndex(currentModalId);
+  const zIndex = modalStack.includes(currentModalId) ? getZIndex(currentModalId) : 50;
   
   return (
     <DialogPortal>
@@ -80,7 +101,7 @@ const DialogContent = React.forwardRef<
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => {
           // Only close if this is the topmost modal
-          if (modalStack[modalStack.length - 1] !== currentModalId) {
+          if (modalStack.length > 0 && modalStack[modalStack.length - 1] !== currentModalId) {
             e.preventDefault();
           }
         }}

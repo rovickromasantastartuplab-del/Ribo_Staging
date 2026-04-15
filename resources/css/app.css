@@ -198,6 +198,10 @@ html[dir='rtl'] [data-sonner-toast][data-styled='true'] [data-close-button],
         overflow-x: hidden;
     }
 
+    [data-rbd-drag-handle-draggable-id] {
+        touch-action: none !important;
+    }
+
     /* Custom thin scrollbar */
     * {
         scrollbar-width: thin;

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Plan;
 use App\Models\PlanOrder;
 use App\Models\PlanRequest;
+use App\Models\AiUsageLog;
 use Illuminate\Support\Facades\DB;
 
 
@@ -281,7 +282,130 @@ class DashboardController extends Controller
                 })
                 ->toArray();
         } catch (\Exception $e) {
-            // Table might not exist yet
+            \Log::error('AI Usage Insight Aggregation Failure: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+        }
+
+        // AI Usage Insights (Last 30 days)
+        $aiUsage = [
+            'stats' => [
+                'totalTokens' => 0,
+                'totalRequests' => 0,
+                'totalCost' => 0,
+                'successRate' => 0
+            ],
+            'charts' => [
+                'dailyTrends' => [],
+                'modelDistribution' => []
+            ],
+            'topCompanies' => []
+        ];
+
+        try {
+            $thirtyDaysAgo = now()->subDays(30)->startOfDay();
+
+            $baseAiQuery = AiUsageLog::where(DB::raw('COALESCE(ai_usage_logs.requested_at, ai_usage_logs.created_at)'), '>=', $thirtyDaysAgo);
+
+            // Global Stats
+            $aiGlobalStats = (clone $baseAiQuery)
+                ->select(
+                    DB::raw('SUM(total_tokens) as total_tokens'),
+                    DB::raw('COUNT(*) as total_requests'),
+                    DB::raw('SUM(estimated_cost) as total_cost')
+                )
+                ->first();
+
+            $successfulRequests = 0;
+            try {
+                $successfulRequests = (clone $baseAiQuery)
+                    ->whereJsonContains('metadata_json->status', 'success')
+                    ->count();
+            } catch (\Throwable $statusQueryException) {
+                // Fallback for environments with limited JSON query support.
+                $successfulRequests = (clone $baseAiQuery)
+                    ->where('metadata_json', 'like', '%"status":"success"%')
+                    ->count();
+            }
+
+            if ($aiGlobalStats->total_requests > 0) {
+                $aiUsage['stats'] = [
+                    'totalTokens' => (int) $aiGlobalStats->total_tokens,
+                    'totalRequests' => (int) $aiGlobalStats->total_requests,
+                    'totalCost' => (float) $aiGlobalStats->total_cost,
+                    'successRate' => round(($successfulRequests / $aiGlobalStats->total_requests) * 100, 1)
+                ];
+            }
+
+            // Daily Trends
+            $dailyTrends = (clone $baseAiQuery)
+                ->select(
+                    DB::raw('DATE(COALESCE(requested_at, created_at)) as date'),
+                    DB::raw('SUM(total_tokens) as tokens'),
+                    DB::raw('COUNT(*) as requests'),
+                    DB::raw('SUM(estimated_cost) as cost')
+                )
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+
+            // Fill missing days with zeros
+            $trendData = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $date = now()->subDays($i)->format('Y-m-d');
+                $match = $dailyTrends->firstWhere('date', $date);
+                $trendData[] = [
+                    'date' => $date,
+                    'displayDate' => now()->subDays($i)->format('M d'),
+                    'tokens' => $match ? (int) $match->tokens : 0,
+                    'requests' => $match ? (int) $match->requests : 0,
+                    'cost' => $match ? (float) $match->cost : 0
+                ];
+            }
+            $aiUsage['charts']['dailyTrends'] = $trendData;
+
+            // Model Distribution
+            $modelDist = (clone $baseAiQuery)
+                ->select('model_version', DB::raw('SUM(total_tokens) as value'))
+                ->whereNotNull('model_version')
+                ->groupBy('model_version')
+                ->get();
+
+            $colors = ['#3b82f6', '#10b77f', '#f59e0b', '#ef4444', '#8b5cf6'];
+            $aiUsage['charts']['modelDistribution'] = $modelDist->map(function ($item, $index) use ($colors) {
+                return [
+                    'name' => $item->model_version,
+                    'value' => (int) $item->value,
+                    'color' => $colors[$index % count($colors)]
+                ];
+            })->toArray();
+
+            // Top Companies
+            $topAiCompanies = (clone $baseAiQuery)
+                ->join('users', 'ai_usage_logs.created_by', '=', 'users.id')
+                ->select(
+                    'users.name',
+                    DB::raw('SUM(ai_usage_logs.total_tokens) as usage_tokens'),
+                    DB::raw('SUM(ai_usage_logs.estimated_cost) as total_cost')
+                )
+                ->groupBy('users.id', 'users.name')
+                ->orderByDesc('usage_tokens')
+                ->take(5)
+                ->get();
+
+            $aiUsage['topCompanies'] = $topAiCompanies->map(function ($item) {
+                return [
+                    'name' => $item->name,
+                    'usage' => number_format($item->usage_tokens) . ' tokens',
+                    'cost' => (float) $item->total_cost
+                ];
+            })->toArray();
+
+        } catch (\Exception $e) {
+            \Log::warning('AI Usage Insight Aggregation Failure', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
         }
 
         $dashboardData = [
@@ -301,7 +425,8 @@ class DashboardController extends Controller
             ],
             'recentActivity' => $recentActivity,
             'topPlans' => $topPlans,
-            'paymentLogs' => $paymentLogs
+            'paymentLogs' => $paymentLogs,
+            'aiUsage' => $aiUsage
         ];
 
         return Inertia::render('superadmin/dashboard', [

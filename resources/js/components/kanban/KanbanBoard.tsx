@@ -190,18 +190,20 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 280px)', width: '100%' }}>
-          {leadStatuses.map((status) => (
-            <KanbanColumn
-              key={status.id}
-              status={status}
-              leads={filteredKanbanData[status.id]?.leads || []}
-              onLeadAction={onLeadAction}
-              permissions={permissions}
-              isLoading={isLoading}
-              leadStatuses={leadStatuses}
-            />
-          ))}
+        <div className="overflow-x-auto pb-4 kanban-scroll" style={{ height: 'calc(100vh - 280px)', width: '100%' }}>
+          <div className="flex gap-4 h-full">
+            {leadStatuses.map((status) => (
+              <KanbanColumn
+                key={status.id}
+                status={status}
+                leads={filteredKanbanData[status.id]?.leads || []}
+                onLeadAction={onLeadAction}
+                permissions={permissions}
+                isLoading={isLoading}
+                leadStatuses={leadStatuses}
+              />
+            ))}
+          </div>
         </div>
       </DragDropContext>
     </div>

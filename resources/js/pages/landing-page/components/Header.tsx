@@ -99,6 +99,20 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                             ></span>
                         </Link>
                         <Link
+                            href={route('pricing')}
+                            className="text-gray-600 text-sm font-medium transition-colors relative group"
+                            style={{ '--hover-color': brandColor } as React.CSSProperties}
+                            onMouseEnter={(e) => e.currentTarget.style.color = brandColor}
+                            onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                        >
+                            {t("Pricing")}
+                            <span
+                                className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all group-hover:w-full"
+                                style={{ backgroundColor: brandColor }}
+                                aria-hidden="true"
+                            ></span>
+                        </Link>
+                        <Link
                             href="/page/about-us"
                             className="text-gray-600 text-sm font-medium transition-colors relative group"
                             style={{ '--hover-color': brandColor } as React.CSSProperties}
@@ -206,6 +220,13 @@ export default function Header({ settings, sectionData, customPages = [], brandC
                                 }}
                             >
                                 {t("Home")}
+                            </Link>
+                            <Link
+                                href={route('pricing')}
+                                className="block text-gray-600 hover:text-gray-900 text-base font-medium transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                {t("Pricing")}
                             </Link>
                             <Link
                                 href="/page/about-us"

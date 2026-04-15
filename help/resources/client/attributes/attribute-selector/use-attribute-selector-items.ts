@@ -98,7 +98,7 @@ export function useAttributeSelectorItems({
   const extraItems = use(AttributeSelectorExtraItemsContext) ?? [];
 
   const {allItems, filteredItems, groupedItems} = useMemo(() => {
-    let allItems: AttributeSelectorItemConfig[] = [];
+    const allItems: AttributeSelectorItemConfig[] = [];
 
     // attributes (custom and internal)
     const attributeDefaultValues =
