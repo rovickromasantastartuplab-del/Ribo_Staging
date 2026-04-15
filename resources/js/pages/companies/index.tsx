@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Filter, Search, Plus, Eye, Edit, Trash2, KeyRound, Lock, Unlock, LayoutGrid, List, Info, ArrowUpRight, CreditCard, History } from 'lucide-react';
+import { Filter, Search, Plus, Eye, Edit, Trash2, KeyRound, Lock, Unlock, LayoutGrid, List, Info, ArrowUpRight, CreditCard, History, Users, Briefcase, Building2, MessageSquare, Package, FileText, ShoppingBag, Folder, Megaphone, TrendingUp, Mail, Calendar, CheckSquare, Layers, Box, Truck, BarChart3, Database, Gift, Image } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/components/custom-toast';
 import { useInitials } from '@/hooks/use-initials';
@@ -22,6 +22,8 @@ import { CrudFormModal } from '@/components/CrudFormModal';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
 import { UpgradePlanModal } from '@/components/UpgradePlanModal';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 export default function Companies() {
   const { t } = useTranslation();
@@ -993,38 +995,125 @@ export default function Companies() {
 
       {/* Module Override Modal */}
       <Dialog open={isModuleOverrideModalOpen} onOpenChange={setIsModuleOverrideModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {t('Module Visibility Override')} — {currentCompany?.name}
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Layers className="w-5 h-5 text-purple-600" />
+              {t('Manage Features')} — {currentCompany?.name}
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-4">
-            {t('Override which modules are visible for this company. Toggled modules override the global default.')}
+          <p className="text-sm text-muted-foreground mb-6">
+            {t('Select which features are enabled for this organization. Toggled settings will override the standard system defaults.')}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {moduleOverrides.map((module: any) => (
-              <div
-                key={module.key}
-                className={`flex items-center justify-between rounded-lg border px-4 py-3 ${module.is_overridden ? 'border-purple-300 bg-purple-50 dark:bg-purple-950 dark:border-purple-700' : ''}`}
-              >
-                <div>
-                  <span className="text-sm font-medium">{t(module.label)}</span>
-                  {module.is_overridden && (
-                    <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">({t('overridden')})</span>
-                  )}
+
+          <Tabs defaultValue="crm" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="crm" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                {t('Sales & CRM')}
+              </TabsTrigger>
+              <TabsTrigger value="commerce" className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4" />
+                {t('Inventory & Commerce')}
+              </TabsTrigger>
+              <TabsTrigger value="operations" className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                {t('Ops & Tools')}
+              </TabsTrigger>
+            </TabsList>
+
+            {[
+              {
+                id: 'crm',
+                keys: ['leads', 'opportunities', 'contacts', 'accounts', 'conversations', 'cases', 'quotes', 'sales_orders', 'invoices']
+              },
+              {
+                id: 'commerce',
+                keys: ['products', 'brands', 'categories', 'taxes', 'shipping_provider_types', 'delivery_orders', 'return_orders', 'purchase_orders', 'receipt_orders']
+              },
+              {
+                id: 'operations',
+                keys: ['projects', 'meetings', 'calls', 'calendar', 'documents', 'media_library', 'reports', 'campaigns', 'notification_templates', 'referral']
+              }
+            ].map((category) => (
+              <TabsContent key={category.id} value={category.id} className="mt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {moduleOverrides
+                    .filter((m: any) => category.keys.includes(m.key))
+                    .map((module: any) => {
+                      // Get appropriate icon
+                      const IconComponent = (() => {
+                        switch (module.key) {
+                          case 'leads': return Users;
+                          case 'opportunities': return Briefcase;
+                          case 'contacts': return Users;
+                          case 'accounts': return Building2;
+                          case 'conversations': return MessageSquare;
+                          case 'cases': return FileText;
+                          case 'quotes': return FileText;
+                          case 'sales_orders': return CheckSquare;
+                          case 'invoices': return CreditCard;
+                          case 'referral': return Gift;
+                          case 'products': return Package;
+                          case 'brands': return Box;
+                          case 'categories': return List;
+                          case 'taxes': return BarChart3;
+                          case 'shipping_provider_types': return Truck;
+                          case 'delivery_orders': return Truck;
+                          case 'return_orders': return History;
+                          case 'purchase_orders': return ShoppingBag;
+                          case 'receipt_orders': return ShoppingBag;
+                          case 'projects': return Layers;
+                          case 'meetings': return Calendar;
+                          case 'calls': return Calendar;
+                          case 'calendar': return Calendar;
+                          case 'documents': return Folder;
+                          case 'media_library': return Image;
+                          case 'reports': return TrendingUp;
+                          case 'campaigns': return Megaphone;
+                          case 'notification_templates': return Mail;
+                          default: return LayoutGrid;
+                        }
+                      })();
+
+                      return (
+                        <div
+                          key={module.key}
+                          className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${module.is_overridden
+                              ? 'border-purple-200 bg-purple-50/50 dark:bg-purple-900/10 dark:border-purple-800'
+                              : 'border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800'
+                            }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${module.is_overridden ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
+                              <IconComponent className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold">{t(module.label)}</span>
+                              {module.is_overridden && (
+                                <Badge variant="outline" className="mt-1 w-fit py-0 px-1.5 text-[10px] bg-purple-100 border-purple-200 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-700">
+                                  {t('Custom Setting')}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Switch
+                            checked={module.enabled}
+                            disabled={isModuleOverrideSaving}
+                            onCheckedChange={() => handleModuleOverrideToggle(module.key)}
+                            className="data-[state=checked]:bg-purple-600"
+                          />
+                        </div>
+                      );
+                    })}
                 </div>
-                <Switch
-                  checked={module.enabled}
-                  disabled={isModuleOverrideSaving}
-                  onCheckedChange={() => handleModuleOverrideToggle(module.key)}
-                />
-              </div>
+              </TabsContent>
             ))}
-          </div>
-          <div className="flex justify-end gap-3">
+          </Tabs>
+
+          <div className="mt-8 flex justify-end gap-3 pt-4 border-t">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setIsModuleOverrideModalOpen(false)}
               disabled={isModuleOverrideSaving}
             >
@@ -1033,8 +1122,14 @@ export default function Companies() {
             <Button
               onClick={handleModuleOverrideSave}
               disabled={isModuleOverrideSaving}
+              className="bg-purple-600 hover:bg-purple-700 text-white min-w-[120px]"
             >
-              {isModuleOverrideSaving ? t('Saving...') : t('Save Changes')}
+              {isModuleOverrideSaving ? (
+                <>
+                  <span className="animate-spin mr-2">◌</span>
+                  {t('Saving...')}
+                </>
+              ) : t('Save Changes')}
             </Button>
           </div>
         </DialogContent>
