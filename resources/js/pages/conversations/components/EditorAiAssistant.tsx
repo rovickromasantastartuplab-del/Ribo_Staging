@@ -138,7 +138,7 @@ export default function EditorAiAssistant({
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div className="relative">
                                 <Textarea 
-                                    placeholder="Example prompt: Professional follow-up regarding yesterday's call"
+                                    placeholder="Example: Professional follow-up regarding yesterday's call"
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
                                     className="min-h-[100px] text-xs resize-none focus-visible:ring-indigo-500 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3"

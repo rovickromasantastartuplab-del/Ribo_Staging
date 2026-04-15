@@ -13,6 +13,7 @@ use App\Notifications\ConversationFollowUp;
 use App\Notifications\AutomatedFollowUpSent;
 use Illuminate\Support\Facades\Notification;
 use App\Services\GmailService;
+use App\Services\Conversations\FollowUpEmailBodyFormatter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
@@ -214,10 +215,12 @@ class ProcessFollowUps extends Command
             '{Company}'       => $company,
             '{Email}'         => $email,
             '{SenderName}'    => $senderName,
-            '{TrackingPixel}' => $trackingPixel,
         ];
 
-        return str_replace(array_keys($replacements), array_values($replacements), $body);
+        $resolvedBody = str_replace(array_keys($replacements), array_values($replacements), $body);
+        $formattedBody = app(FollowUpEmailBodyFormatter::class)->format($resolvedBody);
+
+        return str_replace('{TrackingPixel}', $trackingPixel, $formattedBody);
     }
 
     /**
