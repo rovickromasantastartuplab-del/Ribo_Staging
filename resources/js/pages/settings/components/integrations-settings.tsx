@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from 'react-i18next';
 import { Link2, LayoutTemplate, MessageSquare, Loader2, CheckCircle2, Plus, Trash2, Settings2, ChevronDown, ChevronUp, Mail, Eye, EyeOff } from 'lucide-react';
@@ -100,8 +99,6 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
 
     const { data, setData, post, processing } = useForm({
         wordpress_api_key: settings?.wordpress_api_key || '',
-        ai_intent_enabled: settings?.ai_intent_enabled === 'true' || false,
-        ai_auto_apply_threshold: settings?.ai_auto_apply_threshold || '85',
         google_client_id: googleSettings?.google_client_id || '',
         google_client_secret: googleSettings?.google_client_secret || '',
         google_redirect_uri: googleSettings?.google_redirect_uri || '',
@@ -707,44 +704,6 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
                         </div>
                     )}
 
-                    {/* AI Intent Settings (Company Only) */}
-                    {!isSuperAdmin && (
-                        <div className="space-y-4 pt-4 border-t">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-lg font-medium">{t('AI Lead Classification')}</h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('Use ChatGPT to automatically determine the intent of incoming social leads.')}
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={data.ai_intent_enabled}
-                                    onCheckedChange={(checked) => setData('ai_intent_enabled', checked)}
-                                />
-                            </div>
-
-                            {data.ai_intent_enabled && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="ai_auto_apply_threshold">{t('Auto-Apply Threshold (%)')}</Label>
-                                        <Input
-                                            id="ai_auto_apply_threshold"
-                                            type="number"
-                                            min="1"
-                                            max="100"
-                                            value={data.ai_auto_apply_threshold}
-                                            onChange={(e) => setData('ai_auto_apply_threshold', e.target.value)}
-                                            placeholder="85"
-                                        />
-                                        <p className="text-xs text-muted-foreground text-left mt-1">
-                                            {t('Only set pipeline stage if AI confidence is above this threshold.')}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     <div className="flex justify-end pt-6 border-t">
                         <Button type="submit" disabled={processing}>
                             {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -756,4 +715,3 @@ export default function IntegrationsSettings({ settings, socialAccounts = [], fi
         </Card>
     );
 }
-

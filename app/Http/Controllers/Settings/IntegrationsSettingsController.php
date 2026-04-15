@@ -16,8 +16,6 @@ class IntegrationsSettingsController extends Controller
         try {
             $validated = $request->validate([
                 'wordpress_api_key' => 'nullable|string',
-                'ai_intent_enabled' => 'nullable|boolean',
-                'ai_auto_apply_threshold' => 'nullable|numeric|min:1|max:100',
                 'google_client_id' => 'nullable|string',
                 'google_client_secret' => 'nullable|string',
                 'google_redirect_uri' => 'nullable|string',
@@ -128,4 +126,3 @@ class IntegrationsSettingsController extends Controller
         return response()->json(['message' => 'Field mappings saved successfully.']);
     }
 }
-
