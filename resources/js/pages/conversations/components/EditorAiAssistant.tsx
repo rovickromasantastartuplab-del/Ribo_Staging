@@ -112,7 +112,7 @@ export default function EditorAiAssistant({
                 className="w-80 p-0 overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl rounded-xl bg-white dark:bg-slate-950 animate-in zoom-in-95 duration-200"
                 sideOffset={12}
             >
-                {/* HubSpot-Style Header */}
+                {/* HubSpot-Style Headers */}
                 <div className="px-4 py-3 border-b flex items-center justify-between bg-white dark:bg-slate-950">
                     <div className="flex items-center gap-2">
                         {view === 'output' && (
