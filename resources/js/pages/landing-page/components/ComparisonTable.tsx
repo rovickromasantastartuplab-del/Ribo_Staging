@@ -193,10 +193,10 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
                         <div
                             key={plan.id}
                             className={`bg-white rounded-3xl border p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group ${isHighlighted ? 'border-2' : 'border-gray-200'}`}
-                            style={isHighlighted ? { borderColor: brandColor } : {}}
+                            style={isHighlighted ? { borderColor: '#2563eb' } : {}}
                         >
                             {isHighlighted && (
-                                <div className="absolute top-0 left-0 w-full bg-emerald-600 text-white py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                <div className="absolute top-0 left-0 w-full bg-blue-600 text-white py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm">
                                     {t('Most popular')}
                                 </div>
                             )}
@@ -213,7 +213,7 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
                             
                             <div className="flex items-baseline mb-1">
                                 <span className="text-3xl xl:text-4xl font-extrabold text-gray-900 tracking-tight">
-                                    ${displayPrice}
+                                    ₱{displayPrice}
                                 </span>
                             </div>
                             <p className="text-[10px] text-gray-400 mb-8 uppercase tracking-wider w-full truncate">

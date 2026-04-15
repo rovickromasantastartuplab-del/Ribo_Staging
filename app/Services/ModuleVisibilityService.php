@@ -35,6 +35,10 @@ class ModuleVisibilityService
             'media_library'       => 'Media Library',
             'referral'            => 'Referral Program',
             'notification_templates' => 'Notification Templates',
+            'shipping_provider_types' => 'Shipping Provider Types',
+            'brands'              => 'Brands',
+            'categories'          => 'Categories',
+            'taxes'               => 'Taxes',
         ];
     }
 
@@ -105,11 +109,32 @@ class ModuleVisibilityService
                 'purchase_orders',
                 'receipt_orders',
                 'return_orders',
+                'shipping_provider_types',
             ];
             $disabled = array_values(array_diff($disabled, $ecommerceModules));
         }
 
-        return $disabled;
+        // Handle module dependencies (e.g., if 'leads' is off, 'lead_statuses' and 'lead_sources' are also off)
+        $dependencies = [
+            'leads' => ['lead_statuses', 'lead_sources'],
+            'opportunities' => ['opportunity_stages', 'opportunity_sources'],
+            'accounts' => ['account_types', 'account_industries'],
+            'projects' => ['project_tasks', 'task_statuses'],
+            'campaigns' => ['campaign_types', 'target_lists'],
+            'documents' => ['document_folders', 'document_types'],
+        ];
+
+        foreach ($dependencies as $parent => $subs) {
+            if (in_array($parent, $disabled)) {
+                foreach ($subs as $sub) {
+                    if (!in_array($sub, $disabled)) {
+                        $disabled[] = $sub;
+                    }
+                }
+            }
+        }
+
+        return array_values(array_unique($disabled));
     }
 
     /**

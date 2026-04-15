@@ -528,7 +528,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Taxes routes
-        Route::middleware('permission:manage-taxes')->group(function () {
+        Route::middleware(['permission:manage-taxes', 'checkModuleVisibility:taxes'])->group(function () {
             Route::get('taxes', [TaxController::class, 'index'])->middleware('permission:manage-taxes')->name('taxes.index');
             Route::post('taxes', [TaxController::class, 'store'])->middleware('permission:create-taxes')->name('taxes.store');
             Route::put('taxes/{tax}', [TaxController::class, 'update'])->middleware('permission:edit-taxes')->name('taxes.update');
@@ -538,7 +538,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Brands routes
-        Route::middleware('permission:manage-brands')->group(function () {
+        Route::middleware(['permission:manage-brands', 'checkModuleVisibility:brands'])->group(function () {
             Route::get('brands', [BrandController::class, 'index'])->middleware('permission:manage-brands')->name('brands.index');
             Route::post('brands', [BrandController::class, 'store'])->middleware('permission:create-brands')->name('brands.store');
             Route::put('brands/{brand}', [BrandController::class, 'update'])->middleware('permission:edit-brands')->name('brands.update');
@@ -548,7 +548,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Categories routes
-        Route::middleware('permission:manage-categories')->group(function () {
+        Route::middleware(['permission:manage-categories', 'checkModuleVisibility:categories'])->group(function () {
             Route::get('categories', [CategoryController::class, 'index'])->middleware('permission:manage-categories')->name('categories.index');
             Route::post('categories', [CategoryController::class, 'store'])->middleware('permission:create-categories')->name('categories.store');
             Route::put('categories/{category}', [CategoryController::class, 'update'])->middleware('permission:edit-categories')->name('categories.update');
@@ -797,7 +797,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('wedding-supplier-categories', \App\Http\Controllers\WeddingSupplierCategoryController::class);
 
         // Shipping Provider Type routes
-        Route::middleware('permission:manage-shipping-provider-types')->group(function () {
+        Route::middleware(['permission:manage-shipping-provider-types', 'checkModuleVisibility:shipping_provider_types'])->group(function () {
             Route::get('shipping-provider-types', [ShippingProviderTypeController::class, 'index'])->middleware('permission:manage-shipping-provider-types')->name('shipping-provider-types.index');
             Route::get('shipping-provider-types/{id}', [ShippingProviderTypeController::class, 'show'])->middleware('permission:view-shipping-provider-types')->name('shipping-provider-types.show');
             Route::post('shipping-provider-types', [ShippingProviderTypeController::class, 'store'])->middleware('permission:create-shipping-provider-types')->name('shipping-provider-types.store');

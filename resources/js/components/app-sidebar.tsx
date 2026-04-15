@@ -323,19 +323,19 @@ export function AppSidebar() {
                 href: route('products.index')
             });
         }
-        if (hasPermission(permissions, 'manage-categories')) {
+        if (!disabledModules.includes('categories') && hasPermission(permissions, 'manage-categories')) {
             productManagementChildren.push({
                 title: t('Categories'),
                 href: route('categories.index')
             });
         }
-        if (hasPermission(permissions, 'manage-brands')) {
+        if (!disabledModules.includes('brands') && hasPermission(permissions, 'manage-brands')) {
             productManagementChildren.push({
                 title: t('Brands'),
                 href: route('brands.index')
             });
         }
-        if (hasPermission(permissions, 'manage-taxes')) {
+        if (!disabledModules.includes('taxes') && hasPermission(permissions, 'manage-taxes')) {
             productManagementChildren.push({
                 title: t('Taxes'),
                 href: route('taxes.index')
@@ -405,7 +405,7 @@ export function AppSidebar() {
                 href: route('purchase-orders.index')
             });
         }
-        if (hasPermission(permissions, 'manage-shipping-provider-types')) {
+        if (!disabledModules.includes('shipping_provider_types') && hasPermission(permissions, 'manage-shipping-provider-types')) {
             ecommerceChildren.push({
                 title: t('Shipping Provider Types'),
                 href: route('shipping-provider-types.index')
