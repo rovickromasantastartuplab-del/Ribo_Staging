@@ -1018,19 +1018,19 @@ class ConversationController extends Controller
                     'id' => 'nudge',
                     'name' => 'Gentle Nudge',
                     'subject' => 'Re: {Subject}',
-                    'body' => view('emails.followups.nudge')->render(),
+                    'body' => "Hi {FirstName},\n\nJust a quick nudge on this to make sure it didn't get buried in your inbox. Would love to hear your thoughts when you have a moment.\n\nBest,\n{SenderName}\n\n{TrackingPixel}",
                 ],
                 [
                     'id' => 'value_add',
                     'name' => 'Value Add',
                     'subject' => 'Quick resource for {Company}',
-                    'body' => view('emails.followups.value_add')->render(),
+                    'body' => "Hi {FirstName},\n\nI was just thinking about {Company} and wanted to share this resource that might be helpful for your team.\n\nWe've helped similar companies achieve great results, and I'd love to chat about how we can do the same for you.\n\nBest,\n{SenderName}\n\n{TrackingPixel}",
                 ],
                 [
                     'id' => 'breakup',
                     'name' => 'Break-up',
                     'subject' => 'Closing files',
-                    'body' => view('emails.followups.breakup')->render(),
+                    'body' => "Hi {FirstName},\n\nI haven't heard back from you, so I'm assuming your priorities have shifted. I'll go ahead and close your file for now.\n\nFeel free to reach out if you'd like to reconnect in the future.\n\nBest,\n{SenderName}\n\n{TrackingPixel}",
                 ],
             ]
         ]);

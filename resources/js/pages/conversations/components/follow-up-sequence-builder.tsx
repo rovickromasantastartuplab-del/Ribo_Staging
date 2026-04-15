@@ -109,7 +109,7 @@ export function FollowUpSequenceBuilder({ threadId, lastMessageAt }: Props) {
                 trigger_type: 'no_reply',
                 delay_days: 3,
                 subject: 'Re: Follow Up',
-                body: '<p>Hi {FirstName},</p><p>Just following up on my previous email. Would love to hear your thoughts.</p><p>Best,<br/>{SenderName}</p>{TrackingPixel}',
+                body: 'Hi {FirstName},\n\nJust following up on my previous email. Would love to hear your thoughts.\n\nBest,\n{SenderName}\n\n{TrackingPixel}',
             },
         ]);
         setIsEditing(true);
@@ -404,7 +404,7 @@ export function FollowUpSequenceBuilder({ threadId, lastMessageAt }: Props) {
                                                     <div className="space-y-1.5">
                                                         <div className="flex items-center justify-between ml-1">
                                                             <label className="text-[10px] font-bold text-muted-foreground uppercase">{t('Message Content')}</label>
-                                                            <span className="text-[9px] text-muted-foreground opacity-60 italic">{t('HTML Supported')}</span>
+                                                            <span className="text-[9px] text-muted-foreground opacity-60 italic">{t('Plain text or HTML')}</span>
                                                         </div>
                                                         <textarea
                                                             value={stage.body}
