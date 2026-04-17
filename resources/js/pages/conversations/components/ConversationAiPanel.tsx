@@ -142,7 +142,7 @@ export default function ConversationAiPanel({ threadId, onInsertDraft: _onInsert
 
     return (
         <div className="flex h-full flex-col bg-slate-50/30 dark:bg-slate-950/30">
-            <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/50 p-4 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="shrink-0 border-b border-slate-200 bg-white/50 p-4 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/50">
                 <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 animate-pulse text-indigo-500" />

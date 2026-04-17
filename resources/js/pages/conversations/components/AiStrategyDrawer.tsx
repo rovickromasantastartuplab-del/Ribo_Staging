@@ -48,7 +48,7 @@ export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertD
         return (
             <div
                 className={cn(
-                    'flex h-full shrink-0 flex-col items-center overflow-hidden border-l bg-slate-50/10 py-6 transition-all duration-300 ease-in-out dark:bg-slate-900/10',
+                    'hidden lg:flex h-full shrink-0 flex-col items-center overflow-hidden border-l bg-slate-50/10 py-6 transition-all duration-300 ease-in-out dark:bg-slate-900/10',
                     isOpen ? 'w-[320px]' : 'w-[52px]',
                 )}
             >
@@ -60,14 +60,14 @@ export default function AiStrategyDrawer({ threadId, isOpen, onToggle, onInsertD
     return (
         <div
             className={cn(
-                'group relative flex h-full shrink-0 flex-col overflow-hidden border-l bg-white shadow-sm transition-all duration-300 ease-in-out dark:bg-slate-950',
+                'group relative hidden lg:flex h-full shrink-0 flex-col overflow-hidden border-l bg-white shadow-sm transition-all duration-300 ease-in-out dark:bg-slate-950',
                 isOpen ? 'w-[320px]' : 'w-[52px]',
             )}
         >
             {/* Toggle Button (Floating) */}
             <button
                 onClick={onToggle}
-                className="absolute top-4 left-1.5 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border bg-white text-slate-400 opacity-0 shadow-md transition-all group-hover:opacity-100 hover:scale-110 hover:text-indigo-500 dark:bg-slate-800"
+                className="absolute top-4 left-1.5 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border bg-white text-slate-400 shadow-md transition-all hover:scale-110 hover:text-indigo-500 dark:bg-slate-800"
             >
                 {isOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
             </button>

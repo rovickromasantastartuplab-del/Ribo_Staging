@@ -26,7 +26,6 @@ import {
     Calendar,
     ChevronRight,
     Clock,
-    UserCheck,
     CheckCircle,
     Star,
     Bold,
@@ -35,6 +34,7 @@ import {
     MoreHorizontal,
     CornerDownLeft,
     Check,
+    Sparkles,
 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -67,6 +67,7 @@ import {
     DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Briefcase, TrendingUp, ExternalLink, ChevronDown, DollarSign, ChevronUp as ChevronUpIcon, Target, ShieldCheck } from 'lucide-react';
@@ -323,6 +324,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
         localStorage.setItem('conversations_ai_drawer_open', String(isAiDrawerOpen));
     }, [isAiDrawerOpen]);
 
+    const [isMobileAiSheetOpen, setIsMobileAiSheetOpen] = useState(false);
+
     // Tiptap Editor for Compose Modal
     const composeEditor = useEditor({
         extensions: [
@@ -500,7 +503,9 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                     fetchEarlierMessages();
                 }
             },
-            { threshold: 0.1 }
+            // root: scrollViewportRef.current binds the observer to the actual scroll container
+            // instead of the browser viewport (window), which is the default and incorrect here.
+            { threshold: 0.1, root: scrollViewportRef.current }
         );
 
         if (messagesTopObserverTarget.current) {
@@ -1041,7 +1046,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 noOuterPadding removes page p-4/md:p-6/lg:p-8 — no extra vertical gutter here.
                 Total overhead ≈ 56 + 40 = ~96px; use 116px to account for gaps/borders.
             */}
-            <div className="flex flex-col h-screen overflow-hidden lg:h-[calc(100vh-116px)] min-h-[25rem] bg-background border-b border-border relative">
+            <div className="flex flex-col h-[100dvh] overflow-hidden lg:h-[calc(100dvh-116px)] min-h-[25rem] bg-background border-b border-border relative">
 
                 {/* Mobile folder tabs: visible below xl where the sidebar is hidden */}
                 <div className="xl:hidden border-b shrink-0">
@@ -1056,7 +1061,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 </div>
 
                 {/* Main flex row: sidebar + list + detail */}
-                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
+                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
 
                     {/* Pane 1: Folder sidebar (xl+ only) */}
                     <FolderSidebar
@@ -1307,7 +1312,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 ml-2 shrink-0">
-                                            {/* Status Picker */}
+                                            {/* Status Picker — always visible */}
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-1.5 px-2.5">
@@ -1339,7 +1344,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
 
-                                            {/* Follow-up Trigger */}
+                                            {/* Follow-up Trigger — always visible */}
                                             <Button
                                                 variant="outline"
                                                 size="icon"
@@ -1350,56 +1355,15 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 <Clock className="h-4 w-4" />
                                             </Button>
 
-                                            {/* Assignment Picker */}
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" size="icon" className="h-8 w-8 relative">
-                                                        <UserCheck className="h-4 w-4" />
-                                                        {selectedThread.assignments?.length > 0 && (
-                                                            <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                                                                {selectedThread.assignments.length}
-                                                            </span>
-                                                        )}
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden">
-                                                    <div className="p-2 border-b bg-muted/30">
-                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('Assign Staff')}</p>
-                                                    </div>
-                                                    <ScrollArea className="h-48">
-                                                        <div className="p-1">
-                                                            {companyUsers.map((u: any) => (
-                                                                <DropdownMenuCheckboxItem
-                                                                    key={u.id}
-                                                                    onSelect={(e) => e.preventDefault()}
-                                                                    checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
-                                                                    onCheckedChange={(checked) => {
-                                                                        const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];
-                                                                        const nextIds = checked
-                                                                            ? [...currentIds, u.id]
-                                                                            : currentIds.filter((id: number) => id !== u.id);
-                                                                        handleAssignUsers(nextIds);
-                                                                    }}
-                                                                    className="flex items-center gap-2 text-xs py-2"
-                                                                >
-                                                                    <Avatar className="h-5 w-5">
-                                                                        <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
-                                                                    </Avatar>
-                                                                    {u.name}
-                                                                </DropdownMenuCheckboxItem>
-                                                            ))}
-                                                        </div>
-                                                    </ScrollArea>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-
+                                            {/* Overflow menu — contains Priority, Assignment, and CRM at all widths */}
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuContent align="end" className="w-52">
+                                                    {/* Priority */}
                                                     <DropdownMenuLabel className="text-xs uppercase text-muted-foreground">{t('Thread Priority')}</DropdownMenuLabel>
                                                     {['Low', 'Medium', 'High'].map(p => (
                                                         <DropdownMenuItem key={p} onClick={() => handleUpdateMetadata({ priority: p })}>
@@ -1408,17 +1372,62 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                             {selectedThread.priority === p && <CheckCircle className="ml-auto h-3 w-3 text-primary" />}
                                                         </DropdownMenuItem>
                                                     ))}
+
+                                                    <DropdownMenuSeparator />
+
+                                                    {/* Assignment Picker — moved from standalone button */}
+                                                    <DropdownMenuLabel className="text-xs uppercase text-muted-foreground">{t('Assign Staff')}</DropdownMenuLabel>
+                                                    {companyUsers.map((u: any) => (
+                                                        <DropdownMenuCheckboxItem
+                                                            key={u.id}
+                                                            onSelect={(e) => e.preventDefault()}
+                                                            checked={selectedThread.assignments?.some((a: any) => a.id === u.id)}
+                                                            onCheckedChange={(checked) => {
+                                                                const currentIds = selectedThread.assignments?.map((a: any) => a.id) || [];
+                                                                const nextIds = checked
+                                                                    ? [...currentIds, u.id]
+                                                                    : currentIds.filter((id: number) => id !== u.id);
+                                                                handleAssignUsers(nextIds);
+                                                            }}
+                                                            className="flex items-center gap-2 text-xs py-2"
+                                                        >
+                                                            <Avatar className="h-5 w-5">
+                                                                <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                            {u.name}
+                                                        </DropdownMenuCheckboxItem>
+                                                    ))}
+
+                                                    <DropdownMenuSeparator />
+
+                                                    {/* CRM context — moved from standalone button */}
+                                                    <DropdownMenuItem onClick={() => setShowCrmModal(true)}>
+                                                        <User className="w-3.5 h-3.5 mr-2" />
+                                                        {t('CRM Context')}
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
 
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowCrmModal(true)}>
-                                                <User className={`h-4 w-4 ${showCrmModal ? 'text-primary' : ''}`} />
-                                            </Button>
+                                            {/* Mobile AI trigger — only visible below lg where the persistent drawer is hidden */}
+                                            {selectedThread && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="lg:hidden h-8 w-8"
+                                                    onClick={() => setIsMobileAiSheetOpen(true)}
+                                                    title="AI Assistant"
+                                                >
+                                                    <Sparkles className="h-4 w-4 text-indigo-500" />
+                                                </Button>
+                                            )}
                                         </div>
+
                                     </div>
 
                                     {/* Messages */}
-                                    <ScrollArea className="flex-1 min-h-0">
+                                    {/* Native scrollable div — replaces ScrollArea so scrollViewportRef
+                                        can be bound directly to the scrolling element for the IntersectionObserver root. */}
+                                    <div ref={scrollViewportRef} className="flex-1 min-h-0 overflow-y-auto">
                                         <div className="flex flex-col-reverse pt-4 lg:pt-6 px-3 lg:px-4 pb-2 lg:pb-3 space-y-reverse space-y-4 lg:space-y-6 max-w-4xl mx-auto">
                                             {/* Scroll to bottom target (Native start) */}
                                             <div ref={messagesEndRef} className="h-0 shrink-0 invisible pointer-events-none" />
@@ -1530,7 +1539,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                             {/* Observer target for loading older history (now logically at the end of the reversed list) */}
                                             <div ref={messagesTopObserverTarget} className="h-1 w-full shrink-0" />
                                         </div>
-                                    </ScrollArea>
+                                    </div>
 
                                     {/* Reply box */}
                                     <div className="border-t bg-background shrink-0 p-2 lg:p-3">
@@ -1778,19 +1787,25 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => replyFileRef.current?.click()} disabled={submittingReply || selectedThread.status === 'Archive'}>
                                                         <Paperclip className="h-3.5 w-3.5" />
                                                     </Button>
-                                                    <EmojiPicker
-                                                        disabled={submittingReply || selectedThread.status === 'Archive'}
-                                                        onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()}
-                                                    />
-                                                    <div className="w-px h-4 bg-border mx-1" />
-                                                    <EditorAiAssistant 
-                                                        threadId={selectedThread?.id}
-                                                        disabled={submittingReply || selectedThread.status === 'Archive'}
-                                                        onInsertDraft={(body) => {
-                                                            replyEditor?.commands.setContent(body, true);
-                                                            setReplyBody(body);
-                                                        }}
-                                                    />
+                                                    {/* EmojiPicker — hidden on mobile (low priority, saves ~32px) */}
+                                                    <span className="hidden sm:flex items-center gap-1">
+                                                        <EmojiPicker
+                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                            onSelect={(emoji) => replyEditor?.chain().focus().insertContent(emoji).run()}
+                                                        />
+                                                    </span>
+                                                    {/* EditorAiAssistant — hidden below lg; mobile AI panel (Sheet) covers this use case */}
+                                                    <span className="hidden lg:flex items-center gap-1">
+                                                        <div className="w-px h-4 bg-border mx-1" />
+                                                        <EditorAiAssistant 
+                                                            threadId={selectedThread?.id}
+                                                            disabled={submittingReply || selectedThread.status === 'Archive'}
+                                                            onInsertDraft={(body) => {
+                                                                replyEditor?.commands.setContent(body, true);
+                                                                setReplyBody(body);
+                                                            }}
+                                                        />
+                                                    </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Button
@@ -1836,6 +1851,23 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             setShowCrmModal(false); // Close modal if open
                         }}
                     />
+
+                    {/* Mobile AI Sheet — visible below lg where the persistent drawer is hidden */}
+                    <Sheet open={isMobileAiSheetOpen} onOpenChange={(open) => !open && setIsMobileAiSheetOpen(false)}>
+                        <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col">
+                            <SheetTitle className="sr-only">AI Assistant</SheetTitle>
+                            {selectedThread && (
+                                <ConversationAiPanel
+                                    threadId={selectedThread.id}
+                                    onInsertDraft={(body: string) => {
+                                        replyEditor?.commands.setContent(body, true);
+                                        setReplyBody(body);
+                                        setIsMobileAiSheetOpen(false);
+                                    }}
+                                />
+                            )}
+                        </SheetContent>
+                    </Sheet>
 
                     {/* Pane 4: CRM Context Modal */}
                     {selectedThread && (
@@ -2296,7 +2328,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 {t('New Message')}
                             </DialogTitle>
                         </DialogHeader>
-                        <div className="flex flex-col bg-background">
+                        <div className="flex flex-col bg-background max-h-[calc(100dvh-12rem)] overflow-y-auto">
                             <div className="flex items-center px-6 py-3 border-b focus-within:bg-muted/30 transition-colors group">
                                 <Label htmlFor="compose-to" className="w-16 text-sm font-bold text-muted-foreground group-focus-within:text-foreground transition-colors">{t('To')}</Label>
                                 <Input
@@ -2350,7 +2382,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                 />
                             </div>
                             <div className="flex flex-col relative focus-within:bg-muted/10 transition-colors duration-300">
-                                <div className="min-h-[15.625rem] max-h-[20rem] overflow-y-auto cursor-text scrollbar-thin" onClick={() => composeEditor?.commands.focus()}>
+                                <div className="min-h-[8rem] max-h-[20rem] overflow-y-auto cursor-text scrollbar-thin" onClick={() => composeEditor?.commands.focus()}>
                                     <EditorContent editor={composeEditor} />
                                 </div>
                                 {/* Compose attachment previews */}
