@@ -26,6 +26,7 @@ import {
     Calendar,
     ChevronRight,
     Clock,
+    UserCheck,
     CheckCircle,
     Star,
     Bold,
