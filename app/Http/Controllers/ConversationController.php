@@ -252,7 +252,7 @@ class ConversationController extends Controller
             return $thread;
         });
 
-        $unreadCount = $this->getGlobalUnreadCount($companyId, $gmailAccount);
+        $unreadCount = $this->getGlobalUnreadCount($companyId, $channelAccount);
 
         return response()->json([
             'threads' => $threads,
