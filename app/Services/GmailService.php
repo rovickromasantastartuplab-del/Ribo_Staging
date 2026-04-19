@@ -18,9 +18,9 @@ class GmailService
 {
     private GoogleClient $client;
     private Gmail $gmail;
-    private GmailAccount $account;
+    private $account;
 
-    public function __construct(GmailAccount $account)
+    public function __construct($account)
     {
         $this->account = $account;
 
@@ -41,16 +41,28 @@ class GmailService
         $this->client->setClientSecret($clientSecret);
 
         // Google Client expects a token array, not just a bare access_token string
+        $accessToken = $account instanceof \App\Models\ChannelAccount 
+            ? $account->getConfig('access_token') 
+            : $account->access_token;
+            
+        $tokenExpiresAt = $account instanceof \App\Models\ChannelAccount 
+            ? $account->getConfig('token_expires_at') 
+            : $account->token_expires_at;
+
         $this->client->setAccessToken([
-            'access_token' => $account->access_token,
+            'access_token' => $accessToken,
             'token_type' => 'Bearer',
-            'expires_in' => $account->token_expires_at
-                ? max(0, now()->diffInSeconds($account->token_expires_at, false))
+            'expires_in' => $tokenExpiresAt
+                ? max(0, now()->diffInSeconds(\Carbon\Carbon::parse($tokenExpiresAt), false))
                 : 3600,
             'created' => $account->updated_at?->timestamp ?? time(),
         ]);
 
-        if ($account->refresh_token) {
+        $refreshToken = $account instanceof \App\Models\ChannelAccount 
+            ? $account->getConfig('refresh_token') 
+            : $account->refresh_token;
+
+        if ($refreshToken) {
             $this->client->setAccessType('offline');
         }
 
@@ -62,11 +74,19 @@ class GmailService
      */
     public function refreshTokenIfNeeded(): bool
     {
-        if (!$this->account->isTokenExpired()) {
+        $isExpired = $this->account instanceof \App\Models\ChannelAccount
+            ? (\Carbon\Carbon::parse($this->account->getConfig('token_expires_at'))->isPast() ?? true)
+            : $this->account->isTokenExpired();
+
+        if (!$isExpired) {
             return true;
         }
 
-        if (!$this->account->refresh_token) {
+        $refreshToken = $this->account instanceof \App\Models\ChannelAccount
+            ? $this->account->getConfig('refresh_token')
+            : $this->account->refresh_token;
+
+        if (!$refreshToken) {
             Log::error('Gmail token expired and no refresh token available', [
                 'gmail_account_id' => $this->account->id,
             ]);
@@ -74,33 +94,48 @@ class GmailService
         }
 
         try {
-            $this->client->fetchAccessTokenWithRefreshToken($this->account->refresh_token);
+            $refreshToken = $this->account instanceof \App\Models\ChannelAccount
+                ? $this->account->getConfig('refresh_token')
+                : $this->account->refresh_token;
+
+            $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
             $newToken = $this->client->getAccessToken();
 
             if (isset($newToken['error'])) {
                 Log::error('Gmail token refresh failed', [
-                    'gmail_account_id' => $this->account->id,
+                    'account_id' => $this->account->id,
                     'error' => $newToken['error'],
                 ]);
                 return false;
             }
 
-            $updateData = [
-                'access_token' => $newToken['access_token'],
-                'token_expires_at' => now()->addSeconds($newToken['expires_in'] ?? 3600),
-            ];
+            if ($this->account instanceof \App\Models\ChannelAccount) {
+                $config = $this->account->configuration;
+                $config['access_token'] = $newToken['access_token'];
+                $config['token_expires_at'] = now()->addSeconds($newToken['expires_in'] ?? 3600)->toIso8601String();
+                
+                if (!empty($newToken['refresh_token'])) {
+                    $config['refresh_token'] = $newToken['refresh_token'];
+                }
 
-            // Google may issue a new refresh token — persist it if so
-            if (!empty($newToken['refresh_token'])) {
-                $updateData['refresh_token'] = $newToken['refresh_token'];
+                $this->account->update(['configuration' => $config]);
+            } else {
+                $updateData = [
+                    'access_token' => $newToken['access_token'],
+                    'token_expires_at' => now()->addSeconds($newToken['expires_in'] ?? 3600),
+                ];
+
+                if (!empty($newToken['refresh_token'])) {
+                    $updateData['refresh_token'] = $newToken['refresh_token'];
+                }
+
+                $this->account->update($updateData);
             }
-
-            $this->account->update($updateData);
 
             return true;
         } catch (\Exception $e) {
             Log::error('Gmail token refresh exception', [
-                'gmail_account_id' => $this->account->id,
+                'account_id' => $this->account->id,
                 'error' => $e->getMessage(),
             ]);
             return false;
@@ -119,10 +154,18 @@ class GmailService
         // Build query based on sync strategy
         $baseQuery = 'in:inbox OR in:sent';
         
-        if ($this->account->sync_strategy === 'categories' && !empty($this->account->sync_categories)) {
+        $syncStrategy = $this->account instanceof \App\Models\ChannelAccount 
+            ? $this->account->getConfig('sync_strategy') 
+            : $this->account->sync_strategy;
+            
+        $syncCategories = $this->account instanceof \App\Models\ChannelAccount 
+            ? $this->account->getConfig('sync_categories') 
+            : $this->account->sync_categories;
+
+        if ($syncStrategy === 'categories' && !empty($syncCategories)) {
             $categoryQueries = array_map(function($category) {
                 return 'category:' . strtolower($category);
-            }, $this->account->sync_categories);
+            }, $syncCategories);
             
             $params['q'] = '(' . implode(' OR ', $categoryQueries) . ') AND (' . $baseQuery . ')';
         } else {
@@ -212,13 +255,26 @@ class GmailService
             }
 
             // Update account sync status and persist the historyId for incremental sync
-            $this->account->update([
-                'last_sync_at' => now(),
-                'sync_status' => 'idle',
-                'sync_error' => null,
-                'last_history_id' => $latestHistoryId ?? $this->account->last_history_id,
-                'next_page_token' => $result['nextPageToken'], // Store for infinite scroll
-            ]);
+            if ($this->account instanceof \App\Models\ChannelAccount) {
+                $config = $this->account->configuration;
+                $config['last_history_id'] = $latestHistoryId ?? ($config['last_history_id'] ?? null);
+                $config['next_page_token'] = $result['nextPageToken'];
+                
+                $this->account->update([
+                    'last_sync_at' => now(),
+                    'sync_status' => 'idle',
+                    'sync_error' => null,
+                    'configuration' => $config,
+                ]);
+            } else {
+                $this->account->update([
+                    'last_sync_at' => now(),
+                    'sync_status' => 'idle',
+                    'sync_error' => null,
+                    'last_history_id' => $latestHistoryId ?? $this->account->last_history_id,
+                    'next_page_token' => $result['nextPageToken'],
+                ]);
+            }
 
         } catch (\Exception $e) {
             Log::error('Gmail sync failed', [
@@ -244,7 +300,10 @@ class GmailService
      */
     public function incrementalSync(): ?array
     {
-        $startHistoryId = $this->account->last_history_id;
+        $startHistoryId = $this->account instanceof \App\Models\ChannelAccount 
+            ? $this->account->getConfig('last_history_id') 
+            : $this->account->last_history_id;
+
         if (!$startHistoryId) {
             return null; // No baseline — caller should do a full sync
         }
@@ -315,12 +374,24 @@ class GmailService
             }
 
             // Persist the new historyId
-            $this->account->update([
-                'last_sync_at' => now(),
-                'sync_status' => 'idle',
-                'sync_error' => null,
-                'last_history_id' => $latestHistoryId,
-            ]);
+            if ($this->account instanceof \App\Models\ChannelAccount) {
+                $config = $this->account->configuration;
+                $config['last_history_id'] = $latestHistoryId;
+                
+                $this->account->update([
+                    'last_sync_at' => now(),
+                    'sync_status' => 'idle',
+                    'sync_error' => null,
+                    'configuration' => $config,
+                ]);
+            } else {
+                $this->account->update([
+                    'last_sync_at' => now(),
+                    'sync_status' => 'idle',
+                    'sync_error' => null,
+                    'last_history_id' => $latestHistoryId,
+                ]);
+            }
 
             Log::info('Incremental Gmail sync completed', [
                 'gmail_account_id' => $this->account->id,
@@ -357,8 +428,9 @@ class GmailService
 
         $emailThread = EmailThread::updateOrCreate(
             [
-                'gmail_account_id' => $this->account->id,
-                'gmail_thread_id' => $thread->getId(),
+                'gmail_account_id' => $this->account instanceof \App\Models\GmailAccount ? $this->account->id : null,
+                'channel_account_id' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->id : null,
+                'external_thread_id' => $thread->getId(),
             ],
             [
                 'subject' => $subject,
@@ -371,6 +443,7 @@ class GmailService
                 'is_read' => !in_array('UNREAD', $this->extractThreadLabels($messages)),
                 'labels' => $this->extractThreadLabels($messages),
                 'created_by' => $companyId,
+                'channel_type' => 'gmail',
             ]
         );
 
@@ -398,14 +471,26 @@ class GmailService
      */
     public function getConnectionStatus(): array
     {
+        $email = $this->account instanceof \App\Models\ChannelAccount 
+            ? $this->account->email_address 
+            : $this->account->gmail_address;
+
+        $isExpired = $this->account instanceof \App\Models\ChannelAccount
+            ? (\Carbon\Carbon::parse($this->account->getConfig('token_expires_at'))->isPast() ?? true)
+            : $this->account->isTokenExpired();
+
+        $needsReconnect = $this->account instanceof \App\Models\ChannelAccount
+            ? (empty($this->account->getConfig('refresh_token')) || $this->account->sync_status === 'error')
+            : $this->account->needsReconnect();
+
         return [
             'connected' => true,
-            'email' => $this->account->gmail_address,
+            'email' => $email,
             'last_sync_at' => $this->account->last_sync_at?->toIso8601String(),
             'sync_status' => $this->account->sync_status,
             'sync_error' => $this->account->sync_error,
-            'token_expired' => $this->account->isTokenExpired(),
-            'needs_reconnect' => $this->account->needsReconnect(),
+            'token_expired' => $isExpired,
+            'needs_reconnect' => $needsReconnect,
         ];
     }
 
@@ -573,7 +658,11 @@ class GmailService
      */
     private function buildSimpleMessage(string $to, string $subject, string $body, ?string $inReplyTo, array $cc, array $bcc = []): string
     {
-        $rawMessage = "From: {$this->account->gmail_address}\r\n";
+        $fromEmail = $this->account instanceof \App\Models\ChannelAccount 
+            ? $this->account->email_address 
+            : $this->account->gmail_address;
+
+        $rawMessage = "From: {$fromEmail}\r\n";
         $rawMessage .= "To: {$to}\r\n";
 
         if (!empty($cc)) {
@@ -605,7 +694,11 @@ class GmailService
     {
         $boundary = 'boundary_' . md5(uniqid(mt_rand(), true));
 
-        $rawMessage = "From: {$this->account->gmail_address}\r\n";
+        $fromEmail = $this->account instanceof \App\Models\ChannelAccount 
+            ? $this->account->email_address 
+            : $this->account->gmail_address;
+
+        $rawMessage = "From: {$fromEmail}\r\n";
         $rawMessage .= "To: {$to}\r\n";
 
         if (!empty($cc)) {
@@ -676,7 +769,7 @@ class GmailService
             return strtolower(trim($participant));
         }, $participants);
 
-        $selfEmail = strtolower($this->account->gmail_address);
+        $selfEmail = strtolower($this->account instanceof \App\Models\ChannelAccount ? $this->account->email_address : $this->account->gmail_address);
         $externalParticipants = array_unique(array_filter($externalParticipants, function ($email) use ($selfEmail) {
             return !empty($email) && $email !== $selfEmail;
         }));
@@ -898,7 +991,7 @@ class GmailService
         $emailMessage = EmailMessage::updateOrCreate(
             [
                 'email_thread_id' => $emailThread->id,
-                'gmail_message_id' => $message->getId(),
+                'external_message_id' => $message->getId(),
             ],
             [
                 'from_email' => $this->parseEmailAddress($fromRaw),
@@ -921,13 +1014,33 @@ class GmailService
     }
 
     /**
-     * Download and store attachments from a Gmail message using Spatie Media Library.
+     * Extract and store attachment metadata from a Gmail message to enable lazy-loading.
      */
     private function syncAttachments(EmailMessage $emailMessage, $gmailMessage): void
     {
-        // NO-OP: We no longer store attachments locally to save space.
-        // Attachments are now proxied live from the Gmail API on demand.
-        return;
+        $payload = $gmailMessage->getPayload();
+        if (!$payload) return;
+
+        $parts = $this->collectAttachmentParts($payload->getParts() ?? []);
+        $attachments = [];
+
+        foreach ($parts as $part) {
+            $attachmentId = $part->getBody()?->getAttachmentId();
+            if ($attachmentId) {
+                $attachments[] = [
+                    'id' => $attachmentId,
+                    'name' => $part->getFilename(),
+                    'size' => $part->getBody()?->getSize(),
+                    'content_type' => $part->getMimeType(),
+                ];
+            }
+        }
+
+        if (!empty($attachments)) {
+            $metadata = $emailMessage->metadata ?? [];
+            $metadata['attachments'] = $attachments;
+            $emailMessage->update(['metadata' => $metadata]);
+        }
     }
 
     /**
@@ -1095,14 +1208,16 @@ class GmailService
             // Find or create the local thread
             $emailThread = \App\Models\EmailThread::updateOrCreate(
                 [
-                    'gmail_thread_id' => $sentMessage->getThreadId(),
+                    'external_thread_id' => $sentMessage->getThreadId(),
                     'created_by' => $companyId,
                 ],
                 [
                     'subject' => $subject,
                     'is_read' => true,
                     'last_message_at' => now(),
-                    'gmail_account_id' => $this->account->id,
+                    'gmail_account_id' => $this->account instanceof \App\Models\GmailAccount ? $this->account->id : null,
+                    'channel_account_id' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->id : null,
+                    'channel_type' => 'gmail',
                 ]
             );
 
@@ -1110,10 +1225,10 @@ class GmailService
             \App\Models\EmailMessage::updateOrCreate(
                 [
                     'email_thread_id' => $emailThread->id,
-                    'gmail_message_id' => $sentMessage->getId(),
+                    'external_message_id' => $sentMessage->getId(),
                 ],
                 [
-                    'from_email' => $this->account->gmail_address,
+                    'from_email' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->email_address : $this->account->gmail_address,
                     'from_name' => $this->account->name,
                     'to_emails' => [$to],
                     'bcc_emails' => $bcc_emails ?: null,
@@ -1145,8 +1260,10 @@ class GmailService
     private function logActivity(string $type, string $title, ?string $description = null, array $old = [], array $new = [])
     {
         try {
+            $column = $this->account instanceof \App\Models\ChannelAccount ? 'channel_account_id' : 'gmail_account_id';
+            
             \App\Models\GmailAccountActivity::create([
-                'gmail_account_id' => $this->account->id,
+                $column => $this->account->id,
                 'user_id' => auth()->id() ?? $this->account->user_id,
                 'activity_type' => $type,
                 'title' => $title,

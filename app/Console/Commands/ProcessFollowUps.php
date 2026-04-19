@@ -12,7 +12,7 @@ use App\Models\EmailClickLog;
 use App\Notifications\ConversationFollowUp;
 use App\Notifications\AutomatedFollowUpSent;
 use Illuminate\Support\Facades\Notification;
-use App\Services\GmailService;
+use App\Services\Omnichannel\MailboxManager;
 use App\Services\Conversations\FollowUpEmailBodyFormatter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +51,7 @@ class ProcessFollowUps extends Command
      */
     private function processAutomatedFollowUps(): void
     {
-        $dueItems = ThreadFollowUpQueue::with(['stage.emailThread.gmailAccount', 'stage.emailThread.leads', 'stage.emailThread.contacts'])
+        $dueItems = ThreadFollowUpQueue::with(['stage.emailThread.channelAccount', 'stage.emailThread.leads', 'stage.emailThread.contacts'])
             ->where('status', 'pending')
             ->where('scheduled_at', '<=', now())
             ->get();
@@ -68,7 +68,7 @@ class ProcessFollowUps extends Command
                 $stage = $item->stage;
                 $thread = $stage?->emailThread;
 
-                if (!$thread || !$thread->gmailAccount) {
+                if (!$thread || !$thread->channelAccount) {
                     $item->update(['status' => 'cancelled', 'cancelled_reason' => 'missing_thread_or_account']);
                     continue;
                 }
@@ -80,16 +80,10 @@ class ProcessFollowUps extends Command
                     continue;
                 }
 
-                // Authenticate as the thread owner for GmailService
-                $owner = User::find($thread->created_by);
-                if ($owner) {
-                    Auth::login($owner);
-                }
-
-                $gmailService = new GmailService($thread->gmailAccount);
+                $driver = MailboxManager::resolve($thread->channelAccount);
 
                 // Evaluate trigger condition
-                $conditionMet = $this->evaluateTrigger($stage->trigger_type, $item, $gmailService);
+                $conditionMet = $this->evaluateTrigger($stage->trigger_type, $item, $driver);
 
                 if ($conditionMet) {
                     $item->update(['status' => 'cancelled', 'cancelled_reason' => 'condition_met']);
@@ -100,8 +94,19 @@ class ProcessFollowUps extends Command
                 // Resolve merge tags
                 $resolvedBody = $this->resolveMergeTags($stage->body, $thread, $item);
 
-                // Send the follow-up reply
-                $newMessageId = $gmailService->sendFollowUpReply($item, $resolvedBody);
+                // Send the follow-up reply as a generic EmailMessage
+                $message = \App\Models\EmailMessage::create([
+                    'email_thread_id' => $thread->id,
+                    'from_email' => $thread->channelAccount->email_address,
+                    'to_emails' => [$item->recipient_email],
+                    'subject' => $thread->subject,
+                    'body_html' => $resolvedBody,
+                    'message_id_header' => $item->external_message_id ?: $item->gmail_message_id,
+                    'created_by' => $thread->created_by,
+                ]);
+
+                $success = $driver->sendOutgoing($message);
+                $newMessageId = $success ? $message->external_message_id : null;
 
                 if ($newMessageId) {
                     $item->update(['status' => 'sent', 'sent_at' => now()]);
@@ -128,8 +133,8 @@ class ProcessFollowUps extends Command
                             Notification::send($recipients, new AutomatedFollowUpSent($thread, $item));
                         }
 
-                        // Also notify the connected Gmail account if it's not one of the registered recipients
-                        $connectedEmail = $thread->gmailAccount?->gmail_address;
+                        // Also notify the connected account if it's not one of the registered recipients
+                        $connectedEmail = $thread->channelAccount?->email_address;
                         if ($connectedEmail) {
                             $isAlreadyNotified = $recipients->contains(function ($user) use ($connectedEmail) {
                                 return strtolower($user->email) === strtolower($connectedEmail);
@@ -163,12 +168,14 @@ class ProcessFollowUps extends Command
      * Evaluate whether the trigger condition has been met (recipient replied, opened, or clicked).
      * Returns true if the condition IS met (meaning we should CANCEL the follow-up).
      */
-    private function evaluateTrigger(string $triggerType, ThreadFollowUpQueue $item, GmailService $gmailService): bool
+    private function evaluateTrigger(string $triggerType, ThreadFollowUpQueue $item, \App\Contracts\Omnichannel\MailboxProvider $driver): bool
     {
         return match ($triggerType) {
-            'no_reply' => $gmailService->hasReply($item->gmail_thread_id, $item->recipient_email),
-            'no_open'  => EmailOpenLog::where('gmail_message_id', $item->gmail_message_id)->exists(),
-            'no_click' => EmailClickLog::where('gmail_message_id', $item->gmail_message_id)->exists(),
+            'no_reply' => $driver->hasReply($item->external_thread_id ?: $item->gmail_thread_id, $item->recipient_email),
+            'no_open'  => EmailOpenLog::where('external_message_id', $item->external_message_id ?: $item->gmail_message_id)->exists() 
+                          || EmailOpenLog::where('gmail_message_id', $item->gmail_message_id)->exists(),
+            'no_click' => EmailClickLog::where('external_message_id', $item->external_message_id ?: $item->gmail_message_id)->exists()
+                          || EmailClickLog::where('gmail_message_id', $item->gmail_message_id)->exists(),
             'drip'     => false, // Always send
             default    => false,
         };
@@ -202,11 +209,11 @@ class ProcessFollowUps extends Command
             $email = $contact->email ?? $email;
         }
 
-        // Sender name from the Gmail account owner
-        $senderName = $thread->gmailAccount?->user?->name ?? '';
+        // Sender name from the account owner
+        $senderName = $thread->channelAccount?->user?->name ?? '';
 
         // Build tracking pixel tag
-        $pixelUrl = route('tracking.pixel', ['messageId' => $item->gmail_message_id]) . '?e=' . urlencode($item->recipient_email);
+        $pixelUrl = route('tracking.pixel', ['messageId' => $item->external_message_id ?: $item->gmail_message_id]) . '?e=' . urlencode($item->recipient_email);
         $trackingPixel = '<img src="' . $pixelUrl . '" width="1" height="1" style="display:none" alt="" />';
 
         $replacements = [
@@ -239,8 +246,8 @@ class ProcessFollowUps extends Command
         ThreadFollowUpQueue::create([
             'thread_follow_up_stage_id' => $nextStage->id,
             'recipient_email'           => $sentItem->recipient_email,
-            'gmail_thread_id'           => $sentItem->gmail_thread_id,
-            'gmail_message_id'          => $newMessageId,
+            'external_thread_id'        => $sentItem->external_thread_id ?: $sentItem->gmail_thread_id,
+            'external_message_id'       => $newMessageId,
             'status'                    => 'pending',
             'scheduled_at'              => now()->addDays($nextStage->delay_days),
         ]);

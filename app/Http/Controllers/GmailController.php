@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GmailAccount;
+use App\Models\ChannelAccount;
 use App\Models\EmailThread;
-use App\Jobs\SyncGmailThreadsJob;
+use App\Jobs\SyncChannelAccountJob;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -19,27 +19,27 @@ class GmailController extends Controller
         $companyId = $user->creatorId();
         $isOwner = $user->type === 'company' || $user->id === $companyId;
 
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->where('type', 'gmail')->first();
 
-        if (!$gmailAccount) {
+        if (!$channelAccount) {
             return Inertia::render('gmail/index', [
                 'threads' => [],
-                'gmailAccount' => null,
+                'channelAccount' => null,
                 'isOwner' => $isOwner,
             ]);
         }
 
-        $query = EmailThread::where('gmail_account_id', $gmailAccount->id);
+        $query = EmailThread::where('channel_account_id', $channelAccount->id);
 
         // Apply sync strategy filtering
-        if ($gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
-            $syncCategories = $gmailAccount->sync_categories;
+        if ($channelAccount->getConfig('sync_strategy') === 'categories' && !empty($channelAccount->getConfig('sync_categories'))) {
+            $syncCategories = $channelAccount->getConfig('sync_categories');
             $hasPrimary = in_array('PRIMARY', $syncCategories);
 
             $query->where(function($q) use ($syncCategories, $hasPrimary) {
                 foreach ($syncCategories as $category) {
                     if ($category !== 'PRIMARY') {
-                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
+                        $q->orWhereJsonContains('tags', 'CATEGORY_' . strtoupper($category));
                     }
                 }
                 
@@ -47,7 +47,7 @@ class GmailController extends Controller
                     $q->orWhere(function($sq) {
                         $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
                         foreach ($otherCategories as $other) {
-                            $sq->whereJsonDoesntContain('labels', $other);
+                            $sq->whereJsonDoesntContain('tags', $other);
                         }
                     });
                 }
@@ -69,12 +69,12 @@ class GmailController extends Controller
 
         return Inertia::render('gmail/index', [
             'threads' => $threads,
-            'gmailAccount' => [
-                'id' => $gmailAccount->id,
-                'gmail_address' => $gmailAccount->gmail_address,
-                'last_sync_at' => $gmailAccount->last_sync_at?->toIso8601String(),
-                'sync_status' => $gmailAccount->sync_status,
-                'sync_error' => $gmailAccount->sync_error,
+            'channelAccount' => [
+                'id' => $channelAccount->id,
+                'gmail_address' => $channelAccount->email_address,
+                'last_sync_at' => $channelAccount->last_sync_at?->toIso8601String(),
+                'sync_status' => $channelAccount->sync_status,
+                'sync_error' => $channelAccount->sync_error,
             ],
             'filters' => [
                 'search' => $search,
@@ -90,10 +90,10 @@ class GmailController extends Controller
         $user = auth()->user();
         $companyId = $user->creatorId();
 
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->firstOrFail();
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->where('type', 'gmail')->firstOrFail();
 
-        $thread = EmailThread::where('gmail_account_id', $gmailAccount->id)
-            ->where('gmail_thread_id', $threadId)
+        $thread = EmailThread::where('channel_account_id', $channelAccount->id)
+            ->where('external_thread_id', $threadId)
             ->with('messages')
             ->firstOrFail();
 
@@ -105,8 +105,8 @@ class GmailController extends Controller
         return Inertia::render('gmail/show', [
             'thread' => $thread,
             'messages' => $thread->messages,
-            'gmailAccount' => [
-                'gmail_address' => $gmailAccount->gmail_address,
+            'channelAccount' => [
+                'gmail_address' => $channelAccount->email_address,
             ],
         ]);
     }
@@ -119,36 +119,17 @@ class GmailController extends Controller
         $user = auth()->user();
         $companyId = $user->creatorId();
 
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->where('type', 'gmail')->first();
 
-        if ($gmailAccount) {
-            // This will cascade delete email_threads and email_messages
-            $gmailAccount->delete();
-        }
-
-        return redirect('/settings#integrations-settings')
-            ->with('success', 'Gmail account disconnected successfully.');
-    }
-
-    /**
-     * Trigger an immediate sync for the user's Gmail account.
-     */
-    public function syncNow()
-    {
-        $user = auth()->user();
-        $companyId = $user->creatorId();
-
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
-
-        if (!$gmailAccount) {
+        if (!$channelAccount) {
             return redirect()->back()->with('error', 'No Gmail account connected.');
         }
 
-        if ($gmailAccount->sync_status === 'syncing') {
+        if ($channelAccount->sync_status === 'syncing') {
             return redirect()->back()->with('info', 'A sync is already in progress.');
         }
 
-        SyncGmailThreadsJob::dispatchSync($gmailAccount->id);
+        SyncChannelAccountJob::dispatchSync($channelAccount->id);
 
         return redirect()->back()->with('success', 'Gmail sync completed successfully.');
     }
@@ -161,9 +142,9 @@ class GmailController extends Controller
         $user = auth()->user();
         $companyId = $user->creatorId();
 
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->where('type', 'gmail')->first();
 
-        if (!$gmailAccount) {
+        if (!$channelAccount) {
             return redirect()->back()->with('error', 'No Gmail account connected.');
         }
 
@@ -173,9 +154,11 @@ class GmailController extends Controller
             'gmail_sync_categories.*' => 'string|in:PRIMARY,SOCIAL,PROMOTIONS,UPDATES,FORUMS',
         ]);
 
-        $gmailAccount->update([
-            'sync_strategy' => $validated['gmail_sync_strategy'],
-            'sync_categories' => $validated['gmail_sync_categories'] ?? null,
+        $channelAccount->update([
+            'configuration' => array_merge($channelAccount->configuration, [
+                'sync_strategy' => $validated['gmail_sync_strategy'],
+                'sync_categories' => $validated['gmail_sync_categories'] ?? null,
+            ])
         ]);
 
         return redirect()->back()->with('success', 'Gmail sync settings updated successfully.');

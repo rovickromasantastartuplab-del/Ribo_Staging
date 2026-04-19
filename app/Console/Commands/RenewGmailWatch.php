@@ -27,7 +27,7 @@ class RenewGmailWatch extends Command
     {
         $this->info('Starting Gmail Pub/Sub watch renewal process...');
 
-        $accounts = \App\Models\GmailAccount::all();
+        $accounts = \App\Models\ChannelAccount::where('type', 'gmail')->get();
         $successful = 0;
         $failed = 0;
 
@@ -39,18 +39,18 @@ class RenewGmailWatch extends Command
                 if ($service->refreshTokenIfNeeded()) {
                     if ($service->watchInbox()) {
                         $successful++;
-                        $this->line("Successfully renewed watch for {$account->gmail_address}");
+                        $this->line("Successfully renewed watch for {$account->email_address}");
                     } else {
                         $failed++;
-                        $this->error("Failed to renew watch for {$account->gmail_address}");
+                        $this->error("Failed to renew watch for {$account->email_address}");
                     }
                 } else {
                     $failed++;
-                    $this->error("Could not refresh token for {$account->gmail_address}");
+                    $this->error("Could not refresh token for {$account->email_address}");
                 }
             } catch (\Exception $e) {
                 $failed++;
-                $this->error("Error processing {$account->gmail_address}: " . $e->getMessage());
+                $this->error("Error processing {$account->email_address}: " . $e->getMessage());
             }
         }
 

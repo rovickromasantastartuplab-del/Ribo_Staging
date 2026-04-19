@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\GmailAccount;
-use App\Jobs\SyncGmailThreadsJob;
+use App\Models\ChannelAccount;
+use App\Jobs\SyncChannelAccountJob;
 
 class GmailWebhookController extends Controller
 {
@@ -40,16 +40,18 @@ class GmailWebhookController extends Controller
         Log::info("Gmail webhook received for: {$emailAddress} (HistoryId: {$historyId})");
 
         // Find all connected Gmail accounts for this email (to support multi-company if it exists)
-        $gmailAccounts = GmailAccount::where('gmail_address', $emailAddress)->get();
+        $channelAccounts = ChannelAccount::where('email_address', $emailAddress)
+            ->where('type', 'gmail')
+            ->get();
 
-        if ($gmailAccounts->isNotEmpty()) {
-            foreach ($gmailAccounts as $gmailAccount) {
+        if ($channelAccounts->isNotEmpty()) {
+            foreach ($channelAccounts as $account) {
                 // Immediately dispatch the sync job to the background queue
-                SyncGmailThreadsJob::dispatch($gmailAccount->id);
-                Log::info("Dispatched SyncGmailThreadsJob for account ID {$gmailAccount->id} ({$emailAddress}) via Webhook");
+                SyncChannelAccountJob::dispatch($account->id);
+                Log::info("Dispatched SyncChannelAccountJob for account ID {$account->id} ({$emailAddress}) via Webhook");
             }
         } else {
-            Log::warning("Gmail webhook received for {$emailAddress} but no matching GmailAccount found in DB.");
+            Log::warning("Gmail webhook received for {$emailAddress} but no matching ChannelAccount (gmail) found in DB.");
         }
 
         // Return a quick 200 OK so Google knows we received it

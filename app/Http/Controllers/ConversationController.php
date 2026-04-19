@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GmailAccount;
+use App\Models\ChannelAccount;
 use App\Models\EmailThread;
 use App\Models\EmailMessage;
 use App\Models\ThreadFollowUpStage;
 use App\Models\ThreadFollowUpQueue;
-use App\Services\GmailService;
+use App\Services\Omnichannel\MailboxManager;
 use App\Models\LeadStatus;
 use App\Models\LeadSource;
 use App\Models\AccountIndustry;
@@ -34,17 +34,17 @@ class ConversationController extends Controller
         $companyId = $user->creatorId();
         $isOwner = $user->type === 'company' || $user->id === $companyId;
         
-        // Find any Gmail account belonging to this company (shared account)
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
+        // Find any Channel account belonging to this company (shared account)
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->first();
 
-        // If not found on owner, check if any staff has one (legacy support)
-        if (!$gmailAccount) {
-            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+        // If not found on owner, check if any staff has one
+        if (!$channelAccount) {
+            $channelAccount = ChannelAccount::whereHas('user', function($q) use ($companyId) {
                 $q->where('created_by', $companyId);
             })->first();
         }
 
-        $unreadCount = $this->getGlobalUnreadCount($companyId, $gmailAccount);
+        $unreadCount = $this->getGlobalUnreadCount($companyId, $channelAccount);
 
         return Inertia::render('conversations/index', [
             'initialFolder' => 'inbox',
@@ -52,12 +52,13 @@ class ConversationController extends Controller
             'unreadCount' => $unreadCount,
             'companyId' => $companyId,
             'isOwner' => $isOwner,
-            'gmailAccount' => $gmailAccount ? [
-                'id' => $gmailAccount->id,
-                'email' => $gmailAccount->gmail_address,
-                'last_sync_at' => $gmailAccount->last_sync_at?->toIso8601String(),
-                'sync_status' => $gmailAccount->sync_status,
-                'sync_error' => $gmailAccount->sync_error,
+            'channelAccount' => $channelAccount ? [
+                'id' => $channelAccount->id,
+                'type' => $channelAccount->type,
+                'email' => $channelAccount->email_address,
+                'last_sync_at' => $channelAccount->last_sync_at?->toIso8601String(),
+                'sync_status' => $channelAccount->sync_status,
+                'sync_error' => $channelAccount->sync_error,
             ] : null,
             'leadStatuses' => LeadStatus::where('created_by', createdBy())->where('status', 'active')
                 ->orderBy('order', 'asc')->orderBy('id', 'asc')
@@ -138,33 +139,37 @@ class ConversationController extends Controller
             ->orderByDesc('last_message_at');
 
         // Apply sync strategy filtering if in category mode
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
-        if (!$gmailAccount) {
-            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->first();
+        if (!$channelAccount) {
+            $channelAccount = ChannelAccount::whereHas('user', function($q) use ($companyId) {
                 $q->where('created_by', $companyId);
             })->first();
         }
 
-        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
-            $syncCategories = $gmailAccount->sync_categories;
-            $hasPrimary = in_array('PRIMARY', $syncCategories);
+        if ($channelAccount && $channelAccount->type === 'gmail') {
+            $syncStrategy = $channelAccount->getConfig('sync_strategy');
+            $syncCategories = $channelAccount->getConfig('sync_categories');
 
-            $query->where(function($q) use ($syncCategories, $hasPrimary) {
-                foreach ($syncCategories as $category) {
-                    if ($category !== 'PRIMARY') {
-                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
-                    }
-                }
-                
-                if ($hasPrimary) {
-                    $q->orWhere(function($sq) {
-                        $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
-                        foreach ($otherCategories as $other) {
-                            $sq->whereJsonDoesntContain('labels', $other);
+            if ($syncStrategy === 'categories' && !empty($syncCategories)) {
+                $hasPrimary = in_array('PRIMARY', $syncCategories);
+
+                $query->where(function($q) use ($syncCategories, $hasPrimary) {
+                    foreach ($syncCategories as $category) {
+                        if ($category !== 'PRIMARY') {
+                            $q->orWhereJsonContains('tags', 'CATEGORY_' . strtoupper($category));
                         }
-                    });
-                }
-            });
+                    }
+                    
+                    if ($hasPrimary) {
+                        $q->orWhere(function($sq) {
+                            $otherCategories = ['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
+                            foreach ($otherCategories as $other) {
+                                $sq->whereJsonDoesntContain('tags', $other);
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         // Apply search filter
@@ -179,12 +184,12 @@ class ConversationController extends Controller
         // Apply folder/status filtering
         if ($folder === 'sent') {
             $query->whereHas('messages', function ($q) use ($companyId) {
-                $gmailAccount = GmailAccount::whereHas('user', function($qu) use ($companyId) {
+                $channelAccount = ChannelAccount::whereHas('user', function($qu) use ($companyId) {
                     $qu->where('id', $companyId)->orWhere('created_by', $companyId);
                 })->first();
 
-                if ($gmailAccount) {
-                    $q->where('from_email', strtolower($gmailAccount->gmail_address));
+                if ($channelAccount) {
+                    $q->where('from_email', strtolower($channelAccount->email_address));
                 }
             });
         } elseif ($folder === 'unassigned_staff') {
@@ -317,19 +322,19 @@ class ConversationController extends Controller
         $thread->update($validated);
         $thread = $thread->fresh();
 
-        // Handle Gmail Sync (Archive/Unarchive)
+        // Handle Provider Sync (Archive/Unarchive)
         if ($statusChanged) {
             try {
-                $account = $thread->gmailAccount;
+                $account = $thread->channelAccount;
                 if ($account) {
-                    $service = new \App\Services\GmailService($account);
+                    $driver = MailboxManager::resolve($account);
                     
                     if ($thread->status === 'Archive') {
                         // Moving TO archive
-                        $service->archiveThread($thread->gmail_thread_id);
+                        $driver->updateThreadStatus($thread, 'archived');
                     } elseif ($wasArchive && in_array($thread->status, ['Open', 'Closed'])) {
                         // Restoring FROM archive
-                        $service->unarchiveThread($thread->gmail_thread_id);
+                        $driver->updateThreadStatus($thread, 'inbox');
                     }
                 }
             } catch (\Exception $e) {
@@ -407,21 +412,21 @@ class ConversationController extends Controller
         $companyId = auth()->user()->creatorId();
         $email = $request->get('email');
         
-        $gmailAccount = GmailAccount::where('user_id', $companyId)->first();
-        if (!$gmailAccount) {
-            $gmailAccount = GmailAccount::whereHas('user', function($q) use ($companyId) {
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->first();
+        if (!$channelAccount) {
+            $channelAccount = ChannelAccount::whereHas('user', function($q) use ($companyId) {
                 $q->where('created_by', $companyId);
             })->first();
         }
 
-        if (!$gmailAccount) {
+        if (!$channelAccount) {
             return response()->json(['data' => []]);
         }
 
         if ($email) {
             // CONSOLIDATED ACTIVITY VIEW FOR A SPECIFIC PERSON
             $email = trim(strtolower($email));
-            $companyEmail = strtolower($gmailAccount->gmail_address);
+            $companyEmail = strtolower($channelAccount->email_address);
             
             // 0. Resolve Identity (Lead or Contact if provided)
             $leadId = $request->get('lead_id');
@@ -443,7 +448,10 @@ class ConversationController extends Controller
             $participantEmails = array_unique(array_filter($participantEmails));
 
             // 1. System Activities (User Logs)
-            $systemActivities = \App\Models\GmailAccountActivity::where('gmail_account_id', $gmailAccount->id)
+            $systemActivities = \App\Models\GmailAccountActivity::where(function($q) use ($channelAccount) {
+                    $q->where('channel_account_id', $channelAccount->id)
+                      ->orWhere('gmail_account_id', $channelAccount->id); // Backward compatibility
+                })
                 ->where(function($q) use ($participantEmails) {
                     foreach ($participantEmails as $e) {
                         $q->orWhere('description', 'like', "%{$e}%");
@@ -558,7 +566,10 @@ class ConversationController extends Controller
             ]);
         }
 
-        $activities = $gmailAccount->activities()
+        $activities = \App\Models\GmailAccountActivity::where(function($q) use ($channelAccount) {
+                $q->where('channel_account_id', $channelAccount->id)
+                  ->orWhere('gmail_account_id', $channelAccount->id);
+            })
             ->with('user:id,name,avatar')
             ->orderByDesc('created_at')
             ->paginate(20);
@@ -614,15 +625,13 @@ class ConversationController extends Controller
         }
 
         try {
-            $service = new GmailService($gmailAccount);
-            $service->refreshTokenIfNeeded();
-
-            $stats = $service->syncThreads(20, $gmailAccount->next_page_token);
+            $driver = MailboxManager::resolve($channelAccount);
+            $stats = $driver->syncInbound($channelAccount);
 
             return response()->json([
                 'success' => true,
                 'stats' => $stats,
-                'next_page_token' => $gmailAccount->fresh()->next_page_token
+                'next_page_token' => $channelAccount->fresh()->getConfig('next_page_token')
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -649,20 +658,19 @@ class ConversationController extends Controller
             ->reorder('sent_at', 'desc')
             ->paginate($perPage);
 
-        $service = new GmailService($thread->gmailAccount);
+        $driver = MailboxManager::resolve($thread->channelAccount);
 
         // Return newest to oldest for flex-col-reverse display
         $messages = collect($messagesPaginated->items())->values();
 
-        // Inject live attachment metadata from Gmail for messages without local storage
-        $messages->each(function($msg) use ($service) {
+        // Inject live attachment metadata from provider for messages without local storage
+        $messages->each(function($msg) use ($driver) {
             if ($msg->media->isEmpty()) {
-                // This is a lightweight call to fetch only the file names/IDs from Gmail
-                $msg->live_attachments = $service->getMessageAttachmentsInfo($msg->gmail_message_id);
+                $msg->live_attachments = $driver->getLiveAttachments($msg);
             }
         });
 
-        $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'gmailAccount']);
+        $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'channelAccount']);
         $this->attachLeadOpportunities($thread);
         $this->attachLeadRecentStreamPreview($thread);
         $this->attachOpportunityRecentStreamPreview($thread);
@@ -683,13 +691,16 @@ class ConversationController extends Controller
                 'has_more' => $messagesPaginated->hasMorePages(),
                 'total' => $messagesPaginated->total(),
             ],
-            'unread_count' => $this->getGlobalUnreadCount($thread->created_by, $thread->gmailAccount),
+            'unread_count' => $this->getGlobalUnreadCount($thread->created_by, $thread->channelAccount),
         ]);
     }
 
     /**
      * Proxy a download request directly from the Gmail API to the user's browser.
      * This avoids storing the file on the CRM's server.
+     */
+    /**
+     * Download or view an attachment with local caching.
      */
     public function downloadAttachment(Request $request, EmailMessage $message, string $attachmentId)
     {
@@ -698,17 +709,32 @@ class ConversationController extends Controller
         }
 
         $filename = $request->query('filename', 'attachment');
-
-        $service = new GmailService($message->thread->gmailAccount);
-        $result = $service->downloadAttachmentRaw($message->gmail_message_id, $attachmentId);
-
-        if (!$result) {
-            abort(404, 'Attachment not found or failed to download from Gmail.');
+        
+        // Define local cache path
+        // Using private storage for security (served via controller)
+        $cachePath = "inbox_attachments/{$message->id}/{$attachmentId}_{$filename}";
+        
+        if (\Illuminate\Support\Facades\Storage::disk('local')->exists($cachePath)) {
+            return \Illuminate\Support\Facades\Storage::disk('local')->download($cachePath, $filename);
         }
 
-        return response()->streamDownload(function () use ($result) {
-            echo $result['data'];
-        }, $filename);
+        $driver = MailboxManager::resolve($message->thread->channelAccount);
+        $tempPath = $driver->downloadAttachment($message, $attachmentId);
+
+        if (!$tempPath || !file_exists($tempPath)) {
+            abort(404, 'Attachment not found or failed to download from provider.');
+        }
+
+        // Cache the file locally
+        \Illuminate\Support\Facades\Storage::disk('local')->put(
+            $cachePath, 
+            file_get_contents($tempPath)
+        );
+
+        // Cleanup temp file
+        @unlink($tempPath);
+
+        return \Illuminate\Support\Facades\Storage::disk('local')->download($cachePath, $filename);
     }
 
     /**
@@ -734,9 +760,9 @@ class ConversationController extends Controller
         try {
             $companyId = $user->creatorId();
             
-            $account = \App\Models\GmailAccount::where('user_id', $companyId)->first();
+            $account = \App\Models\ChannelAccount::where('user_id', $companyId)->first();
             if (!$account) {
-                $account = \App\Models\GmailAccount::whereHas('user', function($q) use ($companyId) {
+                $account = \App\Models\ChannelAccount::whereHas('user', function($q) use ($companyId) {
                     $q->where('created_by', $companyId);
                 })->first();
             }
@@ -754,20 +780,22 @@ class ConversationController extends Controller
             $bcc = array_filter(array_map('trim', explode(',', $request->bcc ?? '')));
 
 
-            $success = $service->sendMessage(
-                $request->to,
-                $request->subject,
-                $request->body,
-                null,
-                null,
-                $cc,
-                $attachments,
-                $bcc
-            );
+            $message = EmailMessage::create([
+                'email_thread_id' => null, // Driver will handle or link later
+                'from_email' => $account->email_address,
+                'to_emails' => [$request->to],
+                'subject' => $request->subject,
+                'body_html' => $request->body,
+                'cc_emails' => $cc,
+                'bcc_emails' => $bcc,
+                'created_by' => $companyId,
+            ]);
+
+            $success = $driver->sendOutgoing($message);
 
             if ($success) {
                 // Dispatch async sync so the user doesn't wait for Gmail sync (Fix 2.2)
-                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
+                \App\Jobs\SyncChannelAccountJob::dispatch($account->id);
                 
                 return response()->json(['message' => 'Email sent successfully.']);
             }
@@ -811,16 +839,16 @@ class ConversationController extends Controller
         ]);
 
         try {
-            $account = $thread->gmailAccount;
+            $account = $thread->channelAccount;
             if (!$account) {
-                return response()->json(['error' => 'Gmail account not found for this thread.'], 422);
+                return response()->json(['error' => 'Mailbox account not found for this thread.'], 422);
             }
 
-            $service = new GmailService($account);
+            $driver = MailboxManager::resolve($account);
             
             // Build recipient list: all external participants
             $participants = $thread->participants ?? [];
-            $accountEmail = strtolower($account->gmail_address);
+            $accountEmail = strtolower($account->email_address);
 
             $externalParticipants = collect($participants)->filter(function ($email) use ($accountEmail) {
                 return strtolower($email) !== $accountEmail;
@@ -855,20 +883,23 @@ class ConversationController extends Controller
             $cc = array_filter(array_map('trim', explode(',', $request->cc ?? '')));
             $bcc = array_filter(array_map('trim', explode(',', $request->bcc ?? '')));
 
-            $success = $service->sendMessage(
-                $primaryRecipient,
-                $thread->subject,
-                $request->body,
-                $thread->gmail_thread_id,
-                $replyToHeader,
-                $cc,
-                $attachments,
-                $bcc
-            );
+            $message = EmailMessage::create([
+                'email_thread_id' => $thread->id,
+                'from_email' => $account->email_address,
+                'to_emails' => [$primaryRecipient],
+                'subject' => $thread->subject,
+                'body_html' => $request->body,
+                'cc_emails' => $cc,
+                'bcc_emails' => $bcc,
+                'message_id_header' => $replyToHeader, // Bridging for driver
+                'created_by' => $user->creatorId(),
+            ]);
+
+            $success = $driver->sendOutgoing($message);
 
             if ($success) {
                 // Dispatch async sync so the user doesn't wait for Gmail sync (Fix 2.2)
-                \App\Jobs\SyncGmailThreadsJob::dispatch($account->id);
+                \App\Jobs\SyncChannelAccountJob::dispatch($account->id);
 
                 return response()->json(['message' => 'Reply sent successfully.']);
             }
@@ -887,7 +918,7 @@ class ConversationController extends Controller
     /**
      * Calculate global unread count for the company's active inbox filters.
      */
-    private function getGlobalUnreadCount(int $companyId, ?GmailAccount $gmailAccount): int
+    private function getGlobalUnreadCount(int $companyId, ?ChannelAccount $channelAccount): int
     {
         $unreadCountQuery = EmailThread::where('created_by', $companyId)
             ->where('is_read', false)
@@ -895,14 +926,15 @@ class ConversationController extends Controller
                 $q->where('status', 'Open')->orWhereNull('status');
             });
 
-        if ($gmailAccount && $gmailAccount->sync_strategy === 'categories' && !empty($gmailAccount->sync_categories)) {
-            $syncCategories = $gmailAccount->sync_categories;
-            $hasPrimary = in_array('PRIMARY', $syncCategories);
-            
-            $unreadCountQuery->where(function($q) use ($syncCategories, $hasPrimary) {
+        if ($channelAccount && $channelAccount->type === 'gmail') {
+            $syncCategories = $channelAccount->getConfig('sync_categories');
+            if (!empty($syncCategories)) {
+                $hasPrimary = in_array('PRIMARY', $syncCategories);
+                
+                $unreadCountQuery->where(function($q) use ($syncCategories, $hasPrimary) {
                 foreach ($syncCategories as $category) {
                     if ($category !== 'PRIMARY') {
-                        $q->orWhereJsonContains('labels', 'CATEGORY_' . strtoupper($category));
+                        $q->orWhereJsonContains('tags', 'CATEGORY_' . strtoupper($category));
                     }
                 }
                 
@@ -956,12 +988,18 @@ class ConversationController extends Controller
                     if ($index === 0) {
                         // Find the latest message in this thread to act as the anchor
                         // We typically follow up based on our last message to them
-                        $lastMessage = $thread->messages()->whereNotNull('gmail_message_id')->latest('sent_at')->first();
+                        $lastMessage = $thread->messages()
+                            ->where(function($q) {
+                                $q->whereNotNull('external_message_id')
+                                  ->orWhereNotNull('gmail_message_id');
+                            })
+                            ->latest('sent_at')
+                            ->first();
                         
                         if ($lastMessage) {
                             // Determine recipient: if we sent the last message, send to 'to_emails'
                             // If they sent the last message, send to 'from_email'
-                            $myEmail = $thread->gmailAccount->gmail_address;
+                            $myEmail = $thread->channelAccount->email_address;
                             $recipient = $lastMessage->from_email === $myEmail 
                                 ? ($lastMessage->to_emails[0] ?? null) 
                                 : $lastMessage->from_email;
@@ -970,8 +1008,8 @@ class ConversationController extends Controller
                                 ThreadFollowUpQueue::create([
                                     'thread_follow_up_stage_id' => $stage->id,
                                     'recipient_email' => $recipient,
-                                    'gmail_thread_id' => $thread->gmail_thread_id,
-                                    'gmail_message_id' => $lastMessage->gmail_message_id,
+                                    'external_thread_id' => $thread->external_thread_id,
+                                    'external_message_id' => $lastMessage->external_message_id ?: $lastMessage->gmail_message_id,
                                     'status' => 'pending',
                                     'scheduled_at' => ($lastMessage->sent_at ?? now())->addDays($stage->delay_days),
                                 ]);

@@ -26,6 +26,8 @@ class EmailMessage extends BaseModel implements HasMedia
         'sent_at',
         'gmail_labels',
         'message_id_header',
+        'external_message_id',
+        'metadata',
         'created_by',
         'user_id',
         'bcc_emails',
@@ -38,6 +40,7 @@ class EmailMessage extends BaseModel implements HasMedia
             'cc_emails' => 'array',
             'bcc_emails' => 'array',
             'gmail_labels' => 'array',
+            'metadata' => 'array',
             'sent_at' => 'datetime',
             'user_id' => 'integer',
         ];

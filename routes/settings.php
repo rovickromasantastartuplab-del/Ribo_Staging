@@ -135,4 +135,10 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
         Route::post('settings/gmail/categories', [\App\Http\Controllers\GmailController::class , 'updateSyncSettings'])->name('settings.gmail.categories.update');
         Route::get('gmail/threads', [\App\Http\Controllers\GmailController::class , 'threads'])->name('gmail.threads');
         Route::get('gmail/threads/{threadId}', [\App\Http\Controllers\GmailController::class , 'showThread'])->name('gmail.thread.show');
+
+        // Omnichannel Channel Account Management routes
+        Route::get('settings/channels', [\App\Http\Controllers\Settings\ChannelAccountController::class, 'index'])->name('settings.channels.index');
+        Route::post('settings/channels', [\App\Http\Controllers\Settings\ChannelAccountController::class, 'store'])->name('settings.channels.store');
+        Route::post('settings/channels/{account}/sync', [\App\Http\Controllers\Settings\ChannelAccountController::class, 'sync'])->name('settings.channels.sync');
+        Route::delete('settings/channels/{account}', [\App\Http\Controllers\Settings\ChannelAccountController::class, 'destroy'])->name('settings.channels.destroy');
     });

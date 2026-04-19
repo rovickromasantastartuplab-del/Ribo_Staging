@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use App\Models\ChannelAccount;
 use App\Models\SocialAccount;
-use App\Models\GmailAccount;
-use App\Jobs\SyncGmailThreadsJob;
+use App\Jobs\SyncChannelAccountJob;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -135,26 +135,32 @@ class SocialAuthController extends Controller
                 $email = $socialUser->getEmail();
 
                 // RESTRICT: Ensure the Gmail address is unique system-wide (One account per company)
-                $existingAccount = GmailAccount::where('gmail_address', $email)->first();
+                $existingAccount = ChannelAccount::where('email_address', $email)
+                    ->where('type', 'gmail')
+                    ->first();
+
                 if ($existingAccount && $existingAccount->user_id !== $companyId) {
                     Log::warning("OAuth Callback: Gmail address {$email} is already linked to another company (Owner ID: {$existingAccount->user_id}).");
                     return redirect()->route('settings', ['#integrations-settings'])
                         ->with('error', "The Gmail account ({$email}) is already connected to another company in the system.");
                 }
 
-                $gmailAccount = GmailAccount::updateOrCreate(
+                $channelAccount = ChannelAccount::updateOrCreate(
                     [
                         'user_id' => $companyId,
-                        'gmail_address' => $email,
+                        'email_address' => $email,
+                        'type' => 'gmail',
                     ],
                     [
-                        'google_id' => $socialUser->getId(),
-                        'access_token' => $socialUser->token,
-                        'refresh_token' => $socialUser->refreshToken ?? null,
-                        'token_expires_at' => $socialUser->expiresIn
-                            ? now()->addSeconds($socialUser->expiresIn)
-                            : null,
-                        'scopes' => 'https://www.googleapis.com/auth/gmail.readonly',
+                        'configuration' => [
+                            'google_id' => $socialUser->getId(),
+                            'access_token' => $socialUser->token,
+                            'refresh_token' => $socialUser->refreshToken ?? null,
+                            'token_expires_at' => $socialUser->expiresIn
+                                ? now()->addSeconds($socialUser->expiresIn)->toIso8601String()
+                                : null,
+                            'scopes' => 'https://www.googleapis.com/auth/gmail.readonly',
+                        ],
                         'sync_status' => 'idle',
                         'sync_error' => null,
                     ]
@@ -162,14 +168,14 @@ class SocialAuthController extends Controller
 
                 // Initiate real-time Pub/Sub Webhooks
                 try {
-                    $gmailService = new \App\Services\GmailService($gmailAccount);
+                    $gmailService = new \App\Services\GmailService($channelAccount);
                     $gmailService->watchInbox();
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to initiate watch inbox on connect', ['error' => $e->getMessage()]);
                 }
 
                 // Dispatch initial sync in the background
-                SyncGmailThreadsJob::dispatchSync($gmailAccount->id);
+                SyncChannelAccountJob::dispatchSync($channelAccount->id);
 
                 return redirect()->route('settings', ['#integrations-settings'])
                     ->with('success', "Gmail connected successfully: {$socialUser->getEmail()}");

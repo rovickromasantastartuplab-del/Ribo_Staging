@@ -40,6 +40,7 @@
         "stripe/stripe-php": "^17.3",
         "tightenco/ziggy": "^2.4",
         "twilio/sdk": "^8.8",
+        "webklex/laravel-imap": "^6.2",
         "yoomoney/yookassa-sdk-php": "^3.8"
     },
     "require-dev": {
