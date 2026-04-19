@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Services\Omnichannel;
-
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
@@ -66,13 +64,10 @@ class ChannelAccountController extends Controller
             // Trigger initial sync
             SyncChannelAccountJob::dispatch($account->id);
 
-            return response()->json([
-                'message' => 'Account connected successfully. Initial sync started.',
-                'account' => $account
-            ]);
+            return redirect()->back()->with('success', 'Account connected successfully. Initial sync started.');
         } catch (\Exception $e) {
             Log::error('Failed to connect IMAP/SMTP account', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Failed to connect account: ' . $e->getMessage()], 500);
+            return redirect()->back()->withErrors(['error' => 'Failed to connect account: ' . $e->getMessage()]);
         }
     }
 
@@ -87,9 +82,9 @@ class ChannelAccountController extends Controller
 
         try {
             $account->delete();
-            return response()->json(['message' => 'Account disconnected successfully.']);
+            return redirect()->back()->with('success', 'Account disconnected successfully.');
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to disconnect account.'], 500);
+            return redirect()->back()->withErrors(['error' => 'Failed to disconnect account.']);
         }
     }
 
@@ -104,6 +99,6 @@ class ChannelAccountController extends Controller
 
         SyncChannelAccountJob::dispatch($account->id);
 
-        return response()->json(['message' => 'Sync triggered successfully.']);
+        return redirect()->back()->with('success', 'Sync triggered successfully.');
     }
 }

@@ -72,6 +72,13 @@ class SyncChannelAccountJob implements ShouldQueue, ShouldBeUnique
             $driver = MailboxManager::resolve($account);
             $stats = $driver->syncInbound($account);
 
+            // Update sync status to active
+            $account->update([
+                'sync_status' => 'active',
+                'sync_error' => null,
+                'last_sync_at' => now(),
+            ]);
+
             // Broadcast completion for real-time UI updates
             // (Maintaining legacy event name for now to avoid breaking frontend)
             if ($account->type === 'gmail') {

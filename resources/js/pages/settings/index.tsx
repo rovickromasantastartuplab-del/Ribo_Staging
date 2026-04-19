@@ -31,6 +31,7 @@ import SalesOrderTemplateSettings from './components/sales-order-template-settin
 
 import StorageSettings from './components/storage-settings';
 import ModuleVisibilitySettings from './components/module-visibility-settings';
+import MailboxSettings from './components/mailbox-settings';
 import { Toaster } from '@/components/ui/toaster';
 import { useTranslation } from 'react-i18next';
 import { hasPermission } from '@/utils/permissions';
@@ -40,7 +41,7 @@ import { hasPlanFeature } from '@/utils/planFeatures';
 export default function Settings() {
     const { t } = useTranslation();
     const { position } = useLayout();
-    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}, socialAccounts = [], fieldMappings = [], googleSettings = null, gmailAccount = null } = usePage().props as any;
+    const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}, socialAccounts = [], fieldMappings = [], googleSettings = null, gmailAccount = null, channelAccounts = [] } = usePage().props as any;
     const [activeSection, setActiveSection] = useState('system-settings');
 
     const isSuperAdmin =
@@ -166,6 +167,12 @@ export default function Settings() {
             permission: 'settings'
         },
         {
+            title: t('Mailboxes'),
+            href: '#mailbox-settings',
+            icon: <Mail className="h-4 w-4 mr-2" />,
+            permission: 'settings'
+        },
+        {
             title: t('Module Visibility'),
             href: '#module-visibility-settings',
             icon: <LayoutGrid className="h-4 w-4 mr-2" />,
@@ -254,6 +261,7 @@ export default function Settings() {
     const webhookSettingsRef = useRef<HTMLDivElement>(null);
     const googleCalendarSettingsRef = useRef<HTMLDivElement>(null);
     const integrationsSettingsRef = useRef<HTMLDivElement>(null);
+    const mailboxSettingsRef = useRef<HTMLDivElement>(null);
 
     const storageSettingsRef = useRef<HTMLDivElement>(null);
     const moduleVisibilitySettingsRef = useRef<HTMLDivElement>(null);
@@ -285,8 +293,9 @@ export default function Settings() {
             const webhookSettingsPosition = webhookSettingsRef.current?.offsetTop || 0;
             const googleCalendarSettingsPosition = googleCalendarSettingsRef.current?.offsetTop || 0;
             const integrationsSettingsPosition = integrationsSettingsRef.current?.offsetTop || 0;
+            const mailboxSettingsPosition = mailboxSettingsRef.current?.offsetTop || 0;
 
-            const storageSettingsPosition = storageSettingsRef.current?.offsetTop || 0;
+            const storageSettingsRefPosition = storageSettingsRef.current?.offsetTop || 0;
             const moduleVisibilitySettingsPosition = moduleVisibilitySettingsRef.current?.offsetTop || 0;
 
             // Determine active section based on scroll position
@@ -295,6 +304,8 @@ export default function Settings() {
             } else if (scrollPosition >= storageSettingsPosition) {
                 setActiveSection('storage-settings');
 
+            } else if (scrollPosition >= mailboxSettingsPosition) {
+                setActiveSection('mailbox-settings');
             } else if (scrollPosition >= integrationsSettingsPosition) {
                 setActiveSection('integrations-settings');
             } else if (scrollPosition >= googleCalendarSettingsPosition) {
@@ -551,6 +562,13 @@ export default function Settings() {
                     {(isSuperAdmin || auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
                         <section id="integrations-settings" ref={integrationsSettingsRef} className="mb-8">
                             <IntegrationsSettings settings={systemSettings} socialAccounts={socialAccounts} fieldMappings={fieldMappings} googleSettings={googleSettings} gmailAccount={gmailAccount} />
+                        </section>
+                    )}
+
+                    {/* Mailbox Settings Section */}
+                    {(isSuperAdmin || auth.permissions?.includes('settings') || auth.roles?.includes('company')) && (
+                        <section id="mailbox-settings" ref={mailboxSettingsRef} className="mb-8">
+                            <MailboxSettings accounts={channelAccounts} />
                         </section>
                     )}
 
