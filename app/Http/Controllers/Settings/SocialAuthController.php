@@ -26,6 +26,9 @@ class SocialAuthController extends Controller
             return redirect()->back()->with('error', 'Only Company Owners are authorized to manage integrations.');
         }
 
+        // Dynamically configure the provider
+        $this->configureProvider($provider);
+
         // For Facebook, we specifically ask for Pages access
         if ($provider === 'facebook') {
             return Socialite::driver('facebook')
@@ -33,10 +36,8 @@ class SocialAuthController extends Controller
                 ->redirect();
         }
 
-        // For Google/Gmail, build config dynamically from settings table
+        // For Google/Gmail
         if ($provider === 'google') {
-            $this->configureGoogleSocialite();
-
             return Socialite::driver('google')
                 ->scopes([
                     'https://www.googleapis.com/auth/gmail.readonly',
@@ -66,10 +67,8 @@ class SocialAuthController extends Controller
                 ->with('error', 'Connection request was cancelled or failed.');
         }
 
-        // Reconfigure Socialite for Google before processing the callback
-        if ($provider === 'google') {
-            $this->configureGoogleSocialite();
-        }
+        // Reconfigure provider for the callback
+        $this->configureProvider($provider);
 
         try {
             // Get the user from the provider
@@ -191,30 +190,35 @@ class SocialAuthController extends Controller
         }
     }
     /**
-     * Dynamically configure the Socialite Google driver using credentials
-     * stored in the settings table by the superadmin.
-     * Falls back to config/services.php if DB settings are empty.
+     * Dynamically configure Socialite drivers to ensure consistency.
      */
-    private function configureGoogleSocialite(): void
+    private function configureProvider(string $provider): void
     {
-        // The superadmin is always user_id = 1 or first superadmin
-        $superadmin = \App\Models\User::where('type', 'superadmin')->first();
-        $superadminId = $superadmin?->id;
+        $config = [];
+        
+        // Google has special override logic from DB settings
+        if ($provider === 'google') {
+            $superadmin = \App\Models\User::where('type', 'superadmin')->first();
+            $superadminId = $superadmin?->id;
 
-        $clientId = ($superadminId ? getSetting('google_client_id', null, $superadminId) : null)
-            ?: config('services.google.client_id');
+            $clientId = ($superadminId ? getSetting('google_client_id', null, $superadminId) : null)
+                ?: config('services.google.client_id');
 
-        $clientSecret = ($superadminId ? getSetting('google_client_secret', null, $superadminId) : null)
-            ?: config('services.google.client_secret');
+            $clientSecret = ($superadminId ? getSetting('google_client_secret', null, $superadminId) : null)
+                ?: config('services.google.client_secret');
 
-        $redirectUri = ($superadminId ? getSetting('google_redirect_uri', null, $superadminId) : null)
-            ?: config('services.google.redirect');
+            $config = [
+                'services.google.client_id' => $clientId,
+                'services.google.client_secret' => $clientSecret,
+                'services.google.redirect' => route('social.callback', ['provider' => 'google']),
+            ];
+        } else {
+            // For other providers like Facebook, just ensure the redirect URI matches our route
+            $config = [
+                "services.{$provider}.redirect" => route('social.callback', ['provider' => $provider]),
+            ];
+        }
 
-        // Dynamically update the Socialite Google config at runtime
-        config([
-            'services.google.client_id' => $clientId,
-            'services.google.client_secret' => $clientSecret,
-            'services.google.redirect' => $redirectUri,
-        ]);
+        config($config);
     }
 }
