@@ -86,4 +86,12 @@ class GmailProvider implements MailboxProvider
 
         return false;
     }
+
+    /**
+     * Get live attachment metadata from the provider.
+     */
+    public function getLiveAttachments(\App\Models\EmailMessage $message): array
+    {
+        return $message->metadata['attachments'] ?? [];
+    }
 }
