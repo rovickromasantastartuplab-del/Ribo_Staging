@@ -948,9 +948,10 @@ class ConversationController extends Controller
                 }
             });
         }
-
-        return $unreadCountQuery->count();
     }
+
+    return $unreadCountQuery->count();
+}
 
     /**
      * Save follow-up stages for a thread.
