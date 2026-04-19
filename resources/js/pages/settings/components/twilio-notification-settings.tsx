@@ -31,7 +31,7 @@ export default function TwilioNotificationSettings() {
     const [testSMSResult, setTestSMSResult] = useState<{ success: boolean, message: string } | null>(null);
 
     useEffect(() => {
-        // Load available notifications
+        // Load available notification
         axios.get(route('settings.twilio-notifications.available'))
             .then(response => {
                 setAvailableNotifications(response.data);
