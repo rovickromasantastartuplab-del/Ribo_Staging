@@ -116,16 +116,17 @@ export default function PricingPage() {
             <main className="pt-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
                     <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl mb-4">
-                        Choose the <span style={{ color: primaryColor }}>perfect plan</span> for your business
+                        {getSectionData('plans').title || t('Choose the perfect plan for your business')}
                     </h1>
                     <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-                        Transparent pricing for businesses of all sizes. Compare our plans and find the one that fits your needs.
+                        {getSectionData('plans').subtitle || t('Transparent pricing for businesses of all sizes. Compare our plans and find the one that fits your needs.')}
                     </p>
                 </div>
 
                 <ComparisonTable 
                     brandColor={primaryColor} 
                     plans={plans}
+                    comparisonFeatures={getSectionData('plans').comparison_features}
                 />
             </main>
 

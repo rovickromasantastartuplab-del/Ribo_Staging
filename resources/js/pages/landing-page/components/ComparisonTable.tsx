@@ -22,13 +22,26 @@ interface Plan {
     recommended?: boolean;
 }
 
+import { usePage } from '@inertiajs/react';
+
+interface ComparisonFeature {
+    name: string;
+    description: string;
+    type: 'property' | 'module' | 'method';
+    key: string;
+}
+
 interface ComparisonTableProps {
     brandColor?: string;
     plans: Plan[];
+    comparisonFeatures?: ComparisonFeature[];
 }
+import { defaultLandingPageSections } from '../templates/default-sections';
 
-export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: ComparisonTableProps) {
+export default function ComparisonTable({ brandColor = '#3b82f6', plans = [], comparisonFeatures = [] }: ComparisonTableProps) {
     const { t } = useTranslation();
+    const { globalSettings } = usePage().props as any;
+    const currencySymbol = globalSettings?.superAdminCurrencySymbol || '$';
     const [isYearly, setIsYearly] = React.useState(false);
 
     const activePlans = (plans || []).filter(p => p && p.name !== 'Enterprise');
@@ -52,7 +65,7 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
         if (typeof value === 'boolean') {
             return value ? (
                 <div className="flex justify-center">
-                    <Check className="w-5 h-5 text-emerald-500" />
+                    <Check className="w-5 h-5" style={{ color: brandColor }} />
                 </div>
             ) : (
                 <div className="flex justify-center">
@@ -63,53 +76,28 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
         return <span className="text-gray-600 font-medium">{value}</span>;
     };
 
-    const FEATURES = [
-        {
-            name: 'Maximum Users',
-            description: 'Number of team members who can access the account.',
-            getValue: (p: Plan) => getLimit(p.max_users),
-        },
-        {
-            name: 'Maximum Projects',
-            description: 'Number of active projects you can manage.',
-            getValue: (p: Plan) => getLimit(p.max_projects),
-        },
-        {
-            name: 'Maximum Contacts',
-            description: 'Number of total contacts in your database.',
-            getValue: (p: Plan) => getLimit(p.max_contacts),
-        },
-        {
-            name: 'Maximum Accounts',
-            description: 'Number of financial accounts you can connect.',
-            getValue: (p: Plan) => getLimit(p.max_accounts),
-        },
-        {
-            name: 'Storage Limit (GB)',
-            description: 'Total file storage space available.',
-            getValue: (p: Plan) => `${p.storage_limit ?? 0} GB`,
-        },
-        {
-            name: 'Trial Days',
-            description: 'Number of days for the trial period.',
-            getValue: (p: Plan) => getTrialDays(p),
-        },
-        {
-            name: 'Enable Branding',
-            description: 'Remove Ribo branding and use your own.',
-            getValue: (p: Plan): boolean => p.enable_branding === 'on',
-        },
-        {
-            name: 'Wedding Suppliers',
-            description: 'Access to the wedding supplier directory.',
-            getValue: (p: Plan): boolean => hasModule(p, 'wedding_suppliers_module'),
-        },
-        {
-            name: 'E-commerce',
-            description: 'Sell products and services online.',
-            getValue: (p: Plan): boolean => hasModule(p, 'ecommerce'),
-        },
-    ];
+    // Use features from CMS or fallback to defaults
+    const defaultFeatures = defaultLandingPageSections.sections.find(s => s.key === 'plans')?.comparison_features || [];
+    const displayFeatures = (comparisonFeatures !== undefined && comparisonFeatures !== null) ? comparisonFeatures : defaultFeatures;
+
+    const getFeatureValue = (plan: Plan, feature: ComparisonFeature) => {
+        const { type, key } = feature;
+        
+        switch (type) {
+            case 'property':
+                if (key === 'storage_limit') return `${plan.storage_limit ?? 0} GB`;
+                if (key === 'trial_day' || key === 'trial_days') return getTrialDays(plan);
+                return getLimit((plan as any)[key]);
+            case 'module':
+                return hasModule(plan, key);
+            case 'method':
+                if (key === 'enable_branding') return plan.enable_branding === 'on';
+                return false;
+            default:
+                return 'N/A';
+        }
+    };
+
 
     const totalCols = activePlans.length + 1;
     
@@ -193,10 +181,13 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
                         <div
                             key={plan.id}
                             className={`bg-white rounded-3xl border p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group ${isHighlighted ? 'border-2' : 'border-gray-200'}`}
-                            style={isHighlighted ? { borderColor: '#2563eb' } : {}}
+                            style={isHighlighted ? { borderColor: brandColor } : {}}
                         >
                             {isHighlighted && (
-                                <div className="absolute top-0 left-0 w-full bg-blue-600 text-white py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                <div 
+                                    className="absolute top-0 left-0 w-full text-white py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm"
+                                    style={{ backgroundColor: brandColor }}
+                                >
                                     {t('Most popular')}
                                 </div>
                             )}
@@ -213,7 +204,7 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
                             
                             <div className="flex items-baseline mb-1">
                                 <span className="text-3xl xl:text-4xl font-extrabold text-gray-900 tracking-tight">
-                                    ₱{displayPrice}
+                                    {currencySymbol}{displayPrice}
                                 </span>
                             </div>
                             <p className="text-[10px] text-gray-400 mb-8 uppercase tracking-wider w-full truncate">
@@ -236,12 +227,12 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
                 <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-md">
                     <div className="overflow-x-auto overflow-y-visible">
                         <div className="min-w-[800px] lg:min-w-0">
-                            {FEATURES.map((feature, fIdx) => (
+                            {displayFeatures.map((feature, fIdx) => (
                                 <div
                                     key={fIdx}
                                     className={`grid grid-cols-1 ${gridColsClass.replace('md:', '')} gap-0 border-b border-gray-200 last:border-0 hover:bg-gray-50/60 transition-colors group/row
                                         ${fIdx === 0 ? 'rounded-t-[2.5rem]' : ''}
-                                        ${fIdx === FEATURES.length - 1 ? 'rounded-b-[2.5rem]' : ''}`}
+                                        ${fIdx === displayFeatures.length - 1 ? 'rounded-b-[2.5rem]' : ''}`}
                                 >
                                     {/* Feature Name Column */}
                                     <div className="p-6 flex items-center gap-3 min-h-[72px]">
@@ -262,11 +253,12 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
                                     {activePlans.map((plan, pIdx) => (
                                         <div
                                             key={plan.id}
-                                            className={`p-6 flex flex-col justify-center items-center border-l border-gray-200 ${pIdx === activePlans.length - 1 ? 'bg-emerald-50/50 relative' : ''}`}
+                                            className={`p-6 flex flex-col justify-center items-center border-l border-gray-200 ${pIdx === activePlans.length - 1 ? 'relative' : ''}`}
+                                            style={pIdx === activePlans.length - 1 ? { backgroundColor: `${brandColor}08` } : {}}
                                         >
                                             <div className="lg:hidden font-bold text-[10px] uppercase text-gray-400 mb-1">{t(plan.name)}</div>
                                             <div className={`font-medium ${pIdx === activePlans.length - 1 ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
-                                                {renderValue(feature.getValue(plan))}
+                                                {renderValue(getFeatureValue(plan, feature))}
                                             </div>
                                         </div>
                                     ))}
@@ -279,7 +271,7 @@ export default function ComparisonTable({ brandColor = '#3b82f6', plans = [] }: 
 
             <div className="mt-16 text-center">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full border border-gray-100 text-xs font-medium text-gray-500 italic shadow-sm">
-                    <Check className="w-3 h-3 text-emerald-500" />
+                    <Check className="w-3 h-3" style={{ color: brandColor }} />
                     {t('Sign up for any plan to get started immediately')}
                 </div>
             </div>
