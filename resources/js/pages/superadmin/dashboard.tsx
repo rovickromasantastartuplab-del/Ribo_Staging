@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageTemplate } from '@/components/page-template';
-import { RefreshCw, BarChart3, Building2, CreditCard, Users, DollarSign, TrendingUp, Activity, AlertCircle, Receipt } from 'lucide-react';
+import { RefreshCw, BarChart3, Building2, CreditCard, Users, Banknote, TrendingUp, TrendingDown, Activity, AlertCircle, Receipt } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
@@ -157,10 +157,14 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('Monthly Growth')}</p>
-                  <h3 className="mt-2 text-xl font-bold">+{stats.monthlyGrowth || 0}%</h3>
+                  <h3 className="mt-2 text-xl font-bold">{stats.monthlyGrowth > 0 ? '+' : ''}{stats.monthlyGrowth || 0}%</h3>
                 </div>
-                <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-900">
-                  <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <div className={`rounded-full p-3 ${stats.monthlyGrowth >= 0 ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-red-100 dark:bg-red-900'}`}>
+                  {stats.monthlyGrowth >= 0 ? (
+                    <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -174,7 +178,7 @@ export default function SuperAdminDashboard({ dashboardData }: { dashboardData: 
                   <h3 className="mt-2 text-xl font-bold">{formatCurrency(stats.totalRevenue || 0)}</h3>
                 </div>
                 <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900">
-                  <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  <Banknote className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
               </div>
             </CardContent>

@@ -11,10 +11,11 @@ import {
   CalendarDays,
   Eye,
   TrendingUp,
+  TrendingDown,
   ArrowRight,
   Sparkles,
   Users,
-  DollarSign,
+  Banknote,
   Target,
   Briefcase
 } from 'lucide-react';
@@ -49,7 +50,7 @@ export function DashboardOverview({ userType, stats }: DashboardOverviewProps) {
     {
       title: t('Revenue Tracking'),
       description: t('Monitor total system revenue and growth'),
-      icon: DollarSign,
+      icon: Banknote,
       color: 'orange',
       href: route('dashboard'),
       count: formatCurrency(stats?.totalRevenue || 0)
@@ -57,10 +58,10 @@ export function DashboardOverview({ userType, stats }: DashboardOverviewProps) {
     {
       title: t('System Growth'),
       description: t('Monitor system performance and growth'),
-      icon: TrendingUp,
-      color: 'purple',
+      icon: stats?.monthlyGrowth >= 0 ? TrendingUp : TrendingDown,
+      color: stats?.monthlyGrowth >= 0 ? 'purple' : 'red',
       href: route('dashboard'),
-      count: `+${stats?.monthlyGrowth || 0}%`
+      count: `${stats?.monthlyGrowth > 0 ? '+' : ''}${stats?.monthlyGrowth || 0}%`
     }
   ];
 
@@ -107,6 +108,7 @@ export function DashboardOverview({ userType, stats }: DashboardOverviewProps) {
       green: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400',
       purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-400',
       orange: 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-400',
+      red: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400',
     };
     return colors[color as keyof typeof colors] || colors.blue;
   };
@@ -169,12 +171,16 @@ export function DashboardOverview({ userType, stats }: DashboardOverviewProps) {
 
         {/* Additional Info */}
         <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
-            <TrendingUp className="h-4 w-4" />
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${stats?.monthlyGrowth >= 0 ? 'bg-primary/10 text-primary' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+            {stats?.monthlyGrowth >= 0 ? (
+              <TrendingUp className="h-4 w-4" />
+            ) : (
+              <TrendingDown className="h-4 w-4" />
+            )}
             <span className="text-sm font-medium">
               {userType === 'superadmin'
-                ? t('System growing at {{growth}}% monthly', { growth: stats?.monthlyGrowth || 0 })
-                : t('Your business growing at {{growth}}% monthly', { growth: stats?.monthlyGrowth || 0 })
+                ? t('System growth: {{growth}}% monthly', { growth: (stats?.monthlyGrowth > 0 ? '+' : '') + (stats?.monthlyGrowth || 0) })
+                : t('Business growth: {{growth}}% monthly', { growth: (stats?.monthlyGrowth > 0 ? '+' : '') + (stats?.monthlyGrowth || 0) })
               }
             </span>
           </div>

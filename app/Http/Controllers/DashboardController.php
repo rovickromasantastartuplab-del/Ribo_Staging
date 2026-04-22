@@ -96,17 +96,13 @@ class DashboardController extends Controller
         $activeCompanies = User::where('type', 'company')->where('plan_is_active', 1)->count();
         $inactiveCompanies = $totalCompanies - $activeCompanies;
 
-        $currentMonthCompanies = User::where('type', 'company')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
+        $totalCompaniesCount = User::where('type', 'company')->count();
+        $previousTotalCompaniesCount = User::where('type', 'company')
+            ->where('created_at', '<', now()->startOfMonth())
             ->count();
-        $previousMonthCompanies = User::where('type', 'company')
-            ->whereMonth('created_at', now()->subMonth()->month)
-            ->whereYear('created_at', now()->subMonth()->year)
-            ->count();
-        $monthlyGrowth = $previousMonthCompanies > 0
-            ? round((($currentMonthCompanies - $previousMonthCompanies) / $previousMonthCompanies) * 100, 1)
-            : ($currentMonthCompanies > 0 ? 100 : 0);
+        $monthlyGrowth = $previousTotalCompaniesCount > 0
+            ? round((($totalCompaniesCount - $previousTotalCompaniesCount) / $previousTotalCompaniesCount) * 100, 1)
+            : ($totalCompaniesCount > 0 ? 100 : 0);
 
         $companyGrowthData = [];
         $revenueData = [];

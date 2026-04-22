@@ -47,9 +47,9 @@ export default function Companies() {
 
   const [currentCompany, setCurrentCompany] = useState<any>(null);
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
-  const [isModuleOverrideModalOpen, setIsModuleOverrideModalOpen] = useState(false);
-  const [moduleOverrides, setModuleOverrides] = useState<any[]>([]);
-  const [isModuleOverrideSaving, setIsModuleOverrideSaving] = useState(false);
+  const [isModuleVisibilityModalOpen, setIsModuleVisibilityModalOpen] = useState(false);
+  const [moduleVisibility, setModuleVisibility] = useState<any[]>([]);
+  const [isModuleVisibilitySaving, setIsModuleVisibilitySaving] = useState(false);
 
 
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
@@ -334,53 +334,53 @@ export default function Companies() {
     }, { preserveState: true, preserveScroll: true });
   };
 
-  const handleModuleOverride = (company: any) => {
+  const handleModuleVisibility = (company: any) => {
     setCurrentCompany(company);
-    toast.loading(t('Loading module overrides...'));
+    toast.loading(t('Loading module visibility...'));
     fetch(route('companies.module-overrides.index', company.id))
       .then(res => res.json())
       .then(data => {
-        setModuleOverrides(data.modules);
-        setIsModuleOverrideModalOpen(true);
+        setModuleVisibility(data.modules);
+        setIsModuleVisibilityModalOpen(true);
         toast.dismiss();
       })
       .catch(() => {
         toast.dismiss();
-        toast.error(t('Failed to load module overrides'));
+        toast.error(t('Failed to load module visibility'));
       });
   };
 
-  const handleModuleOverrideSave = () => {
-    setIsModuleOverrideSaving(true);
-    toast.loading(t('Saving module overrides...'));
+  const handleModuleVisibilitySave = () => {
+    setIsModuleVisibilitySaving(true);
+    toast.loading(t('Saving module visibility...'));
     fetch(route('companies.module-overrides.save', currentCompany.id), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
       },
-      body: JSON.stringify({ modules: moduleOverrides }),
+      body: JSON.stringify({ modules: moduleVisibility }),
     })
       .then(res => res.json())
       .then(data => {
-        setIsModuleOverrideSaving(false);
+        setIsModuleVisibilitySaving(false);
         toast.dismiss();
         if (data.success) {
-          toast.success(t('Module overrides saved successfully'));
-          setIsModuleOverrideModalOpen(false);
+          toast.success(t('Module visibility saved successfully'));
+          setIsModuleVisibilityModalOpen(false);
         } else {
-          toast.error(t('Failed to save module overrides'));
+          toast.error(t('Failed to save module visibility'));
         }
       })
       .catch(() => {
-        setIsModuleOverrideSaving(false);
+        setIsModuleVisibilitySaving(false);
         toast.dismiss();
-        toast.error(t('Failed to save module overrides'));
+        toast.error(t('Failed to save module visibility'));
       });
   };
 
-  const handleModuleOverrideToggle = (moduleKey: string) => {
-    setModuleOverrides(prev =>
+  const handleModuleVisibilityToggle = (moduleKey: string) => {
+    setModuleVisibility(prev =>
       prev.map(m => m.key === moduleKey ? { ...m, enabled: !m.enabled } : m)
     );
   };
@@ -665,13 +665,13 @@ export default function Companies() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleModuleOverride(company)}
+                              onClick={() => handleModuleVisibility(company)}
                               className="text-purple-500 hover:text-purple-700"
                             >
                               <LayoutGrid className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>{t("Module Visibility Override")}</TooltipContent>
+                          <TooltipContent>{t("Module Visibility")}</TooltipContent>
                         </Tooltip>
 
 
@@ -807,6 +807,10 @@ export default function Companies() {
                         <DropdownMenuItem onClick={() => handleAction('upgrade-plan', company)}>
                           <CreditCard className="h-4 w-4 mr-2" />
                           <span>{t("Upgrade Plan")}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleModuleVisibility(company)}>
+                          <LayoutGrid className="h-4 w-4 mr-2" />
+                          <span>{t("Module Visibility")}</span>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem onClick={() => handleAction('reset-password', company)}>
@@ -993,8 +997,8 @@ export default function Companies() {
         directUpgrade={true}
       />
 
-      {/* Module Override Modal */}
-      <Dialog open={isModuleOverrideModalOpen} onOpenChange={setIsModuleOverrideModalOpen}>
+      {/* Module Visibility Modal */}
+      <Dialog open={isModuleVisibilityModalOpen} onOpenChange={setIsModuleVisibilityModalOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
@@ -1038,7 +1042,7 @@ export default function Companies() {
             ].map((category) => (
               <TabsContent key={category.id} value={category.id} className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {moduleOverrides
+                  {moduleVisibility
                     .filter((m: any) => category.keys.includes(m.key))
                     .map((module: any) => {
                       // Get appropriate icon
@@ -1099,8 +1103,8 @@ export default function Companies() {
                           </div>
                           <Switch
                             checked={module.enabled}
-                            disabled={isModuleOverrideSaving}
-                            onCheckedChange={() => handleModuleOverrideToggle(module.key)}
+                            disabled={isModuleVisibilitySaving}
+                            onCheckedChange={() => handleModuleVisibilityToggle(module.key)}
                             className="data-[state=checked]:bg-purple-600"
                           />
                         </div>
@@ -1114,17 +1118,17 @@ export default function Companies() {
           <div className="mt-8 flex justify-end gap-3 pt-4 border-t">
             <Button
               variant="ghost"
-              onClick={() => setIsModuleOverrideModalOpen(false)}
-              disabled={isModuleOverrideSaving}
+              onClick={() => setIsModuleVisibilityModalOpen(false)}
+              disabled={isModuleVisibilitySaving}
             >
               {t('Cancel')}
             </Button>
             <Button
-              onClick={handleModuleOverrideSave}
-              disabled={isModuleOverrideSaving}
+              onClick={handleModuleVisibilitySave}
+              disabled={isModuleVisibilitySaving}
               className="bg-purple-600 hover:bg-purple-700 text-white min-w-[120px]"
             >
-              {isModuleOverrideSaving ? (
+              {isModuleVisibilitySaving ? (
                 <>
                   <span className="animate-spin mr-2">◌</span>
                   {t('Saving...')}

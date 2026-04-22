@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageTemplate } from '@/components/page-template';
-import { RefreshCw, Users, Building2, Briefcase, UserPlus, Calendar, Clock, TrendingUp, BarChart3, Bell, DollarSign, Target, PieChart, HardDrive } from 'lucide-react';
+import { RefreshCw, Users, Building2, Briefcase, UserPlus, Calendar, Clock, TrendingUp, BarChart3, Bell, Banknote, Target, PieChart, HardDrive } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -174,7 +174,9 @@ export default function Dashboard({
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('Total Leads')}</p>
                   <h3 className="mt-2 text-xl font-bold">{stats.totalLeads || 0}</h3>
-                  <p className="text-xs text-green-600 mt-1">+{stats.monthlyGrowth}% {t('this month')}</p>
+                  <p className={`text-xs mt-1 ${stats.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {stats.monthlyGrowth > 0 ? '+' : ''}{stats.monthlyGrowth}% {t('this month')}
+                  </p>
                 </div>
                 <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
                   <Target className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -234,10 +236,12 @@ export default function Dashboard({
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('Company Revenue')}</p>
                   <h3 className="mt-2 text-xl font-bold">{formatCurrency(stats.companyRevenue || 0)}</h3>
-                  <p className="text-xs text-green-600 mt-1">+{stats.monthlyGrowth}% {t('growth')}</p>
+                  <p className={`text-xs mt-1 ${stats.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {stats.monthlyGrowth > 0 ? '+' : ''}{stats.monthlyGrowth}% {t('growth')}
+                  </p>
                 </div>
                 <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900">
-                  <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  <Banknote className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
               </div>
             </CardContent>
@@ -580,7 +584,7 @@ export default function Dashboard({
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
+                  <Banknote className="h-5 w-5" />
                   <span className="text-lg font-semibold">{t('Recent Sales')}</span>
                 </div>
                 <Badge variant="secondary">{recentActivities.sales.length}</Badge>
