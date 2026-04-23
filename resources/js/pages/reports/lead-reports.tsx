@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Users, TrendingUp, Target, Clock, Printer } from 'lucide-react';
 import { ReportFilters } from '@/components/reports/report-filters';
+import { ReportHeader } from '@/components/reports/report-header';
 import { SummaryCards } from '@/components/reports/summary-cards';
 import { ChartCard } from '@/components/reports/chart-card';
 import { Card } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import { useReportPrint } from '@/hooks/use-report-print';
 
 export default function LeadReports() {
   const { t } = useTranslation();
-  const { filters, summary, monthlyData, dailyData, leadsBySource } = usePage().props as any;
+  const { filters, summary, monthlyData, dailyData, leadsBySource, staff } = usePage().props as any;
   const [chartView, setChartView] = useState<'daily' | 'monthly'>('monthly');
   const { contentRef, handlePrint } = useReportPrint(t('Lead Reports'));
   
@@ -69,10 +70,11 @@ export default function LeadReports() {
         }
       ]}
     >
-      <ReportFilters filters={filters} />
+      <ReportFilters filters={filters} staff={staff} />
 
       {/* ref wraps only the printable content */}
       <div ref={contentRef}>
+        <ReportHeader title={t('Lead Reports')} filters={filters} staff={staff} />
         <SummaryCards cards={summaryCards} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

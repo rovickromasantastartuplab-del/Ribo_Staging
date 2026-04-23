@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { DollarSign, ShoppingCart, TrendingUp, Target, Printer } from 'lucide-react';
 import { ReportFilters } from '@/components/reports/report-filters';
+import { ReportHeader } from '@/components/reports/report-header';
 import { SummaryCards } from '@/components/reports/summary-cards';
 import { ChartCard } from '@/components/reports/chart-card';
 import { Card } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { useReportPrint } from '@/hooks/use-report-print';
 
 export default function SalesReports() {
   const { t } = useTranslation();
-  const { filters, summary, monthlyData, dailyData, salesByStatus } = usePage().props as any;
+  const { filters, summary, monthlyData, dailyData, salesByStatus, staff } = usePage().props as any;
   const [chartView, setChartView] = useState<'daily' | 'monthly'>('monthly');
   const { contentRef, handlePrint } = useReportPrint(t('Sales Reports'));
   
@@ -68,9 +69,10 @@ export default function SalesReports() {
         }
       ]}
     >
-      <ReportFilters filters={filters} />
+      <ReportFilters filters={filters} staff={staff} />
       
       <div ref={contentRef}>
+        <ReportHeader title={t('Sales Reports')} filters={filters} staff={staff} />
         <SummaryCards cards={summaryCards} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

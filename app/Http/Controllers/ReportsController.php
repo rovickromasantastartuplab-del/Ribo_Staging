@@ -21,12 +21,19 @@ class ReportsController extends Controller
     {
         $dateFrom = $request->get('date_from', Carbon::now()->subMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', Carbon::now()->format('Y-m-d'));
+        $staffId = $request->get('staff_id');
         
         $companyId = Auth::user()->creatorId();
+        $staff = $this->getStaff($companyId);
+        
+        $query = Lead::where('leads.created_by', $companyId)->whereBetween('leads.created_at', [$dateFrom, $dateTo]);
+        if ($staffId) {
+            $query->where('leads.assigned_to', $staffId);
+        }
         
         $summary = [
-            'total_leads' => Lead::where('created_by', $companyId)->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-            'converted_leads' => Lead::where('created_by', $companyId)->whereBetween('created_at', [$dateFrom, $dateTo])->where('is_converted', true)->count(),
+            'total_leads' => (clone $query)->count(),
+            'converted_leads' => (clone $query)->where('is_converted', true)->count(),
             'conversion_rate' => 0,
             'avg_conversion_time' => 0
         ];
@@ -37,41 +44,38 @@ class ReportsController extends Controller
         
         // Calculate average conversion time for converted leads
         if ($summary['converted_leads'] > 0) {
-            $avgConversionTime = Lead::where('created_by', $companyId)
-                ->whereBetween('created_at', [$dateFrom, $dateTo])
+            $avgConversionTime = (clone $query)
                 ->where('is_converted', true)
                 ->selectRaw('AVG(DATEDIFF(updated_at, created_at)) as avg_days')
                 ->value('avg_days');
             $summary['avg_conversion_time'] = round($avgConversionTime ?? 0, 1);
         }
         
-        $monthlyData = Lead::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, COUNT(*) as count')
-            ->where('created_by', $companyId)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
+        $monthlyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, COUNT(*) as count')
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $dailyData = Lead::selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, COUNT(*) as count')
-            ->where('created_by', $companyId)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
+        $dailyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, COUNT(*) as count')
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $leadsBySource = Lead::selectRaw('lead_sources.name, COUNT(*) as total')
+        $leadsBySource = (clone $query)
+            ->selectRaw('lead_sources.name, COUNT(*) as total')
             ->join('lead_sources', 'leads.lead_source_id', '=', 'lead_sources.id')
-            ->where('leads.created_by', $companyId)
-            ->whereBetween('leads.created_at', [$dateFrom, $dateTo])
             ->groupBy('lead_sources.name')
             ->get();
 
         return Inertia::render('reports/lead-reports', [
-            'filters' => compact('dateFrom', 'dateTo'),
+            'filters' => compact('dateFrom', 'dateTo', 'staffId'),
             'summary' => $summary,
             'monthlyData' => $monthlyData,
             'dailyData' => $dailyData,
-            'leadsBySource' => $leadsBySource
+            'leadsBySource' => $leadsBySource,
+            'staff' => $staff
         ]);
     }
 
@@ -79,11 +83,19 @@ class ReportsController extends Controller
     {
         $dateFrom = $request->get('date_from', Carbon::now()->subMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', Carbon::now()->format('Y-m-d'));
+        $staffId = $request->get('staff_id');
+
         $companyId = Auth::user()->creatorId();
+        $staff = $this->getStaff($companyId);
+
+        $query = SalesOrder::where('sales_orders.created_by', $companyId)->whereBetween('sales_orders.created_at', [$dateFrom, $dateTo]);
+        if ($staffId) {
+            $query->where('sales_orders.assigned_to', $staffId);
+        }
         
         $summary = [
-            'total_sales' => SalesOrder::where('created_by', $companyId)->whereBetween('created_at', [$dateFrom, $dateTo])->sum('total_amount'),
-            'total_orders' => SalesOrder::where('created_by', $companyId)->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+            'total_sales' => (clone $query)->sum('total_amount'),
+            'total_orders' => (clone $query)->count(),
             'avg_order_value' => 0,
             'growth_rate' => 0
         ];
@@ -96,7 +108,11 @@ class ReportsController extends Controller
         $previousPeriodStart = Carbon::parse($dateFrom)->subDays(Carbon::parse($dateTo)->diffInDays(Carbon::parse($dateFrom)))->format('Y-m-d');
         $previousPeriodEnd = Carbon::parse($dateFrom)->subDay()->format('Y-m-d');
         
-        $previousSales = SalesOrder::where('created_by', $companyId)->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])->sum('total_amount');
+        $prevQuery = SalesOrder::where('sales_orders.created_by', $companyId)->whereBetween('sales_orders.created_at', [$previousPeriodStart, $previousPeriodEnd]);
+        if ($staffId) {
+            $prevQuery->where('sales_orders.assigned_to', $staffId);
+        }
+        $previousSales = $prevQuery->sum('total_amount');
         
         if ($previousSales > 0) {
             $summary['growth_rate'] = (($summary['total_sales'] - $previousSales) / $previousSales) * 100;
@@ -104,32 +120,30 @@ class ReportsController extends Controller
             $summary['growth_rate'] = 100; // 100% growth if no previous sales
         }
         
-        $monthlyData = SalesOrder::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, SUM(total_amount) as revenue, COUNT(*) as orders')
-            ->where('created_by', $companyId)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
+        $monthlyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, SUM(total_amount) as revenue, COUNT(*) as orders')
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $dailyData = SalesOrder::selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, SUM(total_amount) as revenue, COUNT(*) as orders')
-            ->where('created_by', $companyId)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
+        $dailyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, SUM(total_amount) as revenue, COUNT(*) as orders')
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $salesByStatus = SalesOrder::selectRaw('status, COUNT(*) as total, SUM(total_amount) as amount')
-            ->where('created_by', $companyId)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
+        $salesByStatus = (clone $query)
+            ->selectRaw('status, COUNT(*) as total, SUM(total_amount) as amount')
             ->groupBy('status')
             ->get();
 
         return Inertia::render('reports/sales-reports', [
-            'filters' => compact('dateFrom', 'dateTo'),
+            'filters' => compact('dateFrom', 'dateTo', 'staffId'),
             'summary' => $summary,
             'monthlyData' => $monthlyData,
             'dailyData' => $dailyData,
-            'salesByStatus' => $salesByStatus
+            'salesByStatus' => $salesByStatus,
+            'staff' => $staff
         ]);
     }
 
@@ -137,7 +151,10 @@ class ReportsController extends Controller
     {
         $dateFrom = $request->get('date_from', Carbon::now()->subMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', Carbon::now()->format('Y-m-d'));
+        $staffId = $request->get('staff_id');
+
         $companyId = Auth::user()->creatorId();
+        $staff = $this->getStaff($companyId);
         
         $summary = [
             'total_products' => Product::where('created_by', $companyId)->count(),
@@ -146,12 +163,18 @@ class ReportsController extends Controller
             'best_seller' => null
         ];
         
-        $productSales = DB::table('sales_order_products')
+        $productSalesQuery = DB::table('sales_order_products')
             ->join('sales_orders', 'sales_order_products.sales_order_id', '=', 'sales_orders.id')
             ->join('products', 'sales_order_products.product_id', '=', 'products.id')
             ->selectRaw('products.name, SUM(sales_order_products.quantity) as quantity, SUM(sales_order_products.total_price) as revenue')
             ->where('sales_orders.created_by', $companyId)
-            ->whereBetween('sales_orders.created_at', [$dateFrom, $dateTo])
+            ->whereBetween('sales_orders.created_at', [$dateFrom, $dateTo]);
+
+        if ($staffId) {
+            $productSalesQuery->where('sales_orders.assigned_to', $staffId);
+        }
+
+        $productSales = $productSalesQuery
             ->groupBy('products.id', 'products.name')
             ->orderBy('revenue', 'desc')
             ->get()
@@ -167,9 +190,10 @@ class ReportsController extends Controller
         $summary['best_seller'] = $productSales->first()['name'] ?? null;
 
         return Inertia::render('reports/product-reports', [
-            'filters' => compact('dateFrom', 'dateTo'),
+            'filters' => compact('dateFrom', 'dateTo', 'staffId'),
             'summary' => $summary,
-            'productSales' => $productSales
+            'productSales' => $productSales,
+            'staff' => $staff
         ]);
     }
 
@@ -177,35 +201,49 @@ class ReportsController extends Controller
     {
         $dateFrom = $request->get('date_from', Carbon::now()->subMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', Carbon::now()->format('Y-m-d'));
+        $staffId = $request->get('staff_id');
+
         $companyId = Auth::user()->creatorId();
+        $staff = $this->getStaff($companyId);
+
+        $query = Contact::where('contacts.created_by', $companyId);
+        if ($staffId) {
+            $query->where('contacts.assigned_to', $staffId);
+        }
         
         $summary = [
-            'total_contacts' => Contact::where('created_by', $companyId)->count(),
-            'new_contacts' => Contact::where('created_by', $companyId)->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-            'active_contacts' => Contact::where('created_by', $companyId)->where('status', 'active')->count(),
+            'total_contacts' => (clone $query)->count(),
+            'new_contacts' => (clone $query)->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+            'active_contacts' => (clone $query)->where('status', 'active')->count(),
             'contact_lifetime_value' => 0
         ];
         
-        $monthlyData = Contact::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, COUNT(*) as count')
-            ->where('created_by', $companyId)
+        $monthlyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, COUNT(*) as count')
             ->whereBetween('created_at', [$dateFrom, $dateTo])
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $dailyData = Contact::selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, COUNT(*) as count')
-            ->where('created_by', $companyId)
+        $dailyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, COUNT(*) as count')
             ->whereBetween('created_at', [$dateFrom, $dateTo])
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $topContacts = DB::table('contacts')
+        $topContactsQuery = DB::table('contacts')
             ->join('sales_orders', 'contacts.id', '=', 'sales_orders.billing_contact_id')
             ->selectRaw('contacts.name, SUM(sales_orders.total_amount) as total_spent, COUNT(sales_orders.id) as order_count')
             ->where('contacts.created_by', $companyId)
             ->where('sales_orders.created_by', $companyId)
-            ->whereBetween('sales_orders.created_at', [$dateFrom, $dateTo])
+            ->whereBetween('sales_orders.created_at', [$dateFrom, $dateTo]);
+
+        if ($staffId) {
+            $topContactsQuery->where('contacts.assigned_to', $staffId);
+        }
+
+        $topContacts = $topContactsQuery
             ->groupBy('contacts.id', 'contacts.name')
             ->orderBy('total_spent', 'desc')
             ->limit(10)
@@ -219,11 +257,12 @@ class ReportsController extends Controller
             });
 
         return Inertia::render('reports/customer-reports', [
-            'filters' => compact('dateFrom', 'dateTo'),
+            'filters' => compact('dateFrom', 'dateTo', 'staffId'),
             'summary' => $summary,
             'monthlyData' => $monthlyData,
             'dailyData' => $dailyData,
-            'topContacts' => $topContacts
+            'topContacts' => $topContacts,
+            'staff' => $staff
         ]);
     }
 
@@ -231,12 +270,20 @@ class ReportsController extends Controller
     {
         $dateFrom = $request->get('date_from', Carbon::now()->subMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', Carbon::now()->format('Y-m-d'));
+        $staffId = $request->get('staff_id');
+
         $companyId = Auth::user()->creatorId();
+        $staff = $this->getStaff($companyId);
+
+        $query = Project::where('projects.created_by', $companyId);
+        if ($staffId) {
+            $query->where('projects.assigned_to', $staffId);
+        }
         
         $summary = [
-            'total_projects' => Project::where('created_by', $companyId)->count(),
-            'active_projects' => Project::where('created_by', $companyId)->where('status', 'active')->count(),
-            'completed_projects' => Project::where('created_by', $companyId)->where('status', 'completed')->count(),
+            'total_projects' => (clone $query)->count(),
+            'active_projects' => (clone $query)->where('status', 'active')->count(),
+            'completed_projects' => (clone $query)->where('status', 'completed')->count(),
             'completion_rate' => 0
         ];
         
@@ -244,31 +291,40 @@ class ReportsController extends Controller
             $summary['completion_rate'] = ($summary['completed_projects'] / $summary['total_projects']) * 100;
         }
         
-        $monthlyData = Project::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, COUNT(*) as count')
-            ->where('created_by', $companyId)
+        $monthlyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, COUNT(*) as count')
             ->whereBetween('created_at', [$dateFrom, $dateTo])
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $dailyData = Project::selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, COUNT(*) as count')
-            ->where('created_by', $companyId)
+        $dailyData = (clone $query)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as period, COUNT(*) as count')
             ->whereBetween('created_at', [$dateFrom, $dateTo])
             ->groupBy('period')
             ->orderBy('period')
             ->get();
             
-        $projectsByStatus = Project::selectRaw('status, COUNT(*) as total')
-            ->where('created_by', $companyId)
+        $projectsByStatus = (clone $query)
+            ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->get();
 
         return Inertia::render('reports/project-reports', [
-            'filters' => compact('dateFrom', 'dateTo'),
+            'filters' => compact('dateFrom', 'dateTo', 'staffId'),
             'summary' => $summary,
             'monthlyData' => $monthlyData,
             'dailyData' => $dailyData,
-            'projectsByStatus' => $projectsByStatus
+            'projectsByStatus' => $projectsByStatus,
+            'staff' => $staff
         ]);
     }
+
+    private function getStaff($companyId)
+    {
+        return \App\Models\User::where('created_by', $companyId)
+            ->orWhere('id', $companyId)
+            ->get(['id', 'name']);
+    }
+
 }

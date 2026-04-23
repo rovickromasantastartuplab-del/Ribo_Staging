@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Package, CheckCircle, DollarSign, Award, Printer } from 'lucide-react';
 import { ReportFilters } from '@/components/reports/report-filters';
+import { ReportHeader } from '@/components/reports/report-header';
 import { SummaryCards } from '@/components/reports/summary-cards';
 import { ChartCard } from '@/components/reports/chart-card';
 import { Card } from '@/components/ui/card';
@@ -12,7 +13,7 @@ import { useReportPrint } from '@/hooks/use-report-print';
 
 export default function ProductReports() {
   const { t } = useTranslation();
-  const { filters, summary, productSales } = usePage().props as any;
+  const { filters, summary, productSales, staff } = usePage().props as any;
   const { contentRef, handlePrint } = useReportPrint(t('Product Reports'));
 
   const breadcrumbs = [
@@ -65,9 +66,10 @@ export default function ProductReports() {
         }
       ]}
     >
-      <ReportFilters filters={filters} />
+      <ReportFilters filters={filters} staff={staff} />
       
       <div ref={contentRef}>
+        <ReportHeader title={t('Product Reports')} filters={filters} staff={staff} />
         <SummaryCards cards={summaryCards} />
 
         <div className="grid grid-cols-1 gap-6 mb-6">

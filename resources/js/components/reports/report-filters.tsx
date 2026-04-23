@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,28 +7,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTranslation } from 'react-i18next';
 import { router } from '@inertiajs/react';
 
+interface Staff {
+  id: number;
+  name: string;
+}
+
 interface ReportFiltersProps {
   filters: {
     dateFrom: string;
     dateTo: string;
+    staffId?: string;
     [key: string]: any;
   };
+  staff?: Staff[];
   additionalFilters?: ReactNode;
 }
 
-import { ReactNode } from 'react';
-
-export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps) {
+export function ReportFilters({ filters, staff, additionalFilters }: ReportFiltersProps) {
   const { t } = useTranslation();
   const [dateFrom, setDateFrom] = useState(filters.dateFrom);
   const [dateTo, setDateTo] = useState(filters.dateTo);
+  const [staffId, setStaffId] = useState(filters.staffId?.toString() || 'all');
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.get(window.location.pathname, {
+    const params: any = {
       date_from: dateFrom,
       date_to: dateTo,
-    });
+    };
+    if (staffId && staffId !== 'all') {
+      params.staff_id = staffId;
+    }
+    router.get(window.location.pathname, params);
   };
 
   const handleClearFilters = () => {
@@ -38,6 +48,7 @@ export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps
     
     setDateFrom(defaultDateFrom.toISOString().split('T')[0]);
     setDateTo(defaultDateTo.toISOString().split('T')[0]);
+    setStaffId('all');
     
     router.get(window.location.pathname);
   };
@@ -63,6 +74,24 @@ export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps
             onChange={(e) => setDateTo(e.target.value)}
           />
         </div>
+        {staff && staff.length > 0 && (
+          <div className="w-full sm:w-auto sm:flex-1 min-w-[200px]">
+            <Label htmlFor="staff_id">{t('Staff')}</Label>
+            <Select value={staffId} onValueChange={setStaffId}>
+              <SelectTrigger id="staff_id">
+                <SelectValue placeholder={t('Select Staff')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('All Staff')}</SelectItem>
+                {staff.map((s) => (
+                  <SelectItem key={s.id} value={s.id.toString()}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         {additionalFilters}
         <Button type="submit" className="w-full sm:w-auto">{t('Apply Filters')}</Button>
         <Button type="button" variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">{t('Clear Filters')}</Button>
