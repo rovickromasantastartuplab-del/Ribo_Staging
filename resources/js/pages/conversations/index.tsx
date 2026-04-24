@@ -49,7 +49,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ConversationsCalendar, ConversationsCalendarHandle } from './components/conversations-calendar';
 import { FollowUpSequenceBuilder } from './components/follow-up-sequence-builder';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/custom-toast';
 import { CrudFormModal } from '@/components/CrudFormModal';
@@ -326,6 +326,54 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     }, [isAiDrawerOpen]);
 
     const [isMobileAiSheetOpen, setIsMobileAiSheetOpen] = useState(false);
+    const [showNavigationWarning, setShowNavigationWarning] = useState(false);
+    const [pendingNavigation, setPendingNavigation] = useState<any>(null);
+
+    // Unsaved changes detection
+    const hasUnsavedCompose = showCompose && (
+        composeTo.trim() !== '' ||
+        composeSubject.trim() !== '' ||
+        composeCc.trim() !== '' ||
+        composeBcc.trim() !== '' ||
+        (composeBody && composeBody !== '<p></p>' && composeBody !== '')
+    );
+
+    // Intercept Inertia navigation
+    useEffect(() => {
+        const unbind = router.on('before', (event) => {
+            // Only intercept if we have unsaved changes, we're not prefetching, and we're not already navigating after confirmation
+            if (hasUnsavedCompose && !event.detail.visit.prefetch && !pendingNavigation) {
+                event.preventDefault();
+                setPendingNavigation(event.detail.visit);
+                setShowNavigationWarning(true);
+            }
+        });
+        return () => unbind();
+    }, [hasUnsavedCompose, pendingNavigation]);
+
+    // Handle browser refresh/close
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedCompose) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedCompose]);
+
+    const handleConfirmLeave = () => {
+        if (pendingNavigation) {
+            const { url, ...options } = pendingNavigation;
+            setShowNavigationWarning(false);
+            // We need to clear hasUnsavedCompose logic or temporarily disable the guard
+            // by setting showCompose to false immediately before navigating
+            setShowCompose(false);
+            // Small timeout to ensure state update propagates if needed, but router.visit is usually fine
+            router.visit(url, options);
+        }
+    };
 
     // Tiptap Editor for Compose Modal
     const composeEditor = useEditor({
@@ -1291,7 +1339,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         {/* Pane 3: Thread detail + reply */}
                         <div className={`
                         flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/5 transition-all duration-300 ease-in-out
-                        ${!selectedThread ? 'hidden lg:flex' : 'flex'}
+                        ${!selectedThread ? 'hidden lg:flex' : 'flex h-full'}
                     `}>
                             {selectedThread ? (
                                 <>
@@ -1842,16 +1890,19 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                         </div>
                     </>
 
-                    <AiStrategyDrawer 
-                        threadId={selectedThread?.id || null} 
-                        isOpen={isAiDrawerOpen} 
-                        onToggle={() => setIsAiDrawerOpen(!isAiDrawerOpen)} 
-                        onInsertDraft={(body: string) => {
-                            replyEditor?.commands.setContent(body, true);
-                            setReplyBody(body);
-                            setShowCrmModal(false); // Close modal if open
-                        }}
-                    />
+                    {/* Pane 4: Persistent AI Drawer (Desktop only) */}
+                    <div className="hidden lg:flex shrink-0 border-l">
+                        <AiStrategyDrawer 
+                            threadId={selectedThread?.id || null} 
+                            isOpen={isAiDrawerOpen} 
+                            onToggle={() => setIsAiDrawerOpen(!isAiDrawerOpen)} 
+                            onInsertDraft={(body: string) => {
+                                replyEditor?.commands.setContent(body, true);
+                                setReplyBody(body);
+                                setShowCrmModal(false); // Close modal if open
+                            }}
+                        />
+                    </div>
 
                     {/* Mobile AI Sheet — visible below lg where the persistent drawer is hidden */}
                     <Sheet open={isMobileAiSheetOpen} onOpenChange={(open) => !open && setIsMobileAiSheetOpen(false)}>
@@ -1869,6 +1920,32 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                             )}
                         </SheetContent>
                     </Sheet>
+
+                    {/* Navigation Warning Dialog */}
+                    <Dialog open={showNavigationWarning} onOpenChange={(open) => {
+                        setShowNavigationWarning(open);
+                        if (!open) setPendingNavigation(null);
+                    }}>
+                        <DialogContent className="w-[95vw] sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>{t('Unsaved Changes')}</DialogTitle>
+                                <DialogDescription>
+                                    {t('Leaving will remove the message. Are you sure you want to stay or leave?')}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="flex flex-row justify-end gap-2 sm:justify-end">
+                                <Button type="button" variant="outline" onClick={() => {
+                                    setShowNavigationWarning(false);
+                                    setPendingNavigation(null);
+                                }}>
+                                    {t('Stay')}
+                                </Button>
+                                <Button type="button" variant="destructive" onClick={handleConfirmLeave}>
+                                    {t('Leave')}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                     {/* Pane 4: CRM Context Modal */}
                     {selectedThread && (

@@ -228,7 +228,10 @@ const breadcrumbs = [
           label: 'Add Page',
           icon: <Plus className="w-4 h-4 mr-2" />,
           variant: 'default',
-          onClick: () => setIsCreateOpen(true)
+          onClick: () => {
+            reset();
+            setIsCreateOpen(true);
+          }
         }
       ]}
       noPadding
@@ -283,7 +286,12 @@ const breadcrumbs = [
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingPage} onOpenChange={() => setEditingPage(null)}>
+      <Dialog open={!!editingPage} onOpenChange={(open) => {
+        if (!open) {
+          setEditingPage(null);
+          reset();
+        }
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Page</DialogTitle>
@@ -354,7 +362,12 @@ const breadcrumbs = [
       </Dialog>
 
       {/* Create Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      <Dialog open={isCreateOpen} onOpenChange={(open) => {
+        setIsCreateOpen(open);
+        if (!open) {
+          reset();
+        }
+      }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Custom Page</DialogTitle>

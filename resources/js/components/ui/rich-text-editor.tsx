@@ -1,4 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react'
+import { useEffect } from 'react'
 import StarterKit from '@tiptap/starter-kit'
 import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
@@ -70,6 +71,13 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
       }
     },
   })
+
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content)
+      setHtmlContent(content)
+    }
+  }, [content, editor])
 
   useImperativeHandle(ref, () => ({
     getContent: () => editor?.getHTML() || '',
