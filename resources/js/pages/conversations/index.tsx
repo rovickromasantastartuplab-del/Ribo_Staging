@@ -234,7 +234,7 @@ const FolderSidebar = ({ selectedFolder, onSelect, unreadCount, t, isSyncing, on
 );
 
 /* ── Main component ────────────────────────────────────────── */
-export default function ConversationsIndex({ gmailAccount, companyId, isOwner, unreadCount: initialUnreadCount, selectedThreadId }: { gmailAccount: any, companyId: number, isOwner: boolean, unreadCount?: number, selectedThreadId?: number | null }) {
+export default function ConversationsIndex({ channelAccount, companyId, isOwner, unreadCount: initialUnreadCount, selectedThreadId }: { channelAccount: any, companyId: number, isOwner: boolean, unreadCount?: number, selectedThreadId?: number | null }) {
     const { t } = useTranslation();
     const { auth, leadStatuses = [], opportunityStages = [], leadSources = [], accountIndustries = [], campaigns = [], users = [] } = usePage<any>().props;
     const permissions = auth?.permissions || [];
@@ -515,8 +515,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
     const handleAddAsLead = () => {
         if (!selectedThread) return;
 
-        // Find the external participant (not the synced Gmail account)
-        const me = gmailAccount?.email;
+        // Find the external participant (not the synced account)
+        const me = channelAccount?.email;
         const externalParticipant = selectedThread.participants?.find((p: string) => !p.includes(me)) || selectedThread.participants?.[0];
 
         let name = '';
@@ -639,7 +639,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
         const channel = getEcho().private(`company.${companyId}`)
             .listen('.gmail.sync.completed', (data: any) => {
-                if (gmailAccount && data.gmailAccountId == gmailAccount.id) {
+                if (channelAccount && data.gmailAccountId == channelAccount.id) {
                     fetchThreads(false, true);
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
@@ -657,7 +657,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                 }
             });
         return () => { channel.stopListening('.gmail.sync.completed'); };
-    }, [selectedFolder, gmailAccount?.id, companyId, searchQuery]);
+    }, [selectedFolder, channelAccount?.id, companyId, searchQuery]);
 
     // Handle deep linking to a specific thread on mount
     useEffect(() => {
@@ -1158,8 +1158,8 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
 
                                     {/* Thread list scroll area */}
                                     <ScrollArea className="flex-1 min-h-0 overflow-y-auto [&_[data-radix-scroll-area-viewport]>div]:!block">
-                                        {!gmailAccount ? (
-                                            /* No Gmail account */
+                                        {!channelAccount ? (
+                                            /* No mailbox connected */
                                             <div className="flex flex-col items-center justify-center text-center px-4 py-10">
                                                 <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
                                                     <AlertCircle className="h-6 w-6 text-primary" />
@@ -1167,22 +1167,22 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 <h3 className="text-sm font-semibold mb-1">{t('Email Not Connected')}</h3>
                                                 <p className="text-xs text-muted-foreground mb-4 max-w-xs">
                                                     {isOwner
-                                                        ? t('Connect your Gmail account in settings to start managing conversations.')
-                                                        : t('Please ask your Company Owner to connect a Gmail account in settings.')}
+                                                        ? t('Connect your email account in settings to start managing conversations.')
+                                                        : t('Please ask your Company Owner to connect an email account in settings.')}
                                                 </p>
                                                 {isOwner && (
                                                     <Button size="sm" onClick={() => window.location.href = route('settings', ['#integrations-settings'])}>
-                                                        {t('Connect Gmail')}
+                                                        {t('Connect Email')}
                                                     </Button>
                                                 )}
                                             </div>
-                                        ) : gmailAccount?.sync_status === 'error' && threads.length === 0 ? (
+                                        ) : channelAccount?.sync_status === 'error' && threads.length === 0 ? (
                                             /* Sync error */
                                             <div className="flex flex-col items-center justify-center text-center px-4 py-10">
                                                 <AlertCircle className="h-10 w-10 text-destructive mb-3" />
                                                 <h3 className="text-sm font-semibold mb-1">{t('Synchronization Error')}</h3>
                                                 <p className="text-xs text-muted-foreground mb-4 max-w-xs">
-                                                    {gmailAccount.sync_error || t('An error occurred while syncing.')}
+                                                    {channelAccount.sync_error || t('An error occurred while syncing your mailbox.')}
                                                 </p>
                                                 <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
                                                     <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -1205,7 +1205,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                     >
                                                         <Avatar className="h-8 w-8 shrink-0 border border-primary/10">
                                                             <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                                                                {(thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0])?.charAt(0).toUpperCase() || 'U'}
+                                                                {(thread.participants?.find((p: string) => !p.includes(channelAccount?.email)) || thread.participants?.[0] || t('Unknown')).charAt(0).toUpperCase()}
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <div className="min-w-0 flex-1">
@@ -1213,7 +1213,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 <div className="flex flex-col min-w-0 flex-1">
                                                                     <span className={`text-sm truncate ${!thread.is_read ? 'font-extrabold' : 'font-semibold'
                                                                         } ${selectedThread?.id === thread.id ? 'text-primary' : 'text-foreground'}`}>
-                                                                        {thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => p !== gmailAccount?.email) || thread.participants?.[0] || 'Unknown'}
+                                                                        {(thread.leads?.[0]?.name || thread.contacts?.[0]?.name || thread.participants?.find((p: string) => !p.includes(channelAccount?.email)) || thread.participants?.[0] || 'Unknown').split('<')[0]}
                                                                     </span>
                                                                     {(thread.leads?.[0] || thread.contacts?.[0]) && (
                                                                         <span className="text-xs text-muted-foreground truncate opacity-70">
@@ -1304,14 +1304,14 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                 </div>
                                                 <h3 className="text-sm font-semibold mb-1">{t('No conversations found')}</h3>
                                                 <p className="text-xs text-muted-foreground mb-4 max-w-44">
-                                                    {gmailAccount?.sync_status === 'syncing'
+                                                    {channelAccount?.sync_status === 'syncing'
                                                         ? t('We are currently syncing your inbox...')
                                                         : t('Try clicking the sync button to fetch your latest emails.')}
                                                 </p>
-                                                {gmailAccount?.sync_error && (
+                                                {channelAccount?.sync_error && (
                                                     <div className="p-2 bg-destructive/5 text-destructive border border-destructive/10 rounded-lg text-[10px] mb-3 max-w-xs">
                                                         <span className="font-bold block mb-0.5">{t('Sync Error')}:</span>
-                                                        {gmailAccount.sync_error}
+                                                        {channelAccount.sync_error}
                                                     </div>
                                                 )}
                                                 <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
@@ -1668,7 +1668,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 }),
                                                                 ...replyCcList
                                                             ].filter((rawEmail: string) => {
-                                                                const accountEmail = (gmailAccount?.email || '').toLowerCase();
+                                                                const accountEmail = (channelAccount?.email || '').toLowerCase();
                                                                 const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
                                                                 return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
                                                             }))).map((ccEmail) => {
@@ -1720,7 +1720,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                                                 }),
                                                                 ...replyBccList
                                                             ].filter((rawEmail: string) => {
-                                                                const accountEmail = (gmailAccount?.email || '').toLowerCase();
+                                                                const accountEmail = (channelAccount?.email || '').toLowerCase();
                                                                 const primaryToRaw = activeReplyMessage ? (activeReplyMessage.from_email || '').toLowerCase() : '';
                                                                 return rawEmail.trim() !== accountEmail.trim() && rawEmail.trim() !== primaryToRaw.trim();
                                                             }))).map((bccEmail) => {
@@ -1957,7 +1957,7 @@ export default function ConversationsIndex({ gmailAccount, companyId, isOwner, u
                                     <div className="flex items-center justify-between gap-3 min-w-0 px-5 py-4 border-b shrink-0 bg-gradient-to-b from-background to-muted/30">
                                         <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
                                             {(() => {
-                                                const externalParticipant = selectedThread.participants?.find((p: string) => p !== gmailAccount?.email) || selectedThread.participants?.[0];
+                                                const externalParticipant = selectedThread.participants?.find((p: string) => p !== channelAccount?.email) || selectedThread.participants?.[0];
                                                 const contactName = selectedThread.leads?.[0]?.name || selectedThread.contacts?.[0]?.name || externalParticipant || 'Contact';
                                                 return (
                                                     <>
