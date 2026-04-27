@@ -74,7 +74,7 @@ class OpenLoopTaskService
             AiTask::query()->create(array_merge($entityPayload, [
                 'created_by' => $companyId,
                 'email_thread_id' => $threadId,
-                'title' => (string) $candidate['title'],
+                'title' => \Illuminate\Support\Str::limit((string) $candidate['title'], 255),
                 'priority' => 'medium',
                 'is_completed' => false,
                 'source' => 'ai',
@@ -99,7 +99,7 @@ class OpenLoopTaskService
 
             $payload['is_completed'] = false;
             $payload['completed_at'] = null;
-            $payload['title'] = (string) $candidate['title'];
+            $payload['title'] = \Illuminate\Support\Str::limit((string) $candidate['title'], 255);
             $payload['metadata_json'] = $metadata;
         }
 
