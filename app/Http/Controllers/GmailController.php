@@ -112,12 +112,17 @@ class GmailController extends Controller
     }
 
     /**
-     * Disconnect the user's Gmail account.
+     * Trigger a sync for the user's Gmail account.
      */
-    public function disconnect()
+    public function syncNow()
     {
         $user = auth()->user();
         $companyId = $user->creatorId();
+        $isOwner = $user->type === 'company' || $user->id === $companyId;
+
+        if (!$isOwner) {
+            return redirect()->back()->with('error', 'Only company owners can sync the Gmail account.');
+        }
 
         $channelAccount = ChannelAccount::where('user_id', $companyId)->where('type', 'gmail')->first();
 
@@ -129,9 +134,10 @@ class GmailController extends Controller
             return redirect()->back()->with('info', 'A sync is already in progress.');
         }
 
-        SyncChannelAccountJob::dispatchSync($channelAccount->id);
+        // Use dispatchSync for immediate feedback in this controller's context
+        SyncChannelAccountJob::dispatch($channelAccount->id);
 
-        return redirect()->back()->with('success', 'Gmail sync completed successfully.');
+        return redirect()->back()->with('success', 'Gmail sync started successfully.');
     }
 
     /**
