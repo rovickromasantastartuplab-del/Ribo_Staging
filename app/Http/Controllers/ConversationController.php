@@ -803,6 +803,7 @@ class ConversationController extends Controller
                 'body_html' => $request->body,
                 'cc_emails' => $cc,
                 'bcc_emails' => $bcc,
+                'sent_at' => now(),
                 'created_by' => $companyId,
             ]);
 
@@ -906,6 +907,7 @@ class ConversationController extends Controller
                 'cc_emails' => $cc,
                 'bcc_emails' => $bcc,
                 'message_id_header' => $replyToHeader, // Bridging for driver
+                'sent_at' => now(),
                 'created_by' => $user->creatorId(),
             ]);
 
