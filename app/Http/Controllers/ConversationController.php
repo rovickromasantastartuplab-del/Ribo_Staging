@@ -794,9 +794,25 @@ class ConversationController extends Controller
             $cc = array_filter(array_map('trim', explode(',', $request->cc ?? '')));
             $bcc = array_filter(array_map('trim', explode(',', $request->bcc ?? '')));
 
+            $thread = EmailThread::create([
+                'channel_account_id' => $account->id,
+                'channel_type' => $account->type,
+                'subject' => $request->subject,
+                'snippet' => mb_substr(strip_tags($request->body), 0, 200),
+                'participants' => array_values(array_unique(array_filter(array_merge(
+                    [$account->email_address, $request->to],
+                    $cc,
+                    $bcc
+                )))),
+                'message_count' => 1,
+                'last_message_at' => now(),
+                'is_read' => true,
+                'labels' => ['SENT'],
+                'created_by' => $companyId,
+            ]);
 
             $message = EmailMessage::create([
-                'email_thread_id' => null, // Driver will handle or link later
+                'email_thread_id' => $thread->id,
                 'from_email' => $account->email_address,
                 'to_emails' => [$request->to],
                 'subject' => $request->subject,

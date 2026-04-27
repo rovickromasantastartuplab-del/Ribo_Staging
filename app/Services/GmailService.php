@@ -1214,22 +1214,31 @@ class GmailService
         try {
             $companyId = $this->resolveCompanyId();
             
-            // Find or create the local thread
-            $emailThread = \App\Models\EmailThread::updateOrCreate(
-                [
-                    'external_thread_id' => $sentMessage->getThreadId(),
-                    'created_by' => $companyId,
-                ],
-                [
-                    'subject' => $subject,
-                    'is_read' => true,
-                    'last_message_at' => now(),
-                    'gmail_account_id' => $this->account instanceof \App\Models\GmailAccount ? $this->account->id : null,
-                    'channel_account_id' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->id : null,
-                    'channel_type' => 'gmail',
-                    'gmail_thread_id' => $sentMessage->getThreadId(), // Legacy fallback
-                ]
-            );
+            $threadPayload = [
+                'subject' => $subject,
+                'is_read' => true,
+                'last_message_at' => now(),
+                'gmail_account_id' => $this->account instanceof \App\Models\GmailAccount ? $this->account->id : null,
+                'channel_account_id' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->id : null,
+                'channel_type' => 'gmail',
+                'gmail_thread_id' => $sentMessage->getThreadId(), // Legacy fallback
+                'external_thread_id' => $sentMessage->getThreadId(),
+            ];
+
+            $emailThread = $existingMessage?->thread;
+
+            if ($emailThread && !$emailThread->external_thread_id) {
+                $emailThread->update($threadPayload);
+            } else {
+                // Find or create the local thread
+                $emailThread = \App\Models\EmailThread::updateOrCreate(
+                    [
+                        'external_thread_id' => $sentMessage->getThreadId(),
+                        'created_by' => $companyId,
+                    ],
+                    $threadPayload
+                );
+            }
 
             // Create the local message record with the authenticated user's ID
             $payload = [

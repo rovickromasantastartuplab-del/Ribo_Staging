@@ -26,9 +26,10 @@ return new class extends Migration
         });
 
         // 2. Add 'active' to the sync_status ENUM.
-        // Blueprint::enum()->change() doesn't reliably modify ENUMs cross-driver,
-        // so we use a raw ALTER TABLE which is safe and precise.
-        DB::statement("ALTER TABLE channel_accounts MODIFY COLUMN sync_status ENUM('idle','syncing','active','error') NOT NULL DEFAULT 'idle'");
+        // Blueprint::enum()->change() doesn't reliably modify ENUMs cross-driver.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE channel_accounts MODIFY COLUMN sync_status ENUM('idle','syncing','active','error') NOT NULL DEFAULT 'idle'");
+        }
     }
 
     /**
@@ -37,7 +38,9 @@ return new class extends Migration
     public function down(): void
     {
         // Revert sync_status ENUM (rows with 'active' will become '' — acceptable for rollback)
-        DB::statement("ALTER TABLE channel_accounts MODIFY COLUMN sync_status ENUM('idle','syncing','error') NOT NULL DEFAULT 'idle'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE channel_accounts MODIFY COLUMN sync_status ENUM('idle','syncing','error') NOT NULL DEFAULT 'idle'");
+        }
 
         // Revert gmail_thread_id to NOT NULL (only safe if all rows have a value)
         Schema::table('email_threads', function (Blueprint $table) {
