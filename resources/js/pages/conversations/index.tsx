@@ -589,7 +589,7 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
         setLoading(true);
         axios.get(route('api.conversations.show', id))
             .then(r => {
-                setSelectedThread(r.data.thread);
+                setSelectedThread(threadWithReplyMailbox(r.data));
             })
             .catch(err => {
                 console.error('Failed to load thread from calendar:', err);
@@ -631,6 +631,11 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
     const calendarRef = React.useRef<ConversationsCalendarHandle>(null);
     useEffect(() => { selectedThreadIdRef.current = selectedThread?.id || null; }, [selectedThread?.id]);
 
+    const threadWithReplyMailbox = (data: any) => ({
+        ...data.thread,
+        reply_mailbox: data.reply_mailbox,
+    });
+
     useEffect(() => {
         setThreadPage(1);
         fetchThreads(false);
@@ -644,7 +649,7 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
                     if (selectedThreadIdRef.current) {
                         axios.get(route('api.conversations.show', selectedThreadIdRef.current))
                             .then(r => {
-                                const newThread = r.data.thread;
+                                const newThread = threadWithReplyMailbox(r.data);
                                 setSelectedThread((prev: any) => {
                                     if (prev && prev.id === newThread.id) {
                                         return { ...prev, ...newThread };
@@ -665,7 +670,7 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
             setLoading(true);
             axios.get(route('api.conversations.show', selectedThreadId))
                 .then(r => {
-                    setSelectedThread(r.data.thread);
+                    setSelectedThread(threadWithReplyMailbox(r.data));
                 })
                 .catch(err => {
                     console.error('Failed to load deep-linked thread:', err);
@@ -904,7 +909,7 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
                 params: { page }
             });
 
-            const newThread = response.data.thread;
+            const newThread = threadWithReplyMailbox(response.data);
             const pagination = response.data.messages_pagination;
             const unread_count = response.data.unread_count;
 
@@ -964,6 +969,11 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
 
     const handleSendReply = async () => {
         if (!replyBody.trim()) return;
+        if (selectedThread?.reply_mailbox?.can_reply === false) {
+            toast.error(t('This conversation is not linked to an active mailbox.'));
+            return;
+        }
+
         setSubmittingReply(true);
         try {
             const formData = new FormData();
@@ -1071,6 +1081,8 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
             setUpdatingMetadata(false);
         }
     };
+
+    const replyMailboxCanReply = selectedThread?.reply_mailbox?.can_reply !== false;
 
     /* ─── Determine which view to show on mobile ─── */
     // Mobile: show thread list when no thread is selected, show detail when one is.
@@ -1650,6 +1662,19 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
                                                 </div>
                                             )}
 
+                                            {selectedThread?.reply_mailbox && (
+                                                <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b text-xs">
+                                                    <span className="text-muted-foreground">
+                                                        {selectedThread.reply_mailbox.can_reply
+                                                            ? t('Replying from')
+                                                            : t('Reply unavailable')}
+                                                    </span>
+                                                    <span className="font-medium">
+                                                        {selectedThread.reply_mailbox.email || t('No mailbox linked')}
+                                                    </span>
+                                                </div>
+                                            )}
+
                                             <div
                                                 className="w-full min-h-[3.75rem] lg:min-h-[5rem] max-h-[8rem] md:max-h-[12rem] overflow-y-auto cursor-text bg-background scrollbar-thin"
                                                 onClick={() => replyEditor?.commands.focus()}
@@ -1861,7 +1886,7 @@ export default function ConversationsIndex({ channelAccount, companyId, isOwner,
                                                         size="sm"
                                                         className="gap-1.5 px-4 h-7 text-xs"
                                                         onClick={handleSendReply}
-                                                        disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Archive'}
+                                                        disabled={submittingReply || !replyBody.trim() || selectedThread.status === 'Archive' || !replyMailboxCanReply}
                                                     >
                                                         {submittingReply ? (
                                                             <RefreshCw className="h-3 w-3 animate-spin" />

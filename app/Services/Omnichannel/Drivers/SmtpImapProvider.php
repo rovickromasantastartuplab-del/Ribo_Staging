@@ -114,10 +114,28 @@ class SmtpImapProvider implements MailboxProvider
                 $email->bcc(...$message->bcc_emails);
             }
 
+            foreach (($message->metadata['outgoing_attachments'] ?? []) as $attachment) {
+                $absolutePath = storage_path('app/' . $attachment['path']);
+
+                if (is_file($absolutePath)) {
+                    $email->attachFromPath(
+                        $absolutePath,
+                        $attachment['name'] ?? basename($absolutePath),
+                        $attachment['mime'] ?? null
+                    );
+                }
+            }
+
             // Threading headers
+            $replyToHeader = $message->metadata['reply_to_message_id_header'] ?? null;
+
+            if ($replyToHeader) {
+                $email->getHeaders()->addTextHeader('In-Reply-To', $replyToHeader);
+                $email->getHeaders()->addTextHeader('References', $replyToHeader);
+            }
+
             if ($message->message_id_header) {
-                $email->getHeaders()->addTextHeader('In-Reply-To', $message->message_id_header);
-                $email->getHeaders()->addTextHeader('References', $message->message_id_header);
+                $email->getHeaders()->addIdHeader('Message-ID', trim($message->message_id_header, '<>'));
             }
 
             $sentMessage = $mailer->send($email);

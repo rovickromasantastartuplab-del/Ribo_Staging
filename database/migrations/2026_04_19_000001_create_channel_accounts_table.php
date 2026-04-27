@@ -25,7 +25,7 @@ return new class extends Migration {
              */
             $table->longText('configuration')->nullable(); 
             
-            $table->enum('sync_status', ['idle', 'syncing', 'error'])->default('idle');
+            $table->enum('sync_status', ['idle', 'syncing', 'active', 'error'])->default('idle');
             $table->text('sync_error')->nullable();
             $table->timestamp('last_sync_at')->nullable();
             $table->timestamps();

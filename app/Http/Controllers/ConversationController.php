@@ -17,11 +17,14 @@ use App\Models\Account;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use App\Services\LeadActivityStreamService;
+use App\Services\Omnichannel\ReplyMailboxResolver;
 use App\Services\OpportunityActivityStreamService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ConversationController extends Controller
 {
@@ -693,6 +696,20 @@ class ConversationController extends Controller
         // Ensure relations are attached so they are serialized in the response
         $thread->setRelation('messages', $messages);
 
+        $replyMailbox = $thread->channelAccount ? [
+            'id' => $thread->channelAccount->id,
+            'email' => $thread->channelAccount->email_address,
+            'type' => $thread->channelAccount->type,
+            'sync_status' => $thread->channelAccount->sync_status,
+            'can_reply' => $thread->channelAccount->sync_status === 'active',
+        ] : [
+            'id' => null,
+            'email' => null,
+            'type' => null,
+            'sync_status' => null,
+            'can_reply' => false,
+        ];
+
         // Mark as read when user opens the thread
         if (!$thread->is_read) {
             $thread->update(['is_read' => true]);
@@ -707,6 +724,7 @@ class ConversationController extends Controller
                 'total' => $messagesPaginated->total(),
             ],
             'unread_count' => $this->getGlobalUnreadCount($thread->created_by, $thread->channelAccount),
+            'reply_mailbox' => $replyMailbox,
         ]);
     }
 
@@ -846,7 +864,7 @@ class ConversationController extends Controller
     /**
      * Send a reply to a thread.
      */
-    public function reply(Request $request, EmailThread $thread)
+    public function reply(Request $request, EmailThread $thread, ReplyMailboxResolver $replyMailboxResolver)
     {
         // Ensure user has access to this company's threads
         if ($thread->created_by !== auth()->user()->creatorId()) {
@@ -871,9 +889,12 @@ class ConversationController extends Controller
         ]);
 
         try {
-            $account = $thread->channelAccount;
-            if (!$account) {
-                return response()->json(['error' => 'Mailbox account not found for this thread.'], 422);
+            try {
+                $account = $replyMailboxResolver->resolve($thread);
+            } catch (ValidationException $e) {
+                return response()->json([
+                    'error' => collect($e->errors())->flatten()->first(),
+                ], 422);
             }
 
             $driver = MailboxManager::resolve($account);
@@ -922,10 +943,41 @@ class ConversationController extends Controller
                 'body_html' => $request->body,
                 'cc_emails' => $cc,
                 'bcc_emails' => $bcc,
-                'message_id_header' => $replyToHeader, // Bridging for driver
+                'message_id_header' => sprintf(
+                    '<crm-%s-%s@%s>',
+                    $thread->id,
+                    (string) Str::uuid(),
+                    parse_url(config('app.url'), PHP_URL_HOST) ?: 'localhost'
+                ),
+                'metadata' => [
+                    'reply_to_message_id_header' => $replyToHeader,
+                ],
                 'sent_at' => now(),
                 'created_by' => $user->creatorId(),
             ]);
+
+            if (!empty($attachments)) {
+                $storedAttachments = [];
+
+                foreach ($attachments as $attachment) {
+                    $path = $attachment->store("outbox_attachments/{$message->id}");
+
+                    $storedAttachments[] = [
+                        'path' => $path,
+                        'name' => $attachment->getClientOriginalName(),
+                        'mime' => $attachment->getClientMimeType(),
+                        'size' => $attachment->getSize(),
+                    ];
+                }
+
+                $message->update([
+                    'metadata' => array_merge($message->metadata ?? [], [
+                        'outgoing_attachments' => $storedAttachments,
+                    ]),
+                ]);
+
+                $message = $message->fresh('thread.channelAccount');
+            }
 
             $success = $driver->sendOutgoing($message);
 
@@ -936,7 +988,7 @@ class ConversationController extends Controller
                 return response()->json(['message' => 'Reply sent successfully.']);
             }
 
-            return response()->json(['error' => 'Failed to send reply via Gmail API.'], 500);
+            return response()->json(['error' => 'Failed to send reply via connected mailbox provider.'], 500);
             
         } catch (\Exception $e) {
             Log::error('Failed to send reply', [
