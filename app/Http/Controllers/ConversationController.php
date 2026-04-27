@@ -40,7 +40,7 @@ class ConversationController extends Controller
         // Find any Channel account belonging to this company (shared account)
         $channelAccount = ChannelAccount::where('user_id', $companyId)->first();
 
-        // If not found on owner, check if any staff has one
+        // If not found on owner, check if any staff has ones
         if (!$channelAccount) {
             $channelAccount = ChannelAccount::whereHas('user', function($q) use ($companyId) {
                 $q->where('created_by', $companyId);
