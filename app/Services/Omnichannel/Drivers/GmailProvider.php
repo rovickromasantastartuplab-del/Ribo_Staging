@@ -15,6 +15,11 @@ class GmailProvider implements MailboxProvider
      */
     public function syncInbound(ChannelAccount $account): array
     {
+        \Illuminate\Support\Facades\Log::debug('GmailProvider: syncInbound starting', [
+            'channel_account_id' => $account->id,
+            'email' => $account->email_address
+        ]);
+
         $service = new GmailService($account);
 
         // Use incremental sync if possible, otherwise full sync
