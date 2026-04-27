@@ -48,7 +48,8 @@ class GmailProvider implements MailboxProvider
             threadId: $thread->external_thread_id,
             inReplyTo: $message->message_id_header,
             cc: $message->cc_emails ?? [],
-            bcc: $message->bcc_emails ?? []
+            bcc: $message->bcc_emails ?? [],
+            existingMessage: $message
         );
     }
 

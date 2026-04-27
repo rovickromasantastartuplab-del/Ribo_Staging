@@ -613,7 +613,7 @@ class GmailService
      * @param array  $cc        CC recipient email addresses
      * @param array  $attachments  Array of UploadedFile instances
      */
-    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = [], array $attachments = [], array $bcc = []): bool
+    public function sendMessage(string $to, string $subject, string $body, ?string $threadId = null, ?string $inReplyTo = null, array $cc = [], array $attachments = [], array $bcc = [], ?\App\Models\EmailMessage $existingMessage = null): bool
     {
         try {
             // Minimal sanitization to prevent CRLF injection
@@ -646,7 +646,7 @@ class GmailService
             $sentMessage = $this->gmail->users_messages->send('me', $message);
 
             // Record the sent message locally with staff attribution
-            $this->recordSentMessage($sentMessage, $to, $subject, $body, $bcc);
+            $this->recordSentMessage($sentMessage, $to, $subject, $body, $bcc, $existingMessage);
 
             $this->logActivity('email_sent', 'Email sent to ' . $to, "Subject: {$subject}" . (count($attachments) > 0 ? " (" . count($attachments) . " attachments)" : ""));
 
@@ -1209,7 +1209,7 @@ class GmailService
     /**
      * Record a sent message in the local database with staff member attribution.
      */
-    private function recordSentMessage($sentMessage, $to, $subject, $body, array $bcc_emails = []): void
+    private function recordSentMessage($sentMessage, $to, $subject, $body, array $bcc_emails = [], ?\App\Models\EmailMessage $existingMessage = null): void
     {
         try {
             $companyId = $this->resolveCompanyId();
@@ -1232,26 +1232,35 @@ class GmailService
             );
 
             // Create the local message record with the authenticated user's ID
-            \App\Models\EmailMessage::updateOrCreate(
-                [
-                    'email_thread_id' => $emailThread->id,
-                    'external_message_id' => $sentMessage->getId(),
-                ],
-                [
-                    'from_email' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->email_address : $this->account->gmail_address,
-                    'from_name' => $this->account->name,
-                    'to_emails' => [$to],
-                    'bcc_emails' => $bcc_emails ?: null,
-                    'subject' => $subject,
-                    'body_preview' => mb_substr(strip_tags($body), 0, 200),
-                    'body_html' => $body,
-                    'sent_at' => now(),
-                    'gmail_labels' => $sentMessage->getLabelIds() ?: ['SENT'],
-                    'created_by' => $companyId,
-                    'user_id' => auth()->id(),
-                    'gmail_message_id' => $sentMessage->getId(), // Legacy fallback
-                ]
-            );
+            $payload = [
+                'from_email' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->email_address : $this->account->gmail_address,
+                'from_name' => $this->account->name,
+                'to_emails' => [$to],
+                'bcc_emails' => $bcc_emails ?: null,
+                'subject' => $subject,
+                'body_preview' => mb_substr(strip_tags($body), 0, 200),
+                'body_html' => $body,
+                'sent_at' => now(),
+                'gmail_labels' => $sentMessage->getLabelIds() ?: ['SENT'],
+                'created_by' => $companyId,
+                'user_id' => auth()->id(),
+                'gmail_message_id' => $sentMessage->getId(), // Legacy fallback
+                'external_message_id' => $sentMessage->getId(),
+            ];
+
+            if ($existingMessage) {
+                $existingMessage->update(array_merge($payload, [
+                    'email_thread_id' => $emailThread->id
+                ]));
+            } else {
+                \App\Models\EmailMessage::updateOrCreate(
+                    [
+                        'email_thread_id' => $emailThread->id,
+                        'external_message_id' => $sentMessage->getId(),
+                    ],
+                    $payload
+                );
+            }
 
             // Auto-link the thread to lead/contact if it was just created or emails match
             $this->autoLinkThread($emailThread, $companyId);
