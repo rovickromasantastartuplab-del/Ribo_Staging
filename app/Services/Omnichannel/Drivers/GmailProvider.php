@@ -15,11 +15,6 @@ class GmailProvider implements MailboxProvider
      */
     public function syncInbound(ChannelAccount $account): array
     {
-        \Illuminate\Support\Facades\Log::debug('GmailProvider: syncInbound starting', [
-            'channel_account_id' => $account->id,
-            'email' => $account->email_address
-        ]);
-
         $service = new GmailService($account);
 
         // Use incremental sync if possible, otherwise full sync
@@ -29,7 +24,7 @@ class GmailProvider implements MailboxProvider
         // if it returned zero changes but we have NO threads locally for this account,
         // then force a full sync to ensure the initial population happens.
         $localThreadCount = $account->threads()->count();
-        
+
         if ($stats === null || ($stats['synced'] === 0 && $localThreadCount === 0)) {
             $stats = $service->syncThreads(50);
         }

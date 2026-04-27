@@ -12,7 +12,10 @@ class EmailThread extends BaseModel
 
     protected $fillable = [
         'gmail_account_id',
+        'channel_account_id',
+        'channel_type',
         'gmail_thread_id',
+        'external_thread_id',
         'subject',
         'snippet',
         'participants',
