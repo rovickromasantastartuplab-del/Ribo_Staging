@@ -222,7 +222,7 @@ class GmailService
                 try {
                     // OPTIMIZATION: Check if the thread already exists with the same snippet to avoid expensive full fetch (Fix 2.3)
                     // This avoids over-engineering with new schema columns while significantly reducing API calls.
-                    $existingThread = EmailThread::where('gmail_thread_id', $threadMeta->getId())
+                    $existingThread = EmailThread::where('external_thread_id', $threadMeta->getId())
                         ->select('snippet')
                         ->first();
                         
@@ -444,6 +444,7 @@ class GmailService
                 'labels' => $this->extractThreadLabels($messages),
                 'created_by' => $companyId,
                 'channel_type' => 'gmail',
+                'gmail_thread_id' => $thread->getId(), // Legacy fallback
             ]
         );
 
@@ -1006,6 +1007,7 @@ class GmailService
                 'gmail_labels' => $message->getLabelIds(),
                 'message_id_header' => $messageIdHeader,
                 'created_by' => $companyId,
+                'gmail_message_id' => $message->getId(), // Legacy fallback
             ]
         );
 
@@ -1218,6 +1220,7 @@ class GmailService
                     'gmail_account_id' => $this->account instanceof \App\Models\GmailAccount ? $this->account->id : null,
                     'channel_account_id' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->id : null,
                     'channel_type' => 'gmail',
+                    'gmail_thread_id' => $sentMessage->getThreadId(), // Legacy fallback
                 ]
             );
 
@@ -1239,6 +1242,7 @@ class GmailService
                     'gmail_labels' => $sentMessage->getLabelIds() ?: ['SENT'],
                     'created_by' => $companyId,
                     'user_id' => auth()->id(),
+                    'gmail_message_id' => $sentMessage->getId(), // Legacy fallback
                 ]
             );
 

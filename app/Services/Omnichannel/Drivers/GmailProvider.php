@@ -20,7 +20,12 @@ class GmailProvider implements MailboxProvider
         // Use incremental sync if possible, otherwise full sync
         $stats = $service->incrementalSync();
 
-        if ($stats === null) {
+        // If incremental sync returns null (no history baseline) OR 
+        // if it returned zero changes but we have NO threads locally for this account,
+        // then force a full sync to ensure the initial population happens.
+        $localThreadCount = $account->threads()->count();
+        
+        if ($stats === null || ($stats['synced'] === 0 && $localThreadCount === 0)) {
             $stats = $service->syncThreads(50);
         }
 
