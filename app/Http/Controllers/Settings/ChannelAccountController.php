@@ -42,24 +42,31 @@ class ChannelAccountController extends Controller
         ]);
 
         try {
-            $account = ChannelAccount::create([
-                'user_id' => auth()->user()->creatorId(),
-                'type' => 'smtp_imap',
-                'email_address' => $validated['email_address'],
-                'configuration' => [
-                    'imap_host' => $validated['imap_host'],
-                    'imap_port' => $validated['imap_port'],
-                    'imap_encryption' => $validated['imap_encryption'],
-                    'imap_username' => $validated['imap_username'],
-                    'imap_password' => $validated['imap_password'],
-                    'smtp_host' => $validated['smtp_host'],
-                    'smtp_port' => $validated['smtp_port'],
-                    'smtp_encryption' => $validated['smtp_encryption'],
-                    'smtp_username' => $validated['smtp_username'],
-                    'smtp_password' => $validated['smtp_password'],
+            $companyId = auth()->user()->creatorId();
+
+            $account = ChannelAccount::updateOrCreate(
+                [
+                    'user_id' => $companyId,
+                    'type'    => 'smtp_imap',
                 ],
-                'sync_status' => 'pending'
-            ]);
+                [
+                    'email_address' => $validated['email_address'],
+                    'configuration' => [
+                        'imap_host'       => $validated['imap_host'],
+                        'imap_port'       => $validated['imap_port'],
+                        'imap_encryption' => $validated['imap_encryption'],
+                        'imap_username'   => $validated['imap_username'],
+                        'imap_password'   => $validated['imap_password'],
+                        'smtp_host'       => $validated['smtp_host'],
+                        'smtp_port'       => $validated['smtp_port'],
+                        'smtp_encryption' => $validated['smtp_encryption'],
+                        'smtp_username'   => $validated['smtp_username'],
+                        'smtp_password'   => $validated['smtp_password'],
+                    ],
+                    'sync_status' => 'idle',
+                    'sync_error'  => null,
+                ]
+            );
 
             // Trigger initial sync
             SyncChannelAccountJob::dispatch($account->id);

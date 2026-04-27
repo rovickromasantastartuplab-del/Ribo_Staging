@@ -147,21 +147,21 @@ class SocialAuthController extends Controller
                 $channelAccount = ChannelAccount::updateOrCreate(
                     [
                         'user_id' => $companyId,
-                        'email_address' => $email,
-                        'type' => 'gmail',
+                        'type'    => 'gmail',
                     ],
                     [
+                        'email_address' => $email,
                         'configuration' => [
-                            'google_id' => $socialUser->getId(),
-                            'access_token' => $socialUser->token,
-                            'refresh_token' => $socialUser->refreshToken ?? null,
+                            'google_id'        => $socialUser->getId(),
+                            'access_token'     => $socialUser->token,
+                            'refresh_token'    => $socialUser->refreshToken ?? null,
                             'token_expires_at' => $socialUser->expiresIn
                                 ? now()->addSeconds($socialUser->expiresIn)->toIso8601String()
                                 : null,
                             'scopes' => 'https://www.googleapis.com/auth/gmail.readonly',
                         ],
                         'sync_status' => 'idle',
-                        'sync_error' => null,
+                        'sync_error'  => null,
                     ]
                 );
 
