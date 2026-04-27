@@ -671,17 +671,19 @@ class ConversationController extends Controller
             ->reorder('sent_at', 'desc')
             ->paginate($perPage);
 
-        $driver = MailboxManager::resolve($thread->channelAccount);
+        $driver = $thread->channelAccount ? MailboxManager::resolve($thread->channelAccount) : null;
 
         // Return newest to oldest for flex-col-reverse display
         $messages = collect($messagesPaginated->items())->values();
 
         // Inject live attachment metadata from provider for messages without local storage
-        $messages->each(function($msg) use ($driver) {
-            if ($msg->media->isEmpty()) {
-                $msg->live_attachments = $driver->getLiveAttachments($msg);
-            }
-        });
+        if ($driver) {
+            $messages->each(function($msg) use ($driver) {
+                if ($msg->media->isEmpty()) {
+                    $msg->live_attachments = $driver->getLiveAttachments($msg);
+                }
+            });
+        }
 
         $thread->load(['leads.leadStatus', 'contacts', 'assignments:id,name,avatar', 'channelAccount']);
         $this->attachLeadOpportunities($thread);
@@ -784,7 +786,7 @@ class ConversationController extends Controller
                 return response()->json(['error' => 'No connected Gmail account found.'], 422);
             }
 
-            $service = new \App\Services\GmailService($account);
+            $driver = MailboxManager::resolve($account);
             
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
@@ -807,13 +809,13 @@ class ConversationController extends Controller
             $success = $driver->sendOutgoing($message);
 
             if ($success) {
-                // Dispatch async sync so the user doesn't wait for Gmail sync (Fix 2.2)
+                // Dispatch async sync so the user doesn't wait for provider sync
                 \App\Jobs\SyncChannelAccountJob::dispatch($account->id);
                 
                 return response()->json(['message' => 'Email sent successfully.']);
             }
 
-            return response()->json(['error' => 'Failed to send email via Gmail API.'], 500);
+            return response()->json(['error' => 'Failed to send email via provider API.'], 500);
             
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to compose email', [
@@ -888,7 +890,6 @@ class ConversationController extends Controller
                 $replyToHeader = $latestMessage?->message_id_header;
             }
             
-            $service = new \App\Services\GmailService($account);
 
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
@@ -911,7 +912,7 @@ class ConversationController extends Controller
             $success = $driver->sendOutgoing($message);
 
             if ($success) {
-                // Dispatch async sync so the user doesn't wait for Gmail sync (Fix 2.2)
+                // Dispatch async sync so the user doesn't wait for provider sync
                 \App\Jobs\SyncChannelAccountJob::dispatch($account->id);
 
                 return response()->json(['message' => 'Reply sent successfully.']);

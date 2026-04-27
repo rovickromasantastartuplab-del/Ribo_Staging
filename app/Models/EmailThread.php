@@ -47,6 +47,14 @@ class EmailThread extends BaseModel
     }
 
     /**
+     * The omnichannel channel account this thread belongs to.
+     */
+    public function channelAccount(): BelongsTo
+    {
+        return $this->belongsTo(ChannelAccount::class);
+    }
+
+    /**
      * Messages within this thread.
      */
     public function messages(): HasMany
