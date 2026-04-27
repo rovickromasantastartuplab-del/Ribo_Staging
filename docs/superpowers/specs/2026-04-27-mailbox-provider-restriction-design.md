@@ -29,4 +29,4 @@ Modify the `store` method to use `updateOrCreate` instead of `create`.
 ## Verification Plan
 - **Manual Test (Gmail):** Connect Gmail A. Verify 1 record. Connect Gmail B. Verify only 1 record exists and it now reflects Gmail B.
 - **Manual Test (SMTP):** Connect SMTP A. Verify 1 record. Connect SMTP B. Verify only 1 record exists and it now reflects SMTP B.
-- **Cross-Type Test:** Verify that having a Gmail account does NOT prevent adding an SMTP account (total of two allowed).
+- **Cross-Type Test:** Verify that having a Gmail account does NOT prevent adding an SMTP account (total of two allowed).s
