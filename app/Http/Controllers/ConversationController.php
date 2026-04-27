@@ -138,6 +138,14 @@ class ConversationController extends Controller
             ->where('created_by', $companyId)
             ->orderByDesc('last_message_at');
 
+        \Illuminate\Support\Facades\Log::debug('Fetching conversations', [
+            'user_id' => $user->id,
+            'company_id' => $companyId,
+            'folder' => $folder,
+            'search' => $search,
+            'base_query_count' => (clone $query)->count()
+        ]);
+
         // Apply sync strategy filtering if in category mode
         $channelAccount = ChannelAccount::where('user_id', $companyId)->first();
         if (!$channelAccount) {
@@ -149,6 +157,11 @@ class ConversationController extends Controller
         if ($channelAccount && $channelAccount->type === 'gmail') {
             $syncStrategy = $channelAccount->getConfig('sync_strategy');
             $syncCategories = $channelAccount->getConfig('sync_categories');
+
+            \Illuminate\Support\Facades\Log::debug('Applying Gmail sync strategy filtering', [
+                'strategy' => $syncStrategy,
+                'categories' => $syncCategories
+            ]);
 
             if ($syncStrategy === 'categories' && !empty($syncCategories)) {
                 $hasPrimary = in_array('PRIMARY', $syncCategories);

@@ -426,13 +426,21 @@ class GmailService
         $subject = $this->extractHeader($firstMessage, 'Subject');
         $participants = $this->extractParticipants($messages);
 
+        \Illuminate\Support\Facades\Log::debug('Syncing single Gmail thread', [
+            'thread_id' => $thread->getId(),
+            'company_id' => $companyId,
+            'account_type' => get_class($this->account),
+            'account_id' => $this->account->id
+        ]);
+
         $emailThread = EmailThread::updateOrCreate(
+            [
+                'external_thread_id' => $thread->getId(),
+                'created_by' => $companyId,
+            ],
             [
                 'gmail_account_id' => $this->account instanceof \App\Models\GmailAccount ? $this->account->id : null,
                 'channel_account_id' => $this->account instanceof \App\Models\ChannelAccount ? $this->account->id : null,
-                'external_thread_id' => $thread->getId(),
-            ],
-            [
                 'subject' => $subject,
                 'snippet' => $thread->getSnippet() ?? '',
                 'participants' => $participants,
@@ -442,7 +450,6 @@ class GmailService
                     : now(),
                 'is_read' => !in_array('UNREAD', $this->extractThreadLabels($messages)),
                 'labels' => $this->extractThreadLabels($messages),
-                'created_by' => $companyId,
                 'channel_type' => 'gmail',
                 'gmail_thread_id' => $thread->getId(), // Legacy fallback
             ]
