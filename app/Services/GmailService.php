@@ -259,10 +259,10 @@ class GmailService
                 $config = $this->account->configuration;
                 $config['last_history_id'] = $latestHistoryId ?? ($config['last_history_id'] ?? null);
                 $config['next_page_token'] = $result['nextPageToken'];
-                
+
                 $this->account->update([
                     'last_sync_at' => now(),
-                    'sync_status' => 'idle',
+                    'sync_status' => 'active',
                     'sync_error' => null,
                     'configuration' => $config,
                 ]);
@@ -380,7 +380,7 @@ class GmailService
                 
                 $this->account->update([
                     'last_sync_at' => now(),
-                    'sync_status' => 'idle',
+                    'sync_status' => 'active',
                     'sync_error' => null,
                     'configuration' => $config,
                 ]);
