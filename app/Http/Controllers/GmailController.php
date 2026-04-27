@@ -141,6 +141,29 @@ class GmailController extends Controller
     }
 
     /**
+     * Disconnect the user's Gmail account.
+     */
+    public function disconnect()
+    {
+        $user = auth()->user();
+        $companyId = $user->creatorId();
+        $isOwner = $user->type === 'company' || $user->id === $companyId;
+
+        if (!$isOwner) {
+            return redirect()->back()->with('error', 'Only company owners can disconnect the Gmail account.');
+        }
+
+        $channelAccount = ChannelAccount::where('user_id', $companyId)->where('type', 'gmail')->first();
+
+        if ($channelAccount) {
+            $channelAccount->delete();
+            return redirect()->back()->with('success', 'Gmail account disconnected successfully.');
+        }
+
+        return redirect()->back()->with('error', 'No Gmail account found to disconnect.');
+    }
+
+    /**
      * Update Gmail sync settings (strategy and categories).
      */
     public function updateSyncSettings(Request $request)
