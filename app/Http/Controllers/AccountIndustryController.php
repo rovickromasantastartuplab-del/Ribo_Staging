@@ -58,14 +58,20 @@ class AccountIndustryController extends Controller
 
     public function update(Request $request, AccountIndustry $accountIndustry)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7',
             'status' => 'required|in:active,inactive'
         ]);
 
-        $accountIndustry->update($request->all());
+        if (isset($validated['status']) && $validated['status'] === 'inactive' && $accountIndustry->status === 'active') {
+            if ($accountIndustry->accounts()->count() > 0) {
+                return redirect()->back()->with('error', __('Cannot deactivate account industry that has associated accounts.'));
+            }
+        }
+
+        $accountIndustry->update($validated);
 
         return redirect()->back()->with('success', __('Account industry updated successfully'));
     }
@@ -83,9 +89,14 @@ class AccountIndustryController extends Controller
 
     public function toggleStatus(AccountIndustry $accountIndustry)
     {
-        $accountIndustry->update([
-            'status' => $accountIndustry->status === 'active' ? 'inactive' : 'active'
-        ]);
+        if ($accountIndustry->status === 'active') {
+            if ($accountIndustry->accounts()->count() > 0) {
+                return redirect()->back()->with('error', __('Cannot deactivate account industry that has associated accounts.'));
+            }
+            $accountIndustry->update(['status' => 'inactive']);
+        } else {
+            $accountIndustry->update(['status' => 'active']);
+        }
 
         return redirect()->back()->with('success', __('Account industry status updated successfully'));
     }

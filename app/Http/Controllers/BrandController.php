@@ -74,6 +74,12 @@ class BrandController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
+                if (isset($validated['status']) && $validated['status'] === 'inactive' && $brand->status === 'active') {
+                    if ($brand->products()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate brand that is currently assigned to one or more products.'));
+                    }
+                }
+
                 $brand->update($validated);
 
                 return redirect()->back()->with('success', __('Brand updated successfully.'));
@@ -115,7 +121,14 @@ class BrandController extends Controller
 
         if ($brand) {
             try {
-                $brand->status = $brand->status === 'active' ? 'inactive' : 'active';
+                if ($brand->status === 'active') {
+                    if ($brand->products()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate brand that is currently assigned to one or more products.'));
+                    }
+                    $brand->status = 'inactive';
+                } else {
+                    $brand->status = 'active';
+                }
                 $brand->save();
 
                 return redirect()->back()->with('success', __('Brand status updated successfully.'));
