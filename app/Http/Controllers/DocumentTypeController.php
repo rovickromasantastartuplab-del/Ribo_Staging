@@ -111,6 +111,13 @@ class DocumentTypeController extends Controller
             'status' => 'required|in:active,inactive',
         ]);
 
+        if ($request->status === 'inactive' && $documentType->status === 'active') {
+            if ($documentType->documents()->exists()) {
+                return redirect()->route('document-types.index')
+                    ->with('error', __('Cannot deactivate document type that is currently assigned to one or more documents.'));
+            }
+        }
+
         $documentType->update([
             'type_name' => $request->type_name,
             'status' => $request->status,
@@ -151,7 +158,15 @@ class DocumentTypeController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        $newStatus = $documentType->status === 'active' ? 'inactive' : 'active';
+        if ($documentType->status === 'active') {
+            if ($documentType->documents()->exists()) {
+                return redirect()->route('document-types.index')
+                    ->with('error', __('Cannot deactivate document type that is currently assigned to one or more documents.'));
+            }
+            $newStatus = 'inactive';
+        } else {
+            $newStatus = 'active';
+        }
         $documentType->update(['status' => $newStatus]);
 
         return redirect()->route('document-types.index')

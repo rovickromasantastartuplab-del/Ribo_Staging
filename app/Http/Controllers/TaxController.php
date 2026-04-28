@@ -77,6 +77,12 @@ class TaxController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
+                if (isset($validated['status']) && $validated['status'] === 'inactive' && $tax->status === 'active') {
+                    if ($tax->products()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate tax that is currently assigned to one or more products.'));
+                    }
+                }
+
                 $tax->update($validated);
 
                 return redirect()->back()->with('success', __('Tax updated successfully.'));
@@ -118,7 +124,14 @@ class TaxController extends Controller
 
         if ($tax) {
             try {
-                $tax->status = $tax->status === 'active' ? 'inactive' : 'active';
+                if ($tax->status === 'active') {
+                    if ($tax->products()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate tax that is currently assigned to one or more products.'));
+                    }
+                    $tax->status = 'inactive';
+                } else {
+                    $tax->status = 'active';
+                }
                 $tax->save();
 
                 return redirect()->back()->with('success', __('Tax status updated successfully.'));

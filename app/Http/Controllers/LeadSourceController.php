@@ -71,6 +71,12 @@ class LeadSourceController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
                 
+                if (isset($validated['status']) && $validated['status'] === 'inactive' && $leadSource->status === 'active') {
+                    if ($leadSource->leads()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate lead source that is currently assigned to one or more leads.'));
+                    }
+                }
+
                 $leadSource->update($validated);
 
                 return redirect()->back()->with('success', __('Lead source updated successfully.'));
@@ -112,7 +118,14 @@ class LeadSourceController extends Controller
 
         if ($leadSource) {
             try {
-                $leadSource->status = $leadSource->status === 'active' ? 'inactive' : 'active';
+                if ($leadSource->status === 'active') {
+                    if ($leadSource->leads()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate lead source that is currently assigned to one or more leads.'));
+                    }
+                    $leadSource->status = 'inactive';
+                } else {
+                    $leadSource->status = 'active';
+                }
                 $leadSource->save();
 
                 return redirect()->back()->with('success', __('Lead source status updated successfully.'));

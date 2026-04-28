@@ -58,14 +58,20 @@ class AccountTypeController extends Controller
 
     public function update(Request $request, AccountType $accountType)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7',
             'status' => 'required|in:active,inactive'
         ]);
 
-        $accountType->update($request->all());
+        if (isset($validated['status']) && $validated['status'] === 'inactive' && $accountType->status === 'active') {
+            if ($accountType->accounts()->count() > 0) {
+                return redirect()->back()->with('error', __('Cannot deactivate account type that has associated accounts.'));
+            }
+        }
+
+        $accountType->update($validated);
 
         return redirect()->back()->with('success', __('Account type updated successfully.'));
     }
@@ -83,9 +89,14 @@ class AccountTypeController extends Controller
 
     public function toggleStatus(AccountType $accountType)
     {
-        $accountType->update([
-            'status' => $accountType->status === 'active' ? 'inactive' : 'active'
-        ]);
+        if ($accountType->status === 'active') {
+            if ($accountType->accounts()->count() > 0) {
+                return redirect()->back()->with('error', __('Cannot deactivate account type that has associated accounts.'));
+            }
+            $accountType->update(['status' => 'inactive']);
+        } else {
+            $accountType->update(['status' => 'active']);
+        }
 
         return redirect()->back()->with('success', __('Account type status updated successfully.'));
     }

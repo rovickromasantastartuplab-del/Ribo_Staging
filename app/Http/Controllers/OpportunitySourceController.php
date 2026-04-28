@@ -75,6 +75,12 @@ class OpportunitySourceController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
+                if (isset($validated['status']) && $validated['status'] === 'inactive' && $opportunitySource->status === 'active') {
+                    if ($opportunitySource->opportunities()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate opportunity source that is currently assigned to one or more opportunities.'));
+                    }
+                }
+
                 $opportunitySource->update($validated);
 
                 return redirect()->back()->with('success', __('Opportunity source updated successfully.'));
@@ -116,7 +122,14 @@ class OpportunitySourceController extends Controller
 
         if ($opportunitySource) {
             try {
-                $opportunitySource->status = $opportunitySource->status === 'active' ? 'inactive' : 'active';
+                if ($opportunitySource->status === 'active') {
+                    if ($opportunitySource->opportunities()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate opportunity source that is currently assigned to one or more opportunities.'));
+                    }
+                    $opportunitySource->status = 'inactive';
+                } else {
+                    $opportunitySource->status = 'active';
+                }
                 $opportunitySource->save();
 
                 return redirect()->back()->with('success', __('Opportunity source status updated successfully.'));

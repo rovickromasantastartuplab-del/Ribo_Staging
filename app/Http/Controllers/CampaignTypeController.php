@@ -70,6 +70,12 @@ class CampaignTypeController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
+                if (isset($validated['status']) && $validated['status'] === 'inactive' && $campaignType->status === 'active') {
+                    if ($campaignType->campaigns()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate campaign type that is currently assigned to one or more campaigns.'));
+                    }
+                }
+
                 $campaignType->update($validated);
 
                 return redirect()->back()->with('success', __('Campaign type updated successfully.'));
@@ -111,7 +117,14 @@ class CampaignTypeController extends Controller
 
         if ($campaignType) {
             try {
-                $campaignType->status = $campaignType->status === 'active' ? 'inactive' : 'active';
+                if ($campaignType->status === 'active') {
+                    if ($campaignType->campaigns()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate campaign type that is currently assigned to one or more campaigns.'));
+                    }
+                    $campaignType->status = 'inactive';
+                } else {
+                    $campaignType->status = 'active';
+                }
                 $campaignType->save();
 
                 return redirect()->back()->with('success', __('Campaign type status updated successfully.'));

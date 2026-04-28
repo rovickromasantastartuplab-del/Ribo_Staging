@@ -74,6 +74,12 @@ class CategoryController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
+                if (isset($validated['status']) && $validated['status'] === 'inactive' && $category->status === 'active') {
+                    if ($category->products()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate category that is currently assigned to one or more products.'));
+                    }
+                }
+
                 $category->update($validated);
 
                 return redirect()->back()->with('success', __('Category updated successfully.'));
@@ -115,7 +121,14 @@ class CategoryController extends Controller
 
         if ($category) {
             try {
-                $category->status = $category->status === 'active' ? 'inactive' : 'active';
+                if ($category->status === 'active') {
+                    if ($category->products()->count() > 0) {
+                        return redirect()->back()->with('error', __('Cannot deactivate category that is currently assigned to one or more products.'));
+                    }
+                    $category->status = 'inactive';
+                } else {
+                    $category->status = 'active';
+                }
                 $category->save();
 
                 return redirect()->back()->with('success', __('Category status updated successfully.'));
