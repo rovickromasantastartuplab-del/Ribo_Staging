@@ -531,7 +531,7 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
                       text-3xl font-extrabold
                       ${plan.recommended ? 'text-primary' : ''}
                     `}>
-                      {currencySymbol}{plan.price}
+                      <span className="font-normal mr-0.5">{currencySymbol}</span>{plan.price}
                     </span>
                     <span className="text-muted-foreground text-sm">
                       /{t(plan.duration.toLowerCase())}
