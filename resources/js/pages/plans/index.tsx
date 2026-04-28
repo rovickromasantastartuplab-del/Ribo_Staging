@@ -266,8 +266,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
             {t('Connect Bank Account ({{days}} Day Free Trial)', { days: plan.trial_days })}
           </Button>
           <div className="flex items-start gap-1.5 px-1">
-            <Info className="h-3.5 w-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
-            <p className="text-[10px] text-amber-700">
+            <Info className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <p className="text-[10px] text-amber-700 dark:text-amber-300">
               {t('A temporary hold of 20.00 may be applied to verify your account. You will not be charged until your trial ends.')}
             </p>
           </div>
@@ -460,8 +460,8 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
               <div className={`
                 absolute inset-0 rounded-2xl
                 ${plan.recommended
-                  ? 'bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border-primary/30'
-                  : 'bg-gradient-to-br from-gray-100/80 via-gray-50/50 to-transparent border-gray-200/80'
+                  ? 'bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border-primary/30 dark:from-primary/30 dark:via-primary/20'
+                  : 'bg-gradient-to-br from-gray-100/80 via-gray-50/50 to-transparent border-gray-200/80 dark:from-slate-900/80 dark:via-slate-800/50 dark:border-slate-700/80'
                 }
                 border shadow-lg transition-all duration-300
                 group-hover:shadow-xl group-hover:shadow-primary/5
@@ -486,15 +486,15 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
               {isAdmin && (
                 <div className="absolute top-4 right-4 z-10 flex gap-2">
                   {plan.is_default && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400">
                       {t("Default")}
                     </div>
                   )}
                   <div className={`
                     flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                     ${plan.status
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-red-100 text-red-700'
+                      ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                      : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
                     }
                   `}>
                     <span className={`
@@ -537,7 +537,7 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
                       /{t(plan.duration.toLowerCase())}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3">
+                  <p className="text-sm text-muted-foreground dark:text-slate-400 leading-relaxed line-clamp-2 mb-3">
                     {plan.description}
                   </p>
                   {plan.trial_days > 0 && (
@@ -550,11 +550,11 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
 
                 {/* Divider with icon */}
                 <div className="relative flex items-center my-4">
-                  <div className="flex-grow border-t border-gray-200"></div>
+                  <div className="flex-grow border-t border-gray-200 dark:border-slate-800"></div>
                   <div className="mx-3 bg-primary/10 text-primary p-1.5 rounded-full">
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <div className="flex-grow border-t border-gray-200"></div>
+                  <div className="flex-grow border-t border-gray-200 dark:border-slate-800"></div>
                 </div>
 
                 {/* Features */}
@@ -587,73 +587,73 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
                     {t("Usage Limits")}
                   </h4>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="relative overflow-hidden bg-white rounded-xl border border-gray-200 p-3 group-hover:border-primary/30 transition-colors">
-                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-transparent opacity-70"></div>
+                    <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-3 group-hover:border-primary/30 transition-colors">
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 dark:from-emerald-500/10 to-transparent opacity-70"></div>
                       <div className="relative flex items-center gap-2 mb-1">
-                        <div className="p-1.5 rounded-full bg-emerald-100 text-emerald-600">
+                        <div className="p-1.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                           {statIcons.users}
                         </div>
-                        <div className="text-xl font-bold text-emerald-700">
+                        <div className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
                           {plan.stats.users}
                         </div>
                       </div>
-                      <div className="relative text-xs font-medium text-emerald-600 uppercase tracking-wide">
+                      <div className="relative text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
                         {t("Users")}
                       </div>
                     </div>
-                    <div className="relative overflow-hidden bg-white rounded-xl border border-gray-200 p-3 group-hover:border-primary/30 transition-colors">
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-70"></div>
+                    <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-3 group-hover:border-primary/30 transition-colors">
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 dark:from-indigo-500/10 to-transparent opacity-70"></div>
                       <div className="relative flex items-center gap-2 mb-1">
-                        <div className="p-1.5 rounded-full bg-indigo-100 text-indigo-600">
+                        <div className="p-1.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
                           {statIcons.projects}
                         </div>
-                        <div className="text-xl font-bold text-indigo-700">
+                        <div className="text-xl font-bold text-indigo-700 dark:text-indigo-300">
                           {plan.stats.projects}
                         </div>
                       </div>
-                      <div className="relative text-xs font-medium text-indigo-600 uppercase tracking-wide">
+                      <div className="relative text-xs font-medium text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">
                         {t("Projects")}
                       </div>
                     </div>
-                    <div className="relative overflow-hidden bg-white rounded-xl border border-gray-200 p-3 group-hover:border-primary/30 transition-colors">
-                      <div className="absolute inset-0 bg-gradient-to-br from-rose-50 to-transparent opacity-70"></div>
+                    <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-3 group-hover:border-primary/30 transition-colors">
+                      <div className="absolute inset-0 bg-gradient-to-br from-rose-50 dark:from-rose-500/10 to-transparent opacity-70"></div>
                       <div className="relative flex items-center gap-2 mb-1">
-                        <div className="p-1.5 rounded-full bg-rose-100 text-rose-600">
+                        <div className="p-1.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">
                           {statIcons.contacts}
                         </div>
-                        <div className="text-xl font-bold text-rose-700">
+                        <div className="text-xl font-bold text-rose-700 dark:text-rose-300">
                           {plan.stats.contacts}
                         </div>
                       </div>
-                      <div className="relative text-xs font-medium text-rose-600 uppercase tracking-wide">
+                      <div className="relative text-xs font-medium text-rose-600 dark:text-rose-400 uppercase tracking-wide">
                         {t("Contacts")}
                       </div>
                     </div>
-                    <div className="relative overflow-hidden bg-white rounded-xl border border-gray-200 p-3 group-hover:border-primary/30 transition-colors">
-                      <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-transparent opacity-70"></div>
+                    <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-3 group-hover:border-primary/30 transition-colors">
+                      <div className="absolute inset-0 bg-gradient-to-br from-teal-50 dark:from-teal-500/10 to-transparent opacity-70"></div>
                       <div className="relative flex items-center gap-2 mb-1">
-                        <div className="p-1.5 rounded-full bg-teal-100 text-teal-600">
+                        <div className="p-1.5 rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400">
                           {statIcons.accounts}
                         </div>
-                        <div className="text-xl font-bold text-teal-700">
+                        <div className="text-xl font-bold text-teal-700 dark:text-teal-300">
                           {plan.stats.accounts}
                         </div>
                       </div>
-                      <div className="relative text-xs font-medium text-teal-600 uppercase tracking-wide">
+                      <div className="relative text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wide">
                         {t("Accounts")}
                       </div>
                     </div>
-                    <div className="relative overflow-hidden bg-white rounded-xl border border-gray-200 p-3 group-hover:border-primary/30 transition-colors">
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-transparent opacity-70"></div>
+                    <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-3 group-hover:border-primary/30 transition-colors">
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 dark:from-amber-500/10 to-transparent opacity-70"></div>
                       <div className="relative flex items-center gap-2 mb-1">
-                        <div className="p-1.5 rounded-full bg-amber-100 text-amber-600">
+                        <div className="p-1.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">
                           {statIcons.storage}
                         </div>
-                        <div className="text-xl font-bold text-amber-700">
+                        <div className="text-xl font-bold text-amber-700 dark:text-amber-300">
                           {plan.stats.storage}
                         </div>
                       </div>
-                      <div className="relative text-xs font-medium text-amber-600 uppercase tracking-wide">
+                      <div className="relative text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide">
                         {t("Storage")}
                       </div>
                     </div>
@@ -661,7 +661,7 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
                 </div>
 
                 {/* Actions */}
-                <div className="mt-auto pt-4 border-t border-gray-200">
+                <div className="mt-auto pt-4 border-t border-gray-200 dark:border-slate-800">
                   {isAdmin ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -678,7 +678,7 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-9 w-9 p-0 border-gray-200 hover:border-primary hover:text-primary"
+                          className="h-9 w-9 p-0 border-gray-200 dark:border-slate-700 hover:border-primary hover:text-primary"
                           title={t("Edit")}
                           onClick={() => router.get(route('plans.edit', plan.id))}
                         >
@@ -689,7 +689,7 @@ export default function Plans({ plans: initialPlans, billingCycle: initialBillin
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-9 w-9 p-0 border-gray-200 hover:border-red-400 hover:text-red-600"
+                            className="h-9 w-9 p-0 border-gray-200 dark:border-slate-700 hover:border-red-400 hover:text-red-600"
                             title={t("Delete")}
                             onClick={() => handleDelete(plan)}
                           >
