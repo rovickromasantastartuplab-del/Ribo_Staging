@@ -68,12 +68,6 @@ class TargetListController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
-                if (isset($validated['status']) && $validated['status'] === 'inactive' && $targetList->status === 'active') {
-                    if ($targetList->campaigns()->count() > 0) {
-                        return redirect()->back()->with('error', __('Cannot deactivate target list that is currently assigned to one or more campaigns.'));
-                    }
-                }
-
                 $targetList->update($validated);
 
                 return redirect()->back()->with('success', __('Target list updated successfully.'));
@@ -115,14 +109,7 @@ class TargetListController extends Controller
 
         if ($targetList) {
             try {
-                if ($targetList->status === 'active') {
-                    if ($targetList->campaigns()->count() > 0) {
-                        return redirect()->back()->with('error', __('Cannot deactivate target list that is currently assigned to one or more campaigns.'));
-                    }
-                    $targetList->status = 'inactive';
-                } else {
-                    $targetList->status = 'active';
-                }
+                $targetList->status = $targetList->status === 'active' ? 'inactive' : 'active';
                 $targetList->save();
 
                 return redirect()->back()->with('success', __('Target list status updated successfully.'));

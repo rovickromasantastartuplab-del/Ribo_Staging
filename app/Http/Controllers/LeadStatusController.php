@@ -73,12 +73,6 @@ class LeadStatusController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
-                if (isset($validated['status']) && $validated['status'] === 'inactive' && $leadStatus->status === 'active') {
-                    if ($leadStatus->leads()->count() > 0) {
-                        return redirect()->back()->with('error', __('Cannot deactivate lead status that is currently assigned to one or more leads.'));
-                    }
-                }
-
                 $leadStatus->update($validated);
 
                 return redirect()->back()->with('success', __('Lead status updated successfully.'));
@@ -120,14 +114,7 @@ class LeadStatusController extends Controller
 
         if ($leadStatus) {
             try {
-                if ($leadStatus->status === 'active') {
-                    if ($leadStatus->leads()->count() > 0) {
-                        return redirect()->back()->with('error', __('Cannot deactivate lead status that is currently assigned to one or more leads.'));
-                    }
-                    $leadStatus->status = 'inactive';
-                } else {
-                    $leadStatus->status = 'active';
-                }
+                $leadStatus->status = $leadStatus->status === 'active' ? 'inactive' : 'active';
                 $leadStatus->save();
 
                 return redirect()->back()->with('success', __('Lead status status updated successfully.'));

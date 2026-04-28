@@ -144,12 +144,6 @@ class DocumentFolderController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
-                if (isset($validated['status']) && $validated['status'] === 'inactive' && $documentFolder->status === 'active') {
-                    if ($documentFolder->documents()->exists()) {
-                        return redirect()->back()->with('error', __('Cannot deactivate document folder that is currently assigned to one or more documents.'));
-                    }
-                }
-
                 $documentFolder->update($validated);
 
                 return redirect()->back()->with('success', __('Document folder updated successfully.'));
@@ -195,14 +189,7 @@ class DocumentFolderController extends Controller
 
         if ($documentFolder) {
             try {
-                if ($documentFolder->status === 'active') {
-                    if ($documentFolder->documents()->exists()) {
-                        return redirect()->back()->with('error', __('Cannot deactivate document folder that is currently assigned to one or more documents.'));
-                    }
-                    $documentFolder->status = 'inactive';
-                } else {
-                    $documentFolder->status = 'active';
-                }
+                $documentFolder->status = $documentFolder->status === 'active' ? 'inactive' : 'active';
                 $documentFolder->save();
 
                 return redirect()->back()->with('success', __('Document folder status updated successfully.'));

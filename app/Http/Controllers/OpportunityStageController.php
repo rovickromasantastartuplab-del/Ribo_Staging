@@ -79,12 +79,6 @@ class OpportunityStageController extends Controller
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
-                if (isset($validated['status']) && $validated['status'] === 'inactive' && $opportunityStage->status === 'active') {
-                    if ($opportunityStage->opportunities()->count() > 0) {
-                        return redirect()->back()->with('error', __('Cannot deactivate opportunity stage that is currently assigned to one or more opportunities.'));
-                    }
-                }
-
                 $opportunityStage->update($validated);
 
                 return redirect()->back()->with('success', __('Opportunity stage updated successfully.'));
@@ -126,14 +120,7 @@ class OpportunityStageController extends Controller
 
         if ($opportunityStage) {
             try {
-                if ($opportunityStage->status === 'active') {
-                    if ($opportunityStage->opportunities()->count() > 0) {
-                        return redirect()->back()->with('error', __('Cannot deactivate opportunity stage that is currently assigned to one or more opportunities.'));
-                    }
-                    $opportunityStage->status = 'inactive';
-                } else {
-                    $opportunityStage->status = 'active';
-                }
+                $opportunityStage->status = $opportunityStage->status === 'active' ? 'inactive' : 'active';
                 $opportunityStage->save();
 
                 return redirect()->back()->with('success', __('Opportunity stage status updated successfully.'));
