@@ -257,46 +257,31 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
     // Handle theme color change
     const handleThemeColorChange = (color: ThemeColor) => {
         setSettings(prev => ({ ...prev, themeColor: color }));
-        updateThemeColor(color);
     };
 
     // Handle custom color change
     const handleCustomColorChange = (color: string) => {
-        setSettings(prev => ({ ...prev, customColor: color }));
-        // Set as active custom color when user is editing it
-        updateCustomColor(color, true);
+        setSettings(prev => ({ ...prev, customColor: color, themeColor: 'custom' }));
     };
 
     // Handle sidebar variant change
     const handleSidebarVariantChange = (variant: string) => {
         setSettings(prev => ({ ...prev, sidebarVariant: variant }));
-        updateVariant(variant as any);
     };
 
     // Handle sidebar style change
     const handleSidebarStyleChange = (style: string) => {
         setSettings(prev => ({ ...prev, sidebarStyle: style }));
-        updateStyle(style);
     };
 
     // Handle layout direction change
     const handleLayoutDirectionChange = (direction: LayoutPosition) => {
         setSettings(prev => ({ ...prev, layoutDirection: direction }));
-        updatePosition(direction);
     };
 
     // Handle theme mode change
     const handleThemeModeChange = (mode: Appearance) => {
         setSettings(prev => ({ ...prev, themeMode: mode }));
-        // Only update appearance, don't let it reset the theme color
-        updateAppearance(mode);
-        // Immediately reapply the current theme color to prevent it from changing
-        setTimeout(() => {
-            updateThemeColor(settings.themeColor);
-            if (settings.themeColor === 'custom') {
-                updateCustomColor(settings.customColor);
-            }
-        }, 0);
     };
 
     // Save settings
@@ -804,7 +789,14 @@ export default function BrandSettings({ userSettings }: BrandSettingsProps) {
                             </div>
 
                             {/* Comprehensive Theme Preview */}
-                            <ThemePreview />
+                            <ThemePreview
+                                appearance={settings.themeMode}
+                                themeColor={settings.themeColor}
+                                customColor={settings.customColor}
+                                position={settings.layoutDirection}
+                                variant={settings.sidebarVariant as any}
+                                style={settings.sidebarStyle}
+                            />
 
                             {/* Text Preview */}
                             <div className="mt-4 pt-4 border-t">
