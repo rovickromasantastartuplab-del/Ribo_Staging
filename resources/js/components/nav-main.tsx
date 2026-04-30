@@ -150,7 +150,6 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                 <SidebarMenuSubButton asChild isActive={isActive(child.href)}>
                                     <Link
                                         href={child.href || '#'}
-                                        prefetch
                                         target={child.target}
                                         className={`flex items-center gap-2 ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}
                                     >
@@ -244,7 +243,6 @@ export function NavMain({ items = [], position }: { items: NavItem[]; position: 
                                     ) : (
                                         <Link
                                             href={item.href || '#'}
-                                            prefetch
                                             className={`flex items-center gap-2 ${effectivePosition === 'right' ? 'justify-end text-right' : 'justify-start text-left'}`}
                                         >
                                             {effectivePosition === 'right' ? (

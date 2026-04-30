@@ -678,7 +678,7 @@ export function AppSidebar() {
         >
             <SidebarHeader className={style !== 'plain' ? 'sidebar-styled' : ''} style={sidebarStyle}>
                 <div className="flex justify-center items-center p-2">
-                    <Link href={getFirstAvailableHref()} prefetch className="flex items-center justify-center">
+                    <Link href={getFirstAvailableHref()} className="flex items-center justify-center">
                         {/* Logo for expanded sidebar */}
                         <div className="group-data-[collapsible=icon]:hidden flex items-center">
                             {(() => {
