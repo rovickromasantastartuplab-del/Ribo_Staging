@@ -149,6 +149,11 @@ Route::get('/hc/{path?}', function ($path = '') {
 
 // Public form submission routes
 
+// Lead Capture — public form pages (no auth; rendered via Inertia, same-origin CSRF)
+Route::get('f/{form}', [\App\Http\Controllers\LeadCaptureSubmitController::class, 'show'])->name('lead-capture.public.show');
+Route::post('f/{form}', [\App\Http\Controllers\LeadCaptureSubmitController::class, 'store'])->middleware('throttle:30,1')->name('lead-capture.public.submit');
+Route::get('f/{form}/thank-you', [\App\Http\Controllers\LeadCaptureSubmitController::class, 'thankYou'])->name('lead-capture.public.thank-you');
+
 // Omnichannel Inbound Webhooks (Public - excludes session/Inertia middleware)
 $webhookExcludedMiddleware = [
     \App\Http\Middleware\VerifyCsrfToken::class,
@@ -714,6 +719,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('leads/{lead}/comments/{comment}', [LeadCommentController::class, 'update'])->middleware('permission:edit-leads')->name('leads.comments.update');
             Route::put('leads/{lead}/activities/{activity}/comment', [LeadCommentController::class, 'updateActivity'])->middleware('permission:edit-leads')->name('leads.comments.update-activity');
             Route::delete('leads/{lead}/comments/{comment}', [LeadCommentController::class, 'destroy'])->middleware('permission:delete-leads')->name('leads.comments.destroy');
+        });
+
+        // Lead Capture module — gated by the plan feature flag + permission
+        Route::middleware(['plan.feature:lead_capture', 'permission:manage-lead-capture'])->group(function () {
+            Route::get('lead-capture/forms', [\App\Http\Controllers\LeadCaptureFormController::class, 'index'])->name('lead-capture.forms.index');
+            Route::post('lead-capture/forms', [\App\Http\Controllers\LeadCaptureFormController::class, 'store'])->name('lead-capture.forms.store');
+            Route::put('lead-capture/forms/{form}', [\App\Http\Controllers\LeadCaptureFormController::class, 'update'])->name('lead-capture.forms.update');
+            Route::delete('lead-capture/forms/{form}', [\App\Http\Controllers\LeadCaptureFormController::class, 'destroy'])->name('lead-capture.forms.destroy');
+            Route::put('lead-capture/forms/{form}/toggle-status', [\App\Http\Controllers\LeadCaptureFormController::class, 'toggleStatus'])->name('lead-capture.forms.toggle-status');
+            Route::get('lead-capture/forms/{form}/qr', [\App\Http\Controllers\LeadCaptureFormController::class, 'qr'])->name('lead-capture.forms.qr');
+            Route::get('lead-capture/reports', [\App\Http\Controllers\LeadCaptureReportController::class, 'index'])->name('lead-capture.reports.index');
         });
 
         Route::middleware('permission:manage-opportunity-stages')->group(function () {

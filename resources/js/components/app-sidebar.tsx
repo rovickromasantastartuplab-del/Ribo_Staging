@@ -27,6 +27,7 @@ export function AppSidebar() {
     const userRole = auth.user?.type || auth.user?.role;
     const permissions = auth?.permissions || [];
     const companyFeatures = auth?.company_features || [];
+    const planFeatures: string[] = auth?.plan_features?.features || [];
     const disabledModules: string[] = auth?.disabled_modules || [];
 
     // Get current direction
@@ -192,6 +193,26 @@ export function AppSidebar() {
                     title: t('Lead Management'),
                     icon: Users,
                     children: leadChildren
+                });
+            }
+
+            // Forms (only when the plan includes the lead_capture feature)
+            const formsChildren = [];
+            if (planFeatures.includes('lead_capture') && hasPermission(permissions, 'manage-lead-capture')) {
+                formsChildren.push({
+                    title: t('Capture Forms'),
+                    href: route('lead-capture.forms.index')
+                });
+                formsChildren.push({
+                    title: t('Capture Reports'),
+                    href: route('lead-capture.reports.index')
+                });
+            }
+            if (formsChildren.length > 0) {
+                items.push({
+                    title: t('Forms'),
+                    icon: FileIcon,
+                    children: formsChildren
                 });
             }
         } // end !disabledModules.includes('leads')

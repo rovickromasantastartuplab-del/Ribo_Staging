@@ -260,6 +260,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'export-leads', 'module' => 'leads', 'label' => 'Export Leads', 'description' => 'Can export leads'],
             ['name' => 'import-leads', 'module' => 'leads', 'label' => 'Import Leads', 'description' => 'Can import leads'],
 
+            // Lead Capture management
+            ['name' => 'manage-lead-capture', 'module' => 'lead_capture', 'label' => 'Manage Lead Capture', 'description' => 'Can manage lead capture forms, submissions and reports'],
+
             // Opportunity Stage management
             ['name' => 'manage-opportunity-stages', 'module' => 'opportunity_stages', 'label' => 'Manage Opportunity Stages', 'description' => 'Can manage opportunity stages'],
             ['name' => 'view-opportunity-stages', 'module' => 'opportunity_stages', 'label' => 'View Opportunity Stages', 'description' => 'View Opportunity Stages'],

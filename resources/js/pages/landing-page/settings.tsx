@@ -18,6 +18,7 @@ import FeaturesSection from './settings-features';
 import AboutSection from './settings-about';
 import ContactSection from './settings-contact';
 import TemplatesSection from './settings-templates';
+import PlansSection from './settings-plans';
 import LivePreview from './components/LivePreview';
 
 import { defaultLandingPageSections } from './templates/default-sections';
@@ -1877,73 +1878,16 @@ const breadcrumbs = [
 
             {/* Plans Section */}
             {activeSection === 'plans' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-violet-100 rounded-lg">
-                        <Type className="h-5 w-5 text-violet-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{t('Plans Section Content')}</h3>
-                        <p className="text-sm text-gray-500">{t('Pricing section title and description')}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">{t('Enable Section')}</Label>
-                      <Switch
-                        checked={data.config_sections?.section_visibility?.plans !== false}
-                        onCheckedChange={(checked) => updateSectionVisibility('plans', checked)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-3">
-                      <Label htmlFor="plans_title">{t("Section Title")}</Label>
-                      <Input
-                        id="plans_title"
-                        value={getSectionData('plans').title || ''}
-                        onChange={(e) => updateSectionData('plans', { title: e.target.value })}
-                        placeholder={t("Choose Your Plan")}
-                      />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label htmlFor="plans_subtitle">{t("Section Subtitle")}</Label>
-                      <Textarea
-                        id="plans_subtitle"
-                        value={getSectionData('plans').subtitle || ''}
-                        onChange={(e) => updateSectionData('plans', { subtitle: e.target.value })}
-                        placeholder={t("Start with our free plan and upgrade as your business grows.")}
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label htmlFor="plans_faq_text">{t('FAQ Text')}</Label>
-                      <Input
-                        id="plans_faq_text"
-                        value={getSectionData('plans').faq_text || ''}
-                        onChange={(e) => updateSectionData('plans', { faq_text: e.target.value })}
-                        placeholder={t("Have questions about our plans? Contact our sales team")}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start">
-                    <Info className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium mb-1" style={{ color: brandColor }}>{t('Plans Management')}</h4>
-                      <p className="text-sm" style={{ color: brandColor + 'cc' }}>
-                        {t('The actual plans displayed on the landing page are managed through the Plans module. Go to Plans section to create, edit, or manage your subscription plans.')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <PlansSection
+                data={data}
+                setData={setData}
+                errors={errors}
+                handleInputChange={handleInputChange}
+                getSectionData={getSectionData}
+                updateSectionData={updateSectionData}
+                updateSectionVisibility={updateSectionVisibility}
+                t={t}
+              />
             )}
 
             {/* FAQ Section */}

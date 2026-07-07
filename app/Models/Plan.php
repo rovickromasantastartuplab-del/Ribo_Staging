@@ -17,6 +17,7 @@ class Plan extends Model
         'max_projects',
         'max_contacts',
         'max_accounts',
+        'max_lead_capture_forms',
         'enable_branding',
         'enable_chatgpt',
         'storage_limit',
