@@ -12,7 +12,7 @@ import { useReportPrint } from '@/hooks/use-report-print';
 
 export default function ProductReports() {
   const { t } = useTranslation();
-  const { filters, summary, productSales } = usePage().props as any;
+  const { filters, staffList, summary, productSales } = usePage().props as any;
   const { contentRef, handlePrint } = useReportPrint(t('Product Reports'));
 
   const breadcrumbs = [
@@ -65,7 +65,7 @@ export default function ProductReports() {
         }
       ]}
     >
-      <ReportFilters filters={filters} />
+      <ReportFilters filters={filters} staffList={staffList} />
       
       <div ref={contentRef}>
         <SummaryCards cards={summaryCards} />

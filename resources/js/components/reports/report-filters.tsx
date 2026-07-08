@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,38 +7,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTranslation } from 'react-i18next';
 import { router } from '@inertiajs/react';
 
+interface StaffOption {
+  id: number;
+  name: string;
+}
+
 interface ReportFiltersProps {
   filters: {
     dateFrom: string;
     dateTo: string;
+    staffId?: number | string | null;
     [key: string]: any;
   };
+  staffList?: StaffOption[];
   additionalFilters?: ReactNode;
 }
 
-import { ReactNode } from 'react';
+const ALL_STAFF = 'all';
 
-export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps) {
+export function ReportFilters({ filters, staffList, additionalFilters }: ReportFiltersProps) {
   const { t } = useTranslation();
   const [dateFrom, setDateFrom] = useState(filters.dateFrom);
   const [dateTo, setDateTo] = useState(filters.dateTo);
+  const [staffId, setStaffId] = useState(
+    filters.staffId != null && filters.staffId !== '' ? String(filters.staffId) : ALL_STAFF,
+  );
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.get(window.location.pathname, {
+    const params: Record<string, string> = {
       date_from: dateFrom,
       date_to: dateTo,
-    });
+    };
+    if (staffId !== ALL_STAFF) {
+      params.staff_id = staffId;
+    }
+    router.get(window.location.pathname, params);
   };
 
   const handleClearFilters = () => {
-    const defaultDateFrom = new Date();
-    defaultDateFrom.setMonth(defaultDateFrom.getMonth() - 1);
-    const defaultDateTo = new Date();
-    
-    setDateFrom(defaultDateFrom.toISOString().split('T')[0]);
-    setDateTo(defaultDateTo.toISOString().split('T')[0]);
-    
+    setStaffId(ALL_STAFF);
     router.get(window.location.pathname);
   };
 
@@ -63,6 +71,24 @@ export function ReportFilters({ filters, additionalFilters }: ReportFiltersProps
             onChange={(e) => setDateTo(e.target.value)}
           />
         </div>
+        {staffList && staffList.length > 0 && (
+          <div className="w-full sm:w-auto sm:flex-1">
+            <Label htmlFor="staff_id">{t('Assigned Staff')}</Label>
+            <Select value={staffId} onValueChange={setStaffId}>
+              <SelectTrigger id="staff_id">
+                <SelectValue placeholder={t('All Staff')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_STAFF}>{t('All Staff')}</SelectItem>
+                {staffList.map((staff) => (
+                  <SelectItem key={staff.id} value={String(staff.id)}>
+                    {staff.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         {additionalFilters}
         <Button type="submit" className="w-full sm:w-auto">{t('Apply Filters')}</Button>
         <Button type="button" variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">{t('Clear Filters')}</Button>

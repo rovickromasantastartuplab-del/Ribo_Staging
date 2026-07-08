@@ -13,7 +13,7 @@ import { useReportPrint } from '@/hooks/use-report-print';
 
 export default function LeadReports() {
   const { t } = useTranslation();
-  const { filters, summary, monthlyData, dailyData, leadsBySource } = usePage().props as any;
+  const { filters, staffList, summary, monthlyData, dailyData, leadsBySource } = usePage().props as any;
   const [chartView, setChartView] = useState<'daily' | 'monthly'>('monthly');
   const { contentRef, handlePrint } = useReportPrint(t('Lead Reports'));
   
@@ -69,7 +69,7 @@ export default function LeadReports() {
         }
       ]}
     >
-      <ReportFilters filters={filters} />
+      <ReportFilters filters={filters} staffList={staffList} />
 
       {/* ref wraps only the printable content */}
       <div ref={contentRef}>
