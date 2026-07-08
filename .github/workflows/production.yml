@@ -149,11 +149,16 @@ jobs:
         ribocrm@160.153.176.66:/home/ribocrm/public_html
       working-directory: repo
 
-    # Run database migrations on the production server
-    - name: Run migrations
+    # Run migrations, then sync permissions/roles on the production server.
+    # Only PermissionSeeder + RoleSeeder are run (both idempotent) — never the
+    # full db:seed or StaffRoleSeeder, which would create fake demo users.
+    - name: Run migrations & sync permissions
       run: |
         ssh -i ~/.ssh/id_ed25519 \
           -o StrictHostKeyChecking=no -o LogLevel=ERROR \
           -o UserKnownHostsFile=/dev/null \
           ribocrm@160.153.176.66 \
-          "cd /home/ribocrm/public_html && php artisan migrate --force"
+          "cd /home/ribocrm/public_html && \
+           php artisan migrate --force && \
+           php artisan db:seed --class=PermissionSeeder --force && \
+           php artisan db:seed --class=RoleSeeder --force"
