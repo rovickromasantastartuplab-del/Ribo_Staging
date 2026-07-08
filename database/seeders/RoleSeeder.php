@@ -162,6 +162,7 @@ class RoleSeeder extends Seeder
             'convert-leads',
             'export-leads',
             'import-leads',
+            'manage-lead-capture',
             'manage-opportunity-stages',
             'view-opportunity-stages',
             'create-opportunity-stages',

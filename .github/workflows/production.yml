@@ -148,3 +148,12 @@ jobs:
         ./ \
         ribocrm@160.153.176.66:/home/ribocrm/public_html
       working-directory: repo
+
+    # Run database migrations on the production server
+    - name: Run migrations
+      run: |
+        ssh -i ~/.ssh/id_ed25519 \
+          -o StrictHostKeyChecking=no -o LogLevel=ERROR \
+          -o UserKnownHostsFile=/dev/null \
+          ribocrm@160.153.176.66 \
+          "cd /home/ribocrm/public_html && php artisan migrate --force"

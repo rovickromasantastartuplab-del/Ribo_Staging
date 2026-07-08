@@ -80,11 +80,13 @@ class PlanController extends Controller
             'max_projects' => 'required|integer|min:0',
             'max_contacts' => 'required|integer|min:0',
             'max_accounts' => 'required|integer|min:0',
+            'max_lead_capture_forms' => 'nullable|integer|min:0',
             'storage_limit' => 'required|numeric|min:0',
             'enable_branding' => 'nullable|in:on,off',
             'enable_chatgpt' => 'nullable|in:on,off',
             'enable_ecommerce' => 'nullable|in:on,off',
             'enable_wedding_suppliers' => 'nullable|in:on,off',
+            'enable_lead_capture' => 'nullable|in:on,off',
             'module' => 'nullable|array',
             'is_trial' => 'nullable|in:on,off',
             'trial_day' => 'nullable|integer|min:0',
@@ -101,6 +103,7 @@ class PlanController extends Controller
         $validated['enable_chatgpt'] = $validated['enable_chatgpt'] ?? 'off';
         $validated['enable_ecommerce'] = $validated['enable_ecommerce'] ?? 'off';
         $validated['enable_wedding_suppliers'] = $validated['enable_wedding_suppliers'] ?? 'off';
+        $validated['enable_lead_capture'] = $validated['enable_lead_capture'] ?? 'off';
         $validated['is_trial'] = $validated['is_trial'] ?? null;
         $validated['is_plan_enable'] = $validated['is_plan_enable'] ?? 'on';
         $validated['is_default'] = $validated['is_default'] ?? false;
@@ -127,6 +130,9 @@ class PlanController extends Controller
         }
         if ($validated['enable_wedding_suppliers'] === 'on' && !in_array('wedding_suppliers_module', $features, true)) {
             $features[] = 'wedding_suppliers_module';
+        }
+        if ($validated['enable_lead_capture'] === 'on' && !in_array('lead_capture', $features, true)) {
+            $features[] = 'lead_capture';
         }
         if ($validated['is_trial'] === 'on' && !in_array('trial', $features, true)) {
             $features[] = 'trial';
@@ -167,6 +173,7 @@ class PlanController extends Controller
         $planData = array_merge($plan->toArray(), [
             'enable_ecommerce' => in_array('ecommerce', $module) ? 'on' : 'off',
             'enable_wedding_suppliers' => in_array('wedding_suppliers_module', $module) ? 'on' : 'off',
+            'enable_lead_capture' => in_array('lead_capture', $module) ? 'on' : 'off',
         ]);
 
         return Inertia::render('plans/edit', [
@@ -196,11 +203,13 @@ class PlanController extends Controller
             'max_projects' => 'required|integer|min:0',
             'max_contacts' => 'required|integer|min:0',
             'max_accounts' => 'required|integer|min:0',
+            'max_lead_capture_forms' => 'nullable|integer|min:0',
             'storage_limit' => 'required|numeric|min:0',
             'enable_branding' => 'nullable|in:on,off',
             'enable_chatgpt' => 'nullable|in:on,off',
             'enable_ecommerce' => 'nullable|in:on,off',
             'enable_wedding_suppliers' => 'nullable|in:on,off',
+            'enable_lead_capture' => 'nullable|in:on,off',
             'module' => 'nullable|array',
             'is_trial' => 'nullable|in:on,off',
             'trial_day' => 'nullable|integer|min:0',
@@ -217,6 +226,7 @@ class PlanController extends Controller
         $validated['enable_chatgpt'] = $validated['enable_chatgpt'] ?? 'off';
         $validated['enable_ecommerce'] = $validated['enable_ecommerce'] ?? 'off';
         $validated['enable_wedding_suppliers'] = $validated['enable_wedding_suppliers'] ?? 'off';
+        $validated['enable_lead_capture'] = $validated['enable_lead_capture'] ?? 'off';
         $validated['is_trial'] = $validated['is_trial'] ?? null;
         $validated['is_plan_enable'] = $validated['is_plan_enable'] ?? 'on';
         $validated['is_default'] = $validated['is_default'] ?? false;
@@ -243,6 +253,9 @@ class PlanController extends Controller
         }
         if ($validated['enable_wedding_suppliers'] === 'on' && !in_array('wedding_suppliers_module', $features, true)) {
             $features[] = 'wedding_suppliers_module';
+        }
+        if ($validated['enable_lead_capture'] === 'on' && !in_array('lead_capture', $features, true)) {
+            $features[] = 'lead_capture';
         }
         if ($validated['is_trial'] === 'on' && !in_array('trial', $features, true)) {
             $features[] = 'trial';

@@ -24,6 +24,7 @@ class PlanSeeder extends Seeder
                 'max_projects' => 1,
                 'max_contacts' => 10,
                 'max_accounts' => 5,
+                'max_lead_capture_forms' => 1,
                 'enable_branding' => 'on',
                 'enable_chatgpt' => 'off',
                 'storage_limit' => 1,
@@ -31,7 +32,7 @@ class PlanSeeder extends Seeder
                 'trial_day' => 0,
                 'is_plan_enable' => 'on',
                 'is_default' => true,
-                'module' => null
+                'module' => ['lead_capture']
             ],
             [
                 'name' => 'Starter',
@@ -43,6 +44,7 @@ class PlanSeeder extends Seeder
                 'max_projects' => 5,
                 'max_contacts' => 20,
                 'max_accounts' => 25,
+                'max_lead_capture_forms' => 5,
                 'enable_branding' => 'off',
                 'enable_chatgpt' => 'off',
                 'storage_limit' => 5,
@@ -50,7 +52,7 @@ class PlanSeeder extends Seeder
                 'trial_day' => 7,
                 'is_plan_enable' => 'on',
                 'is_default' => false,
-                'module' => null
+                'module' => ['lead_capture']
             ],
             [
                 'name' => 'Pro',
@@ -62,6 +64,7 @@ class PlanSeeder extends Seeder
                 'max_projects' => 20,
                 'max_contacts' => 100,
                 'max_accounts' => 100,
+                'max_lead_capture_forms' => 15,
                 'enable_branding' => 'off',
                 'enable_chatgpt' => 'on',
                 'storage_limit' => 50,
@@ -69,7 +72,7 @@ class PlanSeeder extends Seeder
                 'trial_day' => 14,
                 'is_plan_enable' => 'on',
                 'is_default' => false,
-                'module' => null
+                'module' => ['lead_capture']
             ]
         ];
         

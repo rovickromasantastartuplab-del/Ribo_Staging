@@ -14,7 +14,7 @@ import { useReportPrint } from '@/hooks/use-report-print';
 
 export default function CustomerReports() {
   const { t } = useTranslation();
-  const { filters, summary, monthlyData, dailyData, topContacts } = usePage().props as any;
+  const { filters, staffList, summary, monthlyData, dailyData, topContacts } = usePage().props as any;
   const [chartView, setChartView] = useState<'daily' | 'monthly'>('monthly');
   const { contentRef, handlePrint } = useReportPrint(t('Contact Reports'));
   
@@ -68,7 +68,7 @@ export default function CustomerReports() {
         }
       ]}
     >
-      <ReportFilters filters={filters} />
+      <ReportFilters filters={filters} staffList={staffList} />
       
       <div ref={contentRef}>
         <SummaryCards cards={summaryCards} />

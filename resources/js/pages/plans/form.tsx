@@ -34,11 +34,13 @@ interface Plan {
   max_projects: number;
   max_contacts: number;
   max_accounts: number;
+  max_lead_capture_forms?: number | null;
   storage_limit: number;
   enable_branding: string;
   enable_chatgpt: string;
-  enable_ecommerce: string;
+  enable_ecommerce?: string;
   enable_wedding_suppliers: string;
+  enable_lead_capture?: string;
   module: string[] | null;
   is_trial: string | null;
   trial_day: number;
@@ -70,11 +72,13 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
     max_projects: plan?.max_projects || 0,
     max_contacts: plan?.max_contacts || 0,
     max_accounts: plan?.max_accounts || 0,
+    max_lead_capture_forms: plan?.max_lead_capture_forms ?? 0,
     storage_limit: plan?.storage_limit || 0,
     enable_branding: plan?.enable_branding || 'on',
     enable_chatgpt: plan?.enable_chatgpt || 'off',
     enable_ecommerce: plan?.enable_ecommerce || 'off',
     enable_wedding_suppliers: plan?.enable_wedding_suppliers || 'off',
+    enable_lead_capture: plan?.enable_lead_capture || 'off',
     is_trial: plan?.is_trial || null,
     trial_day: plan?.trial_day || 0,
     is_plan_enable: plan?.is_plan_enable || 'on',
@@ -284,6 +288,18 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
               </div>
 
               <div>
+                <Label htmlFor="max_lead_capture_forms">{t("Maximum Lead Capture Forms")}</Label>
+                <Input
+                  id="max_lead_capture_forms"
+                  name="max_lead_capture_forms"
+                  type="number"
+                  value={formData.max_lead_capture_forms ?? 0}
+                  onChange={handleChange}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{t("Set to 0 for unlimited.")}</p>
+              </div>
+
+              <div>
                 <Label htmlFor="storage_limit">{t("Storage Limit (GB)")}</Label>
                 <Input
                   id="storage_limit"
@@ -459,6 +475,15 @@ export default function PlanForm({ plan, hasDefaultPlan = false, otherDefaultPla
                   id="enable_wedding_suppliers"
                   checked={formData.enable_wedding_suppliers === 'on'}
                   onCheckedChange={(checked) => handleSwitchChange('enable_wedding_suppliers', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="enable_lead_capture">{t("Lead Capture")}</Label>
+                <Switch
+                  id="enable_lead_capture"
+                  checked={formData.enable_lead_capture === 'on'}
+                  onCheckedChange={(checked) => handleSwitchChange('enable_lead_capture', checked)}
                 />
               </div>
             </div>

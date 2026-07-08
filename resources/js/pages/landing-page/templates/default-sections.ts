@@ -231,7 +231,18 @@ export const defaultLandingPageSections = {
       key: 'plans',
       title: 'Choose Your Plan',
       subtitle: 'Start with our free plan and upgrade as your business grows.',
-      faq_text: 'Have questions about our plans? Contact our sales team'
+      faq_text: 'Have questions about our plans? Contact our sales team',
+      comparison_features: [
+        { name: 'Maximum Users', description: 'Number of team members who can access the account.', type: 'property', key: 'max_users' },
+        { name: 'Maximum Projects', description: 'Number of active projects you can manage.', type: 'property', key: 'max_projects' },
+        { name: 'Maximum Contacts', description: 'Number of total contacts in your database.', type: 'property', key: 'max_contacts' },
+        { name: 'Maximum Accounts', description: 'Number of financial accounts you can connect.', type: 'property', key: 'max_accounts' },
+        { name: 'Storage Limit (GB)', description: 'Total file storage space available.', type: 'property', key: 'storage_limit' },
+        { name: 'Trial Days', description: 'Number of days for the trial period.', type: 'property', key: 'trial_day' },
+        { name: 'Enable Branding', description: 'Remove Ribo branding and use your own.', type: 'method', key: 'enable_branding' },
+        { name: 'Wedding Suppliers', description: 'Access to the wedding supplier directory.', type: 'module', key: 'wedding_suppliers_module' },
+        { name: 'E-commerce', description: 'Sell products and services online.', type: 'module', key: 'ecommerce' }
+      ]
     },
     {
       key: 'faq',
